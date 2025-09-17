@@ -1,0 +1,36 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  name       String 
+  role       String
+  isVerified Boolean  @default(false)
+  isBlocked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+
+model Company {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  companyName String
+  industry    String?
+  size        String?
+  website     String?
+  description String?  @db.Text
+  isVerified  Boolean  @default(false)
+  isBlocked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}

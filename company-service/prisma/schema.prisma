@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  password           String
+  companyName        String
+  industry           String?
+  size               String?
+  website            String?
+  description        String?
+  isVerified         Boolean             @default(false)
+  isBlocked          Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  businessType       String?
+  contactPersonEmail String?
+  contactPersonName  String?
+  contactPersonPhone String?
+  contactPersonTitle String?
+  foundedYear        Int?
+  headquarters       String?
+  linkedinUrl        String?
+  logo               String?
+  phone              String?
+  profileCompleted   Boolean             @default(false)
+  rejectionReason    String?
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  updatedAt          DateTime            @updatedAt
+  profileStep        CompanyProfileStep?
+}
+
+model CompanyProfileStep {
+  id                      String   @id @default(uuid())
+  companyId               String   @unique
+  basicInfoCompleted      Boolean  @default(false)
+  companyDetailsCompleted Boolean  @default(false)
+  contactInfoCompleted    Boolean  @default(false)
+  currentStep             Int      @default(1)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  company                 Company  @relation(fields: [companyId], references: [id])
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       Int
+  createdAt DateTime @default(now())
+}

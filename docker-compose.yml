@@ -1,0 +1,106 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: job-portal-db
+    environment:
+      POSTGRES_DB: job_portal
+      POSTGRES_USER: job_portal_user
+      POSTGRES_PASSWORD: devan
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U job_portal_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: job-portal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./user-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./user-service:/app
+      - /app/node_modules
+
+  company-service:
+    build: ./company-service
+    container_name: company-service
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./company-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./company-service:/app
+      - /app/node_modules
+
+  job-service:
+    build: ./job-service
+    container_name: job-service
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./job-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./job-service:/app
+      - /app/node_modules
+
+  application-service:
+    build: ./application-service
+    container_name: application-service
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./application-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./application-service:/app
+      - /app/node_modules
+
+  express-gateway:
+    build: ./express-gateway
+    container_name: express-gateway
+    ports:
+      - "4000:4000"
+    depends_on:
+      - user-service
+      - company-service
+      - job-service
+      - application-service
+    volumes:
+      - ./express-gateway:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:
