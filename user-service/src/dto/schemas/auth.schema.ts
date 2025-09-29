@@ -49,6 +49,15 @@ export const GoogleAuthSchema = z.object({
   name: z.string().optional(),
   photoURL: z.string().url('Invalid photo URL').optional()
 });
+
+export const ChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
+});
+
+
 export const ResendOTPSchema = GenerateOTPSchema;
 
 export type UserRegisterInput = z.infer<typeof UserRegisterSchema>;
@@ -61,3 +70,4 @@ export type RefreshTokenInput = z.infer<typeof RefreshTokenSchema>;
 export type UpdateNameInput = z.infer<typeof UpdateNameSchema>;
 export type GoogleAuthInput = z.infer<typeof GoogleAuthSchema>;
 export type ResendOTPInput = z.infer<typeof ResendOTPSchema>;
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;

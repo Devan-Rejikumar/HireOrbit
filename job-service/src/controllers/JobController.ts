@@ -6,6 +6,19 @@ import { HttpStatusCode, JobStatusCode, ValidationStatusCode } from '../enums/St
 import { CreateJobSchema, JobSearchSchema, JobSuggestionsSchema } from '../dto/schemas/job.schema';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
 
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: string;
+        email: string;
+        role: string;
+        userType: string;
+      };
+    }
+  }
+}
+
 @injectable()
 export class JobController {
   constructor(@inject(TYPES.IJobService) private jobService: IJobService) {
@@ -29,21 +42,17 @@ async createJob(req: Request, res: Response): Promise<void> {
     
     const jobData = validationResult.data;
     console.log('✅ [JobController] Validation passed, jobData:', jobData);
-    
-    // Get companyId from the authenticated user
-    // For company users, userId is the companyId
-    const companyId = req.user?.userId; // Use userId as companyId
+  
+    const companyId = req.user?.userId; 
     console.log('�� [JobController] companyId from token:', companyId);
-    
-    // Convert applicationDeadline from string to Date
+ 
     const applicationDeadlineDate = new Date(jobData.applicationDeadline);
     console.log('�� [JobController] applicationDeadline converted:', applicationDeadlineDate);
     
-    // Create the complete job data with proper types
     const completeJobData = {
       ...jobData,
       companyId: companyId || null,
-      applicationDeadline: applicationDeadlineDate, // Convert to Date
+      applicationDeadline: applicationDeadlineDate,
     };
     
     console.log('🔍 [JobController] Complete job data:', completeJobData);
@@ -114,21 +123,29 @@ async createJob(req: Request, res: Response): Promise<void> {
 
   async searchJobs(req: Request, res: Response): Promise<void> {
     try {
+      console.log('🔍 [JobController] searchJobs called with query params:', req.query);
+      
       const searchValidation = JobSearchSchema.safeParse(req.query);
       
       if (!searchValidation.success) {
+        console.log('❌ [JobController] Validation failed:', searchValidation.error);
         res.status(ValidationStatusCode.VALIDATION_ERROR).json(
           buildErrorResponse('Validation failed', searchValidation.error.message),
         );
         return;
       }
       
+      console.log('✅ [JobController] Validation passed, search filters:', searchValidation.data);
+      
       const jobs = await this.jobService.searchJobs(searchValidation.data);
+      
+      console.log('✅ [JobController] Search completed, found', jobs.length, 'jobs');
       
       res.status(JobStatusCode.JOBS_SEARCHED).json(
         buildSuccessResponse({ jobs }, 'Jobs searched successfully'),
       );
     } catch (err) {
+      console.error('❌ [JobController] Error in searchJobs:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse('Job search failed', errorMessage),
@@ -216,7 +233,6 @@ async updateJob(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Validate the update data
     const validationResult = CreateJobSchema.partial().safeParse(req.body);
     if (!validationResult.success) {
       res.status(ValidationStatusCode.VALIDATION_ERROR).json(

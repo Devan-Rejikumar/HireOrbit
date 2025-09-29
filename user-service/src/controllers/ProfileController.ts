@@ -97,7 +97,7 @@ export class ProfileController {
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
 
-      const userId = (req as RequestWithUser).user?.userId;
+      const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       
       if (!userId) {
         res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'User not authenticated' });

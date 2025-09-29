@@ -11,6 +11,7 @@ interface Job {
   title: string;
   description: string;
   company: string;
+  companyId?: string;
   location: string;
   salary?: string;
   jobType: string;

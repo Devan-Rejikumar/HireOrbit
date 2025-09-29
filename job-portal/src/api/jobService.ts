@@ -31,7 +31,6 @@ export interface SearchFilters {
 }
 
 export const jobService = {
-  // Search jobs
   searchJobs: async (filters: SearchFilters) => {
     const params = new URLSearchParams();
     if (filters.title) params.append('title', filters.title);
@@ -42,24 +41,8 @@ export const jobService = {
     const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
     return response.data;
   },
-
-  // Get job details
   getJobDetails: async (jobId: string) => {
     const response = await api.get(`/jobs/${jobId}`);
     return response.data;
   },
-
-  // Apply for job
-  applyForJob: async (jobId: string, applicationData: FormData) => {
-    const response = await api.post(`/jobs/${jobId}/apply`, applicationData);
-    return response.data;
-  },
-checkApplicationStatus: async (jobId: string) => {
-    try {
-      const response = await api.get<{ hasApplied: boolean }>(`/jobs/${jobId}/application-status`);
-      return response.data.hasApplied || false;
-    } catch (error) {
-      return false;
-    }
-  }
 };

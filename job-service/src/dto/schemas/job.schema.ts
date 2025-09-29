@@ -7,7 +7,7 @@ export const CreateJobSchema = z.object({
   location: z.string().min(1, 'Location is required'),
   jobType: z.string().min(1, 'Job type is required'),
   requirements: z.array(z.string()).min(1, 'At least one requirement is needed'),
-  salary: z.number().nullable(), // Keep as nullable
+  salary: z.number().nullable(), 
   benefits: z.array(z.string()).optional().default([]),
   experienceLevel: z.string().min(1, 'Experience level is required'),
   education: z.string().min(1, 'Education requirement is required'),
@@ -34,6 +34,8 @@ export const UpdateJobSchema = z.object({
 
 export const JobSearchSchema = z.object({
   query: z.string().optional(),
+  title: z.string().optional(), 
+  company: z.string().optional(), 
   location: z.string().optional(),
   jobType: z.string().optional(),
   experienceLevel: z.string().optional(),

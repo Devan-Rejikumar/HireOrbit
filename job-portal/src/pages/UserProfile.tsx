@@ -23,6 +23,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CertificationModal from '@/components/CertificationModal';
 import AchievementModal from '@/components/AchievementModal';
+import AppliedJobs from '@/components/AppliedJobs';
 
 interface Experience {
   id: string;
@@ -106,6 +107,7 @@ const UserProfile = () => {
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [isResumeUploading, setIsResumeUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'applied-jobs'>('profile');
 
   useEffect(() => {
     fetchProfile();
@@ -117,8 +119,6 @@ const UserProfile = () => {
       console.log('Profile data received:', response.data);
       console.log('Achievements in profile:', response.data.profile.achievements);
       console.log('Certifications in profile:', response.data.profile.certifications);
-      
-      // Parse achievements if it's a string
       if (response.data.profile.achievements && typeof response.data.profile.achievements === 'string') {
         try {
           response.data.profile.achievements = JSON.parse(response.data.profile.achievements);
@@ -128,8 +128,6 @@ const UserProfile = () => {
           response.data.profile.achievements = [];
         }
       }
-      
-      // Parse certifications if it's a string
       if (response.data.profile.certifications && typeof response.data.profile.certifications === 'string') {
         try {
           response.data.profile.certifications = JSON.parse(response.data.profile.certifications);
@@ -176,7 +174,7 @@ const UserProfile = () => {
     setIsResumeUploading(true);
     try {
       await userService.uploadResume(file);
-      await fetchProfile(); // Refresh profile data
+      await fetchProfile();
     } catch (error) {
       console.error('Resume upload error:', error);
       throw error;
@@ -189,7 +187,7 @@ const UserProfile = () => {
     setIsResumeUploading(true);
     try {
       await userService.deleteResume();
-      await fetchProfile(); // Refresh profile data
+      await fetchProfile(); 
     } catch (error) {
       console.error('Resume delete error:', error);
       throw error;
@@ -223,10 +221,12 @@ const UserProfile = () => {
     fetchProfile();
   };
 
-  const handleSaveProfile = async (formData: FormData | Record<string, any>) => {
+  const handleSaveProfile = async (profileData: Record<string, any>) => {
     try {
-      const isFormData = typeof FormData !== 'undefined' && formData instanceof FormData;
-      const response = await api.put('/profile/', formData as any, isFormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
+      // Always send as JSON now - no more multipart/form-data
+      const response = await api.put('/profile/', profileData, {
+        headers: { 'Content-Type': 'application/json' }
+      });
 
       const responseData = response.data as {
         success: boolean;
@@ -521,6 +521,30 @@ const UserProfile = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-4">
+                {/* Tab Buttons */}
+                <div className="flex bg-gray-100 rounded-xl p-1">
+                  <button
+                    onClick={() => setActiveTab('profile')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      activeTab === 'profile'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('applied-jobs')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      activeTab === 'applied-jobs'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Applied Jobs
+                  </button>
+                </div>
+                
                 <button
                   onClick={() => setIsEditModalOpen(true)}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
@@ -532,8 +556,10 @@ const UserProfile = () => {
             </div>
           </div>
 
-
-          {/* About Section */}
+          {/* Tab Content */}
+          {activeTab === 'profile' && (
+            <>
+              {/* About Section */}
           <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
@@ -957,6 +983,13 @@ const UserProfile = () => {
               </div>
             )}
           </div>
+            </>
+          )}
+
+          {/* Applied Jobs Tab Content */}
+          {activeTab === 'applied-jobs' && (
+            <AppliedJobs userId={profile.id} />
+          )}
         </div>
       </div>
 

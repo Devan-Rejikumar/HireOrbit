@@ -41,8 +41,11 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
 
   const fetchSuggestions = async (query: string) => {
     try {
-      const response = await api.get<SuggestionsResponse>(`/jobs/suggestions?q=${encodeURIComponent(query)}`);
-      setSuggestions(response.data.suggestions || []);
+      const response = await api.get<{success: boolean, data: {jobs: Array<{title: string}>}}>(`/jobs/search?title=${encodeURIComponent(query)}`);
+      // Extract unique job titles from the search results
+      const jobTitles = response.data.data?.jobs?.map(job => job.title) || [];
+      const uniqueTitles = [...new Set(jobTitles)]; // Remove duplicates
+      setSuggestions(uniqueTitles);
       setShowSuggestions(true);
       setActiveSuggestion(-1);
     } catch (error) {

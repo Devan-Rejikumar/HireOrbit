@@ -1,0 +1,276 @@
+http:
+  port: 4000
+  host: '0.0.0.0'
+
+admin:
+  port: 9876
+  host: '0.0.0.0'
+
+serviceEndpoints:
+  user-service:
+    url: 'http://localhost:3000'
+  company-service:
+    url: 'http://localhost:3001'
+  job-service:
+    url: 'http://localhost:3002'
+  application-service:
+    url: 'http://localhost:3004'
+
+apiEndpoints:
+  user-public-api:
+    host: 'localhost'
+    paths: ['/api/users/login', '/api/users/register', '/api/users/refresh-token']
+  user-protected-api:
+    host: 'localhost'
+    paths: ['/api/users/profile', '/api/users/update', '/api/users/delete', '/api/users/logout', '/api/users/me']
+  company-api:
+    host: 'localhost'
+    paths: '/api/company/*'
+  job-api:
+    host: 'localhost'
+    paths: '/api/jobs/*'
+  application-api:
+    host: 'localhost'
+    paths: '/api/applications/*'
+
+policies:
+  - cors
+  - rate-limit
+  - jwt
+  - request-transformer
+  - proxy
+
+pipelines:
+  - name: user-public-pipeline
+    apiEndpoints:
+      - user-public-api
+    policies:
+      - cors:
+          - action:
+              origin: 'http://localhost:5173'
+              credentials: true
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role', 'x-request-id']
+      - rate-limit:
+          - action:
+              windowMs: 60000
+              max: 200
+              message: 'Too many requests from this IP, please try again later.'
+      - request-transformer:
+          - action:
+              headers:
+                add:
+                  'X-Gateway': '"API-Gateway"'
+                  'X-Service': '"user-service"'
+                  'X-API-Version': '"v1"'
+                  'X-Request-Source': '"gateway"'
+      - proxy:
+          - action:
+              serviceEndpoint: user-service
+              changeOrigin: true
+              stripPath: false
+
+  - name: user-protected-pipeline
+    apiEndpoints:
+      - user-protected-api
+    policies:
+      - cors:
+          - action:
+              origin: 'http://localhost:5173'
+              credentials: true
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role', 'x-request-id']
+      - jwt:
+          - action:
+              secretOrPublicKey: 'supersecret'
+              issuer: 'job-portal-gateway'
+              audience: 'job-portal-users'
+              algorithms: ['HS256']
+              passRequest: true
+              getToken: 'req => req.cookies && req.cookies.accessToken'
+      - request-transformer:
+          - action:
+              headers:
+                add:
+                  'x-user-id': 'req.user && req.user.userId ? req.user.userId : "unknown"'
+                  'x-user-email': 'req.user && req.user.email ? req.user.email : "unknown"'
+                  'x-user-role': 'req.user && req.user.role ? req.user.role : "user"'
+                  'Authorization': 'req.headers.authorization'
+              body:
+                add:
+                  'jwt-debug': 'req.user'
+                  'jwt-email': 'req.user && req.user.email'
+      - proxy:
+          - action:
+              serviceEndpoint: user-service
+              changeOrigin: true
+              stripPath: false
+
+  - name: company-pipeline
+    apiEndpoints:
+      - company-api
+    policies:
+      - cors:
+          - action:
+              origin: true
+              credentials: true
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role', 'x-request-id']
+      - rate-limit:
+          - action:
+              windowMs: 60000
+              max: 100
+              message: 'Too many requests from this IP, please try again later.'
+      - jwt:
+          - action:
+              secretOrPublicKey: 'supersecret'
+              issuer: 'job-portal-gateway'
+              audience: 'job-portal-users'
+              algorithms: ['HS256']
+              passRequest: true
+              getToken: 'req => req.cookies && req.cookies.accessToken'
+      - request-transformer:
+          - action:
+              headers:
+                add:
+                  'X-Gateway': '"API-Gateway"'
+                  'X-Service': '"company-service"'
+                  'X-API-Version': '"v1"'
+                  'X-Request-Source': '"gateway"'
+      - proxy:
+          - action:
+              serviceEndpoint: company-service
+              changeOrigin: true
+              stripPath: true
+
+  - name: job-pipeline
+    apiEndpoints:
+      - job-api
+    policies:
+      - cors:
+          - action:
+              origin: 'http://localhost:5173'
+              credentials: true
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role', 'x-request-id']
+      - rate-limit:
+          - action:
+              windowMs: 60000
+              max: 100
+              message: 'Too many requests from this IP, please try again later.'
+      - jwt:
+          - action:
+              secretOrPublicKey: 'supersecret'
+              issuer: 'job-portal-gateway'
+              audience: 'job-portal-users'
+              algorithms: ['HS256']
+              passRequest: true
+              getToken: 'req => req.cookies && req.cookies.accessToken'
+      - request-transformer:
+          - action:
+              headers:
+                add:
+                  'X-Gateway': '"API-Gateway"'
+                  'X-Service': '"job-service"'
+                  'X-API-Version': '"v1"'
+                  'X-Request-Source': '"gateway"'
+      - proxy:
+          - action:
+              serviceEndpoint: job-service
+              changeOrigin: true
+              stripPath: true
+
+  - name: application-pipeline
+    apiEndpoints:
+      - application-api
+    policies:
+      - cors:
+          - action:
+              origin: 'http://localhost:5173'
+              credentials: true
+              methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+              allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role', 'x-request-id']
+      - rate-limit:
+          - action:
+              windowMs: 60000
+              max: 100
+              message: 'Too many requests from this IP, please try again later.'
+      - jwt:
+          - action:
+              secretOrPublicKey: 'supersecret'
+              issuer: 'job-portal-gateway'
+              audience: 'job-portal-users'
+              algorithms: ['HS256']
+              passRequest: true
+              getToken: 'req => req.cookies && req.cookies.accessToken'
+      - request-transformer:
+          - action:
+              headers:
+                add:
+                  'X-Gateway': '"API-Gateway"'
+                  'X-Service': '"application-service"'
+                  'X-API-Version': '"v1"'
+                  'X-Request-Source': '"gateway"'
+      - proxy:
+          - action:
+              serviceEndpoint: application-service
+              changeOrigin: true
+              stripPath: true
+
+logger:
+  level: 'debug'
+  streams:
+    - type: 'stream'
+      stream: 'process.stdout'
+      level: 'debug'
+    - type: 'file'
+      path: './logs/gateway.log'
+      level: 'debug'
+
+metrics:
+  enabled: true
+  port: 9090
+  host: '0.0.0.0'
+  prefix: 'eg_'
+
+cors:
+  enabled: true
+  origin: 'http://localhost:5173'
+  credentials: true
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role']
+
+request:
+  timeout: 30000
+  keepAlive: true
+  keepAliveMsecs: 1000
+
+response:
+  timeout: 30000
+
+errorHandling:
+  enabled: true
+  includeStackTrace: false
+  logErrors: true
+
+security:
+  rateLimit:
+    enabled: true
+    windowMs: 60000
+    max: 100
+    message: 'Too many requests from this IP, please try again later.'
+  helmet:
+    enabled: true
+    contentSecurityPolicy: false
+    hsts: false
+
+db:
+  redis:
+    host: 'localhost'
+    port: 6379
+    db: 0
+    password: null
+
+env:
+  NODE_ENV: 'development'
+  LOG_LEVEL: 'info'

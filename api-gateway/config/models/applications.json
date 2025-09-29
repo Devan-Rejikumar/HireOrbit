@@ -1,0 +1,31 @@
+{
+  "$id": "applications",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "jobId": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "reviewed", "accepted", "rejected"]
+    },
+    "resume": {
+      "type": "string"
+    },
+    "coverLetter": {
+      "type": "string"
+    },
+    "appliedAt": {
+      "type": "string",
+      "default": "now"
+    },
+    "updatedAt": {
+      "type": "string",
+      "default": "now"
+    }
+  },
+  "required": ["userId", "jobId", "status"]
+}

@@ -1,7 +1,5 @@
 import { User } from '@prisma/client';
 import { TokenPair } from '../types/auth';
-import { ProfileData, UserProfile } from '../types/profile';
-
 export interface IUserService {
   register(email: string, password: string, name: string, role?: string): Promise<User>;
   login(email: string, password: string): Promise<{ user: User; tokens: TokenPair }>; // Return user and token instead
@@ -17,14 +15,11 @@ export interface IUserService {
   resetPassword(email: string, newPassword: string): Promise<{ message: string }>;
   updateUserName(userId: string, name: string): Promise<User>;
   findByEmail(email: string): Promise<User | null>;
-  createGoogleUser(userData: {
-    email: string;
-    fullName: string;
-    profilePicture?: string;
-  }): Promise<User>;
+  createGoogleUser(userData: {email: string;fullName: string; profilePicture?: string;}): Promise<User>;
   findById(id: string): Promise<User | null>;
   refreshToken(refreshToken: string): Promise<{accessToken: string}>;
   logout(userId: string, tokenId: string): Promise<void>;
   logoutAllSessions(userId: string): Promise<void>;
-logoutWithToken(refreshToken: string): Promise<void>;
+  logoutWithToken(refreshToken: string): Promise<void>;
+  changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ message: string }>;
 }

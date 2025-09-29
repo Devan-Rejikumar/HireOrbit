@@ -2,7 +2,6 @@ import { Router } from 'express';
 import container from '../config/inversify.config';
 import TYPES from '../config/types';
 import { ProfileController } from '../controllers/ProfileController';
-import { authenticateToken } from '../middleware/authMiddleware';
 import multer from 'multer';
 import { ResumeController } from '../controllers/ResumeController';
 import { CertificationController } from '../controllers/CertificationController';
@@ -74,10 +73,10 @@ router.get('/current', (req, res) => {
 });
 
 
-router.post('/', authenticateToken, (req, res) => profileController.createProfile(req, res));
-router.get('/', authenticateToken, (req, res) => profileController.getProfile(req, res));
+router.post('/',(req, res) => profileController.createProfile(req, res));
+router.get('/',(req, res) => profileController.getProfile(req, res));
 
-router.put('/', authenticateToken, (req, res, next) => {
+router.put('/',(req, res, next) => {
   console.log('🔍 [PROFILE-ROUTE] PUT /profile/ hit');
   console.log('🔍 [PROFILE-ROUTE] Content-Type:', req.headers['content-type']);
   console.log('🔍 [PROFILE-ROUTE] Request body keys:', Object.keys(req.body || {}));
@@ -114,9 +113,9 @@ router.put('/', authenticateToken, (req, res, next) => {
     next();
   }
 }, (req, res) => profileController.updateProfile(req, res));
-router.delete('/', authenticateToken, (req, res) => profileController.deleteProfile(req, res));
+router.delete('/', (req, res) => profileController.deleteProfile(req, res));
 
-router.get('/full', authenticateToken, (req, res, next) => {
+router.get('/full', (req, res, next) => {
   console.log('=== /full route hit ===');
   console.log('Request URL:', req.url);
   console.log('Request method:', req.method);
@@ -124,31 +123,31 @@ router.get('/full', authenticateToken, (req, res, next) => {
 }, (req, res) => profileController.getFullProfile(req, res));
 
 
-router.post('/experience', authenticateToken, (req, res) => profileController.addExperience(req, res));
-router.put('/experience/:id', authenticateToken, (req, res) => profileController.updateExperience(req, res));
-router.delete('/experience/:id', authenticateToken, (req, res) => profileController.deleteExperience(req, res));
+router.post('/experience',(req, res) => profileController.addExperience(req, res));
+router.put('/experience/:id',(req, res) => profileController.updateExperience(req, res));
+router.delete('/experience/:id', (req, res) => profileController.deleteExperience(req, res));
 
 
-router.post('/education', authenticateToken, (req, res) => profileController.addEducation(req, res));
-router.put('/education/:id', authenticateToken, (req, res) => profileController.updateEducation(req, res));
-router.delete('/education/:id', authenticateToken, (req, res) => profileController.deleteEducation(req, res));
+router.post('/education', (req, res) => profileController.addEducation(req, res));
+router.put('/education/:id',(req, res) => profileController.updateEducation(req, res));
+router.delete('/education/:id',(req, res) => profileController.deleteEducation(req, res));
 
-router.post('/resume', authenticateToken, (req, res, next) => {if (req.body && req.body.resume) {next();} else {res.status(400).json({ error: 'No resume data found' });return;}}, (req, res) => resumeController.uploadResume(req, res));
-router.get('/resume', authenticateToken, (req, res) => resumeController.getResume(req, res));
-router.delete('/resume', authenticateToken, (req, res) => resumeController.deleteResume(req, res));
-
-
-router.post('/certifications', authenticateToken, (req, res) => certificationController.addCertification(req, res));
-router.get('/certifications', authenticateToken, (req, res) => certificationController.getCertifications(req, res));
-router.put('/certifications/:certificationId', authenticateToken, (req, res) => certificationController.updateCertification(req, res));
-router.delete('/certifications/:certificationId', authenticateToken, (req, res) => certificationController.deleteCertification(req, res));
-router.get('/certifications/:certificationId', authenticateToken, (req, res) => certificationController.getCertificationById(req, res));
+router.post('/resume',(req, res, next) => {if (req.body && req.body.resume) {next();} else {res.status(400).json({ error: 'No resume data found' });return;}}, (req, res) => resumeController.uploadResume(req, res));
+router.get('/resume',(req, res) => resumeController.getResume(req, res));
+router.delete('/resume',(req, res) => resumeController.deleteResume(req, res));
 
 
-router.post('/achievements', authenticateToken, (req, res) => achievementController.addAchievement(req, res));
-router.get('/achievements', authenticateToken, (req, res) => achievementController.getAchievements(req, res));
-router.put('/achievements/:achievementId', authenticateToken, (req, res) => achievementController.updateAchievement(req, res));
-router.delete('/achievements/:achievementId', authenticateToken, (req, res) => achievementController.deleteAchievement(req, res));
-router.get('/achievements/:achievementId', authenticateToken, (req, res) => achievementController.getAchievementById(req, res));
+router.post('/certifications',(req, res) => certificationController.addCertification(req, res));
+router.get('/certifications',(req, res) => certificationController.getCertifications(req, res));
+router.put('/certifications/:certificationId',(req, res) => certificationController.updateCertification(req, res));
+router.delete('/certifications/:certificationId', (req, res) => certificationController.deleteCertification(req, res));
+router.get('/certifications/:certificationId',(req, res) => certificationController.getCertificationById(req, res));
+
+
+router.post('/achievements', (req, res) => achievementController.addAchievement(req, res));
+router.get('/achievements',(req, res) => achievementController.getAchievements(req, res));
+router.put('/achievements/:achievementId',  (req, res) => achievementController.updateAchievement(req, res));
+router.delete('/achievements/:achievementId',(req, res) => achievementController.deleteAchievement(req, res));
+router.get('/achievements/:achievementId',(req, res) => achievementController.getAchievementById(req, res));
 
 export default router;

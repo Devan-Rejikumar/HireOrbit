@@ -18,6 +18,7 @@ export interface IJob {
 }
 
 export interface JobSearchFilters {
+  query?: string; 
   title?: string;
   company?: string;
   location?: string;

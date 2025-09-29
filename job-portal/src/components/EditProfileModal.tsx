@@ -82,15 +82,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     
     try {
       setIsUploading(true);
-      // Build FormData for multipart upload
-      const submitData = new FormData();
-      submitData.append('headline', formData.headline);
-      submitData.append('about', formData.about);
-      submitData.append('location', formData.location);
-      submitData.append('phone', formData.phone);
-      if (profileImage) {
-        submitData.append('profilePicture', profileImage);
-      }
+      
+      // Send JSON data instead of FormData
+      const submitData = {
+        headline: formData.headline,
+        about: formData.about,
+        location: formData.location,
+        phone: formData.phone,
+        // Note: profileImage will be handled separately if needed
+        // For now, we'll skip file uploads to avoid multipart issues
+      };
 
       await onSave(submitData);
       
@@ -159,8 +160,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="bg-white border border-gray-300 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm"
-                    title="Upload new image"
+                    className="bg-white border border-gray-300 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm opacity-50 cursor-not-allowed"
+                    title="Upload new image (temporarily disabled)"
+                    disabled
                   >
                     <Upload className="h-3 w-3 text-gray-600" />
                   </button>
@@ -184,6 +186,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </h3>
                 <p className="text-sm text-gray-500 mb-2">
                   Upload a professional photo. JPG, PNG up to 5MB.
+                  <br />
+                  <span className="text-orange-600 text-xs">Note: Profile picture upload is temporarily disabled to avoid multipart issues.</span>
                 </p>
                 <input
                   ref={fileInputRef}
@@ -191,6 +195,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   accept="image/*"
                   onChange={handleImageSelect}
                   className="hidden"
+                  disabled
                 />
                 {profileImage && (
                   <p className="text-xs text-green-600">

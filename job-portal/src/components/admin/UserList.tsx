@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { CheckCircle, XCircle, User, Shield, ShieldOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, XCircle, User, Shield, ShieldOff, ChevronLeft, ChevronRight, Search, Filter, RefreshCw, Users, TrendingUp, AlertCircle, Clock, Eye, Mail, MapPin } from 'lucide-react';
 import api from '@/api/axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -24,6 +24,9 @@ type User = {
   role: string;
   isVerified: boolean;
   isBlocked: boolean;
+  createdAt?: string;
+  lastLogin?: string;
+  location?: string;
 };
 
 type UsersResponse = {
@@ -36,21 +39,37 @@ type UsersResponse = {
   };
 };
 
+type UserStatus = 'all' | 'verified' | 'unverified' | 'blocked' | 'active';
+
 const UserList = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<UserStatus>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, [currentPage, pageSize]);
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    filterUsers();
+  }, [users, searchTerm, statusFilter]);
+
+  const fetchUsers = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       const res = await api.get<UsersResponse>(`/users/admin/users?page=${currentPage}&limit=${pageSize}`);
       console.log('API Response:', res.data); 
       
@@ -91,8 +110,48 @@ const UserList = () => {
       }
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
+
+  const filterUsers = () => {
+    let filtered = users;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.role.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply status filter
+    switch (statusFilter) {
+      case 'verified':
+        filtered = filtered.filter(u => u.isVerified);
+        break;
+      case 'unverified':
+        filtered = filtered.filter(u => !u.isVerified);
+        break;
+      case 'blocked':
+        filtered = filtered.filter(u => u.isBlocked);
+        break;
+      case 'active':
+        filtered = filtered.filter(u => !u.isBlocked);
+        break;
+      default:
+        break;
+    }
+
+    setFilteredUsers(filtered);
+    setCurrentPage(1);
+    setTotalPages(Math.ceil(filtered.length / pageSize));
+  };
+
+  // Calculate pagination for current filtered data
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const calculatedTotalPages = Math.ceil(filteredUsers.length / pageSize);
 
   const handleToggleBlock = async (id: string, userName: string, currentBlocked: boolean) => {
     const action = currentBlocked ? 'unblock' : 'block';
@@ -113,168 +172,541 @@ const UserList = () => {
     }
   };
 
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
+
+  const closeUserModal = () => {
+    setSelectedUser(null);
+    setShowUserModal(false);
+  };
+
+  const getUserStats = () => {
+    const total = users.length;
+    const verified = users.filter(u => u.isVerified).length;
+    const unverified = users.filter(u => !u.isVerified).length;
+    const blocked = users.filter(u => u.isBlocked).length;
+    const active = users.filter(u => !u.isBlocked).length;
+    
+    return { total, verified, unverified, blocked, active };
+  };
+
+  const stats = getUserStats();
+
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-8">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading users...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5" />
-          User Management
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        {user.isVerified ? (
-                          <CheckCircle className="h-4 w-4 text-success" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-destructive" />
-                        )}
-                        <span className="text-sm">
-                          {user.isVerified ? 'Verified' : 'Unverified'}
-                        </span>
-                      </div>
-                      {user.isBlocked && (
-                        <Badge variant="destructive" className="text-xs">
-                          Blocked
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        {user.isBlocked ? (
-                          <ShieldOff className="h-4 w-4 text-destructive" />
-                        ) : (
-                          <Shield className="h-4 w-4 text-success" />
-                        )}
-                        <Label htmlFor={`block-toggle-${user.id}`} className="text-sm font-medium">
-                          {user.isBlocked ? 'Blocked' : 'Active'}
-                        </Label>
-                      </div>
-                      <Switch
-                        id={`block-toggle-${user.id}`}
-                        checked={!user.isBlocked}
-                        onCheckedChange={() => handleToggleBlock(user.id, user.name, user.isBlocked)}
-                        className="data-[state=checked]:bg-success"
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {users.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                      <User className="h-8 w-8 text-muted-foreground/50" />
-                      <span>No users found</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+    <div className="space-y-6">
+      {/* Enhanced Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">User Management</h2>
+          <p className="text-gray-600 mt-1">Manage and monitor user accounts</p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fetchUsers(true)}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
+      </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Users</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
             </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-                  <span className="font-medium">
-                    {Math.min(currentPage * pageSize, totalUsers)}
-                  </span>{' '}
-                  of <span className="font-medium">{totalUsers}</span> results
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        currentPage === page
-                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </button>
-                </nav>
-              </div>
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <Users className="h-6 w-6 text-blue-600" />
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <div className="mt-4 flex items-center">
+            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+            <span className="text-sm text-green-600">+8% from last month</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Verified</p>
+              <p className="text-3xl font-bold text-green-600 mt-1">{stats.verified}</p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center">
+            <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+            <span className="text-sm text-green-600">Verified accounts</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Unverified</p>
+              <p className="text-3xl font-bold text-amber-600 mt-1">{stats.unverified}</p>
+            </div>
+            <div className="bg-amber-100 p-3 rounded-lg">
+              <Clock className="h-6 w-6 text-amber-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center">
+            <AlertCircle className="h-4 w-4 text-amber-500 mr-1" />
+            <span className="text-sm text-amber-600">Need verification</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active</p>
+              <p className="text-3xl font-bold text-blue-600 mt-1">{stats.active}</p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <Shield className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center">
+            <Shield className="h-4 w-4 text-blue-500 mr-1" />
+            <span className="text-sm text-blue-600">Active users</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Blocked</p>
+              <p className="text-3xl font-bold text-red-600 mt-1">{stats.blocked}</p>
+            </div>
+            <div className="bg-red-100 p-3 rounded-lg">
+              <ShieldOff className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center">
+            <XCircle className="h-4 w-4 text-red-500 mr-1" />
+            <span className="text-sm text-red-600">Blocked accounts</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search users by name, email, or role..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Filter:</span>
+          </div>
+        </div>
+
+        {/* Enhanced Filter Tabs */}
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: 'all', label: 'All Users', count: stats.total, color: 'blue' },
+              { key: 'verified', label: 'Verified', count: stats.verified, color: 'green' },
+              { key: 'unverified', label: 'Unverified', count: stats.unverified, color: 'amber' },
+              { key: 'active', label: 'Active', count: stats.active, color: 'blue' },
+              { key: 'blocked', label: 'Blocked', count: stats.blocked, color: 'red' },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key as UserStatus)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === tab.key
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {tab.label}
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  statusFilter === tab.key
+                    ? 'bg-blue-200 text-blue-800'
+                    : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced User Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {paginatedUsers.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-sm text-gray-600 flex items-center">
+                          <Mail className="h-3 w-3 mr-1" />
+                          {user.email}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user.role === 'Admin' || user.role === 'admin' 
+                        ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                        : 'bg-blue-100 text-blue-800 border border-blue-200'
+                    }`}>
+                      {user.role === 'admin' ? 'Admin' : user.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center">
+                        {user.isVerified ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+                      {user.isBlocked && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                          <ShieldOff className="h-3 w-3 mr-1" />
+                          Blocked
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    }) : 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <button 
+                        onClick={() => handleViewUser(user)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </button>
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-xs font-medium ${user.isBlocked ? 'text-red-600' : 'text-green-600'}`}>
+                          {user.isBlocked ? 'Blocked' : 'Active'}
+                        </span>
+                        <button
+                          onClick={() => handleToggleBlock(user.id, user.name, user.isBlocked)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            user.isBlocked ? 'bg-red-200' : 'bg-green-200'
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              user.isBlocked ? 'translate-x-1' : 'translate-x-6'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <Users className="h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-sm font-medium text-gray-900 mb-2">No users found</h3>
+                      <p className="text-sm text-gray-600">
+                        {searchTerm ? 'Try adjusting your search terms.' : 'No users are registered in the system yet.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Enhanced Pagination */}
+      {filteredUsers.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
+              <span className="font-medium">{Math.min(currentPage * pageSize, filteredUsers.length)}</span> of{' '}
+              <span className="font-medium">{filteredUsers.length}</span> results
+            </div>
+            <div className="flex items-center space-x-2">
+              {calculatedTotalPages > 1 && (
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </button>
+              )}
+              
+              {calculatedTotalPages > 1 && (
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, calculatedTotalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (calculatedTotalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= calculatedTotalPages - 2) {
+                      pageNumber = calculatedTotalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                          currentPage === pageNumber
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {calculatedTotalPages > 1 && (
+                <button
+                  onClick={() => setCurrentPage(Math.min(calculatedTotalPages, currentPage + 1))}
+                  disabled={currentPage === calculatedTotalPages}
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">User Details</h3>
+                <button
+                  onClick={closeUserModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* User Avatar and Basic Info */}
+                <div className="flex items-center space-x-4">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                    {selectedUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-semibold text-gray-900">{selectedUser.name}</h4>
+                    <p className="text-gray-600 flex items-center">
+                      <Mail className="h-4 w-4 mr-1" />
+                      {selectedUser.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* User Information Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Account Information</h5>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-gray-500">Role</p>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                          selectedUser.role === 'Admin' || selectedUser.role === 'admin' 
+                            ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                            : 'bg-blue-100 text-blue-800 border border-blue-200'
+                        }`}>
+                          {selectedUser.role === 'admin' ? 'Admin' : selectedUser.role}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Account Status</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          {selectedUser.isVerified ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Unverified
+                            </span>
+                          )}
+                          {selectedUser.isBlocked && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                              <ShieldOff className="h-3 w-3 mr-1" />
+                              Blocked
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">User ID</p>
+                        <p className="text-sm text-gray-900 mt-1 font-mono">{selectedUser.id}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Activity Information</h5>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-gray-500">Registration Date</p>
+                        <p className="text-sm text-gray-900 mt-1">
+                          {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 'Not available'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Last Login</p>
+                        <p className="text-sm text-gray-900 mt-1">
+                          {selectedUser.lastLogin ? new Date(selectedUser.lastLogin).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 'Never logged in'}
+                        </p>
+                      </div>
+                      {selectedUser.location && (
+                        <div>
+                          <p className="text-sm text-gray-500">Location</p>
+                          <p className="text-sm text-gray-900 mt-1 flex items-center">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {selectedUser.location}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Actions */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h5>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => handleToggleBlock(selectedUser.id, selectedUser.name, selectedUser.isBlocked)}
+                      className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        selectedUser.isBlocked 
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200' 
+                          : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                      }`}
+                    >
+                      {selectedUser.isBlocked ? (
+                        <>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Unblock User
+                        </>
+                      ) : (
+                        <>
+                          <ShieldOff className="h-4 w-4 mr-2" />
+                          Block User
+                        </>
+                      )}
+                    </button>
+                    <button className="flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 border border-blue-200 text-sm font-medium transition-colors">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Email
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={closeUserModal}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

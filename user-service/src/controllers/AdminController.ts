@@ -30,13 +30,13 @@ export class AdminController {
       console.log('[AdminController] 3. Tokens generated successfully');
       
       res.cookie('adminAccessToken', tokens.accessToken, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 2 * 60 * 60 * 1000, 
       });
       res.cookie('adminRefreshToken', tokens.refreshToken, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax', 
         maxAge: 7 * 24 * 60 * 60 * 1000, 
@@ -69,7 +69,7 @@ export class AdminController {
       const result = await this.adminService.refreshToken(refreshToken);
       
       res.cookie('adminAccessToken', result.accessToken, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 2 * 60 * 60 * 1000 
@@ -185,7 +185,7 @@ export class AdminController {
         await this.adminService.logoutWithToken(refreshToken);
       }
       res.clearCookie('adminAccessToken', {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/'

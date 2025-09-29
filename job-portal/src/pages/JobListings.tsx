@@ -12,6 +12,7 @@ interface Job {
   title: string;
   description: string;
   company: string;
+  companyId?: string;
   location: string;
   salary?: number;
   jobType: string;
@@ -592,6 +593,7 @@ const JobListings = () => {
           jobId={selectedJob.id}
           jobTitle={selectedJob.title}
           companyName={selectedJob.company}
+          companyId={selectedJob.companyId || selectedJob.company}
           onApplicationSubmit={handleApplicationSubmit}
         />
       )}

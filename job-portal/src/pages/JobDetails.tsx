@@ -24,6 +24,7 @@ interface Job {
   title: string;
   description: string;
   company: string;
+  companyId?: string;
   location: string;
   salary?: number;
   jobType: string;
@@ -117,12 +118,22 @@ const JobDetails = () => {
 
     try {
       setCheckingStatus(true);
-      const response = await api.get<{
-        data: { hasApplied: boolean };
-      }>(`/jobs/${id}/application-status`);
-      const hasApplied = response.data.data?.hasApplied || false;
+      console.log('🔍 [JobDetails] Checking application status with HttpOnly cookies');
+      
+      const response = await fetch(`http://localhost:3004/api/applications/check-status/${id}`, {
+        method: 'GET',
+        credentials: 'include' // This sends HttpOnly cookies automatically
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('🔍 [JobDetails] Check status response:', data);
+      const hasApplied = data.data?.hasApplied || false;
       setApplied(hasApplied);
-      console.log('Application status:', hasApplied);
+      console.log('🔍 [JobDetails] Application status:', hasApplied);
     } catch (error) {
       console.error('Error checking application status:', error);
       setApplied(false);
@@ -148,6 +159,12 @@ const JobDetails = () => {
     console.log('Application submitted successfully via modal:', applicationData);
     setApplied(true);
     setShowApplicationModal(false);
+    toast.success('Application submitted successfully! 🎉');
+    
+    // Re-check application status to ensure consistency
+    if (id) {
+      await checkApplicationStatus();
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -491,6 +508,7 @@ const JobDetails = () => {
           jobId={job.id}
           jobTitle={job.title}
           companyName={job.company}
+          companyId={job.companyId || job.company}
           onApplicationSubmit={handleApplicationSubmit}
         />
       )}

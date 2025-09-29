@@ -18,6 +18,8 @@ import PostJob from './pages/PostJob';
 import JobDetails from './pages/JobDetails';
 import NotFound from './pages/404Page';
 import CompanyApplications from './pages/CompanyApplications';
+import CompanyJobListing from './pages/CompanyJobListing';
+import CompanySettings from './pages/CompanySettings';
 
 function App() {
   return (
@@ -70,6 +72,8 @@ function App() {
           element={<CompanyReviewStatus />}
         />
         <Route path="/company/post-job" element={<PostJob />} />
+        <Route path="/company/jobs" element={<CompanyProtectedRoute><CompanyJobListing /></CompanyProtectedRoute>} />
+        <Route path="/company/settings" element={<CompanyProtectedRoute><CompanySettings /></CompanyProtectedRoute>} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/company/applications" element={<CompanyApplications />} />
         <Route path="*" element={<NotFound />} />

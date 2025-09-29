@@ -48,29 +48,48 @@ export class UserService implements IUserService {
     password: string,
     
   ): Promise<{user: User; tokens: TokenPair}> {
+    console.log('🔐 [UserService] Starting login for:', email);
+    
+    console.log('🔐 [UserService] About to query database for user...');
     const user = await this.userRepository.findByEmail(email);
+    console.log('🔐 [UserService] Database query completed, user found:', !!user);
     if (!user) throw new Error('Invalid credentials');
+    
+    console.log('🔐 [UserService] About to compare password...');
     const valid = await bcrypt.compare(password, user.password);
+    console.log('🔐 [UserService] Password comparison completed, valid:', valid);
     if (!valid) throw new Error('Invalid credentials');
     if (user.isBlocked) throw new Error('Account is blocked');
-    console.log(
-      'Signing token with secret:',
-      JWT_SECRET.substring(0, 10) + '...'
-    );
+    
+    console.log('🔐 [UserService] Credentials valid, generating tokens...');
+    
+    console.log('🔐 [UserService] About to generate JWT tokens...');
     const tokens = this.jwtService.generateTokenPair({
       userId:user.id,
       email:user.email,
       role:user.role,
       userType:'individual'
     });
+    console.log('🔐 [UserService] JWT tokens generated successfully');
 
-    const refresTokenPayload = this.jwtService.verifyRefreshToken(tokens.refreshToken);
-    await this.redisService.storeRefreshToken(
-      user.id,
-      refresTokenPayload.tokenId,
-      tokens.refreshToken
-    );
+    console.log('🔐 [UserService] Tokens generated, storing refresh token...');
+    
+    try {
+      console.log('🔐 [UserService] About to verify refresh token...');
+      const refresTokenPayload = this.jwtService.verifyRefreshToken(tokens.refreshToken);
+      console.log('🔐 [UserService] Refresh token verified, about to store in Redis...');
+      await this.redisService.storeRefreshToken(
+        user.id,
+        refresTokenPayload.tokenId,
+        tokens.refreshToken
+      );
+      console.log('🔐 [UserService] Refresh token stored successfully');
+    } catch (redisError) {
+      console.log('⚠️ [UserService] Redis error (non-critical):', redisError);
+      // Continue without Redis - login should still work
+    }
 
+    console.log('🔐 [UserService] Login completed successfully');
     return {user,tokens};
   }
 
@@ -250,5 +269,30 @@ export class UserService implements IUserService {
       console.log('Invalid refresh token during logout');
     }
   }
+
+  async changePassword(
+  userId: string, 
+  currentPassword: string, 
+  newPassword: string
+): Promise<{ message: string }> {
+  const user = await this.userRepository.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  if (!isCurrentPasswordValid) {
+    throw new Error('Current password is incorrect');
+  }
+  const isSamePassword = await bcrypt.compare(newPassword, user.password);
+  if (isSamePassword) {
+    throw new Error('New password must be different from current password');
+  }
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  await this.userRepository.updateUserPassword(user.email, hashedNewPassword);
+
+  await this.logoutAllSessions(userId);
+
+  return { message: 'Password changed successfully. Please login again.' };
+}
 
 }

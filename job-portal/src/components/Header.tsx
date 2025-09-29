@@ -1,11 +1,14 @@
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, Briefcase, Search, Bell, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, User, Briefcase, Search, Bell, Settings, Lock, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ChangePasswordModal from './ChangePasswordModal';
 import { useAuth } from '@/context/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -13,6 +16,24 @@ const Header = () => {
     await logout();
     navigate('/', { replace: true });
   };
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showSettingsDropdown) {
+        const target = event.target as Element;
+        if (!target.closest('.settings-dropdown')) {
+          console.log('Clicking outside dropdown, closing it');
+          setShowSettingsDropdown(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettingsDropdown]);
 
   return (
     <header className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-200/50 shadow-sm z-50">
@@ -85,13 +106,52 @@ const Header = () => {
                     <span className="text-sm font-semibold text-gray-900">{user.name}</span>
                     <span className="text-xs text-gray-500">Job Seeker</span>
                   </div>
-                  <button 
-                    onClick={() => navigate('/profile')} 
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                    title="Profile Settings"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </button>
+                  <div className="relative settings-dropdown">
+                    <button 
+                      onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} 
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                      title="Settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
+                    
+                    {showSettingsDropdown && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                        <button
+                          onClick={() => {
+                            navigate('/profile');
+                            setShowSettingsDropdown(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                        >
+                          <User className="h-4 w-4 mr-3" />
+                          Profile
+                        </button>
+                        <button
+                          onClick={() => {
+                            console.log('Change Password clicked!');
+                            setIsChangePasswordModalOpen(true);
+                            setShowSettingsDropdown(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                        >
+                          <Lock className="h-4 w-4 mr-3" />
+                          Change Password
+                        </button>
+                        <hr className="my-1" />
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setShowSettingsDropdown(false);
+                          }}
+                          className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center"
+                        >
+                          <LogOut className="h-4 w-4 mr-3" />
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <Button 
                   variant="outline" 
@@ -203,6 +263,10 @@ const Header = () => {
         )}
       </div>
       
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+      />
     </header>
   );
 };

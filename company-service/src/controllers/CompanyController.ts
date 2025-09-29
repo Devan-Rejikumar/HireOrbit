@@ -44,17 +44,21 @@ export class CompanyController {
       const result = await this.companyService.login(email, password);
       
       res.cookie('companyAccessToken', result.tokens.accessToken, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 2 * 60 * 60 * 1000,  
+        maxAge: 2 * 60 * 60 * 1000,
+        domain: 'localhost',
+        path: '/',
       });
     
       res.cookie('companyRefreshToken', result.tokens.refreshToken, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,  
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        domain: 'localhost',
+        path: '/',
       });
       res.status(AuthStatusCode.COMPANY_LOGIN_SUCCESS).json(
         buildSuccessResponse({ company: result.company }, 'Company login successful'),
@@ -150,75 +154,12 @@ export class CompanyController {
       res.status(ValidationStatusCode.VALIDATION_ERROR).json(buildErrorResponse(errorMessage,'OTP resend failed'));
     }
   }
-
-  // async getMe(req: Request, res: Response): Promise<void> {
-  //   try {
-  //     const authHeader = req.headers.authorization;
-  //     console.log('🔍 [getMe] Auth header:', authHeader);
-      
-  //     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-  //       console.log('❌ [getMe] No valid auth header');
-  //       res.status(401).json(buildErrorResponse('No token provided','Authentication required'));
-  //       return;
-  //     }
-
-  //     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-  //     console.log('🔍 [getMe] Token extracted:', token.substring(0, 50) + '...');
-      
-  //     const jwt = require('jsonwebtoken');
-  //     const jwtSecret = process.env.JWT_SECRET;
-  //     console.log('🔍 [getMe] JWT Secret exists:', !!jwtSecret);
-
-  //     if (!jwtSecret) {
-  //       console.log('❌ [getMe] No JWT secret');
-  //       res.status(500).json(buildErrorResponse('Server configuration error','Internal server error'));
-  //       return;
-  //     }
-
-  //     const decoded = jwt.verify(token, jwtSecret);
-  //     console.log('🔍 [getMe] Decoded token:', decoded);
-      
-  //     // Check if this is a company token
-  //     if (decoded.role !== 'company') {
-  //       console.log('❌ [getMe] Invalid role:', decoded.role);
-  //       res.status(403).json(buildErrorResponse('Invalid token type','Company token required'));
-  //       return;
-  //     }
-
-  //     const companyId = decoded.userId || decoded.companyId;
-  //     const email = decoded.email;
-  //     console.log('🔍 [getMe] Company ID:', companyId, 'Email:', email);
-
-  //     if (!companyId) {
-  //       console.log('❌ [getMe] No company ID');
-  //       res.status(401).json(buildErrorResponse('Company not authenticated','Authentication required'));
-  //       return;
-  //     }
-
-  //     console.log('🔍 [getMe] Fetching company profile for ID:', companyId);
-  //     const company = await this.companyService.getCompanyProfile(companyId);
-  //     console.log('🔍 [getMe] Company found:', !!company);
-      
-  //     if (!company) {
-  //       console.log('❌ [getMe] Company not found');
-  //       res.status(404).json(buildErrorResponse('Company not found','Company profile not found'));
-  //       return;
-  //     }
-
-  //     console.log('✅ [getMe] Returning company data');
-  //     res.status(200).json(buildSuccessResponse({ id: company.id,companyName:company.companyName,email:company.email },'Company profile retrieved successfully'));
-  //   } catch (err) {
-  //     console.error('❌ [getMe] Error:', err);
-  //     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-  //     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(buildErrorResponse(errorMessage,'Failed to retrieve company profile'));
-  //   }
-  // }
-
-
   async getMe(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
-      const email = req.user?.email;
+      const companyId = req.user?.companyId || req.headers['x-user-id'] as string;
+      console.log('🔍 [getMe] Company ID from request:', companyId);
+      const email = req.user?.email || req.headers['x-user-email'] as string;
+      console.log('🔍 [getMe] Email from request:', email);
 
       if (!companyId) {
         res.status(401).json(buildErrorResponse('Company not authenticated','Authentication required'));
@@ -330,12 +271,13 @@ export class CompanyController {
 
 async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    console.log('Step 2 request body:', req.body);
-    console.log('Step 2 headers:', req.headers);
+    console.log('🔍 [COMPANY-CONTROLLER] Step 2 request body:', req.body);
+    console.log('🔍 [COMPANY-CONTROLLER] Step 2 headers:', req.headers);
+    console.log('🔍 [COMPANY-CONTROLLER] User from auth:', req.user);
     
     const validationResult = CompanyStep2Schema.safeParse(req.body);
     if (!validationResult.success) {
-      console.log('Validation failed:', validationResult.error);
+      console.log('❌ [COMPANY-CONTROLLER] Validation failed:', validationResult.error);
       res.status(ValidationStatusCode.VALIDATION_ERROR).json(
         buildErrorResponse('Validation failed', validationResult.error.message),
       );
@@ -345,23 +287,25 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
     const step2Data = validationResult.data;
   
     if (!companyId) {
-      console.log('No company ID in headers');
+      console.log('❌ [COMPANY-CONTROLLER] No company ID in user context');
       res.status(401).json(
         buildErrorResponse('Company not authenticated', 'Authentication required'),
       );
       return;
     }
 
-    console.log('Company ID:', companyId);
-    console.log('Step 2 data:', step2Data);
+    console.log('✅ [COMPANY-CONTROLLER] Company ID:', companyId);
+    console.log('✅ [COMPANY-CONTROLLER] Step 2 data:', step2Data);
   
+    console.log('🔄 [COMPANY-CONTROLLER] Calling companyService.completeStep2...');
     const company = await this.companyService.completeStep2(companyId, step2Data);
-    console.log('Step 2 completed successfully for company:', company.id);
+    console.log('✅ [COMPANY-CONTROLLER] Step 2 completed successfully for company:', company.id);
     res.status(CompanyStatusCode.STEP2_COMPLETED).json(
       buildSuccessResponse({ company }, 'Step 2 completed successfully'),
     );
   } catch (err) {
-    console.error('Step 2 completion error:', err);
+    console.error('❌ [COMPANY-CONTROLLER] Step 2 completion error:', err);
+    console.error('❌ [COMPANY-CONTROLLER] Error stack:', err instanceof Error ? err.stack : 'No stack trace');
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
       buildErrorResponse(errorMessage, 'Step 2 completion failed'),
@@ -413,7 +357,7 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
         return;
       }
 
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      const token = authHeader.substring(7); 
       const jwt = require('jsonwebtoken');
       const jwtSecret = process.env.JWT_SECRET;
 
@@ -423,8 +367,6 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
       }
 
       const decoded = jwt.verify(token, jwtSecret);
-      
-      // Check if this is a company token
       if (decoded.role !== 'company') {
         res.status(403).json(buildErrorResponse('Invalid token type','Company token required'));
         return;
@@ -600,7 +542,7 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
         return;
       }
 
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      const token = authHeader.substring(7);
       const jwt = require('jsonwebtoken');
       const jwtSecret = process.env.JWT_SECRET;
 
@@ -610,8 +552,6 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
       }
 
       const decoded = jwt.verify(token, jwtSecret);
-      
-      // Check if this is a company token
       if (decoded.role !== 'company') {
         res.status(403).json(buildErrorResponse('Invalid token type','Company token required'));
         return;
@@ -639,7 +579,7 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
 
   async updateCompanyProfile(req:AuthenticatedRequest, res:Response):Promise<void>{
     try {
-      const companyId = req.user?.companyId;
+      const companyId = req.user?.companyId || req.headers['x-user-id'] as string;
       if(!companyId){
         res.status(AuthStatusCode.COMPANY_NOT_AUTHENTICATED).json(buildErrorResponse('Company not authenticated','Authentication required'));
         return;

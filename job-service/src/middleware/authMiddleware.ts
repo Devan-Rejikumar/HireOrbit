@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Extend Request interface to include user data
 declare global {
   namespace Express {
     interface Request {
@@ -20,15 +19,14 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   console.log('🔍 [JOB-AUTH-MIDDLEWARE] Authorization header:', req.headers.authorization);
   console.log('🔍 [JOB-AUTH-MIDDLEWARE] Cookies received:', req.cookies);
   
-  // Try to get token from Authorization header first (preferred method)
   let token: string | undefined;
   const authHeader = req.headers.authorization;
   
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    token = authHeader.substring(7); 
     console.log('🔍 [JOB-AUTH-MIDDLEWARE] Token found in Authorization header');
   } else if (req.cookies.accessToken) {
-    // Fallback to cookies for backward compatibility
+
     token = req.cookies.accessToken;
     console.log('🔍 [JOB-AUTH-MIDDLEWARE] Token found in cookies (fallback)');
   }
@@ -43,10 +41,6 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     console.log('🔍 [JOB-AUTH-MIDDLEWARE] Token found, verifying...');
     const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    
-    console.log('✅ [JOB-AUTH-MIDDLEWARE] Token verified successfully:', decoded);
-    
-    // Set user data on request object
     req.user = {
       userId: decoded.userId,
       email: decoded.email,

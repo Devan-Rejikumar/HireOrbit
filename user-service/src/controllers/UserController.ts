@@ -6,10 +6,29 @@ import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { HttpStatusCode,AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
-import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, RefreshTokenSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema } from '../dto/schemas/auth.schema';
+import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, RefreshTokenSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
 import { buildSuccessResponse, buildErrorResponse} from 'shared-dto';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: string;
+        email: string;
+        role: string;
+        username?: string;
+        firstName?: string;
+        lastName?: string;
+        isActive?: boolean;
+        createdAt?: string;
+        updatedAt?: string;
+      };
+    }
+  }
+}
+
 
 if (!admin.apps.length) {
   const serviceAccountPath = path.join(
@@ -78,37 +97,59 @@ export class UserController {
     }
   }
   async login(req: Request, res: Response): Promise<void> {
+    console.log('🔐 [USER CONTROLLER] Login method started');
+    console.log('🔐 [USER CONTROLLER] Request body:', req.body);
+    console.log('🔐 [USER CONTROLLER] Request headers:', req.headers);
+    
     try {
+      console.log('🔐 [USER CONTROLLER] About to validate request body...');
       const validationResult = UserLoginSchema.safeParse(req.body);
       if(!validationResult.success){
+        console.log('🔐 [USER CONTROLLER] Validation failed:', validationResult.error.message);
         res.status(ValidationStatusCode.VALIDATION_ERROR).json(buildErrorResponse('Validation failed', validationResult.error.message));
         return;
       }
+      console.log('🔐 [USER CONTROLLER] Validation successful');
 
       const { email, password } = validationResult.data; 
-      console.log('Login attempt for email:', email);
+      console.log('🔐 [USER CONTROLLER] Login attempt for email:', email);
+      console.log('🔐 [USER CONTROLLER] About to call userService.login...');
+      
       const result = await this.userService.login(email, password);
-      console.log('Login successful for user:');
+      console.log('🔐 [USER CONTROLLER] userService.login completed successfully');
+      console.log('🔐 [USER CONTROLLER] Login successful for user:', result.user.email);
 
+      console.log('🔐 [USER CONTROLLER] About to set cookies...');
       res.cookie('accessToken', result.tokens.accessToken, {
-        httpOnly: true,
+        httpOnly: false,  // ← CHANGED: Allow JavaScript to read
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
+        domain: 'localhost',
+        path: '/',
         maxAge: 2*60*60*1000
-       
       });
-     res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', 
-      path: '/',        
-      maxAge: 7 * 24 * 60 * 60 * 1000 
-    });
+      console.log('🔐 [USER CONTROLLER] accessToken cookie set');
+      
+      res.cookie('refreshToken', result.tokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax', 
+        domain: 'localhost',
+        path: '/',        
+        maxAge: 7 * 24 * 60 * 60 * 1000 
+      });
+      console.log('🔐 [USER CONTROLLER] refreshToken cookie set');
+      
+      console.log('🔐 [USER CONTROLLER] About to send response...');
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(result.user,'Login successful'));
+      console.log('🔐 [USER CONTROLLER] Response sent successfully');
     } catch (err) {
+      console.log('🔐 [USER CONTROLLER] Error in login:', err);
       const errorMessage = err instanceof Error ? err.message : 'unknown error';
+      console.log('🔐 [USER CONTROLLER] Sending error response:', errorMessage);
       res.status(HttpStatusCode.BAD_REQUEST).json(buildErrorResponse(errorMessage,'Login failed'));
     }
+    console.log('🔐 [USER CONTROLLER] Login method completed');
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
@@ -426,6 +467,42 @@ export class UserController {
     }
   }
 
+async changePassword(req: Request, res: Response): Promise<void> {
+  try {
+    const validationResult = ChangePasswordSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      res.status(ValidationStatusCode.VALIDATION_ERROR).json(
+        buildErrorResponse('Validation failed', validationResult.error.message)
+      );
+      return;
+    }
+
+    const { currentPassword, newPassword } = validationResult.data;
+    const userId = req.user!.userId; // Use userId instead of id
+
+    await this.userService.changePassword(userId, currentPassword, newPassword);
+    
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(null, 'Password changed successfully. Please login again.')
+    );
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    
+    if (errorMessage === 'User not found') {
+      res.status(HttpStatusCode.NOT_FOUND).json(
+        buildErrorResponse(errorMessage, 'Password change failed')
+      );
+    } else if (errorMessage === 'Current password is incorrect') {
+      res.status(HttpStatusCode.UNAUTHORIZED).json(
+        buildErrorResponse(errorMessage, 'Password change failed')
+      );
+    } else {
+      res.status(HttpStatusCode.BAD_REQUEST).json(
+        buildErrorResponse(errorMessage, 'Password change failed')
+      );
+    }
+  }
+}
 
 }
 

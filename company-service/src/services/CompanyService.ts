@@ -143,32 +143,37 @@ export class CompanyService implements ICompanyService {
     companyId: string,
     step2Data: CompanyRegistrationStep2,
   ): Promise<Company> {
-    console.log('Service completeStep2 - Company ID:', companyId);
-    console.log('Service completeStep2 - Step 2 data:', step2Data);
+    console.log('🔍 [COMPANY-SERVICE] completeStep2 - Company ID:', companyId);
+    console.log('🔍 [COMPANY-SERVICE] completeStep2 - Step 2 data:', step2Data);
     
     try {
       // First check if company exists
+      console.log('🔍 [COMPANY-SERVICE] Checking if company exists...');
       const existingCompany = await this.companyRepository.getCompanyProfile(companyId);
       if (!existingCompany) {
+        console.log('❌ [COMPANY-SERVICE] Company not found with ID:', companyId);
         throw new Error('Company not found');
       }
-      console.log('Company found:', existingCompany.id);
+      console.log('✅ [COMPANY-SERVICE] Company found:', existingCompany.id);
 
+      console.log('🔄 [COMPANY-SERVICE] Updating company profile...');
       const company = await this.companyRepository.updateCompanyProfile(
         companyId,
         step2Data,
       );
-      console.log('Company profile updated successfully');
+      console.log('✅ [COMPANY-SERVICE] Company profile updated successfully');
 
+      console.log('🔄 [COMPANY-SERVICE] Updating profile step...');
       const profileStep = await this.companyRepository.updateProfileStep(companyId, {
         companyDetailsCompleted: true,
         currentStep: 3,
       });
-      console.log('Profile step updated successfully:', profileStep);
+      console.log('✅ [COMPANY-SERVICE] Profile step updated successfully:', profileStep);
 
       return company;
     } catch (error) {
-      console.error('Error in completeStep2 service:', error);
+      console.error('❌ [COMPANY-SERVICE] Error in completeStep2 service:', error);
+      console.error('❌ [COMPANY-SERVICE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   }

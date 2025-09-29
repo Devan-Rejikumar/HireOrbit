@@ -25,6 +25,10 @@ const LoginForm: React.FC = () => {
         email,
         password,
       });
+      
+      // Set admin role in localStorage for proper authentication
+      localStorage.setItem('role', 'admin');
+      
       setIsLoading(false);
       toast.success('Welcome back, Admin!');
       navigate('/admin/dashboard');

@@ -23,20 +23,27 @@ export class JobRepository implements IJobRepository {
   }
 
   async getAllJobs(): Promise<Job[]> {
-    return this.prisma.job.findMany({
+    console.log('🔍 [JobRepository] getAllJobs called');
+    const results = await this.prisma.job.findMany({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     });
+    console.log('🔍 [JobRepository] Total jobs in database:', results.length);
+    console.log('🔍 [JobRepository] Job titles:', results.map(job => job.title));
+    return results;
   }
 
   async searchJobs(filters: JobSearchFilters): Promise<Job[]> {
+    console.log('🔍 [JobRepository] searchJobs called with filters:', filters);
     const skip = ((filters.page || 1) - 1) * (filters.limit || 10);
     const take = filters.limit || 10;
     const orderBy: Prisma.JobOrderByWithRelationInput = {};
     orderBy[filters.sortBy || 'createdAt'] = filters.sortOrder || 'desc';
     const whereClause: Prisma.JobWhereInput = { isActive: true };
-    if (filters.title) {
-      whereClause.title = { contains: filters.title, mode: 'insensitive' };
+    const searchTerm = filters.title || filters.query;
+    if (searchTerm) {
+      whereClause.title = { contains: searchTerm, mode: 'insensitive' };
+      console.log('🔍 [JobRepository] Searching for title containing:', searchTerm);
     }
     if (filters.company) {
       whereClause.company = { contains: filters.company, mode: 'insensitive' };
@@ -57,8 +64,6 @@ export class JobRepository implements IJobRepository {
     if (filters.workLocation) {
       whereClause.workLocation = filters.workLocation;
     }
-
-    // Salary range filtering
     if (filters.minSalary || filters.maxSalary) {
       whereClause.salary = {};
       if (filters.minSalary) {
@@ -69,12 +74,19 @@ export class JobRepository implements IJobRepository {
       }
     }
 
-    return this.prisma.job.findMany({
+    console.log('🔍 [JobRepository] Where clause:', JSON.stringify(whereClause, null, 2));
+    
+    const results = await this.prisma.job.findMany({
       where: whereClause,
       orderBy,
       skip,
       take,
     });
+    
+    console.log('🔍 [JobRepository] Search results count:', results.length);
+    console.log('🔍 [JobRepository] Search results:', results.map(job => ({ id: job.id, title: job.title, company: job.company })));
+    
+    return results;
   }
 
   async getJobsByCompany(companyId: string): Promise<Job[]> {

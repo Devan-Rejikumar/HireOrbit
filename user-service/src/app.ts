@@ -20,9 +20,33 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json({ limit: '20mb' }));
+// Enhanced JSON parsing with better error handling
+app.use(express.json({ 
+  limit: '20mb',
+  verify: (req, res, buf, encoding) => {
+    try {
+      JSON.parse(buf.toString());
+    } catch (e) {
+      console.log('Invalid JSON received');
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(cookieParser());
+
+// Add request abort handling
+app.use((req, res, next) => {
+  req.on('aborted', () => {
+    console.log('Request aborted for:', req.url);
+  });
+  
+  req.on('close', () => {
+    console.log('Request closed for:', req.url);
+  });
+  
+  next();
+});
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -30,18 +54,13 @@ app.use(
   })
 );
 app.use((req, res, next) => {
-  console.log(`[${req.method}] ${req.url}`);
-  console.log(
-    '[App] Body parsing middleware - Content-Type:',
-    req.headers['content-type']
-  );
+  console.log(`[USER SERVICE] ${req.method} ${req.url}`);
+  console.log('[USER SERVICE] Body parsing middleware - Content-Type:', req.headers['content-type']);
+  console.log('[USER SERVICE] Request headers:', req.headers);
+  console.log('[USER SERVICE] Request body:', req.body);
+  console.log('[USER SERVICE] About to call next()...');
   next();
-});
-app.use((req, res, next) => {
-  console.log(`[App] ${req.method} ${req.url}`);
-  console.log('[App] Request body:', req.body);
-  console.log('[App] Content-Type:', req.headers['content-type']);
-  next();
+  console.log('[USER SERVICE] next() called successfully');
 });
 
 app.use('/api/users', userRoutes);
@@ -55,6 +74,48 @@ console.log('Profile routes: /api/profile');
 console.log('========================');
 
 app.get('/test', (req, res) => {
+  console.log('[USER SERVICE] Test route hit');
   res.json({ message: 'Server is working!' });
 });
+
+// Add a catch-all route to see if requests are reaching the service
+app.use((req, res, next) => {
+  console.log('[USER SERVICE] Middleware hit:', req.method, req.originalUrl);
+  console.log('[USER SERVICE] Request body:', req.body);
+  next();
+});
+
+// Global error handler
+app.use((err: any, req: any, res: any, next: any) => {
+  console.log('Global error handler:', err.message);
+  
+  if (err.message === 'Invalid JSON') {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Invalid JSON format',
+      message: 'Request body must be valid JSON'
+    });
+  }
+  
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'JSON parse error',
+      message: 'Invalid JSON in request body'
+    });
+  }
+  
+  if (err.code === 'ECONNRESET' || err.message.includes('request aborted')) {
+    console.log('Request aborted or connection reset');
+    return; // Don't send response for aborted requests
+  }
+  
+  console.error('Unhandled error:', err);
+  res.status(500).json({ 
+    success: false, 
+    error: 'Internal server error',
+    message: 'An unexpected error occurred'
+  });
+});
+
 export default app;
