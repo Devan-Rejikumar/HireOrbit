@@ -1,5 +1,4 @@
 import { injectable, inject } from 'inversify';
-import { Response } from 'express';
 import TYPES from '../config/types';
 import { IUserRepository } from '../repositories/IUserRepository';
 import { EmailService } from './EmailService';
@@ -26,12 +25,7 @@ export class UserService implements IUserService {
     @inject(TYPES.JWTService) private jwtService: JWTService
   ) {}
 
-  async register(
-    email: string,
-    password: string,
-    name: string,
-    role: string = 'jobseeker'
-  ): Promise<User> {
+  async register(email: string,password: string,name: string,role: string = 'jobseeker'): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) throw new Error('Email already in use');
     const hashed = await bcrypt.hash(password, 10);
@@ -43,82 +37,56 @@ export class UserService implements IUserService {
     });
   }
 
-  async login(
-    email: string,
-    password: string,
-    
-  ): Promise<{user: User; tokens: TokenPair}> {
-    console.log('🔐 [UserService] Starting login for:', email);
-    
-    console.log('🔐 [UserService] About to query database for user...');
+  async login(email: string,password: string,): Promise<{user: User; tokens: TokenPair}> {
     const user = await this.userRepository.findByEmail(email);
-    console.log('🔐 [UserService] Database query completed, user found:', !!user);
     if (!user) throw new Error('Invalid credentials');
-    
-    console.log('🔐 [UserService] About to compare password...');
     const valid = await bcrypt.compare(password, user.password);
-    console.log('🔐 [UserService] Password comparison completed, valid:', valid);
     if (!valid) throw new Error('Invalid credentials');
     if (user.isBlocked) throw new Error('Account is blocked');
-    
-    console.log('🔐 [UserService] Credentials valid, generating tokens...');
-    
-    console.log('🔐 [UserService] About to generate JWT tokens...');
     const tokens = this.jwtService.generateTokenPair({
       userId:user.id,
       email:user.email,
       role:user.role,
       userType:'individual'
-    });
-    console.log('🔐 [UserService] JWT tokens generated successfully');
-
-    console.log('🔐 [UserService] Tokens generated, storing refresh token...');
-    
+    });  
     try {
-      console.log('🔐 [UserService] About to verify refresh token...');
       const refresTokenPayload = this.jwtService.verifyRefreshToken(tokens.refreshToken);
-      console.log('🔐 [UserService] Refresh token verified, about to store in Redis...');
       await this.redisService.storeRefreshToken(
         user.id,
         refresTokenPayload.tokenId,
         tokens.refreshToken
       );
-      console.log('🔐 [UserService] Refresh token stored successfully');
     } catch (redisError) {
-      console.log('⚠️ [UserService] Redis error (non-critical):', redisError);
-      // Continue without Redis - login should still work
+      console.log('[UserService] Redis error (non-critical):', redisError);
     }
-
-    console.log('🔐 [UserService] Login completed successfully');
+    console.log('[UserService] Login completed successfully');
     return {user,tokens};
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     console.log('🔄 UserService - Starting refresh token process');
     try {
-      console.log('🔍 UserService - Verifying refresh token');
+      console.log('UserService - Verifying refresh token');
       const refreshTokenPayload = this.jwtService.verifyRefreshToken(refreshToken);
-      console.log('✅ UserService - Refresh token verified:', refreshTokenPayload);
-      console.log('🔍 UserService - Checking Redis for stored token');
+      console.log('UserService - Refresh token verified:', refreshTokenPayload);
+      console.log('UserService - Checking Redis for stored token');
       const storedToken = await this.redisService.getRefreshToken(
         refreshTokenPayload.userId,
         refreshTokenPayload.tokenId
       );
-      console.log('📦 UserService - Redis check result:', {
+      console.log('UserService - Redis check result:', {
       hasStoredToken: !!storedToken,
       tokensMatch: storedToken === refreshToken
     });
-
-      if (!storedToken || storedToken !== refreshToken) {
-         console.error('❌ UserService - Token validation failed');
+    if (!storedToken || storedToken !== refreshToken) {
         throw new Error('Invalid refresh token');
       }
-      console.log('🔄 UserService - Generating new access token');
+      console.log('UserService - Generating new access token');
       const newAccessToken = this.jwtService.generateNewAccessToken(refreshTokenPayload);
-      console.log('✅ UserService - New access token generated');
+      console.log('UserService - New access token generated');
       return { accessToken: newAccessToken };
     } catch (error) {
-      console.error('❌ UserService - Refresh token error:', error);
+      console.error('UserService - Refresh token error:', error);
       throw new Error('Invalid refresh token');
     }
   }
@@ -133,31 +101,15 @@ export class UserService implements IUserService {
 
 
   
-  async generateOTP(email: string): Promise<{ message: string }> {
-    console.log(` [UserService] generateOTP called with email: ${email}`);
-    
+  async generateOTP(email: string): Promise<{ message: string }> {   
     try {
-      console.log(' [UserService] Checking if user exists');
-      const existingUser = await this.userRepository.findByEmail(email);
-      console.log(' [UserService] Existing user check result:', existingUser ? 'User exists' : 'User not found');
-      
+      const existingUser = await this.userRepository.findByEmail(email);;
       if (existingUser) {
-        console.log('[UserService] Email already registered, throwing error');
         throw new Error('Email already registered');
       }
-      
-      console.log(' [UserService] Generating OTP');
       const otp = Math.floor(100000 + Math.random() * 900000);
-      console.log(` [UserService] Generated OTP: ${otp}`);
-      
       await this.redisService.storeOTP(email, otp.toString(), 300);
-      console.log(' [UserService] OTP saved to Redis');
-      
-      console.log(' [UserService] Calling emailService.sendOTP');
       await this.emailService.sendOTP(email, otp);
-      console.log(' [UserService] Email service completed');
-      
-      console.log(' [UserService] Returning success message');
       return { message: 'OTP sent successfully' };
     } catch (error) {
       console.log(' [UserService] Error in generateOTP:', error);
@@ -174,6 +126,10 @@ export class UserService implements IUserService {
       throw new Error('Invalid OTP');
     }
     await this.redisService.deleteOTP(email);
+    const user = await this.userRepository.findByEmail(email);
+    if(user){
+      await this.userRepository.updateUser(user.id,{isVerified:true});
+    }
     return {message: 'OTP verified successfully'};
   }
 

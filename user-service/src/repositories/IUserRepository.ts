@@ -37,5 +37,6 @@ export interface IUserRepository {
   updateUserPassword(email: string, hashedPassword: string): Promise<void>;
   updateUserName(userId: string, name: string): Promise<User>;
   updateProfile(userId: string, profileData: ProfileData): Promise<UserProfile>;
+  updateUser(id: string, data: Partial<User>): Promise<User>;
     
 }

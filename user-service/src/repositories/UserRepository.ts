@@ -124,6 +124,10 @@ export class UserRepository extends BaseRepository<User> implements IUserReposit
     console.log('✅ UserRepository: updateUserName result:', JSON.stringify(result, null, 2));
     return result;
   }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    return this.update(id, data);
+  }
   async updateProfile(userId: string, profileData: ProfileData): Promise<UserProfile> {
     try {
       console.log('UserRepository: updateProfile called with userId =', userId);

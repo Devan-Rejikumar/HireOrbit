@@ -10,6 +10,8 @@ import {
   Edit,
   Award,
   ExternalLink,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import api from '../api/axios';
 import Header from '@/components/Header';
@@ -85,6 +87,7 @@ interface UserData {
   id: string;
   username: string;
   email: string;
+  isVerified: boolean;
 }
 
 interface ProfileResponse {
@@ -509,6 +512,19 @@ const UserProfile = () => {
                   <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
                     <Mail className="h-5 w-5 mr-2 text-blue-600" />
                     <span className="font-medium">{user.email}</span>
+                  </div>
+                  <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
+                    {user.isVerified ? (
+                      <>
+                        <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                        <span className="font-medium text-green-600">Email Verified</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="h-5 w-5 mr-2 text-orange-600" />
+                        <span className="font-medium text-orange-600">Email Not Verified</span>
+                      </>
+                    )}
                   </div>
                   {profile.phone && (
                     <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
