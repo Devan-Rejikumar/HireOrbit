@@ -334,6 +334,9 @@ export class ApplicationRepository implements IApplicationRepository {
         userId,
         jobId,
       },
+      orderBy:{
+        appliedAt:'desc'
+      }
     });
   }
 

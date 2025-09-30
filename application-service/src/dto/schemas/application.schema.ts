@@ -21,6 +21,21 @@ export const AddApplicationNoteSchema = z.object({
   addedBy: z.string().uuid('Invalid user ID format')
 });
 
+export const WithdrawApplicationSchema = z.object({
+  reason: z.string().optional()
+});
+
+export const GetApplicationsQuerySchema = z.object({
+  companyId: z.string().optional(),
+  userId: z.string().optional(),
+  status: z.string().optional(),
+  jobId: z.string().optional(),
+  page: z.coerce.number().min(1).optional(),
+  limit: z.coerce.number().min(1).max(100).optional()
+});
+
 export type CreateApplicationInput = z.infer<typeof CreateApplicationSchema>;
 export type UpdateApplicationStatusInput = z.infer<typeof UpdateApplicationStatusSchema>;
 export type AddApplicationNoteInput = z.infer<typeof AddApplicationNoteSchema>;
+export type WithdrawApplicationInput = z.infer<typeof WithdrawApplicationSchema>;
+export type GetApplicationsQueryInput = z.infer<typeof GetApplicationsQuerySchema>;

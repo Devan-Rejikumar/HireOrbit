@@ -59,4 +59,5 @@ export interface IApplicationService {
     eligible: boolean;
     reason?: string;
   }>;
+  
 }

@@ -94,15 +94,13 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
   };
 
   const handleWithdrawApplication = async (applicationId: string) => {
-    if (window.confirm('Are you sure you want to withdraw this application?')) {
-      try {
-        await applicationService.withdrawApplication(applicationId);
-        toast.success('Application withdrawn successfully');
-        fetchApplications(); // Refresh the list
-      } catch (error) {
-        console.error('Error withdrawing application:', error);
-        toast.error('Failed to withdraw application');
-      }
+    try {
+      await applicationService.withdrawApplication(applicationId);
+      toast.success('Application withdrawn successfully');
+      fetchApplications(); // Refresh the list
+    } catch (error) {
+      console.error('Error withdrawing application:', error);
+      toast.error('Failed to withdraw application');
     }
   };
 

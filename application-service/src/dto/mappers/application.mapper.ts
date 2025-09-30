@@ -22,7 +22,7 @@ export function mapApplicationToResponse(application: Application): ApplicationR
     expectedSalary: application.expectedSalary,
     availability: application.availability,
     experience: application.experience,
-    resumeUrl: application.resumeUrl || undefined,
+    resumeUrl: application.resumeUrl,
     appliedAt: application.appliedAt,
     updatedAt: application.updatedAt,
   };
@@ -37,7 +37,7 @@ export function mapApplicationStatusHistoryToResponse(
     status: statusHistory.status,
     changedAt: statusHistory.changedAt,
     changedBy: statusHistory.changedBy,
-    reason: statusHistory.reason || undefined,
+    reason: statusHistory.reason,
   };
 }
 

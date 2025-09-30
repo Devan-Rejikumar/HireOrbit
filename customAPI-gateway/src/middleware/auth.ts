@@ -9,13 +9,30 @@ interface AuthRequest extends Request {
 
 
 export const Authenticate = (req: AuthRequest,res: Response,next: NextFunction): void => {
+  let token: string | undefined;
+  
+  // Try to get token from Authorization header first
   const authHeader = req.headers.authorization;
-  if (!authHeader) {
+  if (authHeader) {
+    token = authHeader.split(' ')[1];
+  }
+  
+  // If no token in header, try to get from cookies
+  if (!token && req.headers.cookie) {
+    const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    token = cookies.accessToken;
+  }
+  
+  if (!token) {
     res.status(401).json({ message: 'No token provided' });
     return;
   }
 
-  const token = authHeader.split(' ')[1];
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
     req.user = payload;

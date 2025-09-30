@@ -16,6 +16,8 @@ export const ROUTES = {
         '/api/users/logout',
         '/api/users/change-password',
         '/api/users/update-name',
+        '/api/profile/full',
+        '/api/profile',
         '/api/company/profile', 
         '/api/company/update',
         '/api/jobs/create',

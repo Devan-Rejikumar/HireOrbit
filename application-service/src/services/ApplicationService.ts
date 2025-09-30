@@ -41,18 +41,16 @@ export class ApplicationService implements IApplicationService {
 
     const application = await this.applicationRepository.create(data);
     
-    try {
-      await this.eventService.publish('application.created', {
-        applicationId: application.id,
-        userId: application.userId,
-        jobId: application.jobId,
-        companyId: application.companyId,
-        status: application.status,
-        appliedAt: application.appliedAt
-      });
-    } catch (error) {
-      console.warn('⚠️ Failed to publish application.created event:', error);
-    }
+ try {
+  await this.eventService.publish('application.created', {
+    applicationId: application.id,
+    userId: application.userId,
+    jobId: application.jobId,
+    companyId: application.companyId,
+  });
+} catch (error) {
+  console.warn('Kafka not available, continuing...', error);
+}
 
     return mapApplicationToResponse(application);
   }
@@ -72,17 +70,18 @@ export class ApplicationService implements IApplicationService {
     return mapUserApplicationsResponse(applications, total);
   }
 
-  async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean }> {
-    try {
-      const application = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
-      return {
-        hasApplied: !!application && application.status !== 'WITHDRAWN'
-      };
-    } catch (error) {
-      console.error('Error checking application status:', error);
-      throw new Error('Failed to check application status');
-    }
+async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean; status?: string }> {
+  try {
+    const application = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
+    return {
+      hasApplied: !!application && application.status !== 'WITHDRAWN',
+      status: application?.status
+    };
+  } catch (error) {
+    console.error('Error checking application status:', error);
+    throw new Error('Failed to check application status');
   }
+}
 
   async getApplicationById(id: string): Promise<ApplicationDetailsResponse> {
     const application = await this.applicationRepository.findWithRelations(id);
@@ -117,13 +116,17 @@ export class ApplicationService implements IApplicationService {
       userId
     );
 
-    await this.eventService.publish('application.withdrawn', {
-      applicationId: updatedApplication.id,
-      userId: updatedApplication.userId,
-      jobId: updatedApplication.jobId,
-      companyId: updatedApplication.companyId,
-      withdrawnAt: new Date()
-    });
+    try {
+      await this.eventService.publish('application.withdrawn', {
+        applicationId: updatedApplication.id,
+        userId: updatedApplication.userId,
+        jobId: updatedApplication.jobId,
+        companyId: updatedApplication.companyId,
+        withdrawnAt: new Date()
+      });
+    } catch (error) {
+      console.warn('Kafka not available, continuing...', error);
+    }
 
     return mapApplicationToResponse(updatedApplication);
   }
@@ -319,13 +322,13 @@ async searchApplications(filters: {
     eligible: boolean;
     reason?: string;
   }> {
-    const existingApplication = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
-    if (existingApplication) {
-      return {
-        eligible: false,
-        reason: 'You have already applied for this job'
-      };
-    }
+const existingApplication = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
+if (existingApplication && existingApplication.status !== 'WITHDRAWN') {
+  return {
+    eligible: false,
+    reason: 'You have already applied for this job'
+  };
+}
 
     return { eligible: true };
   }

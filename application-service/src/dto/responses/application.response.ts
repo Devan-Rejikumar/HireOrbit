@@ -8,7 +8,7 @@ export interface ApplicationResponse {
   expectedSalary: string;
   availability: string;
   experience: string;
-  resumeUrl?: string;
+  resumeUrl: string | null;
   appliedAt: Date;
   updatedAt: Date;
 }
@@ -27,7 +27,7 @@ export interface ApplicationStatusHistoryResponse {
   status: string;
   changedAt: Date;
   changedBy: string;
-  reason?: string;
+  reason: string | null;
 }
 
 export interface ApplicationNoteResponse {

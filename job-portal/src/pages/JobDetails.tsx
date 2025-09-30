@@ -19,6 +19,7 @@ import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import JobApplicationModal from '@/components/JobApplicationModal';
 import CompanyProfileModal from '../components/CompanyProfileModal';
+import { FiRefreshCw } from 'react-icons/fi';
 
 interface Job {
   id: string;
@@ -69,6 +70,7 @@ const JobDetails = () => {
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -120,20 +122,23 @@ const JobDetails = () => {
     try {
       setCheckingStatus(true);
       console.log('🔍 [JobDetails] Checking application status with axios');
-      
+
       const response = await api.get<{
-        data: { hasApplied: boolean };
+        data: { hasApplied: boolean; status?: string };
       }>(`/applications/check-status/${id}`, {
         headers: getAuthHeaders()
       });
-      
-      console.log('🔍 [JobDetails] Check status response:', response.data);
       const hasApplied = response.data.data?.hasApplied || false;
+      const status = response.data.data?.status;
       setApplied(hasApplied);
-      console.log('🔍 [JobDetails] Application status:', hasApplied);
+      setApplicationStatus(status || null);
+
+      console.log('🔍 [JobDetails] Check status response:', response.data);
+      console.log('🔍 [JobDetails] Application status:', hasApplied, 'Status:', status);
     } catch (error) {
       console.error('Error checking application status:', error);
       setApplied(false);
+      setApplicationStatus(null);
     } finally {
       setCheckingStatus(false);
     }
@@ -157,7 +162,7 @@ const JobDetails = () => {
     setApplied(true);
     setShowApplicationModal(false);
     toast.success('Application submitted successfully! 🎉');
-    
+
     // Re-check application status to ensure consistency
     if (id) {
       await checkApplicationStatus();
@@ -400,36 +405,62 @@ const JobDetails = () => {
                   </div>
                 ) : (
                   <div>
-                    <button
-                      onClick={handleApplyClick}
-                      disabled={applying || !job.isActive || applied || checkingStatus}
-                      className={`w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 ${!job.isActive
+                    {applicationStatus === 'WITHDRAWN' ? (
+                      <div className="space-y-3">
+                        <div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-yellow-800 font-medium">Application Withdrawn</p>
+                          <p className="text-yellow-600 text-sm mt-1">You can re-apply for this position</p>
+                        </div>
+                        <button
+                          onClick={handleApplyClick}
+                          disabled={applying || !job.isActive || checkingStatus}
+                          className="w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg transform hover:-translate-y-0.5 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                        >
+                          {applying ? (
+                            <div className="flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                              Applying...
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <FiRefreshCw className="mr-2" />
+                              Re-apply
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleApplyClick}
+                        disabled={applying || !job.isActive || applied || checkingStatus}
+                        className={`w-full px-6 py-4 rounded-lg font-semibold text-lg transition-all duration-200 ${!job.isActive
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : applied
                             ? 'bg-green-600 text-white cursor-not-allowed'
                             : applying || checkingStatus
                               ? 'bg-blue-400 text-white cursor-not-allowed'
                               : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg transform hover:-translate-y-0.5'
-                        }`}
-                    >
-                      {applying ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                          Applying...
-                        </div>
-                      ) : checkingStatus ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                          Checking...
-                        </div>
-                      ) : !job.isActive ? (
-                        'Job No Longer Active'
-                      ) : applied ? (
-                        'Already Applied'
-                      ) : (
-                        'Apply for this Job'
-                      )}
-                    </button>
+                          }`}
+                      >
+                        {applying ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                            Applying...
+                          </div>
+                        ) : checkingStatus ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                            Checking...
+                          </div>
+                        ) : !job.isActive ? (
+                          'Job No Longer Active'
+                        ) : applied ? (
+                          'Already Applied'
+                        ) : (
+                          'Apply for this Job'
+                        )}
+                      </button>
+                    )}
 
                     {!isAuthenticated && (
                       <p className="text-sm text-gray-500 mt-4">
