@@ -4,7 +4,10 @@ import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNot
 export interface IApplicationRepository {
   create(data: CreateApplicationInput): Promise<Application>;
   findById(id: string): Promise<Application | null>;
-  findByUserId(userId: string): Promise<Application[]>;
+  findByUserId(userId: string): Promise<Array<Application & {
+    jobTitle?: string;
+    companyName?: string;
+  }>>;
   findByCompanyId(companyId: string): Promise<Application[]>;
   findByJobId(jobId: string): Promise<Application[]>;
   update(id: string, data: Partial<Application>): Promise<Application>;

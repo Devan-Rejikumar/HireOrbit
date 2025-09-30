@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check, Search, Filter } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '@/api/axios';
 
@@ -58,6 +58,7 @@ const CompanyList = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<CompanyStatus>('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -69,7 +70,7 @@ const CompanyList = () => {
 
   useEffect(() => {
     filterCompanies();
-  }, [companies, statusFilter]);
+  }, [companies, statusFilter, searchTerm]);
 
   const fetchAllCompanies = async () => {
     try {
@@ -96,6 +97,7 @@ const CompanyList = () => {
   const filterCompanies = () => {
     let filtered = companies;
     
+    // Apply status filter
     switch (statusFilter) {
     case 'pending':
       filtered = companies.filter(c => c.profileCompleted && !c.isVerified && !c.rejectionReason);
@@ -108,6 +110,17 @@ const CompanyList = () => {
       break;
     default:
       filtered = companies;
+    }
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(company =>
+        company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.contactPersonEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.industry?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     
     setFilteredCompanies(filtered);
@@ -225,8 +238,8 @@ const CompanyList = () => {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading companies...</p>
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading companies...</p>
         </div>
       </div>
     );
@@ -235,86 +248,116 @@ const CompanyList = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Company Management</h2>
+        <h2 className="text-2xl font-bold text-white">Company Management</h2>
         <button
           onClick={fetchAllCompanies}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 shadow-md"
         >
           Refresh
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 px-6">
+      {/* Search and Filters */}
+      <div className="bg-gray-800 rounded-lg shadow-xl p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search companies by name, email, contact person, or industry..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-300">Filter:</span>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="mt-4 border-t border-gray-700 pt-4">
+          <div className="flex flex-wrap gap-2">
             {[
-              { key: 'all', label: 'All Companies', count: counts.total },
-              { key: 'pending', label: 'Pending', count: counts.pending },
-              { key: 'approved', label: 'Approved', count: counts.approved },
-              { key: 'rejected', label: 'Rejected', count: counts.rejected },
+              { key: 'all', label: 'All Companies', count: companies.length },
+              { key: 'pending', label: 'Pending', count: companies.filter(c => c.profileCompleted && !c.isVerified && !c.rejectionReason).length },
+              { key: 'approved', label: 'Approved', count: companies.filter(c => c.isVerified).length },
+              { key: 'rejected', label: 'Rejected', count: companies.filter(c => c.rejectionReason).length },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key as CompanyStatus)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   statusFilter === tab.key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-purple-600 text-white border border-purple-500'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {tab.label} ({tab.count})
+                {tab.label}
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  statusFilter === tab.key
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-600 text-gray-300'
+                }`}>
+                  {tab.count}
+                </span>
               </button>
             ))}
-          </nav>
+          </div>
         </div>
       </div>
 
+
       {filteredCompanies.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            {statusFilter === 'pending' && 'No Pending Applications!'}
-            {statusFilter === 'approved' && 'No Approved Companies'}
-            {statusFilter === 'rejected' && 'No Rejected Companies'}
-            {statusFilter === 'all' && 'No Companies Found'}
+        <div className="text-center py-12 bg-gray-800 rounded-lg shadow-xl">
+          <CheckCircle className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">
+            {searchTerm ? 'No companies found matching your search.' : 
+             statusFilter === 'pending' ? 'No Pending Applications!' :
+             statusFilter === 'approved' ? 'No Approved Companies' :
+             statusFilter === 'rejected' ? 'No Rejected Companies' :
+             'No Companies Found'}
           </h3>
-          <p className="text-gray-600">
-            {statusFilter === 'pending' && 'All company applications have been processed.'}
-            {statusFilter === 'approved' && 'No companies have been approved yet.'}
-            {statusFilter === 'rejected' && 'No companies have been rejected yet.'}
-            {statusFilter === 'all' && 'No company registrations found in the system.'}
+          <p className="text-gray-300">
+            {searchTerm ? 'Try adjusting your search terms.' :
+             statusFilter === 'pending' ? 'All company applications have been processed.' :
+             statusFilter === 'approved' ? 'No companies have been approved yet.' :
+             statusFilter === 'rejected' ? 'No companies have been rejected yet.' :
+             'No company registrations found in the system.'}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Company</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Details</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {filteredCompanies.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((company) => (
-                  <tr key={company.id} className="hover:bg-gray-50">
+                  <tr key={company.id} className="hover:bg-gray-700 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{company.companyName}</div>
-                        <div className="text-sm text-gray-500">{company.email}</div>
+                        <div className="text-sm font-medium text-white">{company.companyName}</div>
+                        <div className="text-sm text-gray-400">{company.email}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{company.contactPersonName || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{company.contactPersonEmail || 'N/A'}</div>
+                      <div className="text-sm text-white">{company.contactPersonName || 'N/A'}</div>
+                      <div className="text-sm text-gray-400">{company.contactPersonEmail || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{company.industry || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{company.size || 'N/A'} employees</div>
+                      <div className="text-sm text-white">{company.industry || 'N/A'}</div>
+                      <div className="text-sm text-gray-400">{company.size || 'N/A'} employees</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(company)}
@@ -325,7 +368,7 @@ const CompanyList = () => {
                           <button
                             onClick={() => handleApprove(company.id)}
                             disabled={actionLoading === company.id}
-                            className="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 disabled:opacity-50 shadow-md"
                           >
                             {actionLoading === company.id ? (
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
@@ -337,7 +380,7 @@ const CompanyList = () => {
                           <button
                             onClick={() => openRejectModal(company)}
                             disabled={actionLoading === company.id}
-                            className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                            className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50 shadow-md"
                           >
                             <X className="w-4 h-4 mr-1" />
                             Reject
@@ -347,7 +390,7 @@ const CompanyList = () => {
                       <button
                         onClick={() => handleViewCompany(company)}
                         disabled={detailsLoading}
-                        className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 shadow-md"
                       >
                         {detailsLoading ? (
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
@@ -367,31 +410,31 @@ const CompanyList = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+        <div className="flex items-center justify-between bg-gray-800 px-4 py-3 border-t border-gray-700 sm:px-6">
           <div className="flex justify-between flex-1 sm:hidden">
             <button
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Previous
             </button>
             <button
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative ml-3 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               Next
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{' '}
-                <span className="font-medium">
+              <p className="text-sm text-gray-300">
+                Showing <span className="font-medium text-white">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+                <span className="font-medium text-white">
                   {Math.min(currentPage * pageSize, totalCompanies)}
                 </span>{' '}
-                of <span className="font-medium">{totalCompanies}</span> results
+                of <span className="font-medium text-white">{totalCompanies}</span> results
               </p>
             </div>
             <div>
@@ -399,7 +442,7 @@ const CompanyList = () => {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-lg border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -407,10 +450,10 @@ const CompanyList = () => {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-all duration-200 ${
                       currentPage === page
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        ? 'z-10 bg-purple-600 border-purple-500 text-white'
+                        : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
                     {page}
@@ -419,7 +462,7 @@ const CompanyList = () => {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-lg border border-gray-600 bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>

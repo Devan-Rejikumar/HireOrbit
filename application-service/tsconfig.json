@@ -10,7 +10,7 @@
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   },
   "include": ["src/**/*", "../shared-dto/src/**/*"],
   "exclude": ["node_modules", "dist"]

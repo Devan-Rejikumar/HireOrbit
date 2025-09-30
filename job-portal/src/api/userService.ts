@@ -72,4 +72,24 @@ export const userService = {
   console.log('🔍 [UserService] Change password response:', data);
   return data;
 },
+
+  sendOTP: async (email: string) => {
+    console.log('🔍 [UserService] Sending OTP to:', email);
+    const response = await api.post('/users/generate-otp', { email });
+    console.log('🔍 [UserService] Send OTP response:', response.data);
+    return response.data;
+  },
+
+  verifyOTP: async (email: string, otp: number) => {
+    console.log('🔍 [UserService] Verifying OTP for:', email, 'OTP:', otp);
+    const response = await api.post('/users/verify-otp', { email, otp: otp.toString() });
+    console.log('🔍 [UserService] Verify OTP response:', response.data);
+    return response.data;
+  },
+  sendVerificationOTP: async (email: string) => {
+  console.log('🔍 [UserService] Sending verification OTP to:', email);
+  const response = await api.post('/users/generate-verification-otp', { email });
+  console.log('🔍 [UserService] Send verification OTP response:', response.data);
+  return response.data;
+},
 };

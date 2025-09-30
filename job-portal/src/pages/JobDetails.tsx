@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
+import { getAuthHeaders } from '../utils/authUtils';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import JobApplicationModal from '@/components/JobApplicationModal';
@@ -118,20 +119,16 @@ const JobDetails = () => {
 
     try {
       setCheckingStatus(true);
-      console.log('🔍 [JobDetails] Checking application status with HttpOnly cookies');
+      console.log('🔍 [JobDetails] Checking application status with axios');
       
-      const response = await fetch(`http://localhost:3004/api/applications/check-status/${id}`, {
-        method: 'GET',
-        credentials: 'include' // This sends HttpOnly cookies automatically
+      const response = await api.get<{
+        data: { hasApplied: boolean };
+      }>(`/applications/check-status/${id}`, {
+        headers: getAuthHeaders()
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('🔍 [JobDetails] Check status response:', data);
-      const hasApplied = data.data?.hasApplied || false;
+      console.log('🔍 [JobDetails] Check status response:', response.data);
+      const hasApplied = response.data.data?.hasApplied || false;
       setApplied(hasApplied);
       console.log('🔍 [JobDetails] Application status:', hasApplied);
     } catch (error) {

@@ -1,8 +1,18 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { container } from '../config/inversify.config';
 import { ApplicationController } from '../controllers/ApplicationController';
 
 import {TYPES} from '../config/types';
+
+// Define AuthRequest interface for header-based authentication
+interface AuthRequest extends Request {
+  headers: {
+    'x-user-id'?: string;
+    'x-user-email'?: string;
+    'x-user-role'?: string;
+    [key: string]: any;
+  };
+}
 
 const router = Router();
 const applicationController = container.get<ApplicationController>(TYPES.ApplicationController);

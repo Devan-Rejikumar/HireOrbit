@@ -4,6 +4,7 @@ export interface IUserService {
   register(email: string, password: string, name: string, role?: string): Promise<User>;
   login(email: string, password: string): Promise<{ user: User; tokens: TokenPair }>; // Return user and token instead
   generateOTP(email: string): Promise<{ message: string }>;
+  generateVerificationOTP(email: string): Promise<{ message: string }>;
   verifyOTP(email: string, otp: number): Promise<{ message: string }>;
   resendOTP(email: string): Promise<{ message: string }>;
   getAllUsers(): Promise<User[]>;

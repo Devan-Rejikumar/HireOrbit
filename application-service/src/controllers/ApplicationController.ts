@@ -7,7 +7,17 @@ import { buildSuccessResponse, buildErrorResponse } from "../../../shared-dto/sr
 import { HttpStatusCode } from "../enums/StatusCodes";
 import { TYPES } from '../config/types';
 import { uploadToCloudinary } from '../config/cloudinary';
-import { AuthRequest } from '../middleware/auth.middleware';
+
+// Define AuthRequest interface for header-based authentication
+interface AuthRequest extends Request {
+  headers: {
+    'x-user-id'?: string;
+    'x-user-email'?: string;
+    'x-user-role'?: string;
+    [key: string]: any;
+  };
+}
+
 
 injectable()
 export class ApplicationController {
@@ -27,7 +37,10 @@ export class ApplicationController {
   }
 
   private checkAuth(req: AuthRequest, res: Response, allowedRoles: string[]): boolean {
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
+    const userId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
+    
+    if (!userId || !userRole || !allowedRoles.includes(userRole)) {
       res.status(HttpStatusCode.UNAUTHORIZED).json(
         buildErrorResponse('Unauthorized access')
       );
@@ -43,7 +56,11 @@ export class ApplicationController {
   async applyForJob(req: AuthRequest, res: Response): Promise<void> {
     try {
       console.log('🔍 [ApplicationController] applyForJob called');
-      console.log('🔍 [ApplicationController] req.user:', req.user);
+      console.log('🔍 [ApplicationController] Headers:', {
+        'x-user-id': req.headers['x-user-id'],
+        'x-user-email': req.headers['x-user-email'],
+        'x-user-role': req.headers['x-user-role']
+      });
       console.log('🔍 [ApplicationController] req.body:', req.body);
       console.log('🔍 [ApplicationController] req.file:', req.file);
 
@@ -58,7 +75,7 @@ export class ApplicationController {
 
       if (resumeFile) {
         try {
-          resumeUrl = await uploadToCloudinary(resumeFile.path, req.user!.id);
+          resumeUrl = await uploadToCloudinary(resumeFile.path, req.headers['x-user-id']!);
           console.log('✅ [ApplicationController] Resume uploaded to Cloudinary:', resumeUrl);
           
         } catch (uploadError) {
@@ -75,13 +92,13 @@ export class ApplicationController {
         availability,
         experience,
         resumeUrl,
-        userId: req.user!.id
+        userId: req.headers['x-user-id']!
       };
 
       console.log('🔍 [ApplicationController] Application data:', {
         jobId,
         companyId,
-        userId: req.user!.id,
+        userId: req.headers['x-user-id']!,
         hasResume: !!resumeFile,
         resumeUrl: applicationData.resumeUrl
       });
@@ -99,7 +116,7 @@ export class ApplicationController {
     try {
       if (!this.checkAuth(req, res, ['jobseeker'])) return;
 
-      const result = await this.applicationService.getUserApplications(req.user!.id);
+      const result = await this.applicationService.getUserApplications(req.headers['x-user-id']!);
       this.sendSuccess(res, result, 'Applications retrieved successfully');
     } catch (error: unknown) {
       this.handleError(res, error, 'Failed to retrieve applications', HttpStatusCode.INTERNAL_SERVER_ERROR);
@@ -111,7 +128,7 @@ export class ApplicationController {
       if (!this.checkAuth(req, res, ['jobseeker'])) return;
 
       const { jobId } = req.params;
-      const result = await this.applicationService.checkApplicationStatus(req.user!.id, jobId);
+      const result = await this.applicationService.checkApplicationStatus(req.headers['x-user-id']!, jobId);
       this.sendSuccess(res, result, 'Application status checked successfully');
     } catch (error: unknown) {
       this.handleError(res, error, 'Failed to check application status', HttpStatusCode.INTERNAL_SERVER_ERROR);
@@ -125,14 +142,14 @@ export class ApplicationController {
       const { id } = req.params;
       const result = await this.applicationService.getApplicationById(id);
       
-      if (req.user!.role === 'jobseeker' && result.userId !== req.user!.id) {
+      if (req.headers['x-user-role'] === 'jobseeker' && result.userId !== req.headers['x-user-id']) {
         res.status(HttpStatusCode.FORBIDDEN).json(
           buildErrorResponse('You can only view your own applications')
         );
         return;
       }
       
-      if (req.user!.role === 'company' && result.companyId !== req.user!.id) {
+      if (req.headers['x-user-role'] === 'company' && result.companyId !== req.headers['x-user-id']) {
         res.status(HttpStatusCode.FORBIDDEN).json(
           buildErrorResponse('You can only view applications for your jobs')
         );
@@ -150,7 +167,7 @@ export class ApplicationController {
       if (!this.checkAuth(req, res, ['jobseeker'])) return;
 
       const { id } = req.params;
-      const result = await this.applicationService.withdrawApplication(id, req.user!.id);
+      const result = await this.applicationService.withdrawApplication(id, req.headers['x-user-id']!);
       this.sendSuccess(res, result, 'Application withdrawn successfully');
     } catch (error: unknown) {
       this.handleError(res, error, 'Failed to withdraw application');
@@ -161,7 +178,7 @@ export class ApplicationController {
     try {
       if (!this.checkAuth(req, res, ['company'])) return;
 
-      const result = await this.applicationService.getCompanyApplications(req.user!.id);
+      const result = await this.applicationService.getCompanyApplications(req.headers['x-user-id']!);
       this.sendSuccess(res, result, 'Company applications retrieved successfully');
     } catch (error: unknown) {
       this.handleError(res, error, 'Failed to retrieve applications', HttpStatusCode.INTERNAL_SERVER_ERROR);
@@ -174,7 +191,7 @@ export class ApplicationController {
 
       const { id } = req.params;
       const validatedData = UpdateApplicationStatusSchema.parse(req.body);
-      const result = await this.applicationService.updateApplicationStatus(id, validatedData, req.user!.id);
+      const result = await this.applicationService.updateApplicationStatus(id, validatedData, req.headers['x-user-id']!);
       
       this.sendSuccess(res, result, 'Application status updated successfully');
     } catch (error: unknown) {
@@ -188,7 +205,7 @@ export class ApplicationController {
 
       const { id } = req.params;
       const validatedData = AddApplicationNoteSchema.parse(req.body);
-      const noteData = { ...validatedData, addedBy: req.user!.id };
+      const noteData = { ...validatedData, addedBy: req.headers['x-user-id']! };
       const result = await this.applicationService.addApplicationNote(id, noteData);
       
       this.sendSuccess(res, result, 'Note added successfully');
@@ -202,7 +219,7 @@ export class ApplicationController {
       if (!this.checkAuth(req, res, ['company'])) return;
 
       const { id } = req.params;
-      const result = await this.applicationService.getApplicationDetails(id, req.user!.id);
+      const result = await this.applicationService.getApplicationDetails(id, req.headers['x-user-id']!);
       this.sendSuccess(res, result, 'Application details retrieved successfully');
     } catch (error: unknown) {
       this.handleError(res, error, 'Application not found', HttpStatusCode.NOT_FOUND);
@@ -215,8 +232,8 @@ export class ApplicationController {
       if (!this.checkAuth(req, res, ['jobseeker', 'company'])) return;
 
       const filters = {
-        companyId: req.user!.role === 'company' ? req.user!.id : req.query.companyId as string,
-        userId: req.user!.role === 'jobseeker' ? req.user!.id : req.query.userId as string,
+        companyId: req.headers['x-user-role'] === 'company' ? req.headers['x-user-id'] : req.query.companyId as string,
+        userId: req.headers['x-user-role'] === 'jobseeker' ? req.headers['x-user-id'] : req.query.userId as string,
         status: req.query.status as string,
         jobId: req.query.jobId as string,
         page: req.query.page ? parseInt(req.query.page as string) : 1,
@@ -234,7 +251,7 @@ export class ApplicationController {
     try {
       if (!this.checkAuth(req, res, ['company'])) return;
 
-      const result = await this.applicationService.getCompanyApplicationStats(req.user!.id);
+      const result = await this.applicationService.getCompanyApplicationStats(req.headers['x-user-id']!);
       this.sendSuccess(res, result, 'Statistics retrieved successfully');
     } catch (error: unknown) {
       this.handleError(res, error, 'Failed to retrieve statistics', HttpStatusCode.INTERNAL_SERVER_ERROR);
@@ -255,7 +272,7 @@ export class ApplicationController {
       }
 
       await this.applicationService.bulkUpdateApplicationStatus(
-        applicationIds, status, req.user!.id, req.user!.id
+        applicationIds, status, req.headers['x-user-id']!, req.headers['x-user-id']!
       );
       
       this.sendSuccess(res, null, 'Applications updated successfully');

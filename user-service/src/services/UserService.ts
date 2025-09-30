@@ -27,7 +27,13 @@ export class UserService implements IUserService {
 
   async register(email: string,password: string,name: string,role: string = 'jobseeker'): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(email);
-    if (existingUser) throw new Error('Email already in use');
+    // if (existingUser) throw new Error('Email already in use');
+    if(existingUser){
+      if(existingUser.isVerified){
+        return existingUser;
+      }
+      throw new Error('Email already in use');
+    }
     const hashed = await bcrypt.hash(password, 10);
     return this.userRepository.createUser({
       email,
@@ -117,6 +123,22 @@ export class UserService implements IUserService {
     }
   }
 
+  async generateVerificationOTP(email: string): Promise<{ message: string }> {
+  try {
+    const existingUser = await this.userRepository.findByEmail(email);
+    if (!existingUser) {
+      throw new Error('User not found');
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    await this.redisService.storeOTP(email, otp.toString(), 300);
+    await this.emailService.sendOTP(email, otp);
+    return { message: 'OTP sent successfully' };
+  } catch (error) {
+    console.log(' [UserService] Error in generateVerificationOTP:', error);
+    throw error;
+  }
+}
+
   async verifyOTP(email: string, otp: number): Promise<{ message: string }> {
     const storedOtp = await this.redisService.getOTP(email);
     if (!storedOtp) {
@@ -125,11 +147,13 @@ export class UserService implements IUserService {
     if(parseInt(storedOtp)!==otp){
       throw new Error('Invalid OTP');
     }
-    await this.redisService.deleteOTP(email);
+    
     const user = await this.userRepository.findByEmail(email);
     if(user){
       await this.userRepository.updateUser(user.id,{isVerified:true});
     }
+
+    await this.redisService.deleteOTP(email);
     return {message: 'OTP verified successfully'};
   }
 

@@ -26,6 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import CertificationModal from '@/components/CertificationModal';
 import AchievementModal from '@/components/AchievementModal';
 import AppliedJobs from '@/components/AppliedJobs';
+import VerificationModal from '@/components/VerificationModal';
 
 interface Experience {
   id: string;
@@ -110,6 +111,7 @@ const UserProfile = () => {
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [isResumeUploading, setIsResumeUploading] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'applied-jobs'>('profile');
 
   useEffect(() => {
@@ -142,6 +144,9 @@ const UserProfile = () => {
       }
       
       setProfileData(response.data);
+      console.log('🔍 Frontend - Profile data received:', response.data);
+      console.log('🔍 Frontend - User data:', response.data.user);
+      console.log('🔍 Frontend - User isVerified:', response.data.user?.isVerified);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -513,17 +518,27 @@ const UserProfile = () => {
                     <Mail className="h-5 w-5 mr-2 text-blue-600" />
                     <span className="font-medium">{user.email}</span>
                   </div>
-                  <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
-                    {user.isVerified ? (
-                      <>
-                        <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                        <span className="font-medium text-green-600">Email Verified</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="h-5 w-5 mr-2 text-orange-600" />
-                        <span className="font-medium text-orange-600">Email Not Verified</span>
-                      </>
+                  <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-xl">
+                    <div className="flex items-center">
+                      {user.isVerified ? (
+                        <>
+                          <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                          <span className="font-medium text-green-600">Email Verified</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-5 w-5 mr-2 text-orange-600" />
+                          <span className="font-medium text-orange-600">Email Not Verified</span>
+                        </>
+                      )}
+                    </div>
+                    {!user.isVerified && (
+                      <button
+                        onClick={() => setIsVerificationModalOpen(true)}
+                        className="text-sm bg-orange-600 text-white px-3 py-1 rounded-lg hover:bg-orange-700 transition-colors"
+                      >
+                        Verify Now
+                      </button>
                     )}
                   </div>
                   {profile.phone && (
@@ -1079,6 +1094,15 @@ const UserProfile = () => {
         onRefresh={fetchProfile}
         achievement={editingAchievement || undefined}
         isEditing={!!editingAchievement}
+      />
+
+      <VerificationModal
+        isOpen={isVerificationModalOpen}
+        onClose={() => setIsVerificationModalOpen(false)}
+        userEmail={user?.email || ''}
+        onVerificationSuccess={() => {
+          fetchProfile(); // Refresh profile to update verification status
+        }}
       />
       
       <ToastContainer />

@@ -23,11 +23,59 @@ export class ApplicationRepository implements IApplicationRepository {
         })
     }
 
-    async findByUserId(userId: string): Promise<Application[]> {
-        return await this.prisma.application.findMany({
+    async findByUserId(userId: string): Promise<Array<Application & {
+        jobTitle?: string;
+        companyName?: string;
+    }>> {
+        const applications = await this.prisma.application.findMany({
             where:{userId},
             orderBy:{appliedAt:'desc'}
-        })
+        });
+
+        // Fetch job details from job service for each application
+        const applicationsWithJobDetails = await Promise.all(
+            applications.map(async (app) => {
+                try {
+                    // Call job service to get job details
+                    console.log(`🔍 [ApplicationRepository] Fetching job details for jobId: ${app.jobId}`);
+                    const jobResponse = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
+                    console.log(`🔍 [ApplicationRepository] Job service response status: ${jobResponse.status}`);
+                    
+                    if (jobResponse.ok) {
+                        const jobData = await jobResponse.json() as {
+                            data?: {
+                                job?: {
+                                    title?: string;
+                                    company?: string;
+                                };
+                            };
+                        };
+                        console.log(`🔍 [ApplicationRepository] Job data received:`, jobData);
+                        return {
+                            ...app,
+                            jobTitle: jobData.data?.job?.title || 'Job Title',
+                            companyName: jobData.data?.job?.company || 'Company Name'
+                        };
+                    } else {
+                        console.log(`❌ [ApplicationRepository] Job service returned status: ${jobResponse.status}`);
+                        return {
+                            ...app,
+                            jobTitle: 'Job Title',
+                            companyName: 'Company Name'
+                        };
+                    }
+                } catch (error) {
+                    console.error(`❌ [ApplicationRepository] Error fetching job details for jobId ${app.jobId}:`, error);
+                    return {
+                        ...app,
+                        jobTitle: 'Job Title',
+                        companyName: 'Company Name'
+                    };
+                }
+            })
+        );
+
+        return applicationsWithJobDetails;
     }
 
     async findByCompanyId(companyId: string): Promise<Application[]> {

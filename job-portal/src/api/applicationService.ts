@@ -1,4 +1,5 @@
 import api from './axios';
+import { getAuthHeaders } from '../utils/authUtils';
 
 export interface Application {
   id: string;
@@ -42,23 +43,16 @@ export interface ApplicationResponse {
 
 export const applicationService = {
   applyForJob: async (applicationData: FormData): Promise<ApplicationResponse> => {
-    console.log('🔍 [ApplicationService] Sending application with HttpOnly cookies');
+    console.log('🔍 [ApplicationService] Sending application with axios');
     
-    // Call application service directly for multipart data
-    // HttpOnly cookies will be sent automatically with credentials: 'include'
-    const response = await fetch('http://localhost:3004/api/applications/apply', {
-      method: 'POST',
-      body: applicationData,
-      credentials: 'include' // This sends HttpOnly cookies automatically
+    const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...getAuthHeaders()
+      }
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ [ApplicationService] Error response:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    return response.data;
   },
   getUserApplications: async () => {
     const response = await api.get<{

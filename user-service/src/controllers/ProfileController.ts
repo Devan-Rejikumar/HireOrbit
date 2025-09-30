@@ -254,15 +254,24 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
     const completionPercentage = this.calculateCompletionPercentage(fullProfile);
 
-    res.status(HttpStatusCode.OK).json({
+    console.log('🔍 ProfileController - userData from database:', userData);
+    console.log('🔍 ProfileController - userData.isVerified:', userData?.isVerified);
+    
+    const responseData = {
       profile: fullProfile,
       user: {
         id: userId,
         username: userData?.name || req.headers['x-user-email'] as string,
         email: req.headers['x-user-email'] as string,
+        isVerified: userData?.isVerified || false,
       },
       completionPercentage,
-    });
+    };
+    
+    console.log('🔍 ProfileController - Final response data:', responseData);
+    console.log('🔍 ProfileController - Final user.isVerified:', responseData.user.isVerified);
+    
+    res.status(HttpStatusCode.OK).json(responseData);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: errorMessage });

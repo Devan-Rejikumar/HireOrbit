@@ -195,6 +195,26 @@ export class UserController {
     }
   }
 
+
+  async generateVerificationOTP(req: Request, res: Response): Promise<void> {
+  try {
+    const validationResult = GenerateOTPSchema.safeParse(req.body);
+    if(!validationResult.success){
+      res.status(ValidationStatusCode.VALIDATION_ERROR).json(buildErrorResponse('Validation failed',validationResult.error.message));
+      return;
+    }
+    const { email } = validationResult.data;
+    const result = await this.userService.generateVerificationOTP(email);
+    res.status(HttpStatusCode.OK).json(buildSuccessResponse(result,'OTP sent successfully'));
+  } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'unknown error';
+      if(errorMessage==='Email alredy registered'){
+        res.status(AuthStatusCode.EMAIL_ALREADY_EXISTS).json(buildErrorResponse(errorMessage,'OTP generation failed'));
+      }else{
+        res.status(HttpStatusCode.BAD_REQUEST).json(buildErrorResponse(errorMessage,'OTP generation failed'));
+      }
+    }
+}
   async verifyOTP(req: Request, res: Response): Promise<void> {
     try {
       const validationResult = VerifyOTPSchema.safeParse(req.body);

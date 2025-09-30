@@ -61,6 +61,14 @@ export class ApplicationService implements IApplicationService {
     const applications = await this.applicationRepository.findByUserId(userId);
     const total = applications.length;
 
+    console.log('🔍 [ApplicationService] getUserApplications - applications from repository:', 
+      applications.map(app => ({ 
+        id: app.id, 
+        jobTitle: app.jobTitle, 
+        companyName: app.companyName 
+      }))
+    );
+
     return mapUserApplicationsResponse(applications, total);
   }
 
