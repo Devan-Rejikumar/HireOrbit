@@ -6,6 +6,7 @@ import { IApplicationService } from '../services/IApplicationService';
 import { ApplicationService } from '../services/ApplicationService';
 import { IEventService } from '../services/IEventService';
 import { KafkaEventService } from '../services/KafkaEventService';
+import { StatusUpdateService } from '../services/StatusUpdateService';
 import { ApplicationController } from '../controllers/ApplicationController';
 import {TYPES} from './types';
 
@@ -17,6 +18,7 @@ container.bind<PrismaClient>(TYPES.PrismaClient).toConstantValue(new PrismaClien
 container.bind<IApplicationRepository>(TYPES.IApplicationRepository).to(ApplicationRepository);
 container.bind<IApplicationService>(TYPES.IApplicationService).to(ApplicationService);
 container.bind<IEventService>(TYPES.IEventService).to(KafkaEventService);
+container.bind<StatusUpdateService>(TYPES.StatusUpdateService).to(StatusUpdateService);
 container.bind<ApplicationController>(TYPES.ApplicationController).to(ApplicationController);
 
 export { container };

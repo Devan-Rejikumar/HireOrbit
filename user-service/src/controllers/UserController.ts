@@ -292,6 +292,47 @@ export class UserController {
     }
   }
 
+  // Get user by ID (for other services to call)
+  async getUserById(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        res.status(400).json(
+          buildErrorResponse('User ID is required', 'Invalid request')
+        );
+        return;
+      }
+
+      const user = await this.userService.findById(id);
+      
+      if (!user) {
+        res.status(404).json(
+          buildErrorResponse('User not found', 'User does not exist')
+        );
+        return;
+      }
+
+      // Return basic user info (don't send password!)
+      const userData = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt
+      };
+
+      res.status(200).json(
+        buildSuccessResponse({ user: userData }, 'User retrieved successfully')
+      );
+    } catch (error) {
+      console.error('Error in getUserById:', error);
+      res.status(500).json(
+        buildErrorResponse('Internal server error', 'Failed to retrieve user')
+      );
+    }
+  }
 
   async logout(req: Request, res: Response): Promise<void> {
     try {

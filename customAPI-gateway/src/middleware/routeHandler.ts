@@ -30,13 +30,37 @@ const isAuthenticationRoute = (path:string): boolean =>{
 
 const isProtectedRoute = (path: string): boolean =>{
     const clean = cleanPath(path);
+    
+    // Check exact matches first
     const result = ROUTES.protected.some(route =>{
         if(clean === route){
             return true;
         }
         return false;
     })
-    return result;
+    
+    if (result) return true;
+    
+    // Check for dynamic application routes
+    // Pattern: /api/applications/{id}/status
+    if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/status$/)) {
+        console.log('✅ Matched application status update route:', clean);
+        return true;
+    }
+    
+    // Pattern: /api/applications/{applicationId}/resume/view
+    if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/resume\/view$/)) {
+        console.log('✅ Matched application resume view route:', clean);
+        return true;
+    }
+    
+    // Pattern: /api/applications/{applicationId}/resume/download
+    if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/resume\/download$/)) {
+        console.log('✅ Matched application resume download route:', clean);
+        return true;
+    }
+    
+    return false;
 }
 
 const isPublicRoute = (path: string): boolean =>{

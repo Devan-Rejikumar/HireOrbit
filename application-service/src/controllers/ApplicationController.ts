@@ -401,6 +401,14 @@ export class ApplicationController {
 
       const result = await this.applicationService.applyForJob(applicationData);
       
+      console.log('✅ [ApplicationController] Application created:', {
+        id: result.id,
+        userId: result.userId,
+        companyId: result.companyId,
+        jobId: result.jobId,
+        status: result.status
+      });
+      
       // Map to response DTO
       const responseData = mapApplicationToResponse(result);
       
@@ -598,25 +606,33 @@ export class ApplicationController {
 
   // 7. Update application status (Companies)
   async updateApplicationStatus(req: Request, res: Response): Promise<void> {
+    console.log('🎯 [ApplicationController] ========== UPDATE STATUS CALLED ==========');
+    console.log('🎯 [ApplicationController] Method:', req.method);
+    console.log('🎯 [ApplicationController] URL:', req.url);
+    console.log('🎯 [ApplicationController] Body:', req.body);
+    console.log('🎯 [ApplicationController] Headers:', {
+      'x-user-id': req.headers['x-user-id'],
+      'x-user-role': req.headers['x-user-role']
+    });
+    
     try {
-      console.log('🔍 [ApplicationController] updateApplicationStatus called');
-      console.log('🔍 [ApplicationController] req.user:', req.user);
-
       // Use req.user (preferred method) or fallback to headers
       const userId = req.user?.userId || req.headers['x-user-id'] as string;
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        console.log('❌ [ApplicationController] Unauthorized access');
+        console.log('❌ [ApplicationController] Unauthorized - userId:', userId, 'role:', userRole);
         res.status(401).json({ error: 'Unauthorized access' });
         return;
       }
 
       const { id } = req.params;
+      console.log('🎯 [ApplicationController] Application ID from params:', id);
       
       // Validate request body
       const validationResult = UpdateApplicationStatusSchema.safeParse(req.body);
       if (!validationResult.success) {
+        console.log('❌ [ApplicationController] Validation failed:', validationResult.error);
         res.status(ValidationStatusCode.VALIDATION_ERROR).json(
           buildErrorResponse('Validation failed', validationResult.error.message)
         );
@@ -624,20 +640,25 @@ export class ApplicationController {
       }
       
       const validatedData = validationResult.data;
+      console.log('✅ [ApplicationController] Validation passed, data:', validatedData);
       
-      console.log(`🔍 [ApplicationController] Updating application ${id} status to ${validatedData.status} by company ${userId}`);
-      
+      console.log(`🎯 [ApplicationController] Calling service.updateApplicationStatus...`);
       const result = await this.applicationService.updateApplicationStatus(id, validatedData, userId);
+      console.log('✅ [ApplicationController] Service returned result');
       
       // Map to response DTO
       const responseData = mapApplicationToResponse(result);
+      console.log('✅ [ApplicationController] Mapped to response, sending...');
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(responseData, 'Application status updated successfully')
       );
+      console.log('🎉 [ApplicationController] Response sent successfully!');
+      
     } catch (error: unknown) {
-      console.error('❌ [ApplicationController] Error in updateApplicationStatus:', error);
+      console.error('❌ [ApplicationController] CAUGHT ERROR:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ [ApplicationController] Error message:', errorMessage);
       res.status(HttpStatusCode.BAD_REQUEST).json(
         buildErrorResponse(errorMessage, 'Failed to update application status')
       );
@@ -824,7 +845,97 @@ export class ApplicationController {
     }
   }
 
-  // 12. Bulk update application status (Companies)
+  // 12. View applicant resume (Companies)
+  async viewResume(req: Request, res: Response): Promise<void> {
+    try {
+      console.log('👁️ [ApplicationController] viewResume called');
+      
+      const userId = req.user?.userId || req.headers['x-user-id'] as string;
+      const userRole = req.user?.role || req.headers['x-user-role'] as string;
+      
+      if (!userId || userRole !== 'company') {
+        console.log('❌ [ApplicationController] Unauthorized access');
+        res.status(401).json({ error: 'Unauthorized access' });
+        return;
+      }
+      
+      const { applicationId } = req.params;
+      console.log('👁️ [ApplicationController] Viewing resume for application:', applicationId);
+      
+      // Get application and verify company owns it
+      const application = await this.applicationService.getApplicationById(applicationId);
+      
+      if (application.companyId !== userId) {
+        console.log('❌ [ApplicationController] Access denied - wrong company');
+        res.status(403).json({ error: 'Access denied' });
+        return;
+      }
+      
+      if (!application.resumeUrl) {
+        console.log('❌ [ApplicationController] No resume found');
+        res.status(404).json({ error: 'No resume uploaded for this application' });
+        return;
+      }
+      
+      console.log('✅ [ApplicationController] Returning resume URL:', application.resumeUrl);
+      
+      // Just return the URL - let frontend handle it
+      res.status(200).json({ 
+        success: true,
+        data: { resumeUrl: application.resumeUrl }
+      });
+      
+    } catch (error) {
+      console.error('❌ [ApplicationController] Error viewing resume:', error);
+      res.status(500).json({ error: 'Failed to view resume' });
+    }
+  }
+
+  // 13. Download applicant resume (Companies)
+  async downloadResume(req: Request, res: Response): Promise<void> {
+    try {
+      console.log('📥 [ApplicationController] downloadResume called');
+      
+      const userId = req.user?.userId || req.headers['x-user-id'] as string;
+      const userRole = req.user?.role || req.headers['x-user-role'] as string;
+      
+      if (!userId || userRole !== 'company') {
+        console.log('❌ [ApplicationController] Unauthorized access');
+        res.status(401).json({ error: 'Unauthorized access' });
+        return;
+      }
+      
+      const { applicationId } = req.params;
+      console.log('📥 [ApplicationController] Downloading resume for application:', applicationId);
+      
+      // Get application and verify company owns it
+      const application = await this.applicationService.getApplicationById(applicationId);
+      
+      if (application.companyId !== userId) {
+        console.log('❌ [ApplicationController] Access denied - wrong company');
+        res.status(403).json({ error: 'Access denied' });
+        return;
+      }
+      
+      if (!application.resumeUrl) {
+        console.log('❌ [ApplicationController] No resume found');
+        res.status(404).json({ error: 'No resume uploaded for this application' });
+        return;
+      }
+      
+      console.log('✅ [ApplicationController] Redirecting to resume:', application.resumeUrl);
+      
+      // Redirect to Cloudinary URL with download flag
+      const downloadUrl = application.resumeUrl.replace('/upload/', '/upload/fl_attachment/');
+      res.redirect(downloadUrl);
+      
+    } catch (error) {
+      console.error('❌ [ApplicationController] Error downloading resume:', error);
+      res.status(500).json({ error: 'Failed to download resume' });
+    }
+  }
+
+  // 13. Bulk update application status (Companies)
   async bulkUpdateApplicationStatus(req: Request, res: Response): Promise<void> {
     try {
       console.log('🔍 [ApplicationController] bulkUpdateApplicationStatus called');

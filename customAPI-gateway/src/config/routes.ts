@@ -25,7 +25,9 @@ export const ROUTES = {
         '/api/jobs/delete',
         '/api/applications/create',
         '/api/applications/update',
-        '/api/applications/delete'
+        '/api/applications/delete',
+        '/api/applications/company/applications',
+        '/api/applications/company/statistics'
     ],
     
     public: [

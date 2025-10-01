@@ -23,6 +23,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 app.use('/api/applications/apply', upload.single('resume'));
 
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log(`📨 [APP-SERVICE] ${req.method} ${req.url} - Body:`, req.body);
+  next();
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy', 

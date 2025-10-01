@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { userServiceProxy, userServiceMultipartProxy } from './userService';
 import { companyServiceProxy } from './companyService';
 import { jobServiceProxy } from './jobService';
-import { applicationServiceProxy } from './applicationService';
+import { applicationServiceProxy, applicationServiceMultipartProxy } from './applicationService';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
   const path = req.originalUrl;
@@ -29,8 +29,16 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
     jobServiceProxy(req, res, next);
   } else if (path.startsWith('/api/applications')) {
     console.log('🔀 Routing to Application Service');
-    console.log('🔀 [LOAD BALANCER] About to call applicationServiceProxy...');
-    applicationServiceProxy(req, res, next);
+    
+    const contentType = req.headers['content-type'];
+    if (contentType && contentType.includes('multipart/form-data')) {
+      console.log('🔀 Using multipart proxy for file uploads (resume)');
+      applicationServiceMultipartProxy(req, res, next);
+    } else {
+      console.log('🔀 Using regular proxy for JSON requests');
+      applicationServiceProxy(req, res, next);
+    }
+    
   } else {
     console.log('🔀 Default routing to User Service');
     console.log('🔀 [LOAD BALANCER] About to call userServiceProxy (default)...');

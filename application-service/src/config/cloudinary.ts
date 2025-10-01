@@ -72,7 +72,9 @@ export const uploadToCloudinary = async (filePath: string, userId: string): Prom
     const result = await cloudinary.uploader.upload(filePath, {
       public_id: publicId,
       resource_type: 'raw',
-      folder: 'job-applications/resumes'
+      folder: 'job-applications/resumes',
+      type: 'upload', // Make it publicly accessible
+      access_mode: 'public' // Ensure public access
     });
     
     fs.unlinkSync(filePath);
