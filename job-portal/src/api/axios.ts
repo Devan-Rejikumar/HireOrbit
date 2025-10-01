@@ -8,16 +8,8 @@ const api = axios.create({
 // Request Interceptor: Content-Type and Logging
 api.interceptors.request.use(
   (config) => {
-    // Ensure correct Content-Type handling
-    if (config.data instanceof FormData) {
-      // Let the browser set multipart boundary; remove any preset header
-      if (config.headers) {
-        delete config.headers['Content-Type'];
-      }
-    } else {
-      // Default JSON Content-Type for non-FormData requests
-      config.headers = { ...(config.headers || {}), 'Content-Type': 'application/json' };
-    }
+    // Set JSON Content-Type for all requests
+    config.headers = { ...(config.headers || {}), 'Content-Type': 'application/json' };
     
     // Add Authorization header with JWT token from cookie
   const getTokenFromCookie = () => {
