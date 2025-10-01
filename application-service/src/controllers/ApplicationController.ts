@@ -371,10 +371,19 @@ export class ApplicationController {
 
       if (resumeFile) {
         try {
-          resumeUrl = await uploadToCloudinary(resumeFile.path, userId);
+          console.log('📤 [ApplicationController] Starting Cloudinary upload...');
+          
+          // Add timeout to prevent hanging
+          const uploadPromise = uploadToCloudinary(resumeFile.path, userId);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Upload timeout')), 10000)
+          );
+          
+          resumeUrl = await Promise.race([uploadPromise, timeoutPromise]) as string;
           console.log('✅ [ApplicationController] Resume uploaded to Cloudinary:', resumeUrl);
         } catch (uploadError) {
-          console.log('🔄 [ApplicationController] Falling back to local file...');
+          console.log('🔄 [ApplicationController] Cloudinary upload failed, using local file...');
+          console.log('🔄 [ApplicationController] Error:', uploadError);
           resumeUrl = `http://localhost:3004/uploads/${resumeFile.filename}`;
           console.log('📁 [ApplicationController] Using local file as fallback:', resumeUrl);
         }
