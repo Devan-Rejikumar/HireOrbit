@@ -27,7 +27,6 @@ export class UserService implements IUserService {
 
   async register(email: string,password: string,name: string,role: string = 'jobseeker'): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(email);
-    // if (existingUser) throw new Error('Email already in use');
     if(existingUser){
       if(existingUser.isVerified){
         return existingUser;
@@ -70,7 +69,7 @@ export class UserService implements IUserService {
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
-    console.log('🔄 UserService - Starting refresh token process');
+    console.log(' UserService - Starting refresh token process');
     try {
       console.log('UserService - Verifying refresh token');
       const refreshTokenPayload = this.jwtService.verifyRefreshToken(refreshToken);

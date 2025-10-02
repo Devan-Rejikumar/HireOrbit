@@ -121,7 +121,7 @@ export class UserRepository extends BaseRepository<User> implements IUserReposit
       data: { name }
     });
     
-    console.log('✅ UserRepository: updateUserName result:', JSON.stringify(result, null, 2));
+    console.log('UserRepository: updateUserName result:', JSON.stringify(result, null, 2));
     return result;
   }
 

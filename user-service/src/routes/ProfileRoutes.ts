@@ -77,39 +77,37 @@ router.post('/',(req, res) => profileController.createProfile(req, res));
 router.get('/',(req, res) => profileController.getProfile(req, res));
 
 router.put('/',(req, res, next) => {
-  console.log('🔍 [PROFILE-ROUTE] PUT /profile/ hit');
-  console.log('🔍 [PROFILE-ROUTE] Content-Type:', req.headers['content-type']);
-  console.log('🔍 [PROFILE-ROUTE] Request body keys:', Object.keys(req.body || {}));
+  console.log('PROFILE-ROUTE PUT /profile/ hit');
+  console.log('PROFILE-ROUTE Content-Type:', req.headers['content-type']);
+  console.log('PROFILE-ROUTE Request body keys:', Object.keys(req.body || {}));
   
   if (req.headers['content-type']?.includes('multipart/form-data')) {
-    console.log('🔍 [PROFILE-ROUTE] Processing multipart/form-data');
+    console.log('PROFILE-ROUTE Processing multipart/form-data');
     upload.single('profilePicture')(req, res, (err) => {
       if (err) {
-        console.error('❌ [PROFILE-ROUTE] Multer error:', err);
+        console.error('PROFILE-ROUTE Multer error:', err);
         return res.status(400).json({ error: err.message });
       }
       
-      console.log('🔍 [PROFILE-ROUTE] File received:', req.file ? 'YES' : 'NO');
+      console.log('PROFILE-ROUTE File received:', req.file ? 'YES' : 'NO');
       if (req.file) {
-        console.log('🔍 [PROFILE-ROUTE] File details:', {
+        console.log('PROFILE-ROUTE File details:', {
           fieldname: req.file.fieldname,
           originalname: req.file.originalname,
           mimetype: req.file.mimetype,
           size: req.file.size
         });
-        
-        // Convert uploaded file to base64 for Cloudinary
         const base64 = req.file.buffer.toString('base64');
         const dataURI = `data:${req.file.mimetype};base64,${base64}`;
         req.body.profilePicture = dataURI;
-        console.log('🔍 [PROFILE-ROUTE] Converted to base64 data URI, length:', dataURI.length);
+        console.log('PROFILE-ROUTE Converted to base64 data URI, length:', dataURI.length);
       }
       
-      console.log('🔍 [PROFILE-ROUTE] Final req.body keys:', Object.keys(req.body || {}));
+      console.log('PROFILE-ROUTE Final req.body keys:', Object.keys(req.body || {}));
       next();
     });
   } else {
-    console.log('🔍 [PROFILE-ROUTE] Processing as regular JSON');
+    console.log('PROFILE-ROUTE Processing as regular JSON');
     next();
   }
 }, (req, res) => profileController.updateProfile(req, res));

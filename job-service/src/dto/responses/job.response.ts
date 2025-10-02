@@ -3,6 +3,7 @@ export interface JobResponse {
   title: string;
   description: string;
   company: string;
+  companyId?: string;
   location: string;
   salary?: number;
   jobType: string;

@@ -157,26 +157,26 @@ export class CompanyController {
   async getMe(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const companyId = req.user?.companyId || req.headers['x-user-id'] as string;
-      console.log('🔍 [getMe] Company ID from request:', companyId);
+      console.log('getMe Company ID from request:', companyId);
       const email = req.user?.email || req.headers['x-user-email'] as string;
-      console.log('🔍 [getMe] Email from request:', email);
+      console.log('getMe Email from request:', email);
 
       if (!companyId) {
         res.status(401).json(buildErrorResponse('Company not authenticated','Authentication required'));
         return;
       }
 
-      console.log('�� [getMe] Fetching company profile for ID:', companyId);
+      console.log('getMe Fetching company profile for ID:', companyId);
       const company = await this.companyService.getCompanyProfile(companyId);
-      console.log('🔍 [getMe] Company found:', !!company);
+      console.log('getMe Company found:', !!company);
       
       if (!company) {
-        console.log('❌ [getMe] Company not found');
+        console.log('getMe Company not found');
         res.status(404).json(buildErrorResponse('Company not found','Company profile not found'));
         return;
       }
 
-      console.log('✅ [getMe] Returning company data');
+      console.log('getMe Returning company data');
       res.status(200).json(buildSuccessResponse({ id: company.id,companyName:company.companyName,email:company.email },'Company profile retrieved successfully'));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -271,13 +271,9 @@ export class CompanyController {
 
 async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    console.log('🔍 [COMPANY-CONTROLLER] Step 2 request body:', req.body);
-    console.log('🔍 [COMPANY-CONTROLLER] Step 2 headers:', req.headers);
-    console.log('🔍 [COMPANY-CONTROLLER] User from auth:', req.user);
-    
     const validationResult = CompanyStep2Schema.safeParse(req.body);
     if (!validationResult.success) {
-      console.log('❌ [COMPANY-CONTROLLER] Validation failed:', validationResult.error);
+      console.log('COMPANY-CONTROLLER Validation failed:', validationResult.error);
       res.status(ValidationStatusCode.VALIDATION_ERROR).json(
         buildErrorResponse('Validation failed', validationResult.error.message),
       );
@@ -287,25 +283,20 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
     const step2Data = validationResult.data;
   
     if (!companyId) {
-      console.log('❌ [COMPANY-CONTROLLER] No company ID in user context');
+      console.log('COMPANY-CONTROLLER No company ID in user context');
       res.status(401).json(
         buildErrorResponse('Company not authenticated', 'Authentication required'),
       );
       return;
     }
-
-    console.log('✅ [COMPANY-CONTROLLER] Company ID:', companyId);
-    console.log('✅ [COMPANY-CONTROLLER] Step 2 data:', step2Data);
-  
-    console.log('🔄 [COMPANY-CONTROLLER] Calling companyService.completeStep2...');
     const company = await this.companyService.completeStep2(companyId, step2Data);
-    console.log('✅ [COMPANY-CONTROLLER] Step 2 completed successfully for company:', company.id);
+    console.log('COMPANY-CONTROLLER Step 2 completed successfully for company:', company.id);
     res.status(CompanyStatusCode.STEP2_COMPLETED).json(
       buildSuccessResponse({ company }, 'Step 2 completed successfully'),
     );
   } catch (err) {
-    console.error('❌ [COMPANY-CONTROLLER] Step 2 completion error:', err);
-    console.error('❌ [COMPANY-CONTROLLER] Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    console.error('COMPANY-CONTROLLER Step 2 completion error:', err);
+    console.error('COMPANY-CONTROLLER Error stack:', err instanceof Error ? err.stack : 'No stack trace');
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
       buildErrorResponse(errorMessage, 'Step 2 completion failed'),
@@ -613,7 +604,7 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
       console.log('🔄 reapplyCompany - Company ID:', companyId);
       
       if (!companyId) {
-        console.log('❌ No company ID in headers');
+        console.log('No company ID in headers');
         res.status(AuthStatusCode.COMPANY_NOT_AUTHENTICATED).json(
           buildErrorResponse('Company not authenticated', 'Authentication required')
         );
@@ -621,13 +612,13 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
       }
 
       const result = await this.companyService.reapplyCompany(companyId);
-      console.log('✅ Reapplication successful:', result);
+      console.log(' Reapplication successful:', result);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Reapplication initiated successfully')
       );
     } catch (err) {
-      console.error('❌ Error in reapplyCompany:', err);
+      console.error(' Error in reapplyCompany:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       res.status(HttpStatusCode.BAD_REQUEST).json(
         buildErrorResponse(errorMessage, 'Reapplication failed')
@@ -641,7 +632,7 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
       console.log('🔍 getReapplyStatus - Company ID:', companyId);
       
       if (!companyId) {
-        console.log('❌ No company ID in headers');
+        console.log(' No company ID in headers');
         res.status(AuthStatusCode.COMPANY_NOT_AUTHENTICATED).json(
           buildErrorResponse('Company not authenticated', 'Authentication required')
         );
@@ -649,13 +640,13 @@ async completeStep2(req: AuthenticatedRequest, res: Response): Promise<void> {
       }
 
       const status = await this.companyService.getReapplyStatus(companyId);
-      console.log('✅ Reapply status retrieved:', status);
+      console.log(' Reapply status retrieved:', status);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(status, 'Reapply status retrieved successfully')
       );
     } catch (err) {
-      console.error('❌ Error in getReapplyStatus:', err);
+      console.error(' Error in getReapplyStatus:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse(errorMessage, 'Failed to get reapply status')

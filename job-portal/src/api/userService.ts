@@ -10,13 +10,19 @@ export interface ResumeResponse {
 
 export const userService = {
   uploadResume: async (file: File): Promise<ResumeResponse> => {
-    const formData = new FormData();
-    formData.append('resume', file);
+    // Convert file to base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
     
-    const response = await api.post<ResumeResponse>('/profile/resume', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const response = await api.post<ResumeResponse>('/profile/resume', {
+      resume: base64
     });
     return response.data;
   },
@@ -27,13 +33,19 @@ export const userService = {
   },
 
   updateResume: async (file: File): Promise<ResumeResponse> => {
-    const formData = new FormData();
-    formData.append('resume', file);
+    // Convert file to base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
     
-    const response = await api.put<ResumeResponse>('/profile/resume', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const response = await api.put<ResumeResponse>('/profile/resume', {
+      resume: base64
     });
     return response.data;
   },

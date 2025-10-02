@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ROUTES } from "@/config/routes";
 import { Authenticate } from "./auth";
 import { createProxy } from "@/proxy/loadBalancer"; 
-import path from "path";
+
 
 
 interface AuthRequest extends Request {
@@ -36,7 +36,25 @@ const isProtectedRoute = (path: string): boolean =>{
         }
         return false;
     })
-    return result;
+    
+    if (result) return true;
+
+    if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/status$/)) {
+        console.log(' Matched application status update route:', clean);
+        return true;
+    }
+
+    if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/resume\/view$/)) {
+        console.log(' Matched application resume view route:', clean);
+        return true;
+    }
+
+    if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/resume\/download$/)) {
+        console.log(' Matched application resume download route:', clean);
+        return true;
+    }
+    
+    return false;
 }
 
 const isPublicRoute = (path: string): boolean =>{
@@ -45,7 +63,6 @@ const isPublicRoute = (path: string): boolean =>{
         if(clean === route){
             return true;
         }
-        // Check for job details pattern: /api/jobs/{uuid}
         if(route === '/api/jobs' && clean.startsWith('/api/jobs/') && clean !== '/api/jobs'){
             return true;
         }

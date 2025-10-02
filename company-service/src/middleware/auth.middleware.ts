@@ -36,29 +36,29 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7); 
-      console.log('🔍 [COMPANY-AUTH-MIDDLEWARE] Token found in Authorization header');
+      console.log('COMPANY-AUTH-MIDDLEWARE Token found in Authorization header');
     } else if (req.cookies.adminAccessToken) {
       token = req.cookies.adminAccessToken;
-      console.log('🔍 [COMPANY-AUTH-MIDDLEWARE] Admin token found in cookies (fallback)');
+      console.log('COMPANY-AUTH-MIDDLEWARE Admin token found in cookies (fallback)');
     } else if (req.cookies.companyAccessToken) {
       token = req.cookies.companyAccessToken;
-      console.log('🔍 [COMPANY-AUTH-MIDDLEWARE] Company token found in cookies (fallback)');
+      console.log('COMPANY-AUTH-MIDDLEWARE Company token found in cookies (fallback)');
     }
     
     if (!token) {
-      console.log('❌ [COMPANY-AUTH-MIDDLEWARE] No access token found in Authorization header or cookies');
+      console.log('COMPANY-AUTH-MIDDLEWARE No access token found in Authorization header or cookies');
       res.status(HttpStatusCode.UNAUTHORIZED).json(buildErrorResponse('No token provided', 'Authentication required'));
       return;
     }
 
     const jwtSecret = process.env.JWT_SECRET || 'supersecret';
-    console.log('🔍 [COMPANY-AUTH-MIDDLEWARE] Token found, verifying...');
+    console.log('COMPANY-AUTH-MIDDLEWARE Token found, verifying...');
     const decoded = jwt.verify(token, jwtSecret) as CompanyTokenPayload;
     
-    console.log('✅ [COMPANY-AUTH-MIDDLEWARE] Token verified successfully:', decoded);
+    console.log('COMPANY-AUTH-MIDDLEWARE Token verified successfully:', decoded);
     
     if (decoded.role !== 'company' && decoded.role !== 'admin') {
-      console.log('❌ [COMPANY-AUTH-MIDDLEWARE] Invalid token type, expected company or admin, got:', decoded.role);
+      console.log('COMPANY-AUTH-MIDDLEWARE Invalid token type, expected company or admin, got:', decoded.role);
       res.status(HttpStatusCode.FORBIDDEN).json(buildErrorResponse('Invalid token type', 'Company or admin token required'));
       return;
     }
@@ -67,7 +67,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
     const companyId = decoded.companyId || decoded.userId;
 
     if (!userId) {
-      console.log('❌ [COMPANY-AUTH-MIDDLEWARE] No user ID found in token');
+      console.log('COMPANY-AUTH-MIDDLEWARE No user ID found in token');
       res.status(HttpStatusCode.UNAUTHORIZED).json(buildErrorResponse('User not authenticated', 'Authentication required'));
       return;
     }
@@ -79,7 +79,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
       userType: decoded.userType
     };
 
-    console.log('✅ [COMPANY-AUTH-MIDDLEWARE] User context set:', {
+    console.log('COMPANY-AUTH-MIDDLEWARE User context set:', {
       userId: userId,
       companyId: companyId,
       email: decoded.email,
@@ -90,7 +90,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
 
     next();
   } catch (error) {
-    console.error('❌ [COMPANY-AUTH-MIDDLEWARE] Token verification failed:', error);
+    console.error('COMPANY-AUTH-MIDDLEWARE Token verification failed:', error);
     res.status(HttpStatusCode.UNAUTHORIZED).json(buildErrorResponse('Invalid token', 'Authentication failed'));
   }
 };

@@ -30,12 +30,7 @@ export class CompanyService implements ICompanyService {
     @inject(TYPES.EmailService) private emailService: IEmailService,
     @inject(TYPES.RedisService) private redisService: RedisService,
   ) { }
-  async register(
-    email: string,
-    password: string,
-    companyName: string,
-    role: string = 'company',
-  ): Promise<Company> {
+  async register(email: string,password: string,companyName: string,role: string = 'company',): Promise<Company> {
     console.log('Service register paramsssssss:', email, password, companyName);
     const existingCompany = await this.companyRepository.findByEmail(email);
     if (existingCompany) throw new Error('Email already in use');
@@ -47,10 +42,7 @@ export class CompanyService implements ICompanyService {
     });
   }
 
-  async login(
-    email: string,
-    password: string,
-  ): Promise<{ company: Company; tokens: { accessToken: string; refreshToken: string } }> {
+  async login(email: string,password: string,): Promise<{ company: Company; tokens: { accessToken: string; refreshToken: string } }> {
     const company = await this.companyRepository.findByEmail(email);
     if (!company) throw new Error('Invalid credentials');
     const valid = await bcrypt.compare(password, company.password);
@@ -139,49 +131,40 @@ export class CompanyService implements ICompanyService {
     return company;
   }
 
-  async completeStep2(
-    companyId: string,
-    step2Data: CompanyRegistrationStep2,
-  ): Promise<Company> {
-    console.log('🔍 [COMPANY-SERVICE] completeStep2 - Company ID:', companyId);
-    console.log('🔍 [COMPANY-SERVICE] completeStep2 - Step 2 data:', step2Data);
-    
+  async completeStep2(companyId: string,step2Data: CompanyRegistrationStep2,): Promise<Company> {
+
     try {
-      // First check if company exists
-      console.log('🔍 [COMPANY-SERVICE] Checking if company exists...');
+      console.log('COMPANY-SERVICE Checking if company exists...');
       const existingCompany = await this.companyRepository.getCompanyProfile(companyId);
       if (!existingCompany) {
-        console.log('❌ [COMPANY-SERVICE] Company not found with ID:', companyId);
+        console.log('COMPANY-SERVICE Company not found with ID:', companyId);
         throw new Error('Company not found');
       }
-      console.log('✅ [COMPANY-SERVICE] Company found:', existingCompany.id);
+      console.log('COMPANY-SERVICE Company found:', existingCompany.id);
 
-      console.log('🔄 [COMPANY-SERVICE] Updating company profile...');
+      console.log('COMPANY-SERVICE Updating company profile...');
       const company = await this.companyRepository.updateCompanyProfile(
         companyId,
         step2Data,
       );
-      console.log('✅ [COMPANY-SERVICE] Company profile updated successfully');
+      console.log('COMPANY-SERVICE Company profile updated successfully');
 
-      console.log('🔄 [COMPANY-SERVICE] Updating profile step...');
+      console.log('COMPANY-SERVICEUpdating profile step...');
       const profileStep = await this.companyRepository.updateProfileStep(companyId, {
         companyDetailsCompleted: true,
         currentStep: 3,
       });
-      console.log('✅ [COMPANY-SERVICE] Profile step updated successfully:', profileStep);
+      console.log('COMPANY-SERVICE Profile step updated successfully:', profileStep);
 
       return company;
     } catch (error) {
-      console.error('❌ [COMPANY-SERVICE] Error in completeStep2 service:', error);
-      console.error('❌ [COMPANY-SERVICE] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('COMPANY-SERVICE Error in completeStep2 service:', error);
+      console.error('COMPANY-SERVICE Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   }
 
-  async completeStep3(
-    companyId: string,
-    step3Data: CompanyRegistrationStep3,
-  ): Promise<Company> {
+  async completeStep3(companyId: string,step3Data: CompanyRegistrationStep3,): Promise<Company> {
     const company = await this.companyRepository.updateCompanyProfile(
       companyId,
       step3Data,
@@ -204,10 +187,7 @@ export class CompanyService implements ICompanyService {
     return this.companyRepository.getCompanyProfile(companyId);
   }
 
-  async updateCompanyProfile(
-    companyId: string,
-    profileData: Partial<CompanyProfileData>,
-  ): Promise<Company> {
+  async updateCompanyProfile(companyId: string,profileData: Partial<CompanyProfileData>,): Promise<Company> {
     return this.companyRepository.updateCompanyProfile(companyId, profileData);
   }
 
@@ -215,10 +195,7 @@ export class CompanyService implements ICompanyService {
     return this.companyRepository.getProfileStep(companyId);
   }
 
-  async markStepCompleted(
-    companyId: string,
-    step: number,
-  ): Promise<CompanyProfileStep> {
+  async markStepCompleted(companyId: string,step: number,): Promise<CompanyProfileStep> {
     const updateData: Partial<CompanyProfileStepData> = {
       currentStep: step + 1,
     };
@@ -249,11 +226,7 @@ export class CompanyService implements ICompanyService {
     return this.companyRepository.approveCompany(companyId, adminId);
   }
 
-  async rejectCompany(
-    companyId: string,
-    reason: string,
-    adminId: string,
-  ): Promise<Company> {
+  async rejectCompany(companyId: string,reason: string,adminId: string,): Promise<Company> {
     const company = await this.companyRepository.getCompanyProfile(companyId);
     if (company) {
       await this.emailService.sendRejectionEmail(
@@ -301,16 +274,16 @@ export class CompanyService implements ICompanyService {
   }
 
   async reapplyCompany(companyId: string): Promise<{ company: Company; message: string }> {
-    console.log('🔄 Service reapplyCompany - Company ID:', companyId);
+    console.log(' Service reapplyCompany - Company ID:', companyId);
     
     const company = await this.companyRepository.getCompanyProfile(companyId);
     if (!company) {
-      console.log('❌ Company not found');
+      console.log(' Company not found');
       throw new Error('Company not found');
     }
 
     if (!company.rejectionReason || company.isVerified) {
-      console.log('❌ Company is not eligible for reapplication');
+      console.log('Company is not eligible for reapplication');
       throw new Error('Company is not eligible for reapplication');
     }
 
@@ -320,7 +293,7 @@ export class CompanyService implements ICompanyService {
       reviewedAt: null,
       reviewedBy: null,
     });
-    console.log('✅ Company profile reset successfully');
+    console.log(' Company profile reset successfully');
 
     const profileStep = await this.companyRepository.updateProfileStep(companyId, {
       basicInfoCompleted: true, 
@@ -328,7 +301,7 @@ export class CompanyService implements ICompanyService {
       contactInfoCompleted: false,
       currentStep: 2, 
     });
-    console.log('✅ Profile step reset successfully:', profileStep);
+    console.log(' Profile step reset successfully:', profileStep);
 
     return {
       company: updatedCompany,
@@ -337,11 +310,11 @@ export class CompanyService implements ICompanyService {
   }
 
   async getReapplyStatus(companyId: string): Promise<{ canReapply: boolean; rejectionReason?: string; lastReviewedAt?: Date }> {
-    console.log('🔍 Service getReapplyStatus - Company ID:', companyId);
+    console.log(' Service getReapplyStatus - Company ID:', companyId);
     
     const company = await this.companyRepository.getCompanyProfile(companyId);
     if (!company) {
-      console.log('❌ Company not found');
+      console.log(' Company not found');
       throw new Error('Company not found');
     }
 

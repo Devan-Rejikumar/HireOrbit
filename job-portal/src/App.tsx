@@ -75,7 +75,7 @@ function App() {
         <Route path="/company/jobs" element={<CompanyProtectedRoute><CompanyJobListing /></CompanyProtectedRoute>} />
         <Route path="/company/settings" element={<CompanyProtectedRoute><CompanySettings /></CompanyProtectedRoute>} />
         <Route path="/jobs/:id" element={<JobDetails />} />
-        <Route path="/company/applications" element={<CompanyApplications />} />
+        <Route path="/company/applications" element={<CompanyProtectedRoute><CompanyApplications /></CompanyProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

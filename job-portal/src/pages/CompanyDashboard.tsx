@@ -359,7 +359,7 @@ const CompanyDashboard = () => {
                 <Building2 className="h-5 w-5" />
                 Company Profile
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button onClick={() => navigate('/company/applications')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <User className="h-5 w-5" />
                 All Applicants
               </button>

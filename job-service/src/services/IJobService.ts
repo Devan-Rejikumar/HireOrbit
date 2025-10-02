@@ -1,4 +1,4 @@
-import { Job, JobApplication } from '@prisma/client';
+import { Job } from '@prisma/client';
 import { JobSearchFilters, } from '../types/job';
 
 export interface UpdateJobInput {
