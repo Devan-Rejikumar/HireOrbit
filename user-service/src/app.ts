@@ -12,7 +12,7 @@ app.use((req, res, next) => {
     req.headers['content-type'] = 'application/json';
     console.log('🔧 Fixed malformed Content-Type header');
   }
-  // Fix mixed content-type headers (application/json + multipart/form-data)
+
   if (req.headers['content-type']?.includes('application/json') && req.headers['content-type']?.includes('multipart/form-data')) {
     req.headers['content-type'] = 'application/json';
     console.log('🔧 Fixed mixed Content-Type header to application/json');
@@ -20,7 +20,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enhanced JSON parsing with better error handling
 app.use(express.json({ 
   limit: '20mb',
   verify: (req, res, buf, encoding) => {
@@ -34,8 +33,6 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(cookieParser());
-
-// Add request abort handling
 app.use((req, res, next) => {
   req.on('aborted', () => {
     console.log('Request aborted for:', req.url);
@@ -78,14 +75,12 @@ app.get('/test', (req, res) => {
   res.json({ message: 'Server is working!' });
 });
 
-// Add a catch-all route to see if requests are reaching the service
 app.use((req, res, next) => {
   console.log('[USER SERVICE] Middleware hit:', req.method, req.originalUrl);
   console.log('[USER SERVICE] Request body:', req.body);
   next();
 });
 
-// Global error handler
 app.use((err: any, req: any, res: any, next: any) => {
   console.log('Global error handler:', err.message);
   
@@ -107,7 +102,7 @@ app.use((err: any, req: any, res: any, next: any) => {
   
   if (err.code === 'ECONNRESET' || err.message.includes('request aborted')) {
     console.log('Request aborted or connection reset');
-    return; // Don't send response for aborted requests
+    return;
   }
   
   console.error('Unhandled error:', err);

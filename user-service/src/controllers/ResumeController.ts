@@ -22,7 +22,6 @@ export class ResumeController {
 
   async uploadResume(req: Request, res: Response): Promise<void> {
     try {
-      // Use the same pattern as ProfileController
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       
       if (!userId) {
@@ -31,8 +30,6 @@ export class ResumeController {
         );
         return;
       }
-
-      // Check if resume data is in the body (from API Gateway)
       if (!req.body || !req.body.resume) {
         res.status(HttpStatusCode.BAD_REQUEST).json(
           buildErrorResponse('No resume data provided', 'Resume file required')
@@ -41,17 +38,11 @@ export class ResumeController {
       }
 
       const resumeData = req.body.resume;
-      
-      // Check if it's base64 data URI
+ 
       if (typeof resumeData === 'string' && resumeData.startsWith('data:')) {
-        // Extract mime type and base64 data
         const [header, base64Data] = resumeData.split(',');
         const mimeType = header.split(':')[1].split(';')[0];
-        
-        // Convert base64 to buffer
         const buffer = Buffer.from(base64Data, 'base64');
-        
-        // Generate clean filename
         const extension = mimeType === 'application/pdf' ? 'pdf' : 'doc';
         const cleanFileName = `resume.${extension}`;
         
@@ -60,8 +51,6 @@ export class ResumeController {
           mimeType,
           size: buffer.length
         });
-        
-        // Upload to Cloudinary
         const result = await this.resumeService.uploadResume(
           userId,
           buffer,

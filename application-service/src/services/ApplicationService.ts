@@ -3,6 +3,7 @@ import { ApplicationStatus } from '@prisma/client';
 import { IApplicationService } from './IApplicationService';
 import { IApplicationRepository } from '../repositories/IApplicationRepository';
 import { IEventService } from './IEventService';
+import { StatusUpdateService } from './StatusUpdateService';
 import { 
   ApplicationResponse, 
   ApplicationDetailsResponse,
@@ -24,11 +25,36 @@ import {
 } from '../dto/mappers/application.mapper';
 import {TYPES} from '../config/types';
 
+interface UserApiResponse {
+  data?: {
+    user?: {
+      id?: string;
+      name?: string;
+      email?: string;
+      role?: string;
+      phone?: string;
+      profile?: unknown;
+    };
+  };
+}
+
+interface JobApiResponse {
+  data?: {
+    job?: {
+      title?: string;
+      company?: string;
+    };
+  };
+}
+
+
+
 @injectable()
 export class ApplicationService implements IApplicationService {
   constructor(
     @inject(TYPES.IApplicationRepository) private applicationRepository: IApplicationRepository,
-    @inject(TYPES.IEventService) private eventService: IEventService
+    @inject(TYPES.IEventService) private eventService: IEventService,
+    @inject(TYPES.StatusUpdateService) private statusUpdateService: StatusUpdateService
   ) {}
 
   async applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse> {
@@ -131,56 +157,90 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     return mapApplicationToResponse(updatedApplication);
   }
 
- 
   async getCompanyApplications(companyId: string): Promise<CompanyApplicationsResponse> {
-    const applications = await this.applicationRepository.findByCompanyIdWithRelations(companyId);
-    const stats = calculateApplicationStats(applications);
-    const externalDataMap = new Map();
-    applications.forEach(app => {
-      externalDataMap.set(app.id, {
-        jobTitle: 'Job Title',
-        companyName: 'Company Name',
-        userName: 'User Name',
-        userEmail: 'user@example.com'
-      });
-    });
+    try {
+      const allApplications = await this.applicationRepository.findByCompanyIdWithRelations(companyId);
+      console.log(`Total applications for company ${companyId}:`, allApplications.length);
+      const applications = allApplications.filter(app => app.status !== 'WITHDRAWN');
+      console.log(`Active applications (excluding WITHDRAWN):`, applications.length);
+      const stats = calculateApplicationStats(applications);
+      console.log(`Stats calculated:`, stats);
+    
+      const externalDataMap = new Map();
+      await Promise.all(
+        applications.map(async (app) => {
+          try {
+            const userRes = await fetch(`http://localhost:3000/api/users/${app.userId}`);
+            const userData = (userRes.ok ? await userRes.json() : {}) as UserApiResponse;
+            const jobRes = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
+            const jobData = (jobRes.ok ? await jobRes.json() : {}) as JobApiResponse;
+            
+            console.log(`Fetched data for ${app.id}:`, {
+              userName: userData.data?.user?.name,
+              jobTitle: jobData.data?.job?.title
+            });
+            externalDataMap.set(app.id, {
+              userName: userData.data?.user?.name || 'Unknown User',
+              userEmail: userData.data?.user?.email || 'Unknown Email',
+              userPhone: null,
+              userProfile: null,
+              jobTitle: jobData.data?.job?.title || 'Unknown Job',
+              companyName: jobData.data?.job?.company || 'Unknown Company'
+            });
+            
+          } catch (error) {
+            console.error(` Error for application ${app.id}:`, error);
+            externalDataMap.set(app.id, {
+              userName: `User Name`,
+              userEmail: `User Email`,
+              userPhone: null,
+              userProfile: null,
+              jobTitle: 'Unknown Job',
+              companyName: 'Unknown Company'
+            });
+          }
+        })
+      );
 
-    return mapCompanyApplicationsResponse(applications, externalDataMap, {
-      total: stats.total,
-      pending: stats.pending,
-      shortlisted: stats.shortlisted,
-      rejected: stats.rejected
-    });
+      return mapCompanyApplicationsResponse(applications, externalDataMap, {
+        total: stats.total,
+        pending: stats.pending,
+        shortlisted: stats.shortlisted,
+        rejected: stats.rejected
+      });
+    } catch (error) {
+      console.error('ApplicationService Error in getCompanyApplications:', error);
+      throw error;
+    }
   }
 
-  async updateApplicationStatus(
-    applicationId: string, 
-    data: UpdateApplicationStatusInput, 
-    changedBy: string
-  ): Promise<ApplicationDetailsResponse> {
+  async updateApplicationStatus(applicationId: string, data: UpdateApplicationStatusInput, changedBy: string): Promise<ApplicationDetailsResponse> {
+
     const existingApplication = await this.applicationRepository.findById(applicationId);
     if (!existingApplication) {
       throw new Error('Application not found');
     }
-
-
-    this.validateStatusTransition(existingApplication.status as ApplicationStatus, data.status as ApplicationStatus);
-
- 
+    this.statusUpdateService.validateOrThrow(
+      existingApplication.status as ApplicationStatus, 
+      data.status as ApplicationStatus
+    );
     const updatedApplication = await this.applicationRepository.updateStatus(applicationId, data, changedBy);
     const applicationWithRelations = await this.applicationRepository.findWithRelations(applicationId);
     if (!applicationWithRelations) {
       throw new Error('Application not found after update');
     }
-
-    await this.eventService.publish('application.status_updated', {
-      applicationId: updatedApplication.id,
-      oldStatus: existingApplication.status,
-      newStatus: updatedApplication.status,
-      changedBy,
-      reason: data.reason,
-      updatedAt: updatedApplication.updatedAt
-    });
+    try {
+      await this.eventService.publish('application.status_updated', {
+        applicationId: updatedApplication.id,
+        oldStatus: existingApplication.status,
+        newStatus: updatedApplication.status,
+        changedBy,
+        reason: data.reason,
+        updatedAt: updatedApplication.updatedAt
+      });
+    } catch (error) {
+      console.warn('Kafka event publish failed, continuing...', error);
+    }
 
     const externalData = {
       jobTitle: 'Job Title',
@@ -192,10 +252,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     return mapApplicationToDetailsResponse(applicationWithRelations, externalData);
   }
 
-  async addApplicationNote(
-    applicationId: string, 
-    data: AddApplicationNoteInput
-  ): Promise<ApplicationDetailsResponse> {
+  async addApplicationNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationDetailsResponse> {
     const application = await this.applicationRepository.findById(applicationId);
     if (!application) {
       throw new Error('Application not found');
@@ -322,29 +379,14 @@ async searchApplications(filters: {
     eligible: boolean;
     reason?: string;
   }> {
-const existingApplication = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
-if (existingApplication && existingApplication.status !== 'WITHDRAWN') {
-  return {
-    eligible: false,
-    reason: 'You have already applied for this job'
-  };
-}
+    const existingApplication = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
+    if (existingApplication && existingApplication.status !== 'WITHDRAWN') {
+      return {
+        eligible: false,
+        reason: 'You have already applied for this job'
+      };
+    }
 
     return { eligible: true };
-  }
-  private validateStatusTransition(currentStatus: ApplicationStatus, newStatus: ApplicationStatus): void {
-    const validTransitions: Record<ApplicationStatus, ApplicationStatus[]> = {
-      PENDING: ['REVIEWING', 'REJECTED', 'WITHDRAWN'],
-      REVIEWING: ['SHORTLISTED', 'REJECTED', 'PENDING'],
-      SHORTLISTED: ['ACCEPTED', 'REJECTED', 'REVIEWING'],
-      REJECTED: [], 
-      ACCEPTED: [], 
-      WITHDRAWN: [] 
-    };
-
-    const allowedStatuses = validTransitions[currentStatus];
-    if (!allowedStatuses.includes(newStatus)) {
-      throw new Error(`Cannot transition from ${currentStatus} to ${newStatus}`);
-    }
   }
 }

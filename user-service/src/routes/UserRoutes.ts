@@ -15,6 +15,7 @@ router.post('/generate-verification-otp', (req, res) => userController.generateV
 router.post('/verify-otp', (req, res) => userController.verifyOTP(req, res));
 router.post('/resend-otp', (req, res) => userController.resendOTP(req, res));
 router.get('/me', (req, res) => userController.getMe(req, res));
+router.get('/:id', (req, res) => userController.getUserById(req, res));
 router.post('/logout', (req, res) => userController.logout(req, res));
 router.post('/forgot-password', (req, res) => userController.forgotPassword(req, res));
 router.post('/verify-password-reset-otp',(req,res)=>userController.verifyPasswordResetOTP(req,res));

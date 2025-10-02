@@ -97,18 +97,23 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     try {
       setSubmitting(true);
       
-      // Create FormData for the complete application
-      const applicationFormData = new FormData();
-      applicationFormData.append('jobId', jobId);
-      applicationFormData.append('companyId', companyId);
-      applicationFormData.append('resume', formData.resume!);
-      applicationFormData.append('coverLetter', formData.coverLetter);
-      applicationFormData.append('expectedSalary', formData.expectedSalary);
-      applicationFormData.append('availability', formData.availability);
-      applicationFormData.append('experience', formData.experience);
+      // Convert file to base64
+      const resumeBase64 = await fileToBase64(formData.resume!);
+      
+      // Create JSON payload for the application
+      const applicationData = {
+        jobId,
+        companyId: companyId || companyName, // Use companyId if available, fallback to companyName
+        resumeBase64,
+        resumeFileName: formData.resume!.name,
+        coverLetter: formData.coverLetter,
+        expectedSalary: formData.expectedSalary,
+        availability: formData.availability,
+        experience: formData.experience,
+      };
 
       // Use the application service
-      const result: ApplicationResponse = await applicationService.applyForJob(applicationFormData);
+      const result: ApplicationResponse = await applicationService.applyForJob(applicationData);
       console.log('Application submitted successfully:', result);
       
       // Call the callback to notify parent component
@@ -129,6 +134,20 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Remove the data:type;base64, prefix to get just the base64 string
+        const base64 = reader.result as string;
+        resolve(base64.split(',')[1]);
+      };
+      reader.onerror = error => reject(error);
+    });
   };
 
   const handleClose = () => {

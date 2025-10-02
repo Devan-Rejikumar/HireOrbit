@@ -536,7 +536,7 @@ const JobDetails = () => {
           jobId={job.id}
           jobTitle={job.title}
           companyName={job.company}
-          companyId={job.companyId || job.company}
+          companyId={job.companyId}
           onApplicationSubmit={handleApplicationSubmit}
         />
       )}

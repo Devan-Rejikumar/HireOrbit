@@ -22,18 +22,17 @@ declare global {
 @injectable()
 export class JobController {
   constructor(@inject(TYPES.IJobService) private jobService: IJobService) {
-    console.log('🔍 JobController: Constructor called');
   }
 
 async createJob(req: Request, res: Response): Promise<void> {
   try {
-    console.log('🔍 [JobController] createJob called');
-    console.log('🔍 [JobController] Request body:', req.body);
-    console.log('�� [JobController] User from token:', req.user);
+    console.log('JobController createJob called');
+    console.log('JobController Request body:', req.body);
+    console.log('JobController User from token:', req.user);
     
     const validationResult = CreateJobSchema.safeParse(req.body);
     if (!validationResult.success) {
-      console.log('❌ [JobController] Validation failed:', validationResult.error);
+      console.log('JobController Validation failed:', validationResult.error);
       res.status(ValidationStatusCode.VALIDATION_ERROR).json(
         buildErrorResponse('Validation failed', validationResult.error.message),
       );
@@ -41,13 +40,13 @@ async createJob(req: Request, res: Response): Promise<void> {
     }
     
     const jobData = validationResult.data;
-    console.log('✅ [JobController] Validation passed, jobData:', jobData);
+    console.log('JobController Validation passed, jobData:', jobData);
   
     const companyId = req.user?.userId; 
-    console.log('�� [JobController] companyId from token:', companyId);
+    console.log('JobController companyId from token:', companyId);
  
     const applicationDeadlineDate = new Date(jobData.applicationDeadline);
-    console.log('�� [JobController] applicationDeadline converted:', applicationDeadlineDate);
+    console.log('JobController applicationDeadline converted:', applicationDeadlineDate);
     
     const completeJobData = {
       ...jobData,
@@ -55,16 +54,16 @@ async createJob(req: Request, res: Response): Promise<void> {
       applicationDeadline: applicationDeadlineDate,
     };
     
-    console.log('🔍 [JobController] Complete job data:', completeJobData);
+    console.log('JobController Complete job data:', completeJobData);
     
     const job = await this.jobService.createJob(completeJobData);
-    console.log('✅ [JobController] Job created successfully:', job);
+    console.log('JobController Job created successfully:', job);
     
     res.status(JobStatusCode.JOB_CREATED).json(
       buildSuccessResponse({ job }, 'Job created successfully'),
     );
   } catch (err) {
-    console.error('❌ [JobController] Error in createJob:', err);
+    console.error('JobController Error in createJob:', err);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
       buildErrorResponse('Job creation failed', errorMessage),
@@ -74,15 +73,15 @@ async createJob(req: Request, res: Response): Promise<void> {
 
   async getAllJobs(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [JobController] getAllJobs called');
+      console.log('JobController getAllJobs called');
       const jobs = await this.jobService.getAllJobs();
-      console.log('✅ [JobController] Jobs retrieved:', jobs.length, 'jobs');
+      console.log('JobController Jobs retrieved:', jobs.length, 'jobs');
       
       res.status(JobStatusCode.JOBS_RETRIEVED).json(
         buildSuccessResponse({ jobs }, 'Jobs retrieved successfully'),
       );
     } catch (err) {
-      console.error('❌ [JobController] Error in getAllJobs:', err);
+      console.error('JobController Error in getAllJobs:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse('Failed to retrieve jobs', errorMessage),
@@ -123,29 +122,29 @@ async createJob(req: Request, res: Response): Promise<void> {
 
   async searchJobs(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [JobController] searchJobs called with query params:', req.query);
+      console.log('JobController searchJobs called with query params:', req.query);
       
       const searchValidation = JobSearchSchema.safeParse(req.query);
       
       if (!searchValidation.success) {
-        console.log('❌ [JobController] Validation failed:', searchValidation.error);
+        console.log('JobController Validation failed:', searchValidation.error);
         res.status(ValidationStatusCode.VALIDATION_ERROR).json(
           buildErrorResponse('Validation failed', searchValidation.error.message),
         );
         return;
       }
       
-      console.log('✅ [JobController] Validation passed, search filters:', searchValidation.data);
+      console.log('JobController Validation passed, search filters:', searchValidation.data);
       
       const jobs = await this.jobService.searchJobs(searchValidation.data);
       
-      console.log('✅ [JobController] Search completed, found', jobs.length, 'jobs');
+      console.log('JobController Search completed, found', jobs.length, 'jobs');
       
       res.status(JobStatusCode.JOBS_SEARCHED).json(
         buildSuccessResponse({ jobs }, 'Jobs searched successfully'),
       );
     } catch (err) {
-      console.error('❌ [JobController] Error in searchJobs:', err);
+      console.error('JobController Error in searchJobs:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse('Job search failed', errorMessage),
@@ -179,18 +178,18 @@ async createJob(req: Request, res: Response): Promise<void> {
 
   async getJobCountByCompany(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [JobController] getJobCountByCompany called');
+      console.log('JobController getJobCountByCompany called');
       const { companyId } = req.params;
-      console.log('🔍 [JobController] companyId:', companyId);
+      console.log('JobController companyId:', companyId);
       
       const count = await this.jobService.getJobCountByCompany(companyId);
-      console.log('✅ [JobController] count:', count);
+      console.log('JobController count:', count);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse({ count }, 'Job count retrieved successfully'),
       );
     } catch (err) {
-      console.error('❌ [JobController] Error in getJobCountByCompany:', err);
+      console.error('JobController Error in getJobCountByCompany:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse('Failed to get job count', errorMessage),

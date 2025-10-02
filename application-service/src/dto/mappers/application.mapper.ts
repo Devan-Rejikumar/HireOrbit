@@ -1,14 +1,5 @@
-
-
 import { Application, ApplicationStatusHistory, ApplicationNotes } from '@prisma/client';
-import { 
-  ApplicationResponse, 
-  ApplicationDetailsResponse, 
-  ApplicationStatusHistoryResponse, 
-  ApplicationNoteResponse,
-  CompanyApplicationsResponse,
-  UserApplicationsResponse 
-} from '../responses/application.response';
+import { ApplicationResponse, ApplicationDetailsResponse, ApplicationStatusHistoryResponse, ApplicationNoteResponse,CompanyApplicationsResponse,UserApplicationsResponse } from '../responses/application.response';
 
 
 export function mapApplicationToResponse(application: Application): ApplicationResponse {
@@ -29,9 +20,7 @@ export function mapApplicationToResponse(application: Application): ApplicationR
 }
 
 
-export function mapApplicationStatusHistoryToResponse(
-  statusHistory: ApplicationStatusHistory
-): ApplicationStatusHistoryResponse {
+export function mapApplicationStatusHistoryToResponse(statusHistory: ApplicationStatusHistory): ApplicationStatusHistoryResponse {
   return {
     id: statusHistory.id,
     status: statusHistory.status,
@@ -41,9 +30,7 @@ export function mapApplicationStatusHistoryToResponse(
   };
 }
 
-export function mapApplicationNoteToResponse(
-  note: ApplicationNotes
-): ApplicationNoteResponse {
+export function mapApplicationNoteToResponse(note: ApplicationNotes): ApplicationNoteResponse {
   return {
     id: note.id,
     note: note.note,
@@ -53,10 +40,7 @@ export function mapApplicationNoteToResponse(
 }
 
 
-export function mapApplicationToDetailsResponse(
-  application: Application & {
-    statusHistory: ApplicationStatusHistory[];
-    notes: ApplicationNotes[];
+export function mapApplicationToDetailsResponse(application: Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];
   },
   externalData: {
     jobTitle: string;
@@ -82,10 +66,7 @@ export function mapApplicationsToResponse(applications: Application[]): Applicat
 }
 
 
-export function mapApplicationsToDetailsResponse(
-  applications: Array<Application & {
-    statusHistory: ApplicationStatusHistory[];
-    notes: ApplicationNotes[];
+export function mapApplicationsToDetailsResponse(applications: Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];
   }>,
   externalDataMap: Map<string, {
     jobTitle: string;
@@ -104,10 +85,7 @@ export function mapApplicationsToDetailsResponse(
 }
 
 
-export function mapCompanyApplicationsResponse(
-  applications: Array<Application & {
-    statusHistory: ApplicationStatusHistory[];
-    notes: ApplicationNotes[];
+export function mapCompanyApplicationsResponse(applications: Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];
   }>,
   externalDataMap: Map<string, {
     jobTitle: string;

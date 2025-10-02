@@ -11,7 +11,7 @@ const app = express();
 
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.url}`);
-  console.log(`[App] Body parsing middleware - Content-Type: ${req.headers['content-type']}`);
+  console.log(`App Body parsing middleware - Content-Type: ${req.headers['content-type']}`);
   next();
 });
 
@@ -24,10 +24,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
-  console.log(`[App] ${req.method} ${req.url}`);
-  console.log(`[App] Request body:`, req.body);
-  console.log(`[App] Content-Type: ${req.headers['content-type']}`);
-  console.log(`[App] All headers:`, req.headers);
+  console.log(`App ${req.method} ${req.url}`);
+  console.log(`App Request body:`, req.body);
+  console.log(`App Content-Type: ${req.headers['content-type']}`);
+  console.log(`App All headers:`, req.headers);
   next();
 });
 

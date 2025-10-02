@@ -3,5 +3,6 @@ export const TYPES = {
     IApplicationRepository: Symbol.for('IApplicationRepository'),
     ApplicationController: Symbol.for('ApplicationController'),
     PrismaClient: Symbol.for('PrismaClient'),
-    IEventService: Symbol.for('IEventService')  
+    IEventService: Symbol.for('IEventService'),
+    StatusUpdateService: Symbol.for('StatusUpdateService')
 };

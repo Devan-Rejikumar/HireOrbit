@@ -5,6 +5,7 @@ export function mapJobToResponse(job: {
   title: string;
   description: string;
   company: string;
+  companyId?: string;
   location: string;
   salary?: number;
   jobType: string;
@@ -22,6 +23,7 @@ export function mapJobToResponse(job: {
     title: job.title,
     description: job.description,
     company: job.company,
+    companyId: job.companyId,
     location: job.location,
     salary: job.salary,
     jobType: job.jobType,

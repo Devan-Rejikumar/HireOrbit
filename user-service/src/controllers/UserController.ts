@@ -96,39 +96,32 @@ export class UserController {
       }
     }
   }
-  async login(req: Request, res: Response): Promise<void> {
-    console.log('🔐 [USER CONTROLLER] Login method started');
-    console.log('🔐 [USER CONTROLLER] Request body:', req.body);
-    console.log('🔐 [USER CONTROLLER] Request headers:', req.headers);
-    
+  async login(req: Request, res: Response): Promise<void> {  
     try {
-      console.log('🔐 [USER CONTROLLER] About to validate request body...');
+      console.log('USER CONTROLLER About to validate request body...');
       const validationResult = UserLoginSchema.safeParse(req.body);
       if(!validationResult.success){
-        console.log('🔐 [USER CONTROLLER] Validation failed:', validationResult.error.message);
+        console.log('USER CONTROLLER Validation failed:', validationResult.error.message);
         res.status(ValidationStatusCode.VALIDATION_ERROR).json(buildErrorResponse('Validation failed', validationResult.error.message));
         return;
       }
-      console.log('🔐 [USER CONTROLLER] Validation successful');
+      console.log('USER CONTROLLER Validation successful');
 
       const { email, password } = validationResult.data; 
-      console.log('🔐 [USER CONTROLLER] Login attempt for email:', email);
-      console.log('🔐 [USER CONTROLLER] About to call userService.login...');
-      
+      console.log('USER CONTROLLER Login attempt for email:', email);
       const result = await this.userService.login(email, password);
-      console.log('🔐 [USER CONTROLLER] userService.login completed successfully');
-      console.log('🔐 [USER CONTROLLER] Login successful for user:', result.user.email);
+      console.log('USER CONTROLLERLogin successful for user:', result.user.email);
 
-      console.log('🔐 [USER CONTROLLER] About to set cookies...');
+      console.log('USER CONTROLLER About to set cookies...');
       res.cookie('accessToken', result.tokens.accessToken, {
-        httpOnly: false,  // ← CHANGED: Allow JavaScript to read
+        httpOnly: false,  
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         domain: 'localhost',
         path: '/',
         maxAge: 2*60*60*1000
       });
-      console.log('🔐 [USER CONTROLLER] accessToken cookie set');
+      console.log('USER CONTROLLER accessToken cookie set');
       
       res.cookie('refreshToken', result.tokens.refreshToken, {
         httpOnly: true,
@@ -138,18 +131,16 @@ export class UserController {
         path: '/',        
         maxAge: 7 * 24 * 60 * 60 * 1000 
       });
-      console.log('🔐 [USER CONTROLLER] refreshToken cookie set');
-      
-      console.log('🔐 [USER CONTROLLER] About to send response...');
+      console.log('USER CONTROLLER refreshToken cookie set');
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(result.user,'Login successful'));
-      console.log('🔐 [USER CONTROLLER] Response sent successfully');
+      console.log('USER CONTROLLER Response sent successfully');
     } catch (err) {
-      console.log('🔐 [USER CONTROLLER] Error in login:', err);
+      console.log('USER CONTROLLER Error in login:', err);
       const errorMessage = err instanceof Error ? err.message : 'unknown error';
-      console.log('🔐 [USER CONTROLLER] Sending error response:', errorMessage);
+      console.log('USER CONTROLLER Sending error response:', errorMessage);
       res.status(HttpStatusCode.BAD_REQUEST).json(buildErrorResponse(errorMessage,'Login failed'));
     }
-    console.log('🔐 [USER CONTROLLER] Login method completed');
+    console.log('USER CONTROLLER Login method completed');
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
@@ -161,7 +152,7 @@ export class UserController {
     }
     const result = await this.userService.refreshToken(refreshToken);
     res.cookie('accessToken', result.accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 1000 
@@ -256,53 +247,76 @@ export class UserController {
 
   async getMe(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [USER-CONTROLLER] getMe called');
-      console.log('🔍 [USER-CONTROLLER] req.user:', req.user);
-      console.log('🔍 [USER-CONTROLLER] Headers (fallback):', {
-        'x-user-id': req.headers['x-user-id'],
-        'x-user-email': req.headers['x-user-email'],
-        'x-user-role': req.headers['x-user-role']
-      });
-
-      // Use req.user (preferred method) or fallback to headers
       const userId = req.user?.userId || req.headers['x-user-id'] as string;
       const userEmail = req.user?.email || req.headers['x-user-email'] as string;
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId) {
-        console.log('❌ [USER-CONTROLLER] No user ID found');
+        console.log('USER-CONTROLLER No user ID found');
         res.status(401).json({ error: 'User not authenticated' });
         return;
       }
 
-      console.log('✅ [USER-CONTROLLER] User context:', { userId, userEmail, userRole });
+      console.log('USER-CONTROLLER User context:', { userId, userEmail, userRole });
 
       const user = await this.userService.findById(userId);
       if (!user) {
-        console.log('❌ [USER-CONTROLLER] User not found in database');
         res.status(404).json({ error: 'User not found' });
         return;
       }
 
-      console.log('✅ [USER-CONTROLLER] User found:', user);
+      console.log('USER-CONTROLLER User found:', user);
       res.status(200).json(user);
     } catch (error) {
-      console.error('❌ [USER-CONTROLLER] Error in getMe:', error);
+      console.error('USER-CONTROLLER Error in getMe:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
+  async getUserById(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      
+      if (!id) {
+        res.status(400).json(
+          buildErrorResponse('User ID is required', 'Invalid request')
+        );
+        return;
+      }
 
+      const user = await this.userService.findById(id);
+      
+      if (!user) {
+        res.status(404).json(
+          buildErrorResponse('User not found', 'User does not exist')
+        );
+        return;
+      }
+      const userData = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt
+      };
+
+      res.status(200).json(
+        buildSuccessResponse({ user: userData }, 'User retrieved successfully')
+      );
+    } catch (error) {
+      console.error('Error in getUserById:', error);
+      res.status(500).json(
+        buildErrorResponse('Internal server error', 'Failed to retrieve user')
+      );
+    }
+  }
 
   async logout(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [USER-CONTROLLER] logout called');
-      console.log('🔍 [USER-CONTROLLER] req.user:', req.user);
-      
-      // Use req.user (preferred method) or fallback to headers
       const userId = req.user?.userId || req.headers['x-user-id'] as string;
       
       if (!userId) {
-        console.log('❌ [USER-CONTROLLER] No user ID found for logout');
+        console.log('USER-CONTROLLER No user ID found for logout');
         res.status(401).json({ error: 'User not authenticated' });
         return;
       }
@@ -404,27 +418,25 @@ export class UserController {
         );
         return;
       }
-      
-      // Use req.user (preferred method) or fallback to headers
       const userId = req.user?.userId || req.headers['x-user-id'] as string;
       const { name } = validationResult.data;
     
       if (!userId) {
-        console.log('❌ [USER-CONTROLLER] No user ID found for updateName');
+        console.log('USER-CONTROLLER No user ID found for updateName');
         res.status(401).json(
           buildErrorResponse('User not authenticated', 'Authentication required')
         );
         return;
       }
     
-      console.log('✅ [USER-CONTROLLER] Updating name for user:', userId);
+      console.log('USER-CONTROLLER Updating name for user:', userId);
       const updatedUser = await this.userService.updateUserName(userId, name);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse({ user: updatedUser }, 'Name updated successfully')
       );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('❌ [USER-CONTROLLER] Error in updateName:', err);
+      console.error('USER-CONTROLLER Error in updateName:', err);
       res.status(HttpStatusCode.BAD_REQUEST).json(
         buildErrorResponse(errorMessage, 'Name update failed')
       );
@@ -498,7 +510,7 @@ async changePassword(req: Request, res: Response): Promise<void> {
     }
 
     const { currentPassword, newPassword } = validationResult.data;
-    const userId = req.user!.userId; // Use userId instead of id
+    const userId = req.user!.userId; 
 
     await this.userService.changePassword(userId, currentPassword, newPassword);
     

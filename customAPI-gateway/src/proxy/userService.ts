@@ -1,7 +1,7 @@
 import proxy from 'express-http-proxy';
 export const userServiceProxy = proxy('http://localhost:3000', {
   proxyReqPathResolver: (req) => {
-    console.log('🔀 [USER PROXY] JSON request to:', req.originalUrl);
+    console.log('USER PROXY JSON request to:', req.originalUrl);
     return req.originalUrl;
   },
   
@@ -26,7 +26,7 @@ export const userServiceProxy = proxy('http://localhost:3000', {
   },
   
   userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-    console.log('✅ [USER PROXY] JSON response:', proxyRes.statusCode);
+    console.log('USER PROXY JSON response:', proxyRes.statusCode);
     return proxyResData;
   }
 });

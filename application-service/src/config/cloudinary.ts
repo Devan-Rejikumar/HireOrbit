@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import dotenv from 'dotenv';
 
 
@@ -23,22 +22,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadDir = 'uploads';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const userId = req.headers['x-user-id'] as string || 'unknown';
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    cb(null, `resume_${userId}_${timestamp}${ext}`);
-  }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedMimes = [
@@ -63,19 +47,19 @@ export const upload = multer({
   fileFilter: fileFilter,
 });
 
-export const uploadToCloudinary = async (filePath: string, userId: string): Promise<string> => {
+export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: string, userId: string): Promise<string> => {
   try {
     const timestamp = Date.now();
-    const ext = path.extname(filePath);
+    const ext = path.extname(originalName);
     const publicId = `job-applications/resumes/resume_${userId}_${timestamp}${ext}`;
     
-    const result = await cloudinary.uploader.upload(filePath, {
+    const result = await cloudinary.uploader.upload(`data:application/octet-stream;base64,${fileBuffer.toString('base64')}`, {
       public_id: publicId,
       resource_type: 'raw',
-      folder: 'job-applications/resumes'
+      folder: 'job-applications/resumes',
+      type: 'upload', 
+      access_mode: 'public' 
     });
-    
-    fs.unlinkSync(filePath);
     
     return result.secure_url;
   } catch (error) {

@@ -78,7 +78,7 @@ export class AchievementRepository implements IAchievementRepository {
   }
 
   async deleteAchievement(userId: string, achievementId: string): Promise<void> {
-    console.log('🔍 [ACHIEVEMENT-REPO] Finding profile for user:', userId);
+    console.log('ACHIEVEMENT-REPO Finding profile for user:', userId);
     
     const profile = await prisma.userProfile.findUnique({
       where: { userId }
@@ -88,62 +88,39 @@ export class AchievementRepository implements IAchievementRepository {
       throw new Error('User profile not found');
     }
 
-    console.log('🔍 [ACHIEVEMENT-REPO] Profile found, achievements:', profile.achievements);
+    console.log('ACHIEVEMENT-REPO Profile found, achievements:', profile.achievements);
 
     const achievements = profile.achievements && typeof profile.achievements === 'string'
       ? JSON.parse(profile.achievements) as Achievement[]
       : [];
-    
-    console.log('🔍 [ACHIEVEMENT-REPO] Parsed achievements:', achievements);
-    console.log('🔍 [ACHIEVEMENT-REPO] Looking for achievement ID:', achievementId);
-    
-    console.log('🔍 [ACHIEVEMENT-REPO] Filtering out achievement ID:', achievementId, 'Type:', typeof achievementId);
-    console.log('🔍 [ACHIEVEMENT-REPO] Available achievement IDs for filtering:', achievements.map(a => ({ id: a.id, type: typeof a.id })));
-    
     const filteredAchievements = achievements.filter(achievement => {
       const shouldKeep = achievement.id !== achievementId;
-      console.log('🔍 [ACHIEVEMENT-REPO] Filter check:', achievement.id, '!==', achievementId, 'Keep:', shouldKeep);
       return shouldKeep;
     });
-    console.log('🔍 [ACHIEVEMENT-REPO] Filtered achievements:', filteredAchievements);
 
     await prisma.userProfile.update({
       where: { userId },
       data: { achievements: JSON.stringify(filteredAchievements) }
     });
-    
-    console.log('✅ [ACHIEVEMENT-REPO] Achievement deleted successfully');
   }
 
-  async getAchievementById(userId: string, achievementId: string): Promise<Achievement | null> {
-    console.log('🔍 [ACHIEVEMENT-REPO] getAchievementById - User ID:', userId, 'Achievement ID:', achievementId);
-    
+  async getAchievementById(userId: string, achievementId: string): Promise<Achievement | null> {  
     const profile = await prisma.userProfile.findUnique({
       where: { userId }
     });
 
     if (!profile) {
-      console.log('❌ [ACHIEVEMENT-REPO] Profile not found');
       return null;
     }
 
-    console.log('🔍 [ACHIEVEMENT-REPO] Profile found, achievements:', profile.achievements);
 
     const achievements = profile.achievements && typeof profile.achievements === 'string'
       ? JSON.parse(profile.achievements) as Achievement[]
       : [];
     
-    console.log('🔍 [ACHIEVEMENT-REPO] Parsed achievements:', achievements);
-    
-    console.log('🔍 [ACHIEVEMENT-REPO] Looking for achievement ID:', achievementId, 'Type:', typeof achievementId);
-    console.log('🔍 [ACHIEVEMENT-REPO] Available achievement IDs:', achievements.map(a => ({ id: a.id, type: typeof a.id })));
-    
     const foundAchievement = achievements.find(achievement => {
-      console.log('🔍 [ACHIEVEMENT-REPO] Comparing:', achievement.id, '===', achievementId, 'Result:', achievement.id === achievementId);
       return achievement.id === achievementId;
-    });
-    console.log('🔍 [ACHIEVEMENT-REPO] Found achievement:', foundAchievement);
-    
+    });  
     return foundAchievement || null;
   }
 }

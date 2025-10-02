@@ -8,9 +8,7 @@ import { UpdateJobInput } from '../services/IJobService';
 export class JobRepository implements IJobRepository {
   private readonly prisma = new PrismaClient();
 
-  async createJob(
-    jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>,
-  ): Promise<Job> {
+  async createJob(jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>,): Promise<Job> {
     return this.prisma.job.create({
       data: jobData,
     });
@@ -23,18 +21,14 @@ export class JobRepository implements IJobRepository {
   }
 
   async getAllJobs(): Promise<Job[]> {
-    console.log('🔍 [JobRepository] getAllJobs called');
     const results = await this.prisma.job.findMany({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     });
-    console.log('🔍 [JobRepository] Total jobs in database:', results.length);
-    console.log('🔍 [JobRepository] Job titles:', results.map(job => job.title));
     return results;
   }
 
   async searchJobs(filters: JobSearchFilters): Promise<Job[]> {
-    console.log('🔍 [JobRepository] searchJobs called with filters:', filters);
     const skip = ((filters.page || 1) - 1) * (filters.limit || 10);
     const take = filters.limit || 10;
     const orderBy: Prisma.JobOrderByWithRelationInput = {};
@@ -43,7 +37,6 @@ export class JobRepository implements IJobRepository {
     const searchTerm = filters.title || filters.query;
     if (searchTerm) {
       whereClause.title = { contains: searchTerm, mode: 'insensitive' };
-      console.log('🔍 [JobRepository] Searching for title containing:', searchTerm);
     }
     if (filters.company) {
       whereClause.company = { contains: filters.company, mode: 'insensitive' };
@@ -74,18 +67,13 @@ export class JobRepository implements IJobRepository {
       }
     }
 
-    console.log('🔍 [JobRepository] Where clause:', JSON.stringify(whereClause, null, 2));
     
     const results = await this.prisma.job.findMany({
       where: whereClause,
       orderBy,
       skip,
       take,
-    });
-    
-    console.log('🔍 [JobRepository] Search results count:', results.length);
-    console.log('🔍 [JobRepository] Search results:', results.map(job => ({ id: job.id, title: job.title, company: job.company })));
-    
+    });  
     return results;
   }
 
@@ -115,7 +103,6 @@ export class JobRepository implements IJobRepository {
     const count = await this.prisma.job.count({
       where: { company: companyId, isActive: true },
     });
-    console.log('🔍 JobRepository: count =', count);
     return count;
   }
 

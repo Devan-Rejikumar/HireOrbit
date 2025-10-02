@@ -1,11 +1,5 @@
 import { Company, CompanyProfileStep } from '@prisma/client';
-import { 
-  CompanyProfileData, 
-  CompanyProfileStepData,
-  CompanyRegistrationStep1,
-  CompanyRegistrationStep2,
-  CompanyRegistrationStep3,
-} from '../types/company';
+import { CompanyProfileData, CompanyProfileStepData,CompanyRegistrationStep1,CompanyRegistrationStep2,CompanyRegistrationStep3,} from '../types/company';
 
 export interface ICompanyService{
     register(email:string,password:string,companyName:string):Promise<Company>;

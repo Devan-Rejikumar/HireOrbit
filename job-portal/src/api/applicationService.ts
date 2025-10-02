@@ -42,12 +42,12 @@ export interface ApplicationResponse {
 }
 
 export const applicationService = {
-  applyForJob: async (applicationData: FormData): Promise<ApplicationResponse> => {
+  applyForJob: async (applicationData: any): Promise<ApplicationResponse> => {
     console.log('🔍 [ApplicationService] Sending application with axios');
     
     const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
         ...getAuthHeaders()
       }
     });
