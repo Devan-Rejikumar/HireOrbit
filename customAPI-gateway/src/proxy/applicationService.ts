@@ -1,6 +1,4 @@
 import proxy from 'express-http-proxy';
-
-// Regular JSON proxy
 export const applicationServiceProxy = proxy('http://localhost:3004', {
   proxyReqPathResolver: (req) => {
     console.log('🔀 [APPLICATION-PROXY] JSON request to:', req.originalUrl);
@@ -34,18 +32,17 @@ export const applicationServiceProxy = proxy('http://localhost:3004', {
   },
   
   userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-    console.log('✅ [APPLICATION-PROXY] JSON response:', proxyRes.statusCode);
+    console.log('APPLICATION-PROXY JSON response:', proxyRes.statusCode);
     return proxyResData;
   }
 });
 
-// Multipart proxy for file uploads
 export const applicationServiceMultipartProxy = proxy('http://localhost:3004', {
   proxyReqPathResolver: (req) => {
-    console.log('🔀 [APPLICATION-MULTIPART-PROXY] File upload request to:', req.originalUrl);
+    console.log('APPLICATION-MULTIPART-PROXY File upload request to:', req.originalUrl);
     return req.originalUrl;
   },
-  parseReqBody: false, // Don't parse body - let multer handle it
+  parseReqBody: false, 
   
   proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
     if (srcReq.headers['x-user-id']) {
@@ -64,7 +61,7 @@ export const applicationServiceMultipartProxy = proxy('http://localhost:3004', {
       proxyReqOpts.headers['Cookie'] = srcReq.headers.cookie;
     }
     
-    console.log('🔀 [APPLICATION-MULTIPART-PROXY] Forwarding headers:', {
+    console.log('APPLICATION-MULTIPART-PROXY Forwarding headers:', {
       'x-user-id': srcReq.headers['x-user-id'],
       'x-user-role': srcReq.headers['x-user-role']
     });
@@ -73,12 +70,12 @@ export const applicationServiceMultipartProxy = proxy('http://localhost:3004', {
   },
   
   userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-    console.log('✅ [APPLICATION-MULTIPART-PROXY] Upload response:', proxyRes.statusCode);
+    console.log('APPLICATION-MULTIPART-PROXY Upload response:', proxyRes.statusCode);
     return proxyResData;
   },
   
   proxyErrorHandler: (err, res, next) => {
-    console.error('❌ [APPLICATION-MULTIPART-PROXY] Proxy error:', err);
+    console.error('APPLICATION-MULTIPART-PROXY Proxy error:', err);
     res.status(500).json({
       success: false,
       error: 'Application service unavailable',

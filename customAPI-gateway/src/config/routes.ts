@@ -31,8 +31,7 @@ export const ROUTES = {
     ],
     
     public: [
-        // Job listing routes (should be public for browsing)
-        '/api/jobs', // This covers /api/jobs and /api/jobs/{id} via pattern matching
+        '/api/jobs', 
         '/api/jobs/list',
         '/api/jobs/search',
         '/api/jobs/details',
@@ -40,7 +39,6 @@ export const ROUTES = {
         '/api/jobs/company',
         '/api/company/list',
         '/api/company/details',
-        // OTP and password reset routes (should be public)
         '/api/users/generate-otp',
         '/api/users/verify-otp',
         '/api/users/resend-otp',

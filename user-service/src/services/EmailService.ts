@@ -15,7 +15,7 @@ export class EmailService {
 
 
   async sendOTP(email: string, otp: number): Promise<void> {
-    console.log(`🔍 [EmailService] sendOTP called with email: ${email}, otp: ${otp}`);
+    console.log(`EmailService sendOTP called with email: ${email}, otp: ${otp}`);
     
     try {
       console.log(` OTP Code for ${email}: ${otp}`);

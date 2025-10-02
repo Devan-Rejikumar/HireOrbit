@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ROUTES } from "@/config/routes";
 import { Authenticate } from "./auth";
 import { createProxy } from "@/proxy/loadBalancer"; 
-import path from "path";
+
 
 
 interface AuthRequest extends Request {
@@ -30,8 +30,6 @@ const isAuthenticationRoute = (path:string): boolean =>{
 
 const isProtectedRoute = (path: string): boolean =>{
     const clean = cleanPath(path);
-    
-    // Check exact matches first
     const result = ROUTES.protected.some(route =>{
         if(clean === route){
             return true;
@@ -40,23 +38,19 @@ const isProtectedRoute = (path: string): boolean =>{
     })
     
     if (result) return true;
-    
-    // Check for dynamic application routes
-    // Pattern: /api/applications/{id}/status
+
     if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/status$/)) {
-        console.log('✅ Matched application status update route:', clean);
+        console.log(' Matched application status update route:', clean);
         return true;
     }
-    
-    // Pattern: /api/applications/{applicationId}/resume/view
+
     if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/resume\/view$/)) {
-        console.log('✅ Matched application resume view route:', clean);
+        console.log(' Matched application resume view route:', clean);
         return true;
     }
-    
-    // Pattern: /api/applications/{applicationId}/resume/download
+
     if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/resume\/download$/)) {
-        console.log('✅ Matched application resume download route:', clean);
+        console.log(' Matched application resume download route:', clean);
         return true;
     }
     
@@ -69,7 +63,6 @@ const isPublicRoute = (path: string): boolean =>{
         if(clean === route){
             return true;
         }
-        // Check for job details pattern: /api/jobs/{uuid}
         if(route === '/api/jobs' && clean.startsWith('/api/jobs/') && clean !== '/api/jobs'){
             return true;
         }

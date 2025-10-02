@@ -2,7 +2,7 @@ import proxy from 'express-http-proxy';
 
 export const jobServiceProxy = proxy('http://localhost:3002', {
   proxyReqPathResolver: (req) => {
-    console.log('🔀 [JOB PROXY] JSON request to:', req.originalUrl);
+    console.log('JOB PROXY JSON request to:', req.originalUrl);
     return req.originalUrl;
   },
   
@@ -27,7 +27,7 @@ export const jobServiceProxy = proxy('http://localhost:3002', {
   },
   
   userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-    console.log('✅ [JOB PROXY] JSON response:', proxyRes.statusCode);
+    console.log('JOB PROXY JSON response:', proxyRes.statusCode);
     return proxyResData;
   },
   

@@ -105,8 +105,8 @@ export class AchievementController {
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       const { achievementId } = req.params;
       
-      console.log('🗑️ [DELETE-ACHIEVEMENT] User ID:', userId);
-      console.log('🗑️ [DELETE-ACHIEVEMENT] Achievement ID:', achievementId);
+      console.log('DELETE-ACHIEVEMENT User ID:', userId);
+      console.log('DELETE-ACHIEVEMENT Achievement ID:', achievementId);
       
       if (!userId) {
         res.status(HttpStatusCode.UNAUTHORIZED).json(
@@ -124,12 +124,12 @@ export class AchievementController {
 
       await this.achievementService.deleteAchievement(userId, achievementId);
       
-      console.log('✅ [DELETE-ACHIEVEMENT] Achievement deleted successfully');
+      console.log('DELETE-ACHIEVEMENT Achievement deleted successfully');
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(null, 'Achievement deleted successfully')
       );
     } catch (error) {
-      console.error('❌ [DELETE-ACHIEVEMENT] Error deleting achievement:', error);
+      console.error('DELETE-ACHIEVEMENT Error deleting achievement:', error);
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse(error instanceof Error ? error.message : 'Failed to delete achievement', 'INTERNAL_SERVER_ERROR')
       );

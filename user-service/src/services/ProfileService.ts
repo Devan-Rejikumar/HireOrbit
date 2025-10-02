@@ -28,25 +28,22 @@ export class ProfileService implements IProfileService {
     return this.profileRepository.getUserProfile(userId);
   }
 
-  async updateProfile(
-    userId: string,
-    profileData: Partial<ProfileData>
-  ): Promise<UserProfile> {
-    console.log('🔍 ProfileService: updateProfile called with userId:', userId);
-    console.log(' ProfileService: profileData:', JSON.stringify(profileData, null, 2));
+  async updateProfile(userId: string,profileData: Partial<ProfileData>): Promise<UserProfile> {
+    console.log(' ProfileService: updateProfile called with userId:', userId);
+
     
     const existingProfile = await this.profileRepository.getUserProfile(userId);
     console.log(' ProfileService: existingProfile:', existingProfile ? 'EXISTS' : 'NOT FOUND');
     
     if (!existingProfile) {
-      console.log('🔍 ProfileService: No existing profile found, creating new one');
-      // Create a new profile instead of throwing an error
+      console.log(' ProfileService: No existing profile found, creating new one');
+
       return this.profileRepository.createProfile(userId, profileData);
     }
 
-    console.log('🔍 ProfileService: Updating existing profile');
+    console.log(' ProfileService: Updating existing profile');
     const result = await this.profileRepository.updateUserProfile(userId, profileData);
-    console.log('✅ ProfileService: Profile updated successfully');
+    console.log(' ProfileService: Profile updated successfully');
     return result;
   }
 

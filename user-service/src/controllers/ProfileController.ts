@@ -103,18 +103,14 @@ export class ProfileController {
         res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'User not authenticated' });
         return;
       }
-      
-      console.log('�� ProfileController: updateProfile called');
-      console.log('🔍 ProfileController: Request body:', JSON.stringify(req.body, null, 2));
-      console.log(' ProfileController: User ID:', userId);
 
       if (req.body?.name && typeof req.body.name === 'string') {
-        console.log('🔍 Updating User name:', req.body.name);
+        console.log(' Updating User name:', req.body.name);
         try {
           await this.userService.updateUserName(userId, req.body.name);
-          console.log('✅ User name updated successfully');
+          console.log(' User name updated successfully');
         } catch (error) {
-          console.error('❌ Error updating user name:', error);
+          console.error(' Error updating user name:', error);
           res.status(HttpStatusCode.BAD_REQUEST).json(
             buildErrorResponse('Failed to update user name', 'Name update failed')
           );
@@ -123,7 +119,7 @@ export class ProfileController {
       }
       const existingProfile = await this.profileService.getProfile(userId);
       if (!existingProfile) {
-        console.log('🔍 No existing profile found, creating new one');
+        console.log(' No existing profile found, creating new one');
         await this.profileService.createProfile(userId, {});
       }
 
@@ -135,16 +131,13 @@ export class ProfileController {
         skills: req.body?.skills || undefined,
         profilePicture: req.body?.profilePicture || undefined
       };
-      console.log('🔍 [ProfileController] Checking for profile picture...');
-      console.log('🔍 [ProfileController] req.body.profilePicture exists:', !!req.body?.profilePicture);
-      console.log('🔍 [ProfileController] profilePicture type:', typeof req.body?.profilePicture);
       if (req.body?.profilePicture) {
-        console.log('🔍 [ProfileController] profilePicture starts with data:image/:', req.body.profilePicture.startsWith('data:image/'));
-        console.log('🔍 [ProfileController] profilePicture length:', req.body.profilePicture.length);
+        console.log('ProfileController profilePicture starts with data:image/:', req.body.profilePicture.startsWith('data:image/'));
+        console.log('ProfileController profilePicture length:', req.body.profilePicture.length);
       }
       
       if (req.body?.profilePicture && typeof req.body.profilePicture === 'string' && req.body.profilePicture.startsWith('data:image/')) {
-        console.log('🔍 [ProfileController] Processing profile picture upload to Cloudinary...');
+        console.log('ProfileController Processing profile picture upload to Cloudinary...');
         try {
           const result = await cloudinary.uploader.upload(req.body.profilePicture, {
             folder: 'user-profiles',
@@ -155,19 +148,18 @@ export class ProfileController {
             resource_type: 'image'
           });
           profileData.profilePicture = result.secure_url;
-          console.log('✅ [ProfileController] Cloudinary upload successful:', result.secure_url);
+          console.log('ProfileController Cloudinary upload successful:', result.secure_url);
         } catch (cloudinaryError) {
-          console.error('❌ [ProfileController] Cloudinary upload error:', cloudinaryError);
+          console.error('ProfileController Cloudinary upload error:', cloudinaryError);
           res.status(500).json(
             buildErrorResponse('Failed to upload image to Cloudinary', 'Image upload failed')
           );
           return;
         }
       } else {
-        console.log('🔍 [ProfileController] No valid profile picture data found');
+        console.log('ProfileController No valid profile picture data found');
       }
 
-      // Clean undefined values
       const cleanedProfileData = Object.entries(profileData).reduce((acc, [key, value]) => {
         if (value !== undefined) {
           acc[key] = value;
@@ -175,23 +167,16 @@ export class ProfileController {
         return acc;
       }, {} as Record<string, unknown>);
 
-      console.log('🔍 ProfileController: Cleaned profile data:', JSON.stringify(cleanedProfileData, null, 2));
-
-      // Validate profile data
       const validationResult = UpdateProfileSchema.safeParse(cleanedProfileData);
       if (!validationResult.success) {
-        console.log('❌ Validation failed:', validationResult.error);
+        console.log(' Validation failed:', validationResult.error);
         res.status(ValidationStatusCode.VALIDATION_ERROR).json(
           buildErrorResponse('Validation failed', validationResult.error.message)
         );
         return;
       }
-
-      console.log(' ProfileController: Validated profile data:', JSON.stringify(validationResult.data, null, 2));
-
-      // Update profile
       const updatedProfile = await this.profileService.updateProfile(userId, validationResult.data);
-      console.log('✅ Profile updated successfully:', JSON.stringify(updatedProfile, null, 2));
+      console.log(' Profile updated successfully:', JSON.stringify(updatedProfile, null, 2));
       
       res.status(HttpStatusCode.OK).json({ 
         success: true,
@@ -199,7 +184,7 @@ export class ProfileController {
         message: 'Profile updated successfully'
       });
     } catch (error: unknown) {
-      console.error('❌ ProfileController error:', error);
+      console.error(' ProfileController error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       if (errorMessage === 'Profile not found') {
@@ -254,8 +239,6 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
     const completionPercentage = this.calculateCompletionPercentage(fullProfile);
 
-    console.log('🔍 ProfileController - userData from database:', userData);
-    console.log('🔍 ProfileController - userData.isVerified:', userData?.isVerified);
     
     const responseData = {
       profile: fullProfile,
@@ -267,10 +250,7 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
       },
       completionPercentage,
     };
-    
-    console.log('🔍 ProfileController - Final response data:', responseData);
-    console.log('🔍 ProfileController - Final user.isVerified:', responseData.user.isVerified);
-    
+
     res.status(HttpStatusCode.OK).json(responseData);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -286,7 +266,6 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
   let score = 0;
   let maxScore = 0;
 
-  // Tier 1: Essential Profile (40% weight - 16 points)
   const essentialFields = [
     { field: 'headline', weight: 4, required: true },
     { field: 'about', weight: 4, required: true },
@@ -302,39 +281,27 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
     maxScore += weight;
   });
 
-  // Tier 2: Professional Profile (40% weight - 24 points)
-  // Skills (8 points) - requires at least 3 skills
   if (profile.skills && Array.isArray(profile.skills) && profile.skills.length >= 3) {
     score += 8;
   }
   maxScore += 8;
 
-  // Experience (8 points) - requires at least 1 experience
   if (profile.experience && Array.isArray(profile.experience) && profile.experience.length >= 1) {
     score += 8;
   }
   maxScore += 8;
-
-  // Education (8 points) - requires at least 1 education
   if (profile.education && Array.isArray(profile.education) && profile.education.length >= 1) {
     score += 8;
   }
   maxScore += 8;
-
-  // Tier 3: Complete Profile (20% weight - 10 points)
-  // Resume (4 points)
   if (profile.resume && profile.resume.trim().length > 0) {
     score += 4;
   }
   maxScore += 4;
-
-  // Profile Picture (2 points)
   if (profile.profilePicture && profile.profilePicture.trim().length > 0) {
     score += 2;
   }
   maxScore += 2;
-
-  // Certifications (2 points) - requires at least 1 certification
   if (profile.certifications) {
     try {
       const certifications = typeof profile.certifications === 'string' 
@@ -344,12 +311,11 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
         score += 2;
       }
     } catch (error) {
-      // If parsing fails, treat as no certifications
+      console.error('Errorrrr')
     }
   }
   maxScore += 2;
 
-  // Achievements (2 points) - requires at least 1 achievement
   if (profile.achievements) {
     try {
       const achievements = typeof profile.achievements === 'string' 
@@ -359,7 +325,7 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
         score += 2;
       }
     } catch (error) {
-      // If parsing fails, treat as no achievements
+      console.error('Errorrrr No acheivements')
     }
   }
   maxScore += 2;
@@ -370,18 +336,12 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
   async addExperience(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [ProfileController] addExperience called');
-      console.log('🔍 [ProfileController] req.user:', (req as RequestWithUser).user);
-      console.log('🔍 [ProfileController] req.headers:', req.headers);
-      console.log('🔍 [ProfileController] x-user-id header:', req.headers['x-user-id']);
-      
-      // Try to get userId from req.user first (preferred method), then fallback to headers
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       
-      console.log('🔍 [ProfileController] Extracted userId:', userId);
+      console.log('ProfileController Extracted userId:', userId);
       
       if (!userId) {
-        console.log('❌ [ProfileController] No userId found');
+        console.log('ProfileController No userId found');
         res.status(HttpStatusCode.UNAUTHORIZED).json(
           buildErrorResponse('User not authenticated')
         );
@@ -417,7 +377,6 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
   async updateExperience(req: Request, res: Response): Promise<void> {
     try {
-      // Try to get userId from req.user first (preferred method), then fallback to headers
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       const experienceId = req.params.id;
       
@@ -444,11 +403,7 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
       }
   
       const experienceData = validationResult.data;
-      const updatedExperience = await this.profileService.updateExperience(
-        userId,
-        experienceId,
-        experienceData
-      );
+      const updatedExperience = await this.profileService.updateExperience(userId,experienceId,experienceData);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse({ experience: updatedExperience }, 'Experience updated successfully')
       );
@@ -472,7 +427,6 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
   async deleteExperience(req: Request, res: Response): Promise<void> {
     try {
-      // Try to get userId from req.user first (preferred method), then fallback to headers
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       const experienceId = req.params.id;
 
@@ -504,18 +458,12 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
   async addEducation(req: Request, res: Response): Promise<void> {
     try {
-      console.log('�� [ProfileController] addEducation called');
-      console.log('🔍 [ProfileController] req.user:', (req as RequestWithUser).user);
-      console.log('🔍 [ProfileController] req.headers:', req.headers);
-      console.log('🔍 [ProfileController] x-user-id header:', req.headers['x-user-id']);
-      
-      // Try to get userId from req.user first (preferred method), then fallback to headers
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       
-      console.log('🔍 [ProfileController] Extracted userId:', userId);
+      console.log('ProfileController Extracted userId:', userId);
       
       if (!userId) {
-        console.log('❌ [ProfileController] No userId found');
+        console.log('ProfileController No userId found');
         res.status(HttpStatusCode.UNAUTHORIZED).json(
           buildErrorResponse('User not authenticated')
         );
@@ -551,7 +499,6 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
   async updateEducation(req: Request, res: Response): Promise<void> {
     try {
-      // Try to get userId from req.user first (preferred method), then fallback to headers
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       const educationId = req.params.id;
       
@@ -606,7 +553,6 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
 
   async deleteEducation(req: Request, res: Response): Promise<void> {
     try {
-      // Try to get userId from req.user first (preferred method), then fallback to headers
       const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
       const educationId = req.params.id;
 

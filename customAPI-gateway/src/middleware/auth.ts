@@ -10,14 +10,11 @@ interface AuthRequest extends Request {
 
 export const Authenticate = (req: AuthRequest,res: Response,next: NextFunction): void => {
   let token: string | undefined;
-  
-  // Try to get token from Authorization header first
   const authHeader = req.headers.authorization;
   if (authHeader) {
     token = authHeader.split(' ')[1];
   }
   
-  // If no token in header, try to get from cookies
   if (!token && req.headers.cookie) {
     const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
       const [key, value] = cookie.trim().split('=');

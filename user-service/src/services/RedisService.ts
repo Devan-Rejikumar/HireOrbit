@@ -20,7 +20,7 @@ export class RedisService {
     });
 
     this.redis.on('connect', () => {
-      console.log('✅ Connected to Redis');
+      console.log(' Connected to Redis');
     });
   }
 
@@ -138,59 +138,32 @@ export class RedisService {
     await this.redis.del(key);
   }
 
-  // async storeRefreshToken(
-  //   userId: string,
-  //   tokenId: string,
-  //   refreshToken: string,
-  //   expiresIn: number = 604800
-  // ): Promise<void> {
-  //   const key = `refresh_token:${userId}:${tokenId}`;
-  //   await this.redis.setex(key, expiresIn, refreshToken);
-  //   console.log(
-  //     `[Redis] Stored refresh token for ${userId}, expires in ${expiresIn}s`
-  //   );
-  // }
-
   async storeRefreshToken(userId: string, tokenId: string, refreshToken: string, expiresIn: number = 604800): Promise<void> {
   const key = `refresh_token:${userId}:${tokenId}`;
-  console.log('💾 RedisService - Storing refresh token:', { userId, tokenId, key });
+  console.log(' RedisService - Storing refresh token:', { userId, tokenId, key });
   
   try {
     await this.redis.setex(key, expiresIn, refreshToken);
-    console.log('✅ RedisService - Token stored successfully');
+    console.log(' RedisService - Token stored successfully');
   } catch (error) {
-    console.error('❌ RedisService - Failed to store token:', error);
+    console.error(' RedisService - Failed to store token:', error);
     throw error;
   }
 }
 
-  // async getRefreshToken(
-  //   userId: string,
-  //   tokenId: string
-  // ): Promise<string | null> {
-  //   const key = `refresh_token:${userId}:${tokenId}`;
-  //   const token = await this.redis.get(key);
-  //   console.log(
-  //     `[Redis] Retrieved refresh token for ${userId}: ${
-  //       token ? 'FOUND' : 'NOT FOUND'
-  //     }`
-  //   );
-  //   return token;
-  // }
-
   async getRefreshToken(userId: string, tokenId: string): Promise<string | null> {
   const key = `refresh_token:${userId}:${tokenId}`;
-  console.log('🔍 RedisService - Getting refresh token:', { userId, tokenId, key });
+  console.log(' RedisService - Getting refresh token:', { userId, tokenId, key });
   
   try {
     const token = await this.redis.get(key);
-    console.log('📦 RedisService - Get result:', {
+    console.log(' RedisService - Get result:', {
       key,
       found: !!token
     });
     return token;
   } catch (error) {
-    console.error('❌ RedisService - Redis error:', error);
+    console.error(' RedisService - Redis error:', error);
     throw error;
   }
 }

@@ -2,7 +2,7 @@ import proxy from 'express-http-proxy';
 
 export const companyServiceProxy = proxy('http://localhost:3001', {
   proxyReqPathResolver: (req) => {
-    console.log('🔀 [COMPANY PROXY] JSON request to:', req.originalUrl);
+    console.log('COMPANY PROXY JSON request to:', req.originalUrl);
     return req.originalUrl;
   },
   
@@ -27,7 +27,7 @@ export const companyServiceProxy = proxy('http://localhost:3001', {
   },
   
   userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-    console.log('✅ [COMPANY PROXY] JSON response:', proxyRes.statusCode);
+    console.log('COMPANY PROXY JSON response:', proxyRes.statusCode);
     return proxyResData;
   }
 });

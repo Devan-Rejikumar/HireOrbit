@@ -160,34 +160,25 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   async getCompanyApplications(companyId: string): Promise<CompanyApplicationsResponse> {
     try {
       const allApplications = await this.applicationRepository.findByCompanyIdWithRelations(companyId);
-      console.log(`📊 Total applications for company ${companyId}:`, allApplications.length);
-      
-      // Filter out WITHDRAWN applications (user-initiated withdrawals)
+      console.log(`Total applications for company ${companyId}:`, allApplications.length);
       const applications = allApplications.filter(app => app.status !== 'WITHDRAWN');
-      console.log(`✅ Active applications (excluding WITHDRAWN):`, applications.length);
-      console.log(`📋 Application statuses:`, applications.map(a => ({ id: a.id.substring(0,8), status: a.status })));
-      
+      console.log(`Active applications (excluding WITHDRAWN):`, applications.length);
       const stats = calculateApplicationStats(applications);
-      console.log(`📊 Stats calculated:`, stats);
+      console.log(`Stats calculated:`, stats);
     
       const externalDataMap = new Map();
       await Promise.all(
         applications.map(async (app) => {
           try {
-            // Call User Service to get user details
             const userRes = await fetch(`http://localhost:3000/api/users/${app.userId}`);
             const userData = (userRes.ok ? await userRes.json() : {}) as UserApiResponse;
-            
-            // Call Job Service to get job details
             const jobRes = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
             const jobData = (jobRes.ok ? await jobRes.json() : {}) as JobApiResponse;
             
-            console.log(`✅ Fetched data for ${app.id}:`, {
+            console.log(`Fetched data for ${app.id}:`, {
               userName: userData.data?.user?.name,
               jobTitle: jobData.data?.job?.title
             });
-            
-            // Store real user and job data
             externalDataMap.set(app.id, {
               userName: userData.data?.user?.name || 'Unknown User',
               userEmail: userData.data?.user?.email || 'Unknown Email',
@@ -198,10 +189,10 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
             });
             
           } catch (error) {
-            console.error(`❌ Error for application ${app.id}:`, error);
+            console.error(` Error for application ${app.id}:`, error);
             externalDataMap.set(app.id, {
-              userName: `User ${app.userId.substring(0, 8)}`,
-              userEmail: `user-${app.userId.substring(0, 8)}@example.com`,
+              userName: `User Name`,
+              userEmail: `User Email`,
               userPhone: null,
               userProfile: null,
               jobTitle: 'Unknown Job',
@@ -218,36 +209,26 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
         rejected: stats.rejected
       });
     } catch (error) {
-      console.error('❌ [ApplicationService] Error in getCompanyApplications:', error);
+      console.error('ApplicationService Error in getCompanyApplications:', error);
       throw error;
     }
   }
 
-  async updateApplicationStatus(
-    applicationId: string, 
-    data: UpdateApplicationStatusInput, 
-    changedBy: string
-  ): Promise<ApplicationDetailsResponse> {
-    // Get existing application
+  async updateApplicationStatus(applicationId: string, data: UpdateApplicationStatusInput, changedBy: string): Promise<ApplicationDetailsResponse> {
+
     const existingApplication = await this.applicationRepository.findById(applicationId);
     if (!existingApplication) {
       throw new Error('Application not found');
     }
-
-    // Use StatusUpdateService for validation (SOLID - Dependency Inversion)
     this.statusUpdateService.validateOrThrow(
       existingApplication.status as ApplicationStatus, 
       data.status as ApplicationStatus
     );
- 
-    // Update in database
     const updatedApplication = await this.applicationRepository.updateStatus(applicationId, data, changedBy);
     const applicationWithRelations = await this.applicationRepository.findWithRelations(applicationId);
     if (!applicationWithRelations) {
       throw new Error('Application not found after update');
     }
-
-    // Publish event (for notifications later)
     try {
       await this.eventService.publish('application.status_updated', {
         applicationId: updatedApplication.id,
@@ -271,10 +252,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     return mapApplicationToDetailsResponse(applicationWithRelations, externalData);
   }
 
-  async addApplicationNote(
-    applicationId: string, 
-    data: AddApplicationNoteInput
-  ): Promise<ApplicationDetailsResponse> {
+  async addApplicationNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationDetailsResponse> {
     const application = await this.applicationRepository.findById(applicationId);
     if (!application) {
       throw new Error('Application not found');

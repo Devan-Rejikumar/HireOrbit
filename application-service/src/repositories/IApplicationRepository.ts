@@ -4,10 +4,7 @@ import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNot
 export interface IApplicationRepository {
   create(data: CreateApplicationInput): Promise<Application>;
   findById(id: string): Promise<Application | null>;
-  findByUserId(userId: string): Promise<Array<Application & {
-    jobTitle?: string;
-    companyName?: string;
-  }>>;
+  findByUserId(userId: string): Promise<Array<Application & {jobTitle?: string;companyName?: string;}>>;
   findByCompanyId(companyId: string): Promise<Application[]>;
   findByJobId(jobId: string): Promise<Application[]>;
   update(id: string, data: Partial<Application>): Promise<Application>;
@@ -17,18 +14,9 @@ export interface IApplicationRepository {
   addNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationNotes>;
   getNotes(applicationId: string): Promise<ApplicationNotes[]>;
   deleteNote(noteId: string): Promise<void>;
-  findWithRelations(id: string): Promise<(Application & {
-    statusHistory: ApplicationStatusHistory[];
-    notes: ApplicationNotes[];
-  }) | null>;
-  findByUserIdWithRelations(userId: string): Promise<Array<Application & {
-    statusHistory: ApplicationStatusHistory[];
-    notes: ApplicationNotes[];
-  }>>;
-  findByCompanyIdWithRelations(companyId: string): Promise<Array<Application & {
-    statusHistory: ApplicationStatusHistory[];
-    notes: ApplicationNotes[];
-  }>>;
+  findWithRelations(id: string): Promise<(Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];}) | null>;
+  findByUserIdWithRelations(userId: string): Promise<Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];}>>;
+  findByCompanyIdWithRelations(companyId: string): Promise<Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];}>>;
   findByStatus(status: ApplicationStatus, companyId?: string): Promise<Application[]>;
   findByDateRange(startDate: Date, endDate: Date, companyId?: string): Promise<Application[]>;
   getApplicationStats(companyId: string): Promise<{

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, ArrowLeft, Loader2 } from 'lucide-react';
+import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-react';
 import api from '@/api/axios';
 
 interface Application {
@@ -27,6 +27,9 @@ const CompanyApplications = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<string>('appliedAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
       fetchApplications();
@@ -78,9 +81,56 @@ const CompanyApplications = () => {
     }
   };
 
-  const filteredApps = statusFilter === 'ALL' 
-    ? applications 
-    : applications.filter(app => app.status === statusFilter);
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'REVIEWING': return 'bg-blue-100 text-blue-800';
+      case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
+      case 'ACCEPTED': return 'bg-green-100 text-green-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const filteredApps = applications
+    .filter(app => statusFilter === 'ALL' || app.status === statusFilter)
+    .filter(app => 
+      searchTerm === '' || 
+      app.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.userEmail.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      let aValue = a[sortField as keyof Application];
+      let bValue = b[sortField as keyof Application];
+      
+      if (sortField === 'appliedAt') {
+        aValue = new Date(a.appliedAt).getTime();
+        bValue = new Date(b.appliedAt).getTime();
+      }
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      return 0;
+    });
 
   if (loading) {
     return (
@@ -100,8 +150,30 @@ const CompanyApplications = () => {
         <Button variant="outline" onClick={() => navigate('/company/dashboard')} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
         </Button>
-        <h1 className="text-3xl font-bold text-gray-900">Job Applicants</h1>
-        <p className="text-gray-600">Manage and review your job applications</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Total Applicants: {applications.length}</h1>
+            <p className="text-gray-600">Manage and review your job applications</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="flex gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Search Applicants"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+          />
+        </div>
+        <Button variant="outline" className="flex items-center gap-2">
+          <Filter className="h-4 w-4" />
+          Filter
+        </Button>
       </div>
 
       {/* Status Filter Tabs */}
@@ -121,114 +193,160 @@ const CompanyApplications = () => {
         ))}
       </div>
 
-      {/* Applications List */}
-      <div className="grid gap-4">
-        {filteredApps.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
+
+      {/* Applications Table */}
+      <Card>
+        <CardContent className="p-0">
+          {filteredApps.length === 0 ? (
+            <div className="p-12 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500">No applications found</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredApps.map(app => (
-            <Card key={app.id} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  {/* Left Side - Applicant Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Users className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">{app.userName}</h3>
-                        <p className="text-purple-600 font-medium">{app.jobTitle}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-3 space-y-2 text-sm text-gray-600">
-                      <p className="flex items-center gap-2">
-                        📧 <span>{app.userEmail}</span>
-                      </p>
-                      {app.userPhone && (
-                        <p className="flex items-center gap-2">
-                          📞 <span>{app.userPhone}</span>
-                        </p>
-                      )}
-                      <p className="flex items-center gap-2">
-                        💰 <span>Expected: {app.expectedSalary}</span>
-                      </p>
-                      <p className="flex items-center gap-2">
-                        💼 <span>Experience: {app.experience}</span>
-                      </p>
-                      <p className="flex items-center gap-2">
-                        📅 <span>Applied: {new Date(app.appliedAt).toLocaleDateString()}</span>
-                      </p>
-                    </div>
-                    
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 mb-1">Cover Letter:</p>
-                      <p className="text-sm text-gray-600 line-clamp-3">{app.coverLetter}</p>
-                    </div>
-                  </div>
-
-                  {/* Right Side - Actions */}
-                  <div className="ml-6 space-y-3">
-                    {/* Status Dropdown */}
-                    <div>
-                      <label className="text-xs text-gray-500 mb-1 block">Status</label>
-                      <select
-                        value={app.status}
-                        onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="PENDING">Pending</option>
-                        <option value="REVIEWING">Reviewing</option>
-                        <option value="SHORTLISTED">Shortlisted</option>
-                        <option value="ACCEPTED">Accepted</option>
-                        <option value="REJECTED">Rejected</option>
-                      </select>
-                    </div>
-
-                    {/* View Details Button */}
-                    <Button 
-                      onClick={() => setSelectedApp(app)}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('userName')}
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
+                      <div className="flex items-center gap-1">
+                        Full Name
+                        {sortField === 'userName' && (
+                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Score
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Hiring Stage
+                        {sortField === 'status' && (
+                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('appliedAt')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Applied Date
+                        {sortField === 'appliedAt' && (
+                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('jobTitle')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Job Role
+                        {sortField === 'jobTitle' && (
+                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredApps.map(app => (
+                    <tr key={app.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                            <Users className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{app.userName}</div>
+                            <div className="text-sm text-gray-500">{app.userEmail}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                          <span className="text-sm text-gray-900">4.5</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          value={app.status}
+                          onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
+                          className={`px-2 py-1 text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-purple-500 ${getStatusColor(app.status)}`}
+                        >
+                          <option value="PENDING">PENDING</option>
+                          <option value="REVIEWING">REVIEWING</option>
+                          <option value="SHORTLISTED">SHORTLISTED</option>
+                          <option value="ACCEPTED">ACCEPTED</option>
+                          <option value="REJECTED">REJECTED</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(app.appliedAt).toLocaleDateString('en-US', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {app.jobTitle}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => setSelectedApp(app)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            See Application
+                          </Button>
+                          <button className="text-gray-400 hover:text-gray-600">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                    {/* View Resume */}
-                    {app.resumeUrl && (
-                      <>
-                        <Button 
-                          onClick={() => handleViewResume(app.userName, app.resumeUrl, app.id)}
-                          variant="outline"
-                          className="w-full border-purple-600 text-purple-600 hover:bg-purple-50"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Resume
-                        </Button>
-                        <Button 
-                          onClick={() => handleDownloadResume(app.resumeUrl)}
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                        >
-                          <Download className="h-3 w-3 mr-2" />
-                          Download
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+      {/* Pagination */}
+      {filteredApps.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            View 10 Applicants per page
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled>
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="bg-purple-600 text-white border-purple-600">
+              1
+            </Button>
+            <Button variant="outline" size="sm">
+              2
+            </Button>
+            <Button variant="outline" size="sm">
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Detail Modal */}
       {selectedApp && (
@@ -267,7 +385,23 @@ const CompanyApplications = () => {
                     <p>💰 Expected Salary: <strong>{selectedApp.expectedSalary}</strong></p>
                     <p>💼 Experience: <strong>{selectedApp.experience}</strong></p>
                     <p>📅 Applied: <strong>{new Date(selectedApp.appliedAt).toLocaleDateString()}</strong></p>
-                    <p>📊 Status: <strong className="text-purple-600">{selectedApp.status}</strong></p>
+                    <div className="flex items-center gap-2">
+                      <span>📊 Status:</span>
+                      <select
+                        value={selectedApp.status}
+                        onChange={(e) => {
+                          handleStatusUpdate(selectedApp.id, e.target.value);
+                          setSelectedApp({...selectedApp, status: e.target.value});
+                        }}
+                        className="px-3 py-1 border border-gray-300 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="PENDING">PENDING</option>
+                        <option value="REVIEWING">REVIEWING</option>
+                        <option value="SHORTLISTED">SHORTLISTED</option>
+                        <option value="ACCEPTED">ACCEPTED</option>
+                        <option value="REJECTED">REJECTED</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 

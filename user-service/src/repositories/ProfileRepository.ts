@@ -64,7 +64,7 @@ export class ProfileRepository implements IProfileRepository {
       data: updateData,
     });
     
-    console.log('✅ ProfileRepository: update result:', JSON.stringify(result, null, 2));
+    console.log('ProfileRepository: update result:', JSON.stringify(result, null, 2));
     return result;
   }
 

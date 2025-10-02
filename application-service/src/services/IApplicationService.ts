@@ -8,26 +8,10 @@ export interface IApplicationService {
   getApplicationById(id: string): Promise<ApplicationDetailsResponse>;
   withdrawApplication(applicationId: string, userId: string): Promise<ApplicationResponse>;
   getCompanyApplications(companyId: string): Promise<CompanyApplicationsResponse>;
-  updateApplicationStatus(
-    applicationId: string, 
-    data: UpdateApplicationStatusInput, 
-    changedBy: string
-  ): Promise<ApplicationDetailsResponse>;
-  addApplicationNote(
-    applicationId: string, 
-    data: AddApplicationNoteInput
-  ): Promise<ApplicationDetailsResponse>;
+  updateApplicationStatus(applicationId: string, data: UpdateApplicationStatusInput, changedBy: string): Promise<ApplicationDetailsResponse>;
+  addApplicationNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationDetailsResponse>;
   getApplicationDetails(applicationId: string, companyId: string): Promise<ApplicationDetailsResponse>;
-
-  
-  searchApplications(filters: {
-    companyId?: string;
-    userId?: string;
-    status?: string;
-    jobId?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{
+  searchApplications(filters: {companyId?: string;userId?: string;status?: string;jobId?: string;page?: number;limit?: number;}): Promise<{
     applications: ApplicationResponse[];
     pagination: {
       total: number;
@@ -38,26 +22,9 @@ export interface IApplicationService {
       hasPrev: boolean;
     };
   }>;
+  getCompanyApplicationStats(companyId: string): Promise<{total: number;pending: number;reviewing: number;shortlisted: number;rejected: number;accepted: number;withdrawn: number;}>;
 
-  getCompanyApplicationStats(companyId: string): Promise<{
-    total: number;
-    pending: number;
-    reviewing: number;
-    shortlisted: number;
-    rejected: number;
-    accepted: number;
-    withdrawn: number;
-  }>;
-
-  bulkUpdateApplicationStatus(
-    applicationIds: string[], 
-    status: string, 
-    changedBy: string,
-    companyId: string
-  ): Promise<void>;
-  validateApplicationEligibility(userId: string, jobId: string): Promise<{
-    eligible: boolean;
-    reason?: string;
-  }>;
+  bulkUpdateApplicationStatus(applicationIds: string[], status: string, changedBy: string,companyId: string): Promise<void>;
+  validateApplicationEligibility(userId: string, jobId: string): Promise<{eligible: boolean;reason?: string;}>;
   
 }

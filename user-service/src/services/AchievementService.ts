@@ -8,7 +8,7 @@ import { CreateAchievementSchema, UpdateAchievementSchema } from '../dto/schemas
 export class AchievementService implements IAchievementService {
   constructor(
     @inject('IAchievementRepository') private achievementRepository: IAchievementRepository
-  ) {}
+  ) { }
 
   private validateAndCleanAchievementData(data: CreateAchievementRequest): CreateAchievementRequest {
     return CreateAchievementSchema.parse(data);
@@ -16,8 +16,8 @@ export class AchievementService implements IAchievementService {
 
   private async checkDuplicateAchievement(userId: string, data: CreateAchievementRequest): Promise<void> {
     const existingAchievements = await this.achievementRepository.getAchievements(userId);
-    
-    const isDuplicate = existingAchievements.some(achievement => 
+
+    const isDuplicate = existingAchievements.some(achievement =>
       achievement.title.toLowerCase() === data.title.toLowerCase() &&
       achievement.date === data.date &&
       achievement.category.toLowerCase() === data.category.toLowerCase()
@@ -36,7 +36,7 @@ export class AchievementService implements IAchievementService {
 
   async getAchievements(userId: string): Promise<Achievement[]> {
     const achievements = await this.achievementRepository.getAchievements(userId);
-    return achievements.sort((a, b) => 
+    return achievements.sort((a, b) =>
       new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }
@@ -47,15 +47,13 @@ export class AchievementService implements IAchievementService {
       throw new Error('Achievement not found');
     }
 
-    console.log('🔍 [ACHIEVEMENT-SERVICE] Validating updates:', JSON.stringify(updates, null, 2));
     const validatedUpdates = UpdateAchievementSchema.parse(updates);
-    console.log('🔍 [ACHIEVEMENT-SERVICE] Validated updates:', JSON.stringify(validatedUpdates, null, 2));
 
     if (validatedUpdates.title || validatedUpdates.date || validatedUpdates.category) {
       const existingAchievements = await this.achievementRepository.getAchievements(userId);
       const otherAchievements = existingAchievements.filter(achievement => achievement.id !== achievementId);
-      
-      const isDuplicate = otherAchievements.some(achievement => 
+
+      const isDuplicate = otherAchievements.some(achievement =>
         achievement.title.toLowerCase() === (validatedUpdates.title || existingAchievement.title).toLowerCase() &&
         achievement.date === (validatedUpdates.date || existingAchievement.date) &&
         achievement.category.toLowerCase() === (validatedUpdates.category || existingAchievement.category).toLowerCase()
@@ -70,16 +68,16 @@ export class AchievementService implements IAchievementService {
   }
 
   async deleteAchievement(userId: string, achievementId: string): Promise<void> {
-    console.log('🔍 [ACHIEVEMENT-SERVICE] Looking for achievement:', achievementId, 'for user:', userId);
-    
+
+
     const existingAchievement = await this.achievementRepository.getAchievementById(userId, achievementId);
-    console.log('🔍 [ACHIEVEMENT-SERVICE] Found achievement:', existingAchievement);
-    
+
+
     if (!existingAchievement) {
       throw new Error('Achievement not found');
     }
 
-    console.log('🗑️ [ACHIEVEMENT-SERVICE] Deleting achievement...');
+
     return this.achievementRepository.deleteAchievement(userId, achievementId);
   }
 

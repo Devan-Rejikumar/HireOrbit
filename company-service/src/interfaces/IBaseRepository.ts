@@ -1,11 +1,4 @@
-
-export interface PaginationResult<T> {
-  data: T[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
+export interface PaginationResult<T> {data: T[];total: number;page: number;totalPages: number;}
 export interface IBaseRepository<T> {
     findById(id: string): Promise<T | null>
     findAll(): Promise<T[]>;

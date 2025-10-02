@@ -21,7 +21,6 @@ router.get('/check-status/:jobId',(req: AuthRequest, res) => applicationControll
 router.get('/:id',(req: AuthRequest, res) => applicationController.getApplicationById(req, res));
 router.patch('/:id/withdraw',(req: AuthRequest, res) => applicationController.withdrawApplication(req, res));
 router.get('/company/applications',(req: AuthRequest, res) => applicationController.getCompanyApplications(req, res));
-// Support both PUT and PATCH for status updates (flexibility)
 router.patch('/:id/status',(req: AuthRequest, res) => applicationController.updateApplicationStatus(req, res));
 router.put('/:id/status',(req: AuthRequest, res) => applicationController.updateApplicationStatus(req, res));
 router.get('/:applicationId/resume/view',(req: AuthRequest, res) => applicationController.viewResume(req, res));

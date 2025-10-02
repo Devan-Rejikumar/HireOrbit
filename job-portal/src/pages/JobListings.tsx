@@ -67,17 +67,11 @@ const JobListings = () => {
       if (searchFilters.company) params.append('company', searchFilters.company);
       if (searchFilters.location) params.append('location', searchFilters.location);
       if (searchFilters.jobType) params.append('jobType', searchFilters.jobType);
-      // Note: We'll handle array filters on the frontend for now
-      // if (searchFilters.experienceLevel.length > 0) params.append('experienceLevel', searchFilters.experienceLevel[0]);
-      // if (searchFilters.education.length > 0) params.append('education', searchFilters.education[0]);
-      // if (searchFilters.workLocation.length > 0) params.append('workLocation', searchFilters.workLocation[0]);
-
       const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
       const jobsData = (response.data as any).data?.jobs || [];
-      
-      // Set all jobs for client-side pagination
+
       setAllJobs(jobsData);
-      setCurrentPage(1); // Reset to first page when new search
+      setCurrentPage(1);
     } catch (error: any) {
       console.error('Error fetching jobs:', error);
       setSearchError('Failed to fetch jobs. Please try again.');
@@ -87,11 +81,8 @@ const JobListings = () => {
     }
   };
 
-  // Pagination logic
-  // Client-side filtering for array-based filters
   const filteredJobs = useMemo(() => {
     return allJobs.filter(job => {
-      // Experience Level filter
       if (searchFilters.experienceLevel.length > 0) {
         const jobExperienceLevel = job.experienceLevel.toLowerCase();
         const hasMatchingExperience = searchFilters.experienceLevel.some(level => {
@@ -106,7 +97,6 @@ const JobListings = () => {
         if (!hasMatchingExperience) return false;
       }
 
-      // Education filter
       if (searchFilters.education.length > 0) {
         const jobEducation = job.education.toLowerCase();
         const hasMatchingEducation = searchFilters.education.some(edu => {
@@ -123,7 +113,7 @@ const JobListings = () => {
         if (!hasMatchingEducation) return false;
       }
 
-      // Work Location filter
+   
       if (searchFilters.workLocation.length > 0) {
         const jobWorkLocation = job.workLocation.toLowerCase();
         const hasMatchingLocation = searchFilters.workLocation.some(location => {
@@ -151,7 +141,7 @@ const JobListings = () => {
   const hasNextPage = currentPage < totalPages;
   const hasPreviousPage = currentPage > 1;
 
-  // Pagination functions
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -183,29 +173,22 @@ const JobListings = () => {
   };
 
   useEffect(() => {
-    // Read search parameters from URL
     const urlParams = new URLSearchParams(location.search);
     const title = urlParams.get('title') || '';
     const locationParam = urlParams.get('location') || '';
-    
-    // Update search filters with URL parameters
     setSearchFilters(prev => ({
       ...prev,
       title,
       location: locationParam
     }));
   }, [location.search]);
-
-  // Separate useEffect for fetching jobs when filters change with debouncing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchJobs();
-    }, 500); // 500ms debounce
+    }, 500); 
 
     return () => clearTimeout(timeoutId);
   }, [searchFilters.title, searchFilters.company, searchFilters.location, searchFilters.jobType, searchFilters.experienceLevel, searchFilters.education, searchFilters.workLocation]);
-
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchFilters]);
@@ -226,7 +209,6 @@ const JobListings = () => {
   };
 
   const handleApplicationSubmit = (applicationData: any) => {
-    // Update the job's application status
     if (selectedJob) {
       setAllJobs(prevJobs => 
         prevJobs.map(job => 
@@ -234,8 +216,7 @@ const JobListings = () => {
         )
       );
     }
-    
-    // Show success toast
+
     toast.success('Job applied successfully! All the best! 🎉');
   };
 

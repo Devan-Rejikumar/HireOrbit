@@ -8,7 +8,9 @@ export const CreateApplicationSchema = z.object({
   expectedSalary: z.string().min(1, 'Expected salary is required'),
   availability: z.string().min(1, 'Availability is required'),
   experience: z.string().min(1, 'Experience is required'),
-  resumeUrl: z.string().url('Invalid resume URL').optional()
+  resumeUrl: z.string().url('Invalid resume URL').optional(),
+  resumeBase64: z.string().optional(),
+  resumeFileName: z.string().optional()
 });
 
 export const UpdateApplicationStatusSchema = z.object({
