@@ -3,9 +3,14 @@ import { UserProfile, Education, Experience } from '@prisma/client';
 import { prisma } from '../prisma/client';
 import { injectable } from 'inversify';
 import { ProfileData, ExperienceData, EducationData } from '../services/IProfileService';
+import { BaseRepository } from './BaseRepository';
 
 @injectable()
-export class ProfileRepository implements IProfileRepository {
+export class ProfileRepository extends BaseRepository<UserProfile> implements IProfileRepository {
+  
+  protected getModel() {
+    return prisma.userProfile;
+  }
   
   async createProfile(
     userId: string,

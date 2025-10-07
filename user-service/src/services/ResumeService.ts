@@ -6,7 +6,7 @@ import  cloudinary  from '../config/cloudinary';
 @injectable()
 export class ResumeService implements IResumeService {
   constructor(
-    @inject('IResumeRepository') private resumeRepository: IResumeRepository
+    @inject('IResumeRepository') private _resumeRepository: IResumeRepository
   ) {}
 
   async uploadResume(userId: string, resumeFile: Buffer, fileName: string, mimeType: string): Promise<string> {
@@ -19,13 +19,13 @@ export class ResumeService implements IResumeService {
         public_id: `resume_${userId}_${Date.now()}`
       }
     );
-    await this.resumeRepository.saveResume(userId, result.secure_url);
+    await this._resumeRepository.saveResume(userId, result.secure_url);
     
     return result.secure_url;
   }
 
   async getResume(userId: string): Promise<string | null> {
-    return this.resumeRepository.getResume(userId);
+    return this._resumeRepository.getResume(userId);
   }
 
   async updateResume(userId: string, resumeFile: Buffer, fileName: string, mimeType: string): Promise<string> {
@@ -35,6 +35,6 @@ export class ResumeService implements IResumeService {
   }
 
   async deleteResume(userId: string): Promise<void> {
-    await this.resumeRepository.deleteResume(userId);
+    await this._resumeRepository.deleteResume(userId);
   }
 }

@@ -24,16 +24,16 @@ interface AdminTokenPayload {
 @injectable()
 export class AdminService implements IAdminService {
   constructor(
-    @inject(TYPES.IAdminRepository) private adminRepository: IAdminRepository,
-    @inject(TYPES.IUserService) private userService: IUserService,
-    @inject(TYPES.ICompanyApiRepository) private companyApiRepository: ICompanyApiRepository
+    @inject(TYPES.IAdminRepository) private _adminRepository: IAdminRepository,
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.ICompanyApiRepository) private _companyApiRepository: ICompanyApiRepository
   ) {}
 
   async login(email: string, password: string): Promise<{ 
     admin: User; 
     tokens: { accessToken: string; refreshToken: string } 
   }> {
-    const admin = await this.adminRepository.findByEmail(email);
+    const admin = await this._adminRepository.findByEmail(email);
     if (!admin) throw new Error('Invalid credentials');
     
     const valid = await bcrypt.compare(password, admin.password);
@@ -85,23 +85,23 @@ export class AdminService implements IAdminService {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return this.userService.getAllUsers();
+    return this._userService.getAllUsers();
   }
 
   async getAllUsersWithPagination(page: number = 1, limit: number = 10): Promise<{ data: User[]; total: number; page: number; totalPages: number }> {
-    return this.userService.getAllUsersWithPagination(page, limit);
+    return this._userService.getAllUsersWithPagination(page, limit);
   }
 
   async getPendingCompanies(): Promise<Company[]> {
-    return this.companyApiRepository.getPendingCompanies();
+    return this._companyApiRepository.getPendingCompanies();
   }
 
   async approveCompany(companyId: string, adminId: string): Promise<CompanyApprovalResponse> {
-    return this.companyApiRepository.approveCompany(companyId, adminId);
+    return this._companyApiRepository.approveCompany(companyId, adminId);
   }
 
   async rejectCompany(companyId: string, reason: string, adminId: string): Promise<CompanyApprovalResponse> {
-    return this.companyApiRepository.rejectCompany(companyId, reason, adminId);
+    return this._companyApiRepository.rejectCompany(companyId, reason, adminId);
   }
 }
 

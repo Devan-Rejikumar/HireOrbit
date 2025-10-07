@@ -7,7 +7,7 @@ import { CreateCertificationSchema, UpdateCertificationSchema } from '../dto/sch
 @injectable()
 export class CertificationService implements ICertificationService {
   constructor(
-    @inject('ICertificationRepository') private certificationRepository: ICertificationRepository
+    @inject('ICertificationRepository') private _certificationRepository: ICertificationRepository
   ) {}
 
   private validateAndCleanCertificationData(data: CreateCertificationRequest): CreateCertificationRequest {
@@ -24,7 +24,7 @@ export class CertificationService implements ICertificationService {
   }
 
   private async checkDuplicateCertification(userId: string, data: CreateCertificationRequest): Promise<void> {
-    const existingCertifications = await this.certificationRepository.getCertifications(userId);
+    const existingCertifications = await this._certificationRepository.getCertifications(userId);
     
     const isDuplicate = existingCertifications.some(cert => 
       cert.name.toLowerCase() === data.name.toLowerCase() &&
@@ -41,18 +41,18 @@ export class CertificationService implements ICertificationService {
 
     const validatedData = this.validateAndCleanCertificationData(certificationData);
     await this.checkDuplicateCertification(userId, validatedData);
-    return this.certificationRepository.addCertification(userId, validatedData);
+    return this._certificationRepository.addCertification(userId, validatedData);
   }
 
   async getCertifications(userId: string): Promise<Certification[]> {
-    const certifications = await this.certificationRepository.getCertifications(userId);
+    const certifications = await this._certificationRepository.getCertifications(userId);
     return certifications.sort((a, b) => 
       new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime()
     );
   }
 
 async updateCertification(userId: string, certificationId: string, updates: UpdateCertificationRequest): Promise<Certification> {
-  const existingCertification = await this.certificationRepository.getCertificationById(userId, certificationId);
+  const existingCertification = await this._certificationRepository.getCertificationById(userId, certificationId);
   if (!existingCertification) {
     throw new Error('Certification not found');
   }
@@ -74,7 +74,7 @@ async updateCertification(userId: string, certificationId: string, updates: Upda
   }
 
   if (validatedUpdates.name || validatedUpdates.issuer || validatedUpdates.issue_date) {
-    const existingCertifications = await this.certificationRepository.getCertifications(userId);
+    const existingCertifications = await this._certificationRepository.getCertifications(userId);
     const otherCertifications = existingCertifications.filter(cert => cert.id !== certificationId);
     
     const isDuplicate = otherCertifications.some(cert => 
@@ -88,19 +88,19 @@ async updateCertification(userId: string, certificationId: string, updates: Upda
     }
   }
 
-  return this.certificationRepository.updateCertification(userId, certificationId, validatedUpdates);
+  return this._certificationRepository.updateCertification(userId, certificationId, validatedUpdates);
 }
 
   async deleteCertification(userId: string, certificationId: string): Promise<void> {
-    const existingCertification = await this.certificationRepository.getCertificationById(userId, certificationId);
+    const existingCertification = await this._certificationRepository.getCertificationById(userId, certificationId);
     if (!existingCertification) {
       throw new Error('Certification not found');
     }
 
-    return this.certificationRepository.deleteCertification(userId, certificationId);
+    return this._certificationRepository.deleteCertification(userId, certificationId);
   }
 
   async getCertificationById(userId: string, certificationId: string): Promise<Certification | null> {
-    return this.certificationRepository.getCertificationById(userId, certificationId);
+    return this._certificationRepository.getCertificationById(userId, certificationId);
   }
 }

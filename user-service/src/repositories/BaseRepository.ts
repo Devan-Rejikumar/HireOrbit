@@ -9,9 +9,9 @@ interface BaseEntity {
 
 @injectable()
 export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepository<T>{
-  protected prisma: PrismaClient;
+  protected _prisma: PrismaClient;
   constructor(){
-    this.prisma = prisma;
+    this._prisma = prisma;
   }
     protected abstract getModel(): any;
     async findById(id: string): Promise<T | null>{

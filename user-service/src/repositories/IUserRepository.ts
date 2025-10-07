@@ -1,6 +1,5 @@
 import { User, Otp } from '@prisma/client';
 import { PaginationResult } from '../interfaces/IBaseRepository';
-import { ProfileData, UserProfile } from '../types/profile';
 
 export interface CreateUserData {
   email: string;
@@ -36,7 +35,5 @@ export interface IUserRepository {
   deletePasswordResetOTP(email: string, otp: string): Promise<void>;
   updateUserPassword(email: string, hashedPassword: string): Promise<void>;
   updateUserName(userId: string, name: string): Promise<User>;
-  updateProfile(userId: string, profileData: ProfileData): Promise<UserProfile>;
   updateUser(id: string, data: Partial<User>): Promise<User>;
-    
 }
