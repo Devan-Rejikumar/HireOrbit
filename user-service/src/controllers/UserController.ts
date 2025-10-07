@@ -68,7 +68,7 @@ const upload = multer({
 
 @injectable()
 export class UserController {
-  constructor(@inject(TYPES.IUserService) private userService: IUserService) {}
+  constructor(@inject(TYPES.IUserService) private _userService: IUserService) {}
   async register(req: Request, res: Response): Promise<void> {
     try {
       const validationResult = UserRegisterSchema.safeParse(req.body);
@@ -79,7 +79,7 @@ export class UserController {
         return;
       }
       const { email, password, name, role } = validationResult.data;
-      const user = await this.userService.register(email, password, name, role);
+      const user = await this._userService.register(email, password, name, role);
       res.status(AuthStatusCode.REGISTRATION_SUCCESS).json(
         buildSuccessResponse(user, 'User registered successfully')
       );
@@ -109,7 +109,7 @@ export class UserController {
 
       const { email, password } = validationResult.data; 
       console.log('USER CONTROLLER Login attempt for email:', email);
-      const result = await this.userService.login(email, password);
+      const result = await this._userService.login(email, password);
       console.log('USER CONTROLLERLogin successful for user:', result.user.email);
 
       console.log('USER CONTROLLER About to set cookies...');
@@ -150,7 +150,7 @@ export class UserController {
       res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'No refresh token provided' });
       return;
     }
-    const result = await this.userService.refreshToken(refreshToken);
+    const result = await this._userService.refreshToken(refreshToken);
     res.cookie('accessToken', result.accessToken, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
@@ -173,7 +173,7 @@ export class UserController {
       }
       const { email } = validationResult.data;
 
-      const result = await this.userService.generateOTP(email);
+      const result = await this._userService.generateOTP(email);
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(result,'OTP generated successfully'));
 
     } catch (err) {
@@ -195,7 +195,7 @@ export class UserController {
       return;
     }
     const { email } = validationResult.data;
-    const result = await this.userService.generateVerificationOTP(email);
+    const result = await this._userService.generateVerificationOTP(email);
     res.status(HttpStatusCode.OK).json(buildSuccessResponse(result,'OTP sent successfully'));
   } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'unknown error';
@@ -214,7 +214,7 @@ export class UserController {
         return;
       }
       const { email, otp } = validationResult.data;
-      const result = await this.userService.verifyOTP(email, parseInt(otp));
+      const result = await this._userService.verifyOTP(email, parseInt(otp));
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(result,'OTP verified successfully'));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -236,7 +236,7 @@ export class UserController {
         return;
       }
       const { email } = validationResult.data;
-      const result = await this.userService.resendOTP(email);
+      const result = await this._userService.resendOTP(email);
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(result,'OTP resent successfully'));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -259,7 +259,7 @@ export class UserController {
 
       console.log('USER-CONTROLLER User context:', { userId, userEmail, userRole });
 
-      const user = await this.userService.findById(userId);
+      const user = await this._userService.findById(userId);
       if (!user) {
         res.status(404).json({ error: 'User not found' });
         return;
@@ -283,7 +283,7 @@ export class UserController {
         return;
       }
 
-      const user = await this.userService.findById(id);
+      const user = await this._userService.findById(id);
       
       if (!user) {
         res.status(404).json(
@@ -324,7 +324,7 @@ export class UserController {
       const refreshToken = req.cookies.refreshToken;
     
       if (refreshToken) {
-        await this.userService.logoutWithToken(refreshToken);
+        await this._userService.logoutWithToken(refreshToken);
       }
 
       res.clearCookie('accessToken');
@@ -343,7 +343,7 @@ export class UserController {
         return;
       }
       const { email } = validationResult.data;
-      await this.userService.forgotPassword(email);
+      await this._userService.forgotPassword(email);
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(null,'Password reset OTP sent successfully'));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -365,7 +365,7 @@ export class UserController {
         return;
       }
       const { email, otp } = validationResult.data;
-      await this.userService.verifyPasswordResetOTP(email, otp);
+      await this._userService.verifyPasswordResetOTP(email, otp);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(null, 'OTP verified successfully')
       );
@@ -394,7 +394,7 @@ export class UserController {
         return;
       }
       const { email, newPassword } = validationResult.data;
-      await this.userService.resetPassword(email, newPassword);
+      await this._userService.resetPassword(email, newPassword);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(null, 'Password reset successful')
       );
@@ -430,7 +430,7 @@ export class UserController {
       }
     
       console.log('USER-CONTROLLER Updating name for user:', userId);
-      const updatedUser = await this.userService.updateUserName(userId, name);
+      const updatedUser = await this._userService.updateUserName(userId, name);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse({ user: updatedUser }, 'Name updated successfully')
       );
@@ -463,11 +463,11 @@ export class UserController {
         return;
       }
     
-      let user = await this.userService.findByEmail(email);
+      let user = await this._userService.findByEmail(email);
       let isNewUser = false;
     
       if (!user) {
-        user = await this.userService.createGoogleUser({
+        user = await this._userService.createGoogleUser({
           email,
           fullName: name || email.split('@')[0],
           profilePicture: photoURL,
@@ -512,7 +512,7 @@ async changePassword(req: Request, res: Response): Promise<void> {
     const { currentPassword, newPassword } = validationResult.data;
     const userId = req.user!.userId; 
 
-    await this.userService.changePassword(userId, currentPassword, newPassword);
+    await this._userService.changePassword(userId, currentPassword, newPassword);
     
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(null, 'Password changed successfully. Please login again.')

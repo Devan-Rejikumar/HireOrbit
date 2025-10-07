@@ -7,7 +7,7 @@ import { CreateAchievementSchema, UpdateAchievementSchema } from '../dto/schemas
 @injectable()
 export class AchievementService implements IAchievementService {
   constructor(
-    @inject('IAchievementRepository') private achievementRepository: IAchievementRepository
+    @inject('IAchievementRepository') private _achievementRepository: IAchievementRepository
   ) { }
 
   private validateAndCleanAchievementData(data: CreateAchievementRequest): CreateAchievementRequest {
@@ -15,7 +15,7 @@ export class AchievementService implements IAchievementService {
   }
 
   private async checkDuplicateAchievement(userId: string, data: CreateAchievementRequest): Promise<void> {
-    const existingAchievements = await this.achievementRepository.getAchievements(userId);
+    const existingAchievements = await this._achievementRepository.getAchievements(userId);
 
     const isDuplicate = existingAchievements.some(achievement =>
       achievement.title.toLowerCase() === data.title.toLowerCase() &&
@@ -31,18 +31,18 @@ export class AchievementService implements IAchievementService {
   async addAchievement(userId: string, achievementData: CreateAchievementRequest): Promise<Achievement> {
     const validatedData = this.validateAndCleanAchievementData(achievementData);
     await this.checkDuplicateAchievement(userId, validatedData);
-    return this.achievementRepository.addAchievement(userId, validatedData);
+    return this._achievementRepository.addAchievement(userId, validatedData);
   }
 
   async getAchievements(userId: string): Promise<Achievement[]> {
-    const achievements = await this.achievementRepository.getAchievements(userId);
+    const achievements = await this._achievementRepository.getAchievements(userId);
     return achievements.sort((a, b) =>
       new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }
 
   async updateAchievement(userId: string, achievementId: string, updates: UpdateAchievementRequest): Promise<Achievement> {
-    const existingAchievement = await this.achievementRepository.getAchievementById(userId, achievementId);
+    const existingAchievement = await this._achievementRepository.getAchievementById(userId, achievementId);
     if (!existingAchievement) {
       throw new Error('Achievement not found');
     }
@@ -50,7 +50,7 @@ export class AchievementService implements IAchievementService {
     const validatedUpdates = UpdateAchievementSchema.parse(updates);
 
     if (validatedUpdates.title || validatedUpdates.date || validatedUpdates.category) {
-      const existingAchievements = await this.achievementRepository.getAchievements(userId);
+      const existingAchievements = await this._achievementRepository.getAchievements(userId);
       const otherAchievements = existingAchievements.filter(achievement => achievement.id !== achievementId);
 
       const isDuplicate = otherAchievements.some(achievement =>
@@ -64,13 +64,13 @@ export class AchievementService implements IAchievementService {
       }
     }
 
-    return this.achievementRepository.updateAchievement(userId, achievementId, validatedUpdates);
+    return this._achievementRepository.updateAchievement(userId, achievementId, validatedUpdates);
   }
 
   async deleteAchievement(userId: string, achievementId: string): Promise<void> {
 
 
-    const existingAchievement = await this.achievementRepository.getAchievementById(userId, achievementId);
+    const existingAchievement = await this._achievementRepository.getAchievementById(userId, achievementId);
 
 
     if (!existingAchievement) {
@@ -78,10 +78,10 @@ export class AchievementService implements IAchievementService {
     }
 
 
-    return this.achievementRepository.deleteAchievement(userId, achievementId);
+    return this._achievementRepository.deleteAchievement(userId, achievementId);
   }
 
   async getAchievementById(userId: string, achievementId: string): Promise<Achievement | null> {
-    return this.achievementRepository.getAchievementById(userId, achievementId);
+    return this._achievementRepository.getAchievementById(userId, achievementId);
   }
 }

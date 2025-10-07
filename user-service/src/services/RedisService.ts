@@ -3,10 +3,10 @@ import Redis from 'ioredis';
 
 @injectable()
 export class RedisService {
-  private redis: Redis;
+  private _redis: Redis;
 
   constructor() {
-    this.redis = new Redis({
+    this._redis = new Redis({
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),
       password: process.env.REDIS_PASSWORD,
@@ -15,11 +15,11 @@ export class RedisService {
       maxRetriesPerRequest: 3,
     });
 
-    this.redis.on('error', (error: Error) => {
+    this._redis.on('error', (error: Error) => {
       console.error('Redis connection error:', error);
     });
 
-    this.redis.on('connect', () => {
+    this._redis.on('connect', () => {
       console.log(' Connected to Redis');
     });
   }
@@ -30,13 +30,13 @@ export class RedisService {
     expiresIn: number = 300
   ): Promise<void> {
     const key = `otp:${email}`;
-    await this.redis.setex(key, expiresIn, otp);
+    await this._redis.setex(key, expiresIn, otp);
     console.log(`[Redis] Stored OTP for ${email}, expires in ${expiresIn}s`);
   }
 
   async getOTP(email: string): Promise<string | null> {
     const key = `otp:${email}`;
-    const otp = await this.redis.get(key);
+    const otp = await this._redis.get(key);
     console.log(
       `[Redis] Retrieved OTP for ${email}: ${otp ? 'FOUND' : 'NOT FOUND'}`
     );
@@ -45,19 +45,19 @@ export class RedisService {
 
   async deleteOTP(email: string): Promise<void> {
     const key = `otp:${email}`;
-    await this.redis.del(key);
+    await this._redis.del(key);
     console.log(`[Redis] Deleted OTP for ${email}`);
   }
 
   async hasOTP(email: string): Promise<boolean> {
     const key = `otp:${email}`;
-    const exists = await this.redis.exists(key);
+    const exists = await this._redis.exists(key);
     return exists === 1;
   }
 
   async getOTPTTL(email: string): Promise<number> {
     const key = `otp:${email}`;
-    return await this.redis.ttl(key);
+    return await this._redis.ttl(key);
   }
 
   async storePasswordResetOTP(
@@ -67,7 +67,7 @@ export class RedisService {
     expiresIn: number = 900
   ): Promise<void> {
     const key = `password_reset:${email}:${role}`;
-    await this.redis.setex(key, expiresIn, otp);
+    await this._redis.setex(key, expiresIn, otp);
     console.log(
       `[Redis] Stored password reset OTP for ${email}:${role}, expires in ${expiresIn}s`
     );
@@ -78,7 +78,7 @@ export class RedisService {
     role: string
   ): Promise<string | null> {
     const key = `password_reset:${email}:${role}`;
-    const otp = await this.redis.get(key);
+    const otp = await this._redis.get(key);
     console.log(
       `[Redis] Retrieved password reset OTP for ${email}:${role}: ${
         otp ? 'FOUND' : 'NOT FOUND'
@@ -89,7 +89,7 @@ export class RedisService {
 
   async deletePasswordResetOTP(email: string, role: string): Promise<void> {
     const key = `password_reset:${email}:${role}`;
-    await this.redis.del(key);
+    await this._redis.del(key);
     console.log(`[Redis] Deleted password reset OTP for ${email}:${role}`);
   }
 
@@ -98,10 +98,10 @@ export class RedisService {
     expiresIn: number = 900
   ): Promise<number> {
     const key = `login_attempts:${email}`;
-    const attempts = await this.redis.incr(key);
+    const attempts = await this._redis.incr(key);
 
     if (attempts === 1) {
-      await this.redis.expire(key, expiresIn);
+      await this._redis.expire(key, expiresIn);
     }
 
     return attempts;
@@ -109,13 +109,13 @@ export class RedisService {
 
   async getLoginAttempts(email: string): Promise<number> {
     const key = `login_attempts:${email}`;
-    const attempts = await this.redis.get(key);
+    const attempts = await this._redis.get(key);
     return attempts ? parseInt(attempts) : 0;
   }
 
   async resetLoginAttempts(email: string): Promise<void> {
     const key = `login_attempts:${email}`;
-    await this.redis.del(key);
+    await this._redis.del(key);
   }
 
   async storeUserSession(
@@ -124,18 +124,18 @@ export class RedisService {
     expiresIn: number = 86400
   ): Promise<void> {
     const key = `session:${userId}`;
-    await this.redis.setex(key, expiresIn, JSON.stringify(sessionData));
+    await this._redis.setex(key, expiresIn, JSON.stringify(sessionData));
   }
 
   async getUserSession(userId: string): Promise<any | null> {
     const key = `session:${userId}`;
-    const session = await this.redis.get(key);
+    const session = await this._redis.get(key);
     return session ? JSON.parse(session) : null;
   }
 
   async deleteUserSession(userId: string): Promise<void> {
     const key = `session:${userId}`;
-    await this.redis.del(key);
+    await this._redis.del(key);
   }
 
   async storeRefreshToken(userId: string, tokenId: string, refreshToken: string, expiresIn: number = 604800): Promise<void> {
@@ -143,7 +143,7 @@ export class RedisService {
   console.log(' RedisService - Storing refresh token:', { userId, tokenId, key });
   
   try {
-    await this.redis.setex(key, expiresIn, refreshToken);
+    await this._redis.setex(key, expiresIn, refreshToken);
     console.log(' RedisService - Token stored successfully');
   } catch (error) {
     console.error(' RedisService - Failed to store token:', error);
@@ -156,7 +156,7 @@ export class RedisService {
   console.log(' RedisService - Getting refresh token:', { userId, tokenId, key });
   
   try {
-    const token = await this.redis.get(key);
+    const token = await this._redis.get(key);
     console.log(' RedisService - Get result:', {
       key,
       found: !!token
@@ -170,15 +170,15 @@ export class RedisService {
 
   async deleteRefreshToken(userId: string, tokenId: string): Promise<void> {
     const key = `refresh_token:${userId}:${tokenId}`;
-    await this.redis.del(key);
+    await this._redis.del(key);
     console.log(`[Redis] Deleted refresh token for ${userId}`);
   }
 
   async deleteAllUserRefreshTokens(userId: string): Promise<void> {
     const pattern = `refresh_token:${userId}:*`;
-    const keys = await this.redis.keys(pattern);
+    const keys = await this._redis.keys(pattern);
     if (keys.length > 0) {
-      await this.redis.del(...keys);
+      await this._redis.del(...keys);
       console.log(`[Redis] Deleted all refresh tokens for ${userId}`);
     }
   }

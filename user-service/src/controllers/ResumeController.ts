@@ -17,7 +17,7 @@ interface RequestWithUser extends Request {
 @injectable()
 export class ResumeController {
   constructor(
-    @inject('IResumeService') private resumeService: IResumeService
+    @inject('IResumeService') private _resumeService: IResumeService
   ) {}
 
   async uploadResume(req: Request, res: Response): Promise<void> {
@@ -51,7 +51,7 @@ export class ResumeController {
           mimeType,
           size: buffer.length
         });
-        const result = await this.resumeService.uploadResume(
+        const result = await this._resumeService.uploadResume(
           userId,
           buffer,
           cleanFileName,
@@ -87,7 +87,7 @@ export class ResumeController {
         return;
       }
 
-      const resume = await this.resumeService.getResume(userId);
+      const resume = await this._resumeService.getResume(userId);
       
       res.status(HttpStatusCode.OK).json({
         success: true,
@@ -113,7 +113,7 @@ export class ResumeController {
         return;
       }
 
-      await this.resumeService.deleteResume(userId);
+      await this._resumeService.deleteResume(userId);
       
       res.status(HttpStatusCode.OK).json({
         success: true,

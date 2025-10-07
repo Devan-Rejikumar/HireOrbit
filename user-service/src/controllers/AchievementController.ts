@@ -15,7 +15,7 @@ interface RequestWithUser extends Request {
 
 @injectable()
 export class AchievementController {
-  constructor(@inject('IAchievementService') private achievementService: IAchievementService) {}
+  constructor(@inject('IAchievementService') private _achievementService: IAchievementService) {}
 
   async addAchievement(req: Request, res: Response): Promise<void> {
     try {
@@ -29,7 +29,7 @@ export class AchievementController {
       }
 
       const achievementData = req.body;
-      const result = await this.achievementService.addAchievement(userId, achievementData);
+      const result = await this._achievementService.addAchievement(userId, achievementData);
       
       res.status(HttpStatusCode.CREATED).json(
         buildSuccessResponse(result, 'Achievement added successfully')
@@ -53,7 +53,7 @@ export class AchievementController {
         return;
       }
 
-      const achievements = await this.achievementService.getAchievements(userId);
+      const achievements = await this._achievementService.getAchievements(userId);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(achievements, 'Achievements retrieved successfully')
@@ -87,7 +87,7 @@ export class AchievementController {
 
       const updates = req.body;
       console.log('🔍 [ACHIEVEMENT-CONTROLLER] Received update data:', JSON.stringify(updates, null, 2));
-      const result = await this.achievementService.updateAchievement(userId, achievementId, updates);
+      const result = await this._achievementService.updateAchievement(userId, achievementId, updates);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Achievement updated successfully')
@@ -122,7 +122,7 @@ export class AchievementController {
         return;
       }
 
-      await this.achievementService.deleteAchievement(userId, achievementId);
+      await this._achievementService.deleteAchievement(userId, achievementId);
       
       console.log('DELETE-ACHIEVEMENT Achievement deleted successfully');
       res.status(HttpStatusCode.OK).json(
@@ -155,7 +155,7 @@ export class AchievementController {
         return;
       }
 
-      const achievement = await this.achievementService.getAchievementById(userId, achievementId);
+      const achievement = await this._achievementService.getAchievementById(userId, achievementId);
       
       if (!achievement) {
         res.status(HttpStatusCode.NOT_FOUND).json(
