@@ -1,5 +1,3 @@
-import { JWTService } from '../services/JWTService';
-
 const TYPES = {
   UserService: Symbol.for('UserService'),
   IUserService: Symbol.for('IUserService'),
@@ -17,6 +15,20 @@ const TYPES = {
   ProfileService: Symbol.for('ProfileService'),
   IProfileService: Symbol.for('IProfileService'),
   ProfileController: Symbol.for('ProfileController'),
+  ResumeController: Symbol.for('ResumeController'),
+  ResumeService: Symbol.for('ResumeService'),
+  IResumeService: Symbol.for('IResumeService'),
+  IResumeRepository: Symbol.for('IResumeRepository'),
+  AchievementService: Symbol.for('AchievementService'),
+  IAchievementService: Symbol.for('IAchievementService'),
+  AchievementRepository: Symbol.for('AchievementRepository'),
+  IAchievementRepository: Symbol.for('IAchievementRepository'),
+  AchievementController: Symbol.for('AchievementController'),
+  CertificationService: Symbol.for('CertificationService'),
+  ICertificationService: Symbol.for('ICertificationService'),
+  CertificationRepository: Symbol.for('CertificationRepository'),
+  ICertificationRepository: Symbol.for('ICertificationRepository'),
+  CertificationController: Symbol.for('CertificationController'),
   CompanyApiRepository: Symbol.for('CompanyApiRepository'),
   ICompanyApiRepository: Symbol.for('ICompanyApiRepository'),
   RedisService: Symbol.for('RedisService'),

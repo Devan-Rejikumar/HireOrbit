@@ -4,6 +4,7 @@ import cors from 'cors';
 import userRoutes from './routes/UserRoutes';
 import adminRoutes from './routes/AdminRoutes';
 import profileRoutes from './routes/ProfileRoutes';
+import { authenticateToken } from './middleware/auth';
 
 const app = express();
 
@@ -62,7 +63,7 @@ app.use((req, res, next) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/users/admin', adminRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/api/profile', authenticateToken, profileRoutes);
 
 console.log('=== ROUTES REGISTERED ===');
 console.log('User routes: /api/users');
@@ -73,6 +74,17 @@ console.log('========================');
 app.get('/test', (req, res) => {
   console.log('[USER SERVICE] Test route hit');
   res.json({ message: 'Server is working!' });
+});
+
+app.get('/test-auth', authenticateToken, (req, res) => {
+  console.log('[USER SERVICE] Test auth route hit');
+  res.json({ message: 'Auth test successful!', user: req.user });
+});
+
+// Test route without auth to compare
+app.get('/test-no-auth', (req, res) => {
+  console.log('[USER SERVICE] Test no-auth route hit');
+  res.json({ message: 'No auth test successful!', headers: req.headers });
 });
 
 app.use((req, res, next) => {

@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
-import { prisma } from '../prisma/client';
+import { prisma } from '../../prisma/client';
 import { User } from '@prisma/client';
-import { IAdminRepository } from './IAdminRepository';
+import { IAdminRepository } from '../interfaces/IAdminRepository';
 
 @injectable()
 export class AdminRepository implements IAdminRepository{

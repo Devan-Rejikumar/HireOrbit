@@ -1,4 +1,4 @@
-import { Achievement, CreateAchievementRequest, UpdateAchievementRequest } from '../types/achievement';
+import { Achievement, CreateAchievementRequest, UpdateAchievementRequest } from '../../types/achievement';
 
 export interface IAchievementService {
   addAchievement(userId: string, achievementData: CreateAchievementRequest): Promise<Achievement>;

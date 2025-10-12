@@ -1,9 +1,9 @@
 import { injectable, inject } from 'inversify';
 import { UserProfile, Experience, Education } from '@prisma/client';
-import { IProfileService, ProfileData, ExperienceData, EducationData } from './IProfileService';
-import { IProfileRepository } from '../repositories/IProfileRepository';
-import { IUserProfile } from '../types/profile';
-import TYPES from '../config/types';
+import { IProfileService, ProfileData, ExperienceData, EducationData } from '../interfaces/IProfileService';
+import { IProfileRepository } from '../../repositories/interfaces/IProfileRepository';
+import { IUserProfile } from '../../types/profile';
+import TYPES from '../../config/types';
 
 @injectable()
 export class ProfileService implements IProfileService {

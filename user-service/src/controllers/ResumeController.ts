@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
-import { IResumeService } from '../services/IResumeService';
+import TYPES from '../config/types';
+import { IResumeService } from '../services/interfaces/IResumeService';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 
@@ -17,7 +18,7 @@ interface RequestWithUser extends Request {
 @injectable()
 export class ResumeController {
   constructor(
-    @inject('IResumeService') private _resumeService: IResumeService
+    @inject(TYPES.IResumeService) private _resumeService: IResumeService
   ) {}
 
   async uploadResume(req: Request, res: Response): Promise<void> {

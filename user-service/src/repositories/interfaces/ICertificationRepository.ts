@@ -1,4 +1,4 @@
-import { Certification } from '../types/certification';
+import { Certification } from '../../types/certification';
 
 export interface ICertificationRepository {
   addCertification(userId: string, certification: Omit<Certification, 'id'>): Promise<Certification>;

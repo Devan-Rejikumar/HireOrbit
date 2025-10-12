@@ -1,4 +1,4 @@
-import { Achievement } from '../types/achievement';
+import { Achievement } from '../../types/achievement';
 
 export interface IAchievementRepository {
   addAchievement(userId: string, achievement: Omit<Achievement, 'id'>): Promise<Achievement>;

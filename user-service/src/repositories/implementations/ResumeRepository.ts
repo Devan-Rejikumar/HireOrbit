@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
-import { IResumeRepository } from './IResumeRepository';
-import { prisma } from '../prisma/client';
+import { IResumeRepository } from '../interfaces/IResumeRepository';
+import { prisma } from '../../prisma/client';
 
 @injectable()
 export class ResumeRepository implements IResumeRepository {

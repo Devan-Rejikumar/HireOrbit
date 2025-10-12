@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
-import { IAdminService } from '../services/IAdminService';
-import { IUserService } from '../services/IUserService';
+import { IAdminService } from '../services/interfaces/IAdminService';
+import { IUserService } from '../services/interfaces/IUserService';
 import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 
 @injectable()

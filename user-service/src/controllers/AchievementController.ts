@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response } from 'express';
-import { IAchievementService } from '../services/IAchievementService';
+import TYPES from '../config/types';
+import { IAchievementService } from '../services/interfaces/IAchievementService';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 
@@ -15,7 +16,7 @@ interface RequestWithUser extends Request {
 
 @injectable()
 export class AchievementController {
-  constructor(@inject('IAchievementService') private _achievementService: IAchievementService) {}
+  constructor(@inject(TYPES.IAchievementService) private _achievementService: IAchievementService) {}
 
   async addAchievement(req: Request, res: Response): Promise<void> {
     try {

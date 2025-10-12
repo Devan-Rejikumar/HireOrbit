@@ -2,6 +2,7 @@ import { Router } from 'express';
 import container from '../config/inversify.config';
 import TYPES from '../config/types';
 import { UserController } from '../controllers/UserController';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 const userController = container.get<UserController>(TYPES.UserController);
@@ -14,7 +15,7 @@ router.post('/generate-otp', (req, res) => userController.generateOTP(req, res))
 router.post('/generate-verification-otp', (req, res) => userController.generateVerificationOTP(req, res));
 router.post('/verify-otp', (req, res) => userController.verifyOTP(req, res));
 router.post('/resend-otp', (req, res) => userController.resendOTP(req, res));
-router.get('/me', (req, res) => userController.getMe(req, res));
+router.get('/me', authenticateToken, (req, res) => userController.getMe(req, res));
 router.get('/:id', (req, res) => userController.getUserById(req, res));
 router.post('/logout', (req, res) => userController.logout(req, res));
 router.post('/forgot-password', (req, res) => userController.forgotPassword(req, res));

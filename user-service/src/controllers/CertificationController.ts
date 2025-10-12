@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response } from 'express';
-import { ICertificationService } from '../services/ICertificationService';
+import TYPES from '../config/types';
+import { ICertificationService } from '../services/interfaces/ICertificationService';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 
@@ -15,7 +16,7 @@ interface RequestWithUser extends Request {
 
 @injectable()
 export class CertificationController {
-  constructor(@inject('ICertificationService') private _certificationService: ICertificationService) {}
+  constructor(@inject(TYPES.ICertificationService) private _certificationService: ICertificationService) {}
 
   async addCertification(req: Request, res: Response): Promise<void> {
     try {

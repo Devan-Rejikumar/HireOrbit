@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
-import { ICertificationRepository } from './ICertificationRepository';
-import { Certification } from '../types/certification';
-import { prisma } from '../prisma/client';
+import { ICertificationRepository } from '../interfaces/ICertificationRepository';
+import { Certification } from '../../types/certification';
+import { prisma } from '../../prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 @injectable()

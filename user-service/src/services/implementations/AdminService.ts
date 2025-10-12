@@ -1,13 +1,15 @@
 import { injectable, inject } from 'inversify';
-import TYPES from '../config/types';
-import { IAdminRepository } from '../repositories/IAdminRepository';
-import { ICompanyApiRepository } from '../repositories/CompanyApiRepository';
+import TYPES from '../../config/types';
+import { IAdminRepository } from '../../repositories/interfaces/IAdminRepository';
+import { ICompanyApiRepository } from '../../repositories/implementations/CompanyApiRepository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '@prisma/client';
-import { IAdminService } from './IAdminService';
-import { IUserService } from './IUserService';
-import { Company, CompanyApprovalResponse } from '../types/company';
+import { IAdminService } from '../interfaces/IAdminService';
+import { IUserService } from '../interfaces/IUserService';
+import { Company, CompanyApprovalResponse } from '../../types/company';
+import { UserResponse, AuthResponse } from '../../dto/responses/user.response';
+import { mapUserToResponse, mapUserToAuthResponse } from '../../dto/mappers/user.mapper';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'refresh_secret';
@@ -30,7 +32,7 @@ export class AdminService implements IAdminService {
   ) {}
 
   async login(email: string, password: string): Promise<{ 
-    admin: User; 
+    admin: UserResponse; 
     tokens: { accessToken: string; refreshToken: string } 
   }> {
     const admin = await this._adminRepository.findByEmail(email);
@@ -52,7 +54,7 @@ export class AdminService implements IAdminService {
     const refreshToken = jwt.sign(tokenPayload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
     return {
-      admin,
+      admin: mapUserToResponse(admin),
       tokens: { accessToken, refreshToken }
     };
   }
@@ -84,11 +86,11 @@ export class AdminService implements IAdminService {
     }
   }
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<UserResponse[]> {
     return this._userService.getAllUsers();
   }
 
-  async getAllUsersWithPagination(page: number = 1, limit: number = 10): Promise<{ data: User[]; total: number; page: number; totalPages: number }> {
+  async getAllUsersWithPagination(page: number = 1, limit: number = 10): Promise<{ data: UserResponse[]; total: number; page: number; totalPages: number }> {
     return this._userService.getAllUsersWithPagination(page, limit);
   }
 
@@ -104,4 +106,3 @@ export class AdminService implements IAdminService {
     return this._companyApiRepository.rejectCompany(companyId, reason, adminId);
   }
 }
-
