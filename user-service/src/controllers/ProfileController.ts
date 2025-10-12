@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
-import { IProfileService } from '../services/IProfileService';
-import { IUserService } from '../services/IUserService';
+import { IProfileService } from '../services/interfaces/IProfileService';
+import { IUserService } from '../services/interfaces/IUserService';
+import { IAchievementService } from '../services/interfaces/IAchievementService';
+import { ICertificationService } from '../services/interfaces/ICertificationService';
 import { UserProfile } from '@prisma/client';
 import { HttpStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { EducationSchema, ExperienceSchema, UpdateProfileSchema } from '../dto/schemas/profile.schema';
@@ -23,7 +25,9 @@ interface RequestWithUser extends Request {
 export class ProfileController {
   constructor(
     @inject(TYPES.IProfileService) private _profileService: IProfileService,
-    @inject(TYPES.IUserService) private _userService: IUserService
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.IAchievementService) private _achievementService: IAchievementService,
+    @inject(TYPES.ICertificationService) private _certificationService: ICertificationService
   ) {}
 
   async createProfile(req: Request, res: Response): Promise<void> {
@@ -252,29 +256,42 @@ async getFullProfile(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Fetch achievements and certifications
+    const achievements = await this._achievementService.getAchievements(userId);
+    const certifications = await this._certificationService.getCertifications(userId);
+
     const completionPercentage = this.calculateCompletionPercentage(fullProfile);
 
     console.log('🔍 ProfileController - userData from database:', userData);
     console.log('🔍 ProfileController - userData.isVerified:', userData?.isVerified);
+    console.log('🔍 ProfileController - fullProfile from database:', fullProfile);
+    console.log('🔍 ProfileController - fullProfile.certifications:', fullProfile?.certifications);
+    console.log('🔍 ProfileController - fullProfile.achievements:', fullProfile?.achievements);
     
     const responseData = {
-      profile: fullProfile,
+      profile: {
+        ...fullProfile,
+        achievements: achievements,
+        certifications: certifications,
+      },
       user: {
         id: userId,
-        username: userData?.name || req.headers['x-user-email'] as string,
+        username: userData?.username || req.headers['x-user-email'] as string,  // ✅ Fixed: use username instead of name
         email: req.headers['x-user-email'] as string,
         isVerified: userData?.isVerified || false,
       },
       completionPercentage,
     };
-    
-    console.log('🔍 ProfileController - Final response data:', responseData);
-    console.log('🔍 ProfileController - Final user.isVerified:', responseData.user.isVerified);
-    
-    res.status(HttpStatusCode.OK).json(responseData);
-  } catch (error: unknown) {
+
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(responseData, 'Full profile retrieved successfully')
+    );
+  } catch (error) {
+    console.error('Error in getFullProfile:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+    res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
+      buildErrorResponse(errorMessage, 'Failed to retrieve full profile')
+    );
   }
 }
 

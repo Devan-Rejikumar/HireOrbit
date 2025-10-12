@@ -83,14 +83,24 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     try {
       setIsUploading(true);
       
-      // Send JSON data instead of FormData
+      // Convert image to base64 if selected
+      let profilePictureData = null;
+      if (profileImage) {
+        const reader = new FileReader();
+        profilePictureData = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(profileImage);
+        });
+      }
+      
+      // Send JSON data with base64 image
       const submitData = {
         headline: formData.headline,
         about: formData.about,
         location: formData.location,
         phone: formData.phone,
-        // Note: profileImage will be handled separately if needed
-        // For now, we'll skip file uploads to avoid multipart issues
+        ...(profilePictureData && { profilePicture: profilePictureData }),
       };
 
       await onSave(submitData);
@@ -135,7 +145,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* Profile Image Section */}
             <div className="flex items-center space-x-6">
               <div className="relative group">
-                <div className="w-24 h-24 bg-gray-300 rounded-full border-4 border-white flex items-center justify-center overflow-hidden">
+                <div 
+                  className="w-24 h-24 bg-gray-300 rounded-full border-4 border-white flex items-center justify-center overflow-hidden cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   {imagePreview ? (
                     <img
                       src={imagePreview}
@@ -160,9 +173,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="bg-white border border-gray-300 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm opacity-50 cursor-not-allowed"
-                    title="Upload new image (temporarily disabled)"
-                    disabled
+                    className="bg-white border border-gray-300 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm"
+                    title="Upload new image"
                   >
                     <Upload className="h-3 w-3 text-gray-600" />
                   </button>
@@ -186,8 +198,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </h3>
                 <p className="text-sm text-gray-500 mb-2">
                   Upload a professional photo. JPG, PNG up to 5MB.
-                  <br />
-                  <span className="text-orange-600 text-xs">Note: Profile picture upload is temporarily disabled to avoid multipart issues.</span>
                 </p>
                 <input
                   ref={fileInputRef}
@@ -195,7 +205,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   accept="image/*"
                   onChange={handleImageSelect}
                   className="hidden"
-                  disabled
                 />
                 {profileImage && (
                   <p className="text-xs text-green-600">

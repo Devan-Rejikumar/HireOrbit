@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
-import { IUserService } from '../services/IUserService';
+import { IUserService } from '../services/interfaces/IUserService';
 import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import path from 'path';
@@ -266,10 +266,11 @@ export class UserController {
       }
 
       console.log('USER-CONTROLLER User found:', user);
-      res.status(200).json(user);
+      res.status(HttpStatusCode.OK).json(buildSuccessResponse({user},'User profile retrived succcessfully'));
     } catch (error) {
       console.error('USER-CONTROLLER Error in getMe:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(buildErrorResponse(errorMessage,'Internal server error'));
     }
   }
   async getUserById(req: Request, res: Response): Promise<void> {
@@ -277,7 +278,7 @@ export class UserController {
       const { id } = req.params;
       
       if (!id) {
-        res.status(400).json(
+        res.status(HttpStatusCode.BAD_REQUEST).json(
           buildErrorResponse('User ID is required', 'Invalid request')
         );
         return;
@@ -286,26 +287,18 @@ export class UserController {
       const user = await this._userService.findById(id);
       
       if (!user) {
-        res.status(404).json(
+        res.status(HttpStatusCode.NOT_FOUND).json(
           buildErrorResponse('User not found', 'User does not exist')
         );
         return;
       }
-      const userData = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-        createdAt: user.createdAt
-      };
 
-      res.status(200).json(
-        buildSuccessResponse({ user: userData }, 'User retrieved successfully')
+      res.status(HttpStatusCode.OK).json(
+        buildSuccessResponse({ user}, 'User retrieved successfully')
       );
     } catch (error) {
       console.error('Error in getUserById:', error);
-      res.status(500).json(
+      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
         buildErrorResponse('Internal server error', 'Failed to retrieve user')
       );
     }

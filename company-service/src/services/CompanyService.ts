@@ -27,8 +27,8 @@ export class CompanyService implements ICompanyService {
   constructor(
     @inject(TYPES.ICompanyRepository)
     private companyRepository: ICompanyRepository,
-    @inject(TYPES.EmailService) private emailService: IEmailService,
-    @inject(TYPES.RedisService) private redisService: RedisService,
+    @inject(TYPES.EmailService) private _emailService: IEmailService,
+    @inject(TYPES.RedisService) private _redisService: RedisService,
   ) { }
   async register(email: string,password: string,companyName: string,role: string = 'company',): Promise<Company> {
     console.log('Service register paramsssssss:', email, password, companyName);
@@ -85,8 +85,8 @@ export class CompanyService implements ICompanyService {
         throw new Error('Company already existing');
       }
       const otp = Math.floor(100000 + Math.random() * 900000);
-      await this.redisService.storeOTP(email, otp.toString(), 300);
-      await this.emailService.sendOTP(email, otp);
+      await this._redisService.storeOTP(email, otp.toString(), 300);
+      await this._emailService.sendOTP(email, otp);
       return { message: 'OTP send succesfully' };
     } catch (error) {
       console.error('Company service generatedOTP error', error);
@@ -95,21 +95,21 @@ export class CompanyService implements ICompanyService {
   }
 
   async verifyOTP(email: string, otp: number): Promise<{ message: string; }> {
-    const storedOtp = await this.redisService.getOTP(email);
+    const storedOtp = await this._redisService.getOTP(email);
     if (!storedOtp) {
       throw new Error('No OTP found for this email or OTP has expired');
     }
     if (parseInt(storedOtp) !== otp) {
       throw new Error('Invalid credentials');
     }
-    await this.redisService.deleteOTP(email);
+    await this._redisService.deleteOTP(email);
     return { message: 'OTP deleted succesfully' };
   }
 
   async resendOTP(email: string): Promise<{ message: string }> {
     const existingCompany = await this.companyRepository.findByEmail(email);
     if (existingCompany) throw new Error('Email already registered');
-    await this.redisService.deleteOTP(email);
+    await this._redisService.deleteOTP(email);
     return this.generateOTP(email);
   }
   async getAllCompanies(): Promise<Company[]> {
@@ -216,7 +216,7 @@ export class CompanyService implements ICompanyService {
   }
 
   async approveCompany(companyId: string, adminId: string): Promise<Company> {
-    await this.emailService.sendApprovalEmail(
+    await this._emailService.sendApprovalEmail(
       (await this.companyRepository.getCompanyProfile(companyId))?.email || '',
       (
         await this.companyRepository.getCompanyProfile(companyId)
@@ -229,7 +229,7 @@ export class CompanyService implements ICompanyService {
   async rejectCompany(companyId: string,reason: string,adminId: string,): Promise<Company> {
     const company = await this.companyRepository.getCompanyProfile(companyId);
     if (company) {
-      await this.emailService.sendRejectionEmail(
+      await this._emailService.sendRejectionEmail(
         company.email,
         company.companyName,
         reason,

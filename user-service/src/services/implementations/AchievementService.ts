@@ -1,13 +1,14 @@
 import { injectable, inject } from 'inversify';
-import { IAchievementService } from './IAchievementService';
-import { IAchievementRepository } from '../repositories/IAchievementRepository';
-import { Achievement, CreateAchievementRequest, UpdateAchievementRequest } from '../types/achievement';
-import { CreateAchievementSchema, UpdateAchievementSchema } from '../dto/schemas/achievement.schema';
+import TYPES from '../../config/types';
+import { IAchievementService } from '../interfaces/IAchievementService';
+import { IAchievementRepository } from '../../repositories/interfaces/IAchievementRepository';
+import { Achievement, CreateAchievementRequest, UpdateAchievementRequest } from '../../types/achievement';
+import { CreateAchievementSchema, UpdateAchievementSchema } from '../../dto/schemas/achievement.schema';
 
 @injectable()
 export class AchievementService implements IAchievementService {
   constructor(
-    @inject('IAchievementRepository') private _achievementRepository: IAchievementRepository
+    @inject(TYPES.IAchievementRepository) private _achievementRepository: IAchievementRepository
   ) { }
 
   private validateAndCleanAchievementData(data: CreateAchievementRequest): CreateAchievementRequest {

@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Company, CompanyApprovalResponse, PendingCompaniesResponse } from '../types/company';
+import { Company, CompanyApprovalResponse, PendingCompaniesResponse } from '../../types/company';
 
 export interface ICompanyApiRepository {
   getPendingCompanies(): Promise<Company[]>;

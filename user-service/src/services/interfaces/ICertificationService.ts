@@ -1,4 +1,4 @@
-import { Certification, CreateCertificationRequest, UpdateCertificationRequest } from '../types/certification';
+import { Certification, CreateCertificationRequest, UpdateCertificationRequest } from '../../types/certification';
 
 export interface ICertificationService {
   addCertification(userId: string, certificationData: CreateCertificationRequest): Promise<Certification>;

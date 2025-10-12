@@ -1,8 +1,8 @@
-import { IProfileRepository } from './IProfileRepository';
+import { IProfileRepository } from '../interfaces/IProfileRepository';
 import { UserProfile, Education, Experience } from '@prisma/client';
-import { prisma } from '../prisma/client';
+import { prisma } from '../../prisma/client';
 import { injectable } from 'inversify';
-import { ProfileData, ExperienceData, EducationData } from '../services/IProfileService';
+import { ProfileData, ExperienceData, EducationData } from '../../services/interfaces/IProfileService';
 import { BaseRepository } from './BaseRepository';
 
 @injectable()
@@ -84,13 +84,19 @@ export class ProfileRepository extends BaseRepository<UserProfile> implements IP
   ): Promise<
     (UserProfile & { experience: Experience[]; education: Education[] }) | null
   > {
-    return prisma.userProfile.findUnique({
+    const profile = await prisma.userProfile.findUnique({
       where: { userId },
       include: {
         experience: true,
         education: true,
       },
     });
+    
+    console.log('🔍 ProfileRepository - Raw profile from DB:', profile);
+    console.log('🔍 ProfileRepository - Certifications:', profile?.certifications);
+    console.log('🔍 ProfileRepository - Achievements:', profile?.achievements);
+    
+    return profile;
   }
 
  

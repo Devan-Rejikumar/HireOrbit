@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
-import { IAchievementRepository } from './IAchievementRepository';
-import { Achievement } from '../types/achievement';
-import { prisma } from '../prisma/client';
+import { IAchievementRepository } from '../interfaces/IAchievementRepository';
+import { Achievement } from '../../types/achievement';
+import { prisma } from '../../prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 @injectable()

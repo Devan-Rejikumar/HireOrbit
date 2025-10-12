@@ -1,12 +1,13 @@
 import { injectable, inject } from 'inversify';
-import { IResumeService } from './IResumeService';
-import { IResumeRepository } from '../repositories/IResumeRepository';
-import  cloudinary  from '../config/cloudinary';
+import TYPES from '../../config/types';
+import { IResumeService } from '../interfaces/IResumeService';
+import { IResumeRepository } from '../../repositories/interfaces/IResumeRepository';
+import  cloudinary  from '../../config/cloudinary';
 
 @injectable()
 export class ResumeService implements IResumeService {
   constructor(
-    @inject('IResumeRepository') private _resumeRepository: IResumeRepository
+    @inject(TYPES.IResumeRepository) private _resumeRepository: IResumeRepository
   ) {}
 
   async uploadResume(userId: string, resumeFile: Buffer, fileName: string, mimeType: string): Promise<string> {

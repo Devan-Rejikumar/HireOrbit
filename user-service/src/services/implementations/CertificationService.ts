@@ -1,13 +1,14 @@
 import { injectable, inject } from 'inversify';
-import { ICertificationService } from './ICertificationService';
-import { ICertificationRepository } from '../repositories/ICertificationRepository';
-import { Certification, CreateCertificationRequest, UpdateCertificationRequest } from '../types/certification';
-import { CreateCertificationSchema, UpdateCertificationSchema } from '../dto/schemas/certification.schema';
+import TYPES from '../../config/types';
+import { ICertificationService } from '../interfaces/ICertificationService';
+import { ICertificationRepository } from '../../repositories/interfaces/ICertificationRepository';
+import { Certification, CreateCertificationRequest, UpdateCertificationRequest } from '../../types/certification';
+import { CreateCertificationSchema, UpdateCertificationSchema } from '../../dto/schemas/certification.schema';
 
 @injectable()
 export class CertificationService implements ICertificationService {
   constructor(
-    @inject('ICertificationRepository') private _certificationRepository: ICertificationRepository
+    @inject(TYPES.ICertificationRepository) private _certificationRepository: ICertificationRepository
   ) {}
 
   private validateAndCleanCertificationData(data: CreateCertificationRequest): CreateCertificationRequest {
