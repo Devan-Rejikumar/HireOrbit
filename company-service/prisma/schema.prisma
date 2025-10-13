@@ -34,6 +34,10 @@ model Company {
   reviewedAt         DateTime?
   reviewedBy         String?
   updatedAt          DateTime            @updatedAt
+  address            String?
+  city               String?
+  state              String?
+  country            String?
   profileStep        CompanyProfileStep?
 }
 

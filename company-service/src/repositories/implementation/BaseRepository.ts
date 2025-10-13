@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
-import { prisma } from '../prisma/client';
+import { prisma } from '../../prisma/client';
 import { PrismaClient } from '@prisma/client';
-import { IBaseRepository, PaginationResult } from '../interfaces/IBaseRepository';
+import { IBaseRepository, PaginationResult } from '../interface/IBaseRepository';
 
 interface BaseEntity {
     id: string;
