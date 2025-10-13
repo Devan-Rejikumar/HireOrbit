@@ -1,14 +1,14 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import TYPES from './types';
-import { CompanyRepository } from '../repositories/CompanyRepository';
-import { CompanyService } from '../services/CompanyService';
-import { EmailService } from '../services/EmailService';
-import { RedisService } from '../services/RedisService';
+import { CompanyRepository } from '../repositories/implementation/CompanyRepository';
+import { CompanyService } from '../services/implementation/CompanyService';
+import { EmailService } from '../services/implementation/EmailService';
+import { RedisService } from '../services/implementation/RedisService';
 import { CompanyController } from '../controllers/CompanyController'; 
-import { ICompanyRepository } from '../repositories/ICompanyRepository';
-import { ICompanyService } from '../services/ICompanyService';
-import { IEmailService } from '../services/IEmailService';
+import { ICompanyRepository } from '../repositories/interface/ICompanyRepository';
+import { ICompanyService } from '../services/interface/ICompanyService';
+import { IEmailService } from '../services/interface/IEmailService';
 
 const container = new Container();
 
