@@ -3,12 +3,13 @@ import { userServiceProxy, userServiceMultipartProxy } from './userService';
 import { companyServiceProxy } from './companyService';
 import { jobServiceProxy } from './jobService';
 import { applicationServiceProxy, applicationServiceMultipartProxy } from './applicationService';
+import { notificationServiceProxy } from './notificationService';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
   const path = req.originalUrl;
 
   if (path.startsWith('/api/users')) {
-    console.log(' Routing to User Service');
+    console.log('Routing to User Service');
     
     const contentType = req.headers['content-type'];
     if (contentType && contentType.includes('multipart/form-data')) {
@@ -20,15 +21,15 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
     }
     
   } else if (path.startsWith('/api/company')) {
-    console.log(' Routing to Company Service');
-    console.log(' [LOAD BALANCER] About to call companyServiceProxy...');
+    console.log('Routing to Company Service');
     companyServiceProxy(req, res, next);
+    
   } else if (path.startsWith('/api/jobs')) {
-    console.log(' Routing to Job Service');
-    console.log(' [LOAD BALANCER] About to call jobServiceProxy...');
+    console.log('Routing to Job Service');
     jobServiceProxy(req, res, next);
+    
   } else if (path.startsWith('/api/applications')) {
-    console.log(' Routing to Application Service');
+    console.log('Routing to Application Service');
     
     const contentType = req.headers['content-type'];
     if (contentType && contentType.includes('multipart/form-data')) {
@@ -39,9 +40,12 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
       applicationServiceProxy(req, res, next);
     }
     
+  } else if (path.startsWith('/api/notifications')) {
+    console.log('Routing to Notification Service');
+    notificationServiceProxy(req, res, next);
+    
   } else {
-    console.log(' Default routing to User Service');
-    console.log(' [LOAD BALANCER] About to call userServiceProxy (default)...');
+    console.log('Default routing to User Service');
     userServiceProxy(req, res, next);
   }
 };

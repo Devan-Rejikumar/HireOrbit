@@ -5,9 +5,9 @@ export function mapJobToResponse(job: {
   title: string;
   description: string;
   company: string;
-  companyId?: string;
+  companyId?: string | null;
   location: string;
-  salary?: number;
+  salary?: number | null;
   jobType: string;
   requirements: string[];
   benefits: string[];
@@ -17,15 +17,16 @@ export function mapJobToResponse(job: {
   workLocation: string;
   createdAt: Date;
   updatedAt: Date;
+  isActive?: boolean;
 }): JobResponse {
   return {
     id: job.id,
     title: job.title,
     description: job.description,
     company: job.company,
-    companyId: job.companyId,
+    companyId: job.companyId || undefined,
     location: job.location,
-    salary: job.salary,
+    salary: job.salary || undefined,
     jobType: job.jobType,
     requirements: job.requirements,
     benefits: job.benefits,
@@ -33,6 +34,7 @@ export function mapJobToResponse(job: {
     education: job.education,
     applicationDeadline: job.applicationDeadline,
     workLocation: job.workLocation,
+    isActive: job.isActive ?? true, // ✅ Add isActive field with default true
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   };
@@ -43,8 +45,9 @@ export function mapJobsToResponse(jobs: Array<{
   title: string;
   description: string;
   company: string;
+  companyId?: string | null;
   location: string;
-  salary?: number;
+  salary?: number | null;
   jobType: string;
   requirements: string[];
   benefits: string[];
@@ -54,6 +57,7 @@ export function mapJobsToResponse(jobs: Array<{
   workLocation: string;
   createdAt: Date;
   updatedAt: Date;
+  isActive?: boolean;
 }>): JobResponse[] {
   return jobs.map(mapJobToResponse);
 }

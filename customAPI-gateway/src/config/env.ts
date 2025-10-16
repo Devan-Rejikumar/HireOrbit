@@ -10,6 +10,7 @@ interface EnvConfig {
   COMPANY_SERVICE_URL: string;
   JOB_SERVICE_URL: string;
   APPLICATION_SERVICE_URL: string;
+  NOTIFICATION_SERVICE_URL: string;
   RATE_LIMIT_WINDOW_MS: number;
   RATE_LIMIT_MAX_REQUESTS: number;
   CORS_ORIGIN: string;
@@ -23,7 +24,8 @@ function getEnvConfig(): EnvConfig {
     'USER_SERVICE_URL',
     'COMPANY_SERVICE_URL',
     'JOB_SERVICE_URL',
-    'APPLICATION_SERVICE_URL'
+    'APPLICATION_SERVICE_URL',
+    'NOTIFICATION_SERVICE_URL'
   ];
 
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -42,6 +44,7 @@ function getEnvConfig(): EnvConfig {
     COMPANY_SERVICE_URL: process.env.COMPANY_SERVICE_URL!,
     JOB_SERVICE_URL: process.env.JOB_SERVICE_URL!,
     APPLICATION_SERVICE_URL: process.env.APPLICATION_SERVICE_URL!,
+    NOTIFICATION_SERVICE_URL: process.env.NOTIFICATION_SERVICE_URL!,
     RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
     RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
     CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
@@ -62,6 +65,7 @@ export const {
   COMPANY_SERVICE_URL,
   JOB_SERVICE_URL,
   APPLICATION_SERVICE_URL,
+  NOTIFICATION_SERVICE_URL,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX_REQUESTS,
   CORS_ORIGIN,

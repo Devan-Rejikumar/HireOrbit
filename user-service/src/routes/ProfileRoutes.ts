@@ -6,6 +6,7 @@ import multer from 'multer';
 import { ResumeController } from '../controllers/ResumeController';
 import { CertificationController } from '../controllers/CertificationController';
 import { AchievementController } from '../controllers/AchievementController';
+import { authenticateToken } from '../middleware/auth';
 
 
 const router = Router();
@@ -74,7 +75,7 @@ router.get('/current', (req, res) => {
 
 
 router.post('/',(req, res) => profileController.createProfile(req, res));
-router.get('/',(req, res) => profileController.getProfile(req, res));
+router.get('/',authenticateToken,(req, res) => profileController.getProfile(req, res));
 
 router.put('/',(req, res, next) => {
   console.log('PROFILE-ROUTE PUT /profile/ hit');
