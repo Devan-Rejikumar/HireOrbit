@@ -61,8 +61,8 @@ model UserProfile {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   resume         String?
-  certifications Json?  
   achievements   String?
+  certifications Json?
   education      Education[]
   experience     Experience[]
   user           User         @relation(fields: [userId], references: [id])

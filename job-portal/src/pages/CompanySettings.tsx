@@ -120,13 +120,46 @@ const CompanySettings = () => {
           
           <div className="flex items-center gap-4">
             {/* Post Job Button */}
-            <Button 
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2"
-              onClick={() => navigate('/company/post-job')}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Post a job
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                className={`px-4 py-2 ${
+                  company?.profileCompleted && company?.isVerified
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                }`}
+                onClick={() => {
+                  if (company?.profileCompleted && company?.isVerified) {
+                    navigate('/company/post-job');
+                  }
+                }}
+                disabled={!company?.profileCompleted || !company?.isVerified}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Post a job
+              </Button>
+              
+              {/* Notification message when button is disabled */}
+              {(!company?.profileCompleted || !company?.isVerified) && (
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-gray-500 max-w-xs">
+                    {!company?.profileCompleted 
+                      ? "Complete your profile to post jobs"
+                      : !company?.isVerified 
+                      ? "Awaiting admin approval to post jobs"
+                      : "Complete profile and get approval to post jobs"
+                    }
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate('/company/review-status')}
+                    className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
+                  >
+                    Check Status
+                  </Button>
+                </div>
+              )}
+            </div>
             
             {/* Notification Bell */}
             <div className="relative">

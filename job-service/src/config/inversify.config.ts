@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import TYPES from './types';
-import { JobService } from '../services/JobService';
-import { JobRepository } from '../repositories/JobRepository';
-import { IJobRepository } from '../repositories/IJobRepository';
-import { IJobService } from '../services/IJobService';
+import { JobService } from '../services/implementation/JobService';
+import { JobRepository } from '../repositories/implementation/JobRepository';
+import { IJobRepository } from '../repositories/interface/IJobRepository';
+import { IJobService } from '../services/interface/IJobService';
 import { JobController } from '../controllers/JobController';
 
 const container = new Container();

@@ -30,6 +30,7 @@ interface UserApiResponse {
     user?: {
       id?: string;
       name?: string;
+      username?: string; // ✅ Add username field
       email?: string;
       role?: string;
       phone?: string;
@@ -170,8 +171,16 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       await Promise.all(
         applications.map(async (app) => {
           try {
+            // ✅ Add debugging
+            console.log(`🔍 [ApplicationService] Processing application ${app.id}:`);
+            console.log(`🔍 [ApplicationService] - userId: ${app.userId}`);
+            console.log(`🔍 [ApplicationService] - jobId: ${app.jobId}`);
+            
             const userRes = await fetch(`http://localhost:3000/api/users/${app.userId}`);
+            console.log(`🔍 [ApplicationService] - User API response status: ${userRes.status}`);
+            
             const userData = (userRes.ok ? await userRes.json() : {}) as UserApiResponse;
+            console.log(`🔍 [ApplicationService] - User API response data:`, JSON.stringify(userData, null, 2));
             const jobRes = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
             const jobData = (jobRes.ok ? await jobRes.json() : {}) as JobApiResponse;
             
@@ -180,7 +189,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
               jobTitle: jobData.data?.job?.title
             });
             externalDataMap.set(app.id, {
-              userName: userData.data?.user?.name || 'Unknown User',
+              userName: userData.data?.user?.username || userData.data?.user?.name || 'Unknown User', // ✅ Try username first, then name
               userEmail: userData.data?.user?.email || 'Unknown Email',
               userPhone: null,
               userProfile: null,

@@ -49,6 +49,9 @@ const JobListings = () => {
     education: [] as string[],
     workLocation: [] as string[],
   });
+  
+  // Quick search functionality
+  const [quickSearch, setQuickSearch] = useState('');
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showFilters, setShowFilters] = useState(false);

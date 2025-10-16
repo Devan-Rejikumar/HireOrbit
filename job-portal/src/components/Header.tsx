@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChangePasswordModal from './ChangePasswordModal';
 import { useAuth } from '@/context/AuthContext';
+import { NotificationBell } from './NotificationBell';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,7 +17,6 @@ const Header = () => {
     await logout();
     navigate('/', { replace: true });
   };
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -89,13 +89,10 @@ const Header = () => {
                 >
                   <Search className="h-5 w-5" />
                 </button>
-                <button 
-                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 relative"
-                  title="Notifications"
-                >
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                </button>
+                
+                {/* Notification Bell - Replaces the old Bell button */}
+                <NotificationBell />
+                
                 <div className="flex items-center space-x-2 pl-2 border-l border-gray-200">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-semibold">
@@ -231,6 +228,12 @@ const Header = () => {
                         <p className="text-sm text-gray-500">Job Seeker</p>
                       </div>
                     </div>
+                    
+                    {/* Mobile Notification Bell */}
+                    <div className="px-4 py-2">
+                      <NotificationBell />
+                    </div>
+                    
                     <button 
                       onClick={() => {navigate('/profile'); setIsMenuOpen(false);}} 
                       className="w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"

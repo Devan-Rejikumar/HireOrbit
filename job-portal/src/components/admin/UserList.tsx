@@ -19,7 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 type User = {
   id: string;
-  name: string;
+  username: string;
   email: string;
   role: string;
   isVerified: boolean;
@@ -121,7 +121,7 @@ const UserList = () => {
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.role.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -383,11 +383,11 @@ const UserList = () => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-medium">
-                          {user.name.charAt(0).toUpperCase()}
+                          {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-white">{user.name}</div>
+                        <div className="text-sm font-medium text-white">{user.username || 'Unknown User'}</div>
                         <div className="text-sm text-gray-400 flex items-center">
                           <Mail className="h-3 w-3 mr-1" />
                           {user.email}
@@ -448,7 +448,7 @@ const UserList = () => {
                           {user.isBlocked ? 'Blocked' : 'Active'}
                         </span>
                         <button
-                          onClick={() => handleToggleBlock(user.id, user.name, user.isBlocked)}
+                          onClick={() => handleToggleBlock(user.id, user.username || 'Unknown User', user.isBlocked)}
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                             user.isBlocked ? 'bg-red-600/30' : 'bg-green-600/30'
                           }`}
@@ -569,10 +569,10 @@ const UserList = () => {
                 {/* User Avatar and Basic Info */}
                 <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
-                    {selectedUser.name.charAt(0).toUpperCase()}
+                    {selectedUser.username ? selectedUser.username.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <div>
-                    <h4 className="text-xl font-semibold text-gray-900">{selectedUser.name}</h4>
+                    <h4 className="text-xl font-semibold text-gray-900">{selectedUser.username || 'Unknown User'}</h4>
                     <p className="text-gray-600 flex items-center">
                       <Mail className="h-4 w-4 mr-1" />
                       {selectedUser.email}
@@ -669,7 +669,7 @@ const UserList = () => {
                   <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h5>
                   <div className="flex items-center space-x-3">
                     <button
-                      onClick={() => handleToggleBlock(selectedUser.id, selectedUser.name, selectedUser.isBlocked)}
+                      onClick={() => handleToggleBlock(selectedUser.id, selectedUser.username, selectedUser.isBlocked)}
                       className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         selectedUser.isBlocked 
                           ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200' 
