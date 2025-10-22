@@ -40,6 +40,10 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
       applicationServiceProxy(req, res, next);
     }
     
+  } else if (path.startsWith('/api/interviews')) {
+    console.log('Routing to Application Service (Interviews)');
+    applicationServiceProxy(req, res, next);
+    
   } else if (path.startsWith('/api/notifications')) {
     console.log('Routing to Notification Service');
     notificationServiceProxy(req, res, next);

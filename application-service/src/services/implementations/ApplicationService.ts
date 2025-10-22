@@ -1,20 +1,20 @@
 import { injectable, inject } from 'inversify';
 import { ApplicationStatus } from '@prisma/client';
-import { IApplicationService } from './IApplicationService';
-import { IApplicationRepository } from '../repositories/IApplicationRepository';
-import { IEventService } from './IEventService';
+import { IApplicationService } from '../interface/IApplicationService';
+import { IApplicationRepository } from '../../repositories/interface/IApplicationRepository';
+import { IEventService } from '../interface/IEventService';
 import { StatusUpdateService } from './StatusUpdateService';
 import { 
   ApplicationResponse, 
   ApplicationDetailsResponse,
   CompanyApplicationsResponse,
   UserApplicationsResponse 
-} from '../dto/responses/application.response';
+} from '../../dto/responses/application.response';
 import { 
   CreateApplicationInput, 
   UpdateApplicationStatusInput, 
   AddApplicationNoteInput 
-} from '../dto/schemas/application.schema';
+} from '../../dto/schemas/application.schema';
 import {
   mapApplicationToResponse,
   mapApplicationToDetailsResponse,
@@ -22,15 +22,15 @@ import {
   mapCompanyApplicationsResponse,
   mapPaginatedApplicationsResponse,
   calculateApplicationStats
-} from '../dto/mappers/application.mapper';
-import {TYPES} from '../config/types';
+} from '../../dto/mappers/application.mapper';
+import {TYPES} from '../../config/types';
 
 interface UserApiResponse {
   data?: {
     user?: {
       id?: string;
       name?: string;
-      username?: string; // ✅ Add username field
+      username?: string; 
       email?: string;
       role?: string;
       phone?: string;
@@ -171,16 +171,15 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       await Promise.all(
         applications.map(async (app) => {
           try {
-            // ✅ Add debugging
-            console.log(`🔍 [ApplicationService] Processing application ${app.id}:`);
-            console.log(`🔍 [ApplicationService] - userId: ${app.userId}`);
-            console.log(`🔍 [ApplicationService] - jobId: ${app.jobId}`);
+            console.log(`[ApplicationService] Processing application ${app.id}:`);
+            console.log(` [ApplicationService] - userId: ${app.userId}`);
+            console.log(` [ApplicationService] - jobId: ${app.jobId}`);
             
             const userRes = await fetch(`http://localhost:3000/api/users/${app.userId}`);
-            console.log(`🔍 [ApplicationService] - User API response status: ${userRes.status}`);
+            console.log(` [ApplicationService] - User API response status: ${userRes.status}`);
             
             const userData = (userRes.ok ? await userRes.json() : {}) as UserApiResponse;
-            console.log(`🔍 [ApplicationService] - User API response data:`, JSON.stringify(userData, null, 2));
+            console.log(` [ApplicationService] - User API response data:`, JSON.stringify(userData, null, 2));
             const jobRes = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
             const jobData = (jobRes.ok ? await jobRes.json() : {}) as JobApiResponse;
             
@@ -189,7 +188,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
               jobTitle: jobData.data?.job?.title
             });
             externalDataMap.set(app.id, {
-              userName: userData.data?.user?.username || userData.data?.user?.name || 'Unknown User', // ✅ Try username first, then name
+              userName: userData.data?.user?.username || userData.data?.user?.name || 'Unknown User', 
               userEmail: userData.data?.user?.email || 'Unknown Email',
               userPhone: null,
               userProfile: null,

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, Briefcase, Search, Bell, Settings, Lock, LogOut } from 'lucide-react';
+import { Menu, X, User, Briefcase, Search, Bell, Settings, Lock, LogOut, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChangePasswordModal from './ChangePasswordModal';
@@ -11,7 +11,7 @@ const Header = () => {
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, role } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -124,6 +124,18 @@ const Header = () => {
                           <User className="h-4 w-4 mr-3" />
                           Profile
                         </button>
+                        {role === 'jobseeker' && (
+                          <button
+                            onClick={() => {
+                              navigate('/schedule');
+                              setShowSettingsDropdown(false);
+                            }}
+                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                          >
+                            <Calendar className="h-4 w-4 mr-3" />
+                            My Schedule
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             console.log('Change Password clicked!');
@@ -240,6 +252,14 @@ const Header = () => {
                     >
                       Profile Settings
                     </button>
+                    {role === 'jobseeker' && (
+                      <button 
+                        onClick={() => {navigate('/schedule'); setIsMenuOpen(false);}} 
+                        className="w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
+                      >
+                        My Schedule
+                      </button>
+                    )}
                     <Button 
                       variant="outline" 
                       className="w-full justify-start text-gray-700 border-gray-300 hover:border-red-300 hover:text-red-600 hover:bg-red-50" 

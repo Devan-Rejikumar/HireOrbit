@@ -24,6 +24,7 @@ model Application {
   // Relations
   statusHistory     ApplicationStatusHistory[]
   notes             ApplicationNotes[]
+  interviews        Interview[]
   
   @@map("applications")
 }
@@ -60,4 +61,27 @@ enum ApplicationStatus {
   REJECTED
   ACCEPTED
   WITHDRAWN
+}
+
+model Interview {
+  id              String      @id @default(cuid())
+  applicationId   String
+  scheduledAt     DateTime
+  duration        Int        
+  type            String     
+  location        String?     
+  meetingLink     String?     
+  status          String      
+  notes           String?
+  decisionReason  String?     // Reason for selection/rejection
+  feedback        String?     // Additional feedback for candidate
+  decidedAt       DateTime?   // When the decision was made
+  decidedBy       String?     // Company user who made the decision
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relation
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  @@map("interviews")
 }
