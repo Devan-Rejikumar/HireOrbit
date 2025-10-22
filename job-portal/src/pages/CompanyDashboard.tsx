@@ -400,9 +400,12 @@ const CompanyDashboard = () => {
                 <Briefcase className="h-5 w-5" />
                 Job Listing
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate('/company/interviews')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
                 <CalendarIcon className="h-5 w-5" />
-                My Schedule
+                Interview Management
               </button>
               <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <CreditCard className="h-5 w-5" />

@@ -14,18 +14,19 @@
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
+    "axios": "^1.12.2",
     "cloudinary": "^1.41.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "inversify": "^7.6.1",
+    "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
     "multer": "^1.4.5-lts.1",
     "prisma": "^6.12.0",
     "reflect-metadata": "^0.2.2",
     "shared-dto": "file:../shared-dto",
-    "zod": "^4.1.1",
-    "jsonwebtoken": "^9.0.2"
+    "zod": "^4.1.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

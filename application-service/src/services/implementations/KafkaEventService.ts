@@ -1,5 +1,5 @@
-import { IEventService } from './IEventService';
-import { producer, consumer } from '../config/kafka.config';
+import { IEventService } from '../interface/IEventService';
+import { producer, consumer } from '../../config/kafka.config';
 
 export class KafkaEventService implements IEventService {
   async publish<T>(event: string, data: T): Promise<void> {
