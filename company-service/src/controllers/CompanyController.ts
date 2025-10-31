@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import TYPES from '../config/types';
-import { ICompanyService } from '../services/ICompanyService';
+import { ICompanyService } from '../services/interface/ICompanyService';
 import { HttpStatusCode, AuthStatusCode, OTPStatusCode, CompanyStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { CompanyGenerateOTPSchema, CompanyLoginSchema, CompanyProfileSchema, CompanyRegisterSchema, CompanyStep2Schema, CompanyStep3Schema, CompanyVerifyOTPSchema, RejectCompanySchema } from '../dto/schemas/company.schema';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
@@ -83,10 +83,12 @@ export class CompanyController {
       const result = await this.companyService.refreshToken(refreshToken);
     
       res.cookie('companyAccessToken', result.accessToken, {
-        httpOnly: true,
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 2 * 60 * 60 * 1000,
+        domain: 'localhost',
+        path: '/',
       });
     
       res.status(HttpStatusCode.OK).json(buildSuccessResponse(null,'Token refreshed successfully'));

@@ -92,13 +92,18 @@ interface UserData {
 }
 
 interface ProfileResponse {
-  profile: UserProfile;
-  user: UserData;
-  completionPercentage: number;
+  success: boolean;
+  data: {
+    profile: UserProfile;
+    user: UserData;
+    completionPercentage: number;
+  };
+  message: string;
+  timestamp: string;
 }
 
 const UserProfile = () => {
-  const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
+  const [profileData, setProfileData] = useState<ProfileResponse['data'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
@@ -121,32 +126,10 @@ const UserProfile = () => {
   const fetchProfile = async () => {
     try {
       const response = await api.get<ProfileResponse>('/profile/full');
-      console.log('Profile data received:', response.data);
-      console.log('Achievements in profile:', response.data.profile.achievements);
-      console.log('Certifications in profile:', response.data.profile.certifications);
-      if (response.data.profile.achievements && typeof response.data.profile.achievements === 'string') {
-        try {
-          response.data.profile.achievements = JSON.parse(response.data.profile.achievements);
-          console.log('Parsed achievements:', response.data.profile.achievements);
-        } catch (parseError) {
-          console.error('Error parsing achievements:', parseError);
-          response.data.profile.achievements = [];
-        }
-      }
-      if (response.data.profile.certifications && typeof response.data.profile.certifications === 'string') {
-        try {
-          response.data.profile.certifications = JSON.parse(response.data.profile.certifications);
-          console.log('Parsed certifications:', response.data.profile.certifications);
-        } catch (parseError) {
-          console.error('Error parsing certifications:', parseError);
-          response.data.profile.certifications = [];
-        }
-      }
-      
-      setProfileData(response.data);
-      console.log('🔍 Frontend - Profile data received:', response.data);
-      console.log('🔍 Frontend - User data:', response.data.user);
-      console.log('🔍 Frontend - User isVerified:', response.data.user?.isVerified);
+        setProfileData(response.data.data);
+      console.log('🔍 Frontend - Profile data received:', response.data.data);
+      console.log('🔍 Frontend - User data:', response.data.data?.user);
+      console.log('🔍 Frontend - User isVerified:', response.data.data?.user?.isVerified);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -271,11 +254,23 @@ const UserProfile = () => {
       console.error('Error adding certification:', error);
       console.error('Error response data:', error.response?.data);
       
-      // Extract error message from different possible locations
+      // Extract and parse error message
       let errorMessage = 'Failed to add certification';
       
       if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+        try {
+          // Try to parse Zod validation errors
+          const errorData = JSON.parse(error.response.data.error);
+          if (Array.isArray(errorData) && errorData.length > 0) {
+            // Extract the first validation error message
+            errorMessage = errorData[0].message || 'Validation error';
+          } else {
+            errorMessage = error.response.data.error;
+          }
+        } catch {
+          // If parsing fails, use the raw error
+          errorMessage = error.response.data.error;
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -326,11 +321,23 @@ const UserProfile = () => {
       console.error('Error updating certification:', error);
       console.error('Error response data:', error.response?.data);
       
-      // Extract error message from different possible locations
+      // Extract and parse error message
       let errorMessage = 'Failed to update certification';
       
       if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+        try {
+          // Try to parse Zod validation errors
+          const errorData = JSON.parse(error.response.data.error);
+          if (Array.isArray(errorData) && errorData.length > 0) {
+            // Extract the first validation error message
+            errorMessage = errorData[0].message || 'Validation error';
+          } else {
+            errorMessage = error.response.data.error;
+          }
+        } catch {
+          // If parsing fails, use the raw error
+          errorMessage = error.response.data.error;
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -352,11 +359,23 @@ const UserProfile = () => {
       console.error('Error adding achievement:', error);
       console.error('Error response data:', error.response?.data);
       
-      // Extract error message from different possible locations
+      // Extract and parse error message
       let errorMessage = 'Failed to add achievement';
       
       if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+        try {
+          // Try to parse Zod validation errors
+          const errorData = JSON.parse(error.response.data.error);
+          if (Array.isArray(errorData) && errorData.length > 0) {
+            // Extract the first validation error message
+            errorMessage = errorData[0].message || 'Validation error';
+          } else {
+            errorMessage = error.response.data.error;
+          }
+        } catch {
+          // If parsing fails, use the raw error
+          errorMessage = error.response.data.error;
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -407,11 +426,23 @@ const UserProfile = () => {
       console.error('Error updating achievement:', error);
       console.error('Error response data:', error.response?.data);
       
-      // Extract error message from different possible locations
+      // Extract and parse error message
       let errorMessage = 'Failed to update achievement';
       
       if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+        try {
+          // Try to parse Zod validation errors
+          const errorData = JSON.parse(error.response.data.error);
+          if (Array.isArray(errorData) && errorData.length > 0) {
+            // Extract the first validation error message
+            errorMessage = errorData[0].message || 'Validation error';
+          } else {
+            errorMessage = error.response.data.error;
+          }
+        } catch {
+          // If parsing fails, use the raw error
+          errorMessage = error.response.data.error;
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -648,7 +679,7 @@ const UserProfile = () => {
               </button>
             </div>
 
-            {profile.experience.length === 0 ? (
+            {(!profile.experience || profile.experience.length === 0) ? (
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Briefcase className="h-8 w-8 text-gray-400" />
@@ -658,7 +689,7 @@ const UserProfile = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {profile.experience.map((exp, index) => (
+                {profile.experience?.map((exp, index) => (
                   <div
                     key={exp.id}
                     className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
@@ -745,7 +776,7 @@ const UserProfile = () => {
               </button>
             </div>
 
-            {profile.education.length === 0 ? (
+            {(!profile.education || profile.education.length === 0) ? (
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                   <GraduationCap className="h-8 w-8 text-gray-400" />
@@ -755,7 +786,7 @@ const UserProfile = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {profile.education.map((edu, index) => (
+                {profile.education?.map((edu, index) => (
                   <div
                     key={edu.id}
                     className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
@@ -817,7 +848,7 @@ const UserProfile = () => {
               </button>
             </div>
 
-            {profile.skills.length === 0 ? (
+            {(!profile.skills || profile.skills.length === 0) ? (
               <div className="text-center py-12 bg-gray-50 rounded-xl">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Award className="h-8 w-8 text-gray-400" />
@@ -827,7 +858,7 @@ const UserProfile = () => {
               </div>
             ) : (
               <div className="flex flex-wrap gap-3">
-                {profile.skills.map((skill, index) => (
+                {profile.skills?.map((skill, index) => (
                   <span
                     key={index}
                     className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-4 py-2 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200"
@@ -870,7 +901,7 @@ const UserProfile = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {profile.certifications.map((cert, index) => (
+                {profile.certifications?.map((cert, index) => (
                   <div
                     key={cert.id}
                     className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
@@ -970,7 +1001,7 @@ const UserProfile = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {profile.achievements.map((achievement, index) => (
+                {profile.achievements?.map((achievement, index) => (
                   <div
                     key={achievement.id}
                     className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}

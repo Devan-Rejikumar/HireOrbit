@@ -10,9 +10,9 @@ import { AchievementController } from '../controllers/AchievementController';
 
 const router = Router();
 const profileController = container.get<ProfileController>(TYPES.ProfileController);
-const resumeController = container.get<ResumeController>('ResumeController');
-const certificationController = container.get<CertificationController>('CertificationController');
-const achievementController = container.get<AchievementController>('AchievementController');
+const resumeController = container.get<ResumeController>(TYPES.ResumeController);
+const certificationController = container.get<CertificationController>(TYPES.CertificationController);
+const achievementController = container.get<AchievementController>(TYPES.AchievementController);
 
 const upload = multer({ 
   storage: multer.memoryStorage(),

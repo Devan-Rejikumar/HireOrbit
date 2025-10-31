@@ -20,6 +20,22 @@ module.exports = [
       'no-console': 'off',                    // Allows console.log for testing
       '@typescript-eslint/no-explicit-any': 'warn',  // Warning instead of error
 
+      // Naming conventions - private/protected members must use underscore prefix
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'memberLike',
+          modifiers: ['private'],
+          format: ['camelCase'],
+          leadingUnderscore: 'require',
+        },
+        {
+          selector: 'memberLike',
+          modifiers: ['protected'],
+          format: ['camelCase'],
+          leadingUnderscore: 'require',
+        },
+      ],
     
       'semi': ['error', 'always'],            
       'quotes': ['error', 'single'],          

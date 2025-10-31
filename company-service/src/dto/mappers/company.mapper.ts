@@ -1,110 +1,46 @@
-import { CompanyDashboardResponse, CompanyProfileStepResponse, CompanyResponse } from '../responses/company.response';
+import { Company } from '@prisma/client';
+import { CompanyAuthResponse, CompanyDashboardResponse, CompanyProfileStepResponse, CompanyResponse } from '../responses/company.response';
 
-export function mapCompanyToResponse(company: {
-  id: string;
-  companyName: string;
-  email: string;
-  industry?: string;
-  size?: string;
-  website?: string;
-  description?: string;
-  foundedYear?: number;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  contactPersonName?: string;
-  contactPersonTitle?: string;
-  contactPersonEmail?: string;
-  contactPersonPhone?: string;
-  isVerified: boolean;
-  isBlocked: boolean;
-  profileCompleted: boolean;
-  rejectionReason?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}): CompanyResponse {
+export function mapCompanyToResponse(company: Company): CompanyResponse {
   return {
     id: company.id,
     companyName: company.companyName,
     email: company.email,
-    industry: company.industry,
-    size: company.size,
-    website: company.website,
-    description: company.description,
-    foundedYear: company.foundedYear,
-    phone: company.phone,
-    address: company.address,
-    city: company.city,
-    state: company.state,
-    country: company.country,
-    contactPersonName: company.contactPersonName,
-    contactPersonTitle: company.contactPersonTitle,
-    contactPersonEmail: company.contactPersonEmail,
-    contactPersonPhone: company.contactPersonPhone,
+    industry: company.industry || undefined,
+    size: company.size || undefined,
+    website: company.website || undefined,
+    description: company.description || undefined,
+    foundedYear: company.foundedYear || undefined,
+    headquarters: company.headquarters || undefined,
+    linkedinUrl: company.linkedinUrl || undefined,
+    logo: company.logo || undefined,
+    phone: company.phone || undefined,
+    businessType: company.businessType || undefined,
+    contactPersonName: company.contactPersonName || undefined,
+    contactPersonTitle: company.contactPersonTitle || undefined,
+    contactPersonEmail: company.contactPersonEmail || undefined,
+    contactPersonPhone: company.contactPersonPhone || undefined,
+    address: company.address || undefined,
+    city: company.city || undefined,
+    state: company.state || undefined,
+    country: company.country || undefined,
     isVerified: company.isVerified,
     isBlocked: company.isBlocked,
     profileCompleted: company.profileCompleted,
-    rejectionReason: company.rejectionReason,
+    rejectionReason: company.rejectionReason || undefined,
+    reviewedAt: company.reviewedAt || undefined,
+    reviewedBy: company.reviewedBy || undefined,
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
   };
 }
 
-export function mapCompaniesToResponse(companies: Array<{
-  id: string;
-  companyName: string;
-  email: string;
-  industry?: string;
-  size?: string;
-  website?: string;
-  description?: string;
-  foundedYear?: number;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  contactPersonName?: string;
-  contactPersonTitle?: string;
-  contactPersonEmail?: string;
-  contactPersonPhone?: string;
-  isVerified: boolean;
-  isBlocked: boolean;
-  profileCompleted: boolean;
-  rejectionReason?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}>): CompanyResponse[] {
+export function mapCompaniesToResponse(companies: Company[]): CompanyResponse[] {
   return companies.map(mapCompanyToResponse);
 }
+
 export function mapCompanyDashboardResponse(
-  company: {
-    id: string;
-    companyName: string;
-    email: string;
-    industry?: string;
-    size?: string;
-    website?: string;
-    description?: string;
-    foundedYear?: number;
-    phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-    contactPersonName?: string;
-    contactPersonTitle?: string;
-    contactPersonEmail?: string;
-    contactPersonPhone?: string;
-    isVerified: boolean;
-    isBlocked: boolean;
-    profileCompleted: boolean;
-    rejectionReason?: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }, 
+  company: Company, 
   profileStep: CompanyProfileStepResponse | null, 
   jobCount: number, 
   applicationCount: number,
@@ -114,5 +50,12 @@ export function mapCompanyDashboardResponse(
     profileStep,
     jobCount,
     applicationCount,
+  };
+}
+
+export function mapCompanyToAuthResponse(company: Company, tokens: {accessToken: string; refreshToken: string}): CompanyAuthResponse {
+  return {
+    company: mapCompanyToResponse(company),
+    tokens
   };
 }

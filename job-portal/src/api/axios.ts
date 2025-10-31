@@ -26,8 +26,8 @@ api.interceptors.request.use(
         role = 'company';
         localStorage.setItem('role', 'company');
       } else if (document.cookie.includes('accessToken')) {
-        role = 'user';
-        localStorage.setItem('role', 'user');
+        role = 'jobseeker';
+        localStorage.setItem('role', 'jobseeker');
       }
     }
     
@@ -48,8 +48,23 @@ api.interceptors.request.use(
       availableCookies: document.cookie.split(';').map(c => c.trim().split('=')[0])
     });
     
-    return token;
-  };
+    if (token) {
+      console.log('✅ Token found:', token.substring(0, 20) + '...');
+    } else {
+      console.log('❌ No token found for role:', role);
+      console.log('🔍 Looking for cookie:', cookieName);
+      console.log('🔍 All cookies:', document.cookie);
+    }
+    
+  return token;
+};
+
+// Function to get refresh token from cookies
+const getRefreshTokenFromCookie = () => {
+  const cookies = document.cookie.split(';');
+  const refreshTokenCookie = cookies.find(cookie => cookie.trim().startsWith('refreshToken='));
+  return refreshTokenCookie ? refreshTokenCookie.split('=')[1] : null;
+};
     
     const token = getTokenFromCookie();
     if (token) {
@@ -63,10 +78,49 @@ api.interceptors.request.use(
       hasAuthHeader: !!config.headers?.['Authorization']
     });
     
+    // Debug token details
+    if (config.headers?.['Authorization']) {
+      console.log('🔑 Token being sent:', config.headers['Authorization'].substring(0, 20) + '...');
+    } else {
+      console.log('❌ No Authorization header found');
+      console.log('🔍 Available cookies:', document.cookie);
+    }
+    
     return config;
   },
-  (error) => {
+  async (error) => {
     console.error('❌ Request Error:', error);
+    
+    // Handle 401/403 errors with token refresh
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      console.log('🔄 Token expired, attempting refresh...');
+      
+      try {
+        const refreshToken = getRefreshTokenFromCookie();
+        if (refreshToken) {
+          console.log('🔄 Refresh token found, calling refresh endpoint...');
+          const response = await axios.post('http://localhost:4000/api/users/refresh', {
+            refreshToken: refreshToken
+          });
+          
+          if (response.data.success) {
+            console.log('🔄 Token refreshed successfully');
+            // Update the access token cookie
+            document.cookie = `accessToken=${response.data.data.accessToken}; path=/; domain=localhost; max-age=${2*60*60}`;
+            
+            // Retry the original request
+            const originalRequest = error.config;
+            originalRequest.headers.Authorization = `Bearer ${response.data.data.accessToken}`;
+            return axios(originalRequest);
+          }
+        }
+      } catch (refreshError) {
+        console.error('🔄 Token refresh failed:', refreshError);
+        // Redirect to login if refresh fails
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );

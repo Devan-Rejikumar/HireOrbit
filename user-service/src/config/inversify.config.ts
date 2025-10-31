@@ -1,40 +1,51 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import TYPES from './types';
-import { UserService } from '../services/UserService';
-import { UserRepository } from '../repositories/UserRepository';
-import { EmailService } from '../services/EmailService';
-import { RedisService } from '../services/RedisService';
+
+// Repository Interfaces
+import { IUserRepository } from '../repositories/interfaces/IUserRepository';
+import { IAdminRepository } from '../repositories/interfaces/IAdminRepository';
+import { IProfileRepository } from '../repositories/interfaces/IProfileRepository';
+import { IResumeRepository } from '../repositories/interfaces/IResumeRepository';
+import { ICertificationRepository } from '../repositories/interfaces/ICertificationRepository';
+import { IAchievementRepository } from '../repositories/interfaces/IAchievementRepository';
+import { ICompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
+
+// Repository Implementations
+import { UserRepository } from '../repositories/implementations/UserRepository';
+import { AdminRepository } from '../repositories/implementations/AdminRepository';
+import { ProfileRepository } from '../repositories/implementations/ProfileRepository';
+import { ResumeRepository } from '../repositories/implementations/ResumeRepository';
+import { CertificationRepository } from '../repositories/implementations/CertificationRepository';
+import { AchievementRepository } from '../repositories/implementations/AchievementRepository';
+import { CompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
+
+// Service Interfaces
+import { IUserService } from '../services/interfaces/IUserService';
+import { IAdminService } from '../services/interfaces/IAdminService';
+import { IProfileService } from '../services/interfaces/IProfileService';
+import { IResumeService } from '../services/interfaces/IResumeService';
+import { ICertificationService } from '../services/interfaces/ICertificationService';
+import { IAchievementService } from '../services/interfaces/IAchievementService';
+
+// Service Implementations
+import { UserService } from '../services/implementations/UserService';
+import { AdminService } from '../services/implementations/AdminService';
+import { ProfileService } from '../services/implementations/ProfileService';
+import { ResumeService } from '../services/implementations/ResumeService';
+import { CertificationService } from '../services/implementations/CertificationService';
+import { AchievementService } from '../services/implementations/AchievementService';
+import { RedisService } from '../services/implementations/RedisService';
+import { EmailService } from '../services/implementations/EmailService';
+import { JWTService } from '../services/implementations/JWTService';
+
+// Controllers
 import { UserController } from '../controllers/UserController';
-import { AdminRepository } from '../repositories/AdminRepository';
-import { AdminService } from '../services/AdminService';
 import { AdminController } from '../controllers/AdminController';
-import { IUserRepository } from '../repositories/IUserRepository';
-import { IAdminRepository } from '../repositories/IAdminRepository';
-import { IAdminService } from '../services/IAdminService';
-import { IUserService } from '../services/IUserService';
-import { ProfileRepository } from '../repositories/ProfileRepository';
-import { IProfileRepository } from '../repositories/IProfileRepository';
-import { ProfileService } from '../services/ProfileService';
-import { IProfileService } from '../services/IProfileService';
 import { ProfileController } from '../controllers/ProfileController';
-import { CompanyApiRepository, ICompanyApiRepository } from '../repositories/CompanyApiRepository';
-import { JWTService } from '../services/JWTService';
 import { ResumeController } from '../controllers/ResumeController';
-import { ResumeService } from '../services/ResumeService';
-import { ResumeRepository } from '../repositories/ResumeRepository';
-import { IResumeRepository } from '../repositories/IResumeRepository';
-import { IResumeService } from '../services/IResumeService';
-import { ICertificationRepository } from '../repositories/ICertificationRepository';
-import { ICertificationService } from '../services/ICertificationService';
 import { CertificationController } from '../controllers/CertificationController';
-import { CertificationService } from '../services/CertificationService';
-import { CertificationRepository } from '../repositories/CertificationRepository';
-import { IAchievementRepository } from '../repositories/IAchievementRepository';
-import { IAchievementService } from '../services/IAchievementService';
 import { AchievementController } from '../controllers/AchievementController';
-import { AchievementService } from '../services/AchievementService';
-import { AchievementRepository } from '../repositories/AchievementRepository';
 
 
 const container = new Container();
@@ -55,13 +66,13 @@ container.bind<IProfileService>(TYPES.IProfileService).to(ProfileService);
 container.bind<ProfileController>(TYPES.ProfileController).to(ProfileController);
 container.bind<ICompanyApiRepository>(TYPES.ICompanyApiRepository).to(CompanyApiRepository);
 container.bind<JWTService>(TYPES.JWTService).to(JWTService);
-container.bind<IResumeRepository>('IResumeRepository').to(ResumeRepository);
-container.bind<IResumeService>('IResumeService').to(ResumeService);
-container.bind<ResumeController>('ResumeController').to(ResumeController);
-container.bind<ICertificationRepository>('ICertificationRepository').to(CertificationRepository);
-container.bind<ICertificationService>('ICertificationService').to(CertificationService);
-container.bind<CertificationController>('CertificationController').to(CertificationController);
-container.bind<IAchievementRepository>('IAchievementRepository').to(AchievementRepository);
-container.bind<IAchievementService>('IAchievementService').to(AchievementService);
-container.bind<AchievementController>('AchievementController').to(AchievementController);
+container.bind<IResumeRepository>(TYPES.IResumeRepository).to(ResumeRepository);
+container.bind<IResumeService>(TYPES.IResumeService).to(ResumeService);
+container.bind<ResumeController>(TYPES.ResumeController).to(ResumeController);
+container.bind<ICertificationRepository>(TYPES.ICertificationRepository).to(CertificationRepository);
+container.bind<ICertificationService>(TYPES.ICertificationService).to(CertificationService);
+container.bind<CertificationController>(TYPES.CertificationController).to(CertificationController);
+container.bind<IAchievementRepository>(TYPES.IAchievementRepository).to(AchievementRepository);
+container.bind<IAchievementService>(TYPES.IAchievementService).to(AchievementService);
+container.bind<AchievementController>(TYPES.AchievementController).to(AchievementController);
 export default container;

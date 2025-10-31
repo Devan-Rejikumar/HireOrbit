@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
-import { IAdminService } from '../services/IAdminService';
-import { IUserService } from '../services/IUserService';
+import { IAdminService } from '../services/interfaces/IAdminService';
+import { IUserService } from '../services/interfaces/IUserService';
 import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 
 @injectable()
 export class AdminController {
   constructor(
-    @inject(TYPES.IAdminService) private adminService: IAdminService,
-    @inject(TYPES.IUserService) private userService: IUserService
+    @inject(TYPES.IAdminService) private _adminService: IAdminService,
+    @inject(TYPES.IUserService) private _userService: IUserService
   ) {}
 
 
@@ -26,7 +26,7 @@ export class AdminController {
         return;
       }
 
-      const { admin, tokens } = await this.adminService.login(email, password);
+      const { admin, tokens } = await this._adminService.login(email, password);
       console.log('[AdminController] 3. Tokens generated successfully');
       
       res.cookie('adminAccessToken', tokens.accessToken, {
@@ -66,7 +66,7 @@ export class AdminController {
         return;
       }
 
-      const result = await this.adminService.refreshToken(refreshToken);
+      const result = await this._adminService.refreshToken(refreshToken);
       
       res.cookie('adminAccessToken', result.accessToken, {
         httpOnly: false,
@@ -95,7 +95,7 @@ export class AdminController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      const result = await this.adminService.getAllUsersWithPagination(page, limit);
+      const result = await this._adminService.getAllUsersWithPagination(page, limit);
       res.status(HttpStatusCode.OK).json({ 
         users: result.data,
         pagination: {
@@ -128,7 +128,7 @@ export class AdminController {
         return;
       }
 
-      const user = await this.userService.blockUser(id);
+      const user = await this._userService.blockUser(id);
       res.status(HttpStatusCode.OK).json({ 
         message: 'User blocked successfully', 
         user 
@@ -162,7 +162,7 @@ export class AdminController {
         return;
       }
 
-      const user = await this.userService.unblockUser(id);
+      const user = await this._userService.unblockUser(id);
       res.status(HttpStatusCode.OK).json({ 
         message: 'User unblocked successfully', 
         user 
@@ -182,7 +182,7 @@ export class AdminController {
     try {
       const refreshToken = req.cookies.adminRefreshToken;
       if(refreshToken){
-        await this.adminService.logoutWithToken(refreshToken);
+        await this._adminService.logoutWithToken(refreshToken);
       }
       res.clearCookie('adminAccessToken', {
         httpOnly: false,
@@ -233,7 +233,7 @@ export class AdminController {
         return;
       }
 
-      const companies = await this.adminService.getPendingCompanies();
+      const companies = await this._adminService.getPendingCompanies();
       res.status(HttpStatusCode.OK).json({ companies });
     } catch (error: any) {
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
@@ -258,7 +258,7 @@ export class AdminController {
         return;
       }
 
-      const result = await this.adminService.approveCompany(companyId, adminId);
+      const result = await this._adminService.approveCompany(companyId, adminId);
       res.status(HttpStatusCode.OK).json({
         message: 'Company approved successfully',
         result
@@ -309,7 +309,7 @@ export class AdminController {
         return;
       }
 
-      const result = await this.adminService.rejectCompany(companyId, reason.trim(), adminId);
+      const result = await this._adminService.rejectCompany(companyId, reason.trim(), adminId);
       res.status(HttpStatusCode.OK).json({
         message: 'Company rejected successfully',
         result
