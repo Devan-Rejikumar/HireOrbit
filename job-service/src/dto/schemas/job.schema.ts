@@ -1,34 +1,34 @@
 import { z } from 'zod';
 
 export const CreateJobSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().min(1, 'Description is required'),
-  company: z.string().min(1, 'Company is required'),
-  location: z.string().min(1, 'Location is required'),
+  title: z.string().min(1, 'Title is required').transform(val => val.trim()),
+  description: z.string().min(1, 'Description is required').transform(val => val.trim()),
+  company: z.string().min(1, 'Company is required').transform(val => val.trim()),
+  location: z.string().min(1, 'Location is required').transform(val => val.trim()),
   jobType: z.string().min(1, 'Job type is required'),
-  requirements: z.array(z.string()).min(1, 'At least one requirement is needed'),
+  requirements: z.array(z.string()).min(1, 'At least one requirement is needed').transform(arr => arr.map(r => r.trim())),
   salary: z.number().nullable(), 
-  benefits: z.array(z.string()).optional().default([]),
+  benefits: z.array(z.string()).optional().default([]).transform(arr => arr.map(b => b.trim())),
   experienceLevel: z.string().min(1, 'Experience level is required'),
   education: z.string().min(1, 'Education requirement is required'),
   applicationDeadline: z.string().min(1, 'Application deadline is required'),
-  workLocation: z.string().min(1, 'Work location is required'),
+  workLocation: z.string().min(1, 'Work location is required').transform(val => val.trim()),
   isActive: z.boolean().default(true),
 });
 
 export const UpdateJobSchema = z.object({
-  title: z.string().min(1, 'Title is required').optional(),
-  description: z.string().min(1, 'Description is required').optional(),
-  company: z.string().min(1, 'Company is required').optional(),
-  location: z.string().min(1, 'Location is required').optional(),
+  title: z.string().min(1, 'Title is required').optional().transform(val => val?.trim()),
+  description: z.string().min(1, 'Description is required').optional().transform(val => val?.trim()),
+  company: z.string().min(1, 'Company is required').optional().transform(val => val?.trim()),
+  location: z.string().min(1, 'Location is required').optional().transform(val => val?.trim()),
   jobType: z.string().min(1, 'Job type is required').optional(),
-  requirements: z.array(z.string()).min(1, 'At least one requirement is needed').optional(),
+  requirements: z.array(z.string()).min(1, 'At least one requirement is needed').optional().transform(arr => arr?.map(r => r.trim())),
   salary: z.number().nullable().optional(),
-  benefits: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional().transform(arr => arr?.map(b => b.trim())),
   experienceLevel: z.string().min(1, 'Experience level is required').optional(),
   education: z.string().min(1, 'Education requirement is required').optional(),
   applicationDeadline: z.string().min(1, 'Application deadline is required').optional(),
-  workLocation: z.string().min(1, 'Work location is required').optional(),
+  workLocation: z.string().min(1, 'Work location is required').optional().transform(val => val?.trim()),
   isActive: z.boolean().optional(),
 });
 
@@ -49,22 +49,6 @@ export const JobSearchSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
-export const PaginationSchema = z.object({
-  page: z.number().min(1, 'Page must be at least 1').default(1),
-  limit: z.number().min(1, 'Limit must be at least 1').max(100, 'Limit cannot exceed 100').default(10),
-});
-
-export const JobApplicationSchema = z.object({
-  jobId: z.string().uuid('Invalid job ID'),
-  coverLetter: z.string().min(1, 'Cover letter is required'),
-  resume: z.string().min(1, 'Resume is required'),
-});
-
-export const UpdateJobApplicationSchema = z.object({
-  status: z.enum(['pending', 'reviewed', 'accepted', 'rejected']),
-  notes: z.string().optional(),
-});
-
 export const JobSuggestionsSchema = z.object({
   q: z.string().min(1, 'Query parameter is required'),
 });
@@ -72,6 +56,4 @@ export const JobSuggestionsSchema = z.object({
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
 export type JobSearchInput = z.infer<typeof JobSearchSchema>;
-export type JobApplicationInput = z.infer<typeof JobApplicationSchema>;
-export type UpdateJobApplicationInput = z.infer<typeof UpdateJobApplicationSchema>;
 export type JobSuggestionsInput = z.infer<typeof JobSuggestionsSchema>;

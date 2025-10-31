@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,9 @@ import {
   Bell,
   Settings,
   LogOut,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Search,
+  X
 } from 'lucide-react';
 import EditJobModal from '@/components/EditJobModal';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
@@ -81,6 +83,45 @@ const CompanyJobListing = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
+  
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filter jobs based on search query - prioritize title matches
+  const filteredJobs = useMemo(() => {
+    if (!searchQuery.trim()) return jobs;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    return jobs.filter(job => {
+      // Priority 1: Exact title match (most important)
+      if (job.title.toLowerCase().includes(query)) {
+        return true;
+      }
+      
+      // Priority 2: Other key fields (location, job type, experience level)
+      if (
+        job.location.toLowerCase().includes(query) ||
+        (job.jobType && job.jobType.toLowerCase().includes(query)) ||
+        (job.experienceLevel && job.experienceLevel.toLowerCase().includes(query)) ||
+        (job.education && job.education.toLowerCase().includes(query)) ||
+        (job.workLocation && job.workLocation.toLowerCase().includes(query))
+      ) {
+        return true;
+      }
+      
+      // Priority 3: Description match (only for very specific multi-word queries)
+      if (job.description && job.description.toLowerCase().includes(query)) {
+        // Only include if the query has 3+ words (like "Senior Business Analyst")
+        const words = query.split(' ').filter(word => word.length > 2);
+        if (words.length >= 3) {
+          return true;
+        }
+      }
+      
+      return false;
+    });
+  }, [jobs, searchQuery]);
 
   useEffect(() => {
     fetchJobs();
@@ -89,29 +130,29 @@ const CompanyJobListing = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      // Get company profile first to get company name
+      // Get company profile first to get company ID
       const companyResponse = await api.get('/company/profile');
       let companyData: Company | null = null;
-      let companyName = '';
+      let companyId = '';
       
       if (companyResponse.data && companyResponse.data.success && companyResponse.data.data && companyResponse.data.data.company) {
         companyData = companyResponse.data.data.company;
-        companyName = companyData.companyName;
+        companyId = companyData.id; // ✅ Use company.id instead of companyName
       } else if (companyResponse.data && companyResponse.data.company) {
         companyData = companyResponse.data.company;
-        companyName = companyData.companyName;
+        companyId = companyData.id; // ✅ Use company.id instead of companyName
       }
       
       setCompany(companyData);
       
-      if (!companyName) {
-        console.error('No company name found');
+      if (!companyId) {
+        console.error('No company ID found');
         setJobs([]);
         return;
       }
       
-      // Fetch jobs for the company using same endpoint as CompanyDashboard
-      const jobsResponse = await api.get(`/jobs/company/${encodeURIComponent(companyName)}`);
+      // Fetch jobs for the company using company ID
+      const jobsResponse = await api.get(`/jobs/company/${companyId}`); // ✅ Use companyId directly
       const jobsList = jobsResponse.data?.data?.jobs ?? [];
       setJobs(Array.isArray(jobsList) ? jobsList : []);
     } catch (error) {
@@ -129,7 +170,7 @@ const CompanyJobListing = () => {
 
   const handleDeleteJob = (job: Job) => {
     setJobToDelete(job);
-    setIsDeleteModalopen(true);
+    setIsDeleteModalOpen(true);
   };
 
   const confirmDeleteJob = async () => {
@@ -168,12 +209,17 @@ const CompanyJobListing = () => {
   };
 
   // Pagination helpers
-  const totalPages = Math.max(1, Math.ceil(jobs.length / pageSize));
-  const pagedJobs = jobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / pageSize));
+  const pagedJobs = filteredJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const goToPage = (p: number) => setCurrentPage(Math.min(Math.max(1, p), totalPages));
 
   // Calculate active jobs count
   const activeJobsCount = jobs.filter(job => job.isActive !== false && job.status !== 'deleted').length;
+  
+  // Reset pagination when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -201,13 +247,46 @@ const CompanyJobListing = () => {
           
           <div className="flex items-center gap-4">
             {/* Post Job Button */}
-            <Button 
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2"
-              onClick={() => navigate('/company/post-job')}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Post a job
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                className={`px-4 py-2 ${
+                  company?.profileCompleted && company?.isVerified
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                }`}
+                onClick={() => {
+                  if (company?.profileCompleted && company?.isVerified) {
+                    navigate('/company/post-job');
+                  }
+                }}
+                disabled={!company?.profileCompleted || !company?.isVerified}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Post a job
+              </Button>
+              
+              {/* Notification message when button is disabled */}
+              {(!company?.profileCompleted || !company?.isVerified) && (
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-gray-500 max-w-xs">
+                    {!company?.profileCompleted 
+                      ? "Complete your profile to post jobs"
+                      : !company?.isVerified 
+                      ? "Awaiting admin approval to post jobs"
+                      : "Complete profile and get approval to post jobs"
+                    }
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate('/company/review-status')}
+                    className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
+                  >
+                    Check Status
+                  </Button>
+                </div>
+              )}
+            </div>
             
             {/* Notification Bell */}
             <div className="relative">
@@ -373,6 +452,34 @@ const CompanyJobListing = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Search Bar */}
+              {jobs.length > 0 && (
+                <div className="mb-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <input
+                      type="text"
+                      placeholder="Search your jobs by title, location, type, or description..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  {searchQuery && (
+                    <div className="mt-2 text-sm text-gray-600">
+                      Found {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
               {loading ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -390,6 +497,18 @@ const CompanyJobListing = () => {
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Post Your First Job
+                  </Button>
+                </div>
+              ) : filteredJobs.length === 0 ? (
+                <div className="text-center py-12">
+                  <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs found</h3>
+                  <p className="text-gray-600 mb-6">No jobs match your search criteria. Try adjusting your search terms.</p>
+                  <Button 
+                    onClick={() => setSearchQuery('')} 
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    Clear Search
                   </Button>
                 </div>
               ) : (

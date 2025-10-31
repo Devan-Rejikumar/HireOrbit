@@ -63,7 +63,7 @@ app.use((req, res, next) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/users/admin', adminRoutes);
-app.use('/api/profile', authenticateToken, profileRoutes);
+app.use('/api/profile',  profileRoutes);//removed auth check here 
 
 console.log('=== ROUTES REGISTERED ===');
 console.log('User routes: /api/users');

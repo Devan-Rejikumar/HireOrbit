@@ -52,10 +52,7 @@ const CompanyApplications = () => {
   const handleViewResume = async (applicantName: string, resumeUrl?: string, applicationId?: string) => {
     if (!resumeUrl) return;
     
-    // Try to open directly first (works for public URLs)
     const newWindow = window.open(resumeUrl, '_blank');
-    
-    // If it fails to open or Cloudinary blocks, show download option
     if (!newWindow) {
       alert('Pop-up blocked! Please allow pop-ups or click Download button instead.');
     }
@@ -63,7 +60,6 @@ const CompanyApplications = () => {
 
   const handleDownloadResume = (resumeUrl?: string) => {
     if (resumeUrl) {
-      // Force download by adding download flag to Cloudinary URL
       const downloadUrl = resumeUrl.replace('/upload/', '/upload/fl_attachment/');
       window.open(downloadUrl, '_blank');
     }
@@ -75,9 +71,9 @@ const CompanyApplications = () => {
         status: newStatus,
         reason: `Status updated to ${newStatus}` 
       });
-      fetchApplications(); // Refresh the list
+      fetchApplications(); 
     } catch (error) {
-      console.error('❌ Error updating status:', error);
+      console.error(' Error updating status:', error);
     }
   };
 

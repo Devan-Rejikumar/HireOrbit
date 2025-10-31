@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(null);
         }
         console.log('🔍 AuthContext - Authentication successful!');
-      } catch (error) {
+      } catch (error: any) {
         console.log('🔍 AuthContext - Authentication check failed:', error);
         console.log('🔍 AuthContext - Error status:', error?.response?.status);
         console.log('🔍 AuthContext - Error data:', error?.response?.data);
