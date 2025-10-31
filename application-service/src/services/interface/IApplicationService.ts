@@ -1,5 +1,5 @@
-import { ApplicationResponse, ApplicationDetailsResponse,CompanyApplicationsResponse,UserApplicationsResponse } from '../dto/responses/application.response';
-import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from '../dto/schemas/application.schema';
+import { ApplicationResponse, ApplicationDetailsResponse,CompanyApplicationsResponse,UserApplicationsResponse } from '../../dto/responses/application.response';
+import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from '../../dto/schemas/application.schema';
 
 export interface IApplicationService {
   applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse>;

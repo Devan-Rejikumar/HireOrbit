@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { NotificationProvider } from './context/NotificationContext';
 import { useAuth } from './context/AuthContext';
 import RegisterPage from './pages/RegisterPage';
@@ -21,6 +23,8 @@ import NotFound from './pages/404Page';
 import CompanyApplications from './pages/CompanyApplications';
 import CompanyJobListing from './pages/CompanyJobListing';
 import CompanySettings from './pages/CompanySettings';
+import CompanyInterviewManagement from './pages/CompanyInterviewManagement';
+import MySchedule from './pages/MySchedule';
 import NotificationTest from './pages/NotificationTest';
 
 // Component to wrap routes with notification context
@@ -94,6 +98,8 @@ const AppContent = () => {
       <Route path="/company/settings" element={<CompanyProtectedRoute><CompanySettings /></CompanyProtectedRoute>} />
       <Route path="/jobs/:id" element={<JobDetails />} />
       <Route path="/company/applications" element={<CompanyProtectedRoute><CompanyApplications /></CompanyProtectedRoute>} />
+      <Route path="/company/interviews" element={<CompanyProtectedRoute><CompanyInterviewManagement /></CompanyProtectedRoute>} />
+      <Route path="/schedule" element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><MySchedule /></ProtectedRoute>} />
       
       {/* Test route for notifications */}
       <Route path="/notification-test" element={<NotificationTest />} />
@@ -107,6 +113,7 @@ function App() {
   return (
     <Router>
       <AppWithNotifications />
+      <ToastContainer />
     </Router>
   );
 }

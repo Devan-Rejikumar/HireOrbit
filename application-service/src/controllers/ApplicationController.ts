@@ -1,7 +1,7 @@
 
 import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
-import { IApplicationService } from "../services/IApplicationService";
+import { IApplicationService } from "../services/interface/IApplicationService";
 import { CreateApplicationSchema, UpdateApplicationStatusSchema,  AddApplicationNoteSchema,GetApplicationsQuerySchema } from "../dto/schemas/application.schema";
 import { buildSuccessResponse, buildErrorResponse } from "../../../shared-dto/src";
 import { HttpStatusCode, ValidationStatusCode } from "../enums/StatusCodes";

@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import { container } from './config/inversify.config';
-import { IEventService } from './services/IEventService';
+import { IEventService } from './services/interface/IEventService';
 import applicationRoutes from './routes/ApplicationRoutes';
+import interviewRoutes from './routes/InterviewRoutes';
 import {TYPES} from './config/types';
 
 
@@ -36,6 +37,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/applications', applicationRoutes);
+app.use('/api/interviews', interviewRoutes);
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Global error handler:', err);

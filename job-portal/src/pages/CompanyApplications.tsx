@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-react';
+import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar } from 'lucide-react';
 import api from '@/api/axios';
+import ScheduleInterviewModal from '@/components/ScheduleInterviewModal';
+import { interviewService } from '@/api/interviewService';
 
 interface Application {
   id: string;
@@ -30,9 +32,13 @@ const CompanyApplications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string>('appliedAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [schedulingApp, setSchedulingApp] = useState<Application | null>(null);
+  const [applicationsWithInterviews, setApplicationsWithInterviews] = useState<Set<string>>(new Set());
 
   useEffect(() => {
       fetchApplications();
+      fetchInterviewsForApplications();
   }, []);
 
   const fetchApplications = async () => {
@@ -46,6 +52,19 @@ const CompanyApplications = () => {
       setApplications([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInterviewsForApplications = async () => {
+    try {
+      const response = await interviewService.getCompanyInterviews();
+      const interviews = response.data || [];
+      
+      // Create a set of application IDs that have interviews scheduled
+      const appIdsWithInterviews = new Set(interviews.map(interview => interview.applicationId));
+      setApplicationsWithInterviews(appIdsWithInterviews);
+    } catch (error) {
+      console.error('❌ Error fetching interviews:', error);
     }
   };
 
@@ -75,6 +94,18 @@ const CompanyApplications = () => {
     } catch (error) {
       console.error(' Error updating status:', error);
     }
+  };
+
+  const handleScheduleInterview = (app: Application) => {
+    setSchedulingApp(app);
+    setShowScheduleModal(true);
+  };
+
+  const handleInterviewScheduled = () => {
+    setShowScheduleModal(false);
+    setSchedulingApp(null);
+    fetchApplications(); 
+    fetchInterviewsForApplications(); 
   };
 
   const handleSort = (field: string) => {
@@ -307,6 +338,16 @@ const CompanyApplications = () => {
                           >
                             See Application
                           </Button>
+                          {app.status === 'SHORTLISTED' && !applicationsWithInterviews.has(app.id) && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleScheduleInterview(app)}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <Calendar className="h-4 w-4 mr-1" />
+                              Schedule
+                            </Button>
+                          )}
                           <button className="text-gray-400 hover:text-gray-600">
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
@@ -429,6 +470,15 @@ const CompanyApplications = () => {
                       </Button>
                     </>
                   )}
+                  {selectedApp.status === 'SHORTLISTED' && !applicationsWithInterviews.has(selectedApp.id) && (
+                    <Button 
+                      onClick={() => handleScheduleInterview(selectedApp)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Schedule Interview
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={() => setSelectedApp(null)}>
                     Close
                   </Button>
@@ -437,6 +487,21 @@ const CompanyApplications = () => {
             </div>
       </div>
         </div>
+      )}
+
+      {/* Schedule Interview Modal */}
+      {schedulingApp && (
+        <ScheduleInterviewModal
+          isOpen={showScheduleModal}
+          onClose={() => {
+            setShowScheduleModal(false);
+            setSchedulingApp(null);
+          }}
+          applicationId={schedulingApp.id}
+          candidateName={schedulingApp.userName}
+          jobTitle={schedulingApp.jobTitle}
+          onSuccess={handleInterviewScheduled}
+        />
       )}
     </div>
   );
