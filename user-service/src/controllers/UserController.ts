@@ -119,7 +119,7 @@ export class UserController {
         sameSite: 'lax',
         domain: 'localhost',
         path: '/',
-        maxAge: 2*60*60*1000
+        maxAge: 15 * 60 * 1000  
       });
       console.log('USER CONTROLLER accessToken cookie set');
       
@@ -155,7 +155,7 @@ export class UserController {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 1000 
+      maxAge: 15 * 60 * 1000  
     });
 
     res.status(HttpStatusCode.OK).json({ message: 'Token refreshed successfully' });

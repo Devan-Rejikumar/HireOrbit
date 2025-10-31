@@ -47,7 +47,7 @@ export class CompanyController {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 2 * 60 * 60 * 1000,
+        maxAge: 15 * 60 * 1000,  // 15 minutes
         domain: 'localhost',
         path: '/',
       });
@@ -86,7 +86,7 @@ export class CompanyController {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 2 * 60 * 60 * 1000,
+        maxAge: 15 * 60 * 1000,  // 15 minutes
         domain: 'localhost',
         path: '/',
       });

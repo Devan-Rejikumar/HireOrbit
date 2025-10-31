@@ -39,32 +39,6 @@ export class UserService implements IUserService {
     return mapUserToResponse(user);
   }
 
-  // async login(email: string,password: string,): Promise<{user: User; tokens: TokenPair}> {
-  //   const user = await this._userRepository.findByEmail(email);
-  //   if (!user) throw new Error('Invalid credentials');
-  //   const valid = await bcrypt.compare(password, user.password);
-  //   if (!valid) throw new Error('Invalid credentials');
-  //   if (user.isBlocked) throw new Error('Account is blocked');
-  //   const tokens = this._jwtService.generateTokenPair({
-  //     userId:user.id,
-  //     email:user.email,
-  //     role:user.role,
-  //     userType:'individual'
-  //   });  
-  //   try {
-  //     const refresTokenPayload = this._jwtService.verifyRefreshToken(tokens.refreshToken);
-  //     await this._redisService.storeRefreshToken(
-  //       user.id,
-  //       refresTokenPayload.tokenId,
-  //       tokens.refreshToken
-  //     );
-  //   } catch (redisError) {
-  //     console.log('[UserService] Redis error (non-critical):', redisError);
-  //   }
-  //   console.log('[UserService] Login completed successfully');
-  //   return {user,tokens};
-  // }
-
   async login(email: string, password: string): Promise<AuthResponse> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) throw new Error('Invalid credentials');
