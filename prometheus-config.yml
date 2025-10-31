@@ -1,0 +1,47 @@
+# Prometheus Configuration File
+# This tells Prometheus WHICH services to scrape for metrics
+
+global:
+  scrape_interval: 15s
+  # How often to collect metrics (every 15 seconds)
+  evaluation_interval: 15s
+  # How often to evaluate alert rules
+
+scrape_configs:
+# List of services to get metrics from
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    # Monitor Prometheus itself
+
+  # YOUR SERVICES - Prometheus will connect to each and get /metrics
+  - job_name: 'application-service'
+    static_configs:
+      - targets: ['application-service:3004']
+    # Try to scrape metrics from application-service on port 3004
+  
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:3000']
+    # Try to scrape metrics from user-service on port 3000
+  
+  - job_name: 'company-service'
+    static_configs:
+      - targets: ['company-service:3001']
+    # Try to scrape metrics from company-service on port 3001
+  
+  - job_name: 'job-service'
+    static_configs:
+      - targets: ['job-service:3002']
+    # Try to scrape metrics from job-service on port 3002
+  
+  - job_name: 'notification-service'
+    static_configs:
+      - targets: ['notification-service:4005']
+    # Try to scrape metrics from notification-service on port 4005
+  
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:4000']
+    # Try to scrape metrics from api-gateway on port 4000
