@@ -1,9 +1,31 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '../api/axios';
 
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  timestamp: string;
+}
+
+interface UserMeResponse {
+  user: User;
+}
+
+interface AdminMeResponse {
+  admin: User;
+}
+
 interface User {
-  name: string;
+  id: string;
+  username: string;
   email: string;
+  role: string;
+  isVerified: boolean;
+  isBlocked: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // interface Company {
@@ -61,25 +83,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const fetchAuth = async () => {
+      console.log('🔍 AuthContext - Starting authentication check for role:', role);
+      console.log('🔍 AuthContext - Current localStorage role:', localStorage.getItem('role'));
+      console.log('🔍 AuthContext - Available cookies:', document.cookie);
+      
       try {
         if (role === 'admin') {
-          const res = await api.get('/users/admin/me');
-          setUser(res.data.admin as User);
+          console.log('🔍 AuthContext - Checking admin authentication...');
+          const res = await api.get<ApiResponse<AdminMeResponse>>('/users/admin/me');
+          console.log('🔍 AuthContext - Admin API response:', res.data);
+          setUser(res.data.data?.admin as User);
           setCompany(null);
         } else if (role === 'jobseeker') {
-          const res = await api.get('/users/me');
-          setUser(res.data as User);
+          console.log('🔍 AuthContext - Checking jobseeker authentication...');
+          const res = await api.get<ApiResponse<UserMeResponse>>('/users/me');
+          console.log('🔍 AuthContext - Full API response:', res.data);
+          console.log('🔍 AuthContext - User data:', res.data.data?.user);
+          setUser(res.data.data?.user as User);
           setCompany(null);
         } else if (role === 'company') {
-          const res = await api.get('/company/me');
-          setCompany(res.data as Company);
+          console.log('🔍 AuthContext - Checking company authentication...');
+          const res = await api.get<ApiResponse<Company>>('/company/me');
+          console.log('🔍 AuthContext - Company API response:', res.data);
+          setCompany(res.data.data as Company);
           setUser(null);
         }
-      } catch {
-        setUser(null);
-        setCompany(null);
-        setRole(null);
-        localStorage.removeItem('role');
+        console.log('🔍 AuthContext - Authentication successful!');
+      } catch (error) {
+        console.log('🔍 AuthContext - Authentication check failed:', error);
+        console.log('🔍 AuthContext - Error status:', error?.response?.status);
+        console.log('🔍 AuthContext - Error data:', error?.response?.data);
+        
+        // Only logout if it's a 401 (unauthorized) or 403 (forbidden) error
+        if (error?.response?.status === 401 || error?.response?.status === 403) {
+          console.log('🔍 AuthContext - Token invalid (401/403), logging out user');
+          setUser(null);
+          setCompany(null);
+          setRole(null);
+          localStorage.removeItem('role');
+        } else {
+          console.log('🔍 AuthContext - Network error, keeping user logged in');
+          // For network errors, keep the user logged in
+        }
       }
     };
     if (role) fetchAuth();
@@ -89,16 +134,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRole(loginRole);
     localStorage.setItem('role', loginRole ?? '');
     if (loginRole === 'admin') {
-      const res = await api.get('/users/admin/me');
-      setUser(res.data.admin as User);
+      const res = await api.get<ApiResponse<AdminMeResponse>>('/users/admin/me');
+      setUser(res.data.data?.admin as User);
       setCompany(null);
     } else if (loginRole === 'jobseeker') {
-      const res = await api.get('/users/me');
-      setUser(res.data as User);
+      const res = await api.get<ApiResponse<UserMeResponse>>('/users/me');
+      setUser(res.data.data?.user as User);
       setCompany(null);
     } else if (loginRole === 'company') {
-      const res = await api.get('/company/me');
-      setCompany(res.data as Company);
+      const res = await api.get<ApiResponse<Company>>('/company/me');
+      setCompany(res.data.data as Company);
       setUser(null);
     }
   };

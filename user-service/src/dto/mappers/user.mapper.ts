@@ -1,28 +1,25 @@
 import { UserResponse, ProfileResponse, ExperienceResponse, EducationResponse } from '../responses/user.response';
+import { User } from '@prisma/client';
 
-
-export function mapUserToResponse(user: {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  isVerified: boolean;
-  isBlocked: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}): UserResponse {
+export function mapUserToResponse(user: User): UserResponse {
   return {
     id: user.id,
-    username: user.username,
+    username: user.name,  
     email: user.email,
     role: user.role,
     isVerified: user.isVerified,
     isBlocked: user.isBlocked,
     createdAt: user.createdAt,
-    updatedAt: user.updatedAt
+    updatedAt: user.createdAt 
   };
 }
 
+export function mapUserToAuthResponse(user: User, tokens: { accessToken: string; refreshToken: string }) {
+  return {
+    user: mapUserToResponse(user),  
+    tokens
+  };
+}
 
 export function mapProfileToResponse(profile: {
   id: string;
@@ -83,15 +80,6 @@ export function mapProfileToResponse(profile: {
 }
 
 
-export function mapUsersToResponse(users: Array<{
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  isVerified: boolean;
-  isBlocked: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}>): UserResponse[] {
+export function mapUsersToResponse(users: User[]): UserResponse[] {
   return users.map(mapUserToResponse);
 }

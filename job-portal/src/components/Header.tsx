@@ -17,7 +17,7 @@ const Header = () => {
     navigate('/', { replace: true });
   };
 
-  // Close settings dropdown when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showSettingsDropdown) {
@@ -99,12 +99,12 @@ const Header = () => {
                 <div className="flex items-center space-x-2 pl-2 border-l border-gray-200">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-semibold">
-                      {user.name?.charAt(0).toUpperCase()}
+                      {user.username?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">{user.name}</span>
-                    <span className="text-xs text-gray-500">Job Seeker</span>
+                    <span className="text-sm font-semibold text-gray-900">{user.username}</span>
+                    <span className="text-xs text-gray-500 capitalize">{user.role}</span>
                   </div>
                   <div className="relative settings-dropdown">
                     <button 
@@ -223,11 +223,11 @@ const Header = () => {
                     <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-lg">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-semibold">
-                          {user.name?.charAt(0).toUpperCase()}
+                          {user.username?.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        <p className="font-semibold text-gray-900">{user.username}</p>
                         <p className="text-sm text-gray-500">Job Seeker</p>
                       </div>
                     </div>

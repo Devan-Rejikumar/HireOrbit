@@ -43,6 +43,9 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
     } else if (req.cookies.companyAccessToken) {
       token = req.cookies.companyAccessToken;
       console.log('COMPANY-AUTH-MIDDLEWARE Company token found in cookies (fallback)');
+    } else if (req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+      console.log('COMPANY-AUTH-MIDDLEWARE Generic access token found in cookies (fallback)');
     }
     
     if (!token) {

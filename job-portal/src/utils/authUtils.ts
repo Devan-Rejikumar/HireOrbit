@@ -12,8 +12,8 @@ export const getTokenFromCookie = () => {
       role = 'company';
       localStorage.setItem('role', 'company');
     } else if (document.cookie.includes('accessToken')) {
-      role = 'user';
-      localStorage.setItem('role', 'user');
+      role = 'jobseeker';
+      localStorage.setItem('role', 'jobseeker');
     }
   }
   
@@ -30,7 +30,7 @@ export const getTokenFromCookie = () => {
 
 export const getUserInfoFromToken = () => {
   const token = getTokenFromCookie();
-  const role = localStorage.getItem('role') || 'user';
+  const role = localStorage.getItem('role') || 'jobseeker';
   
   let userId = '';
   let userEmail = '';

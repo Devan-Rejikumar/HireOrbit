@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import { Request, Response } from 'express';
-import { ICertificationService } from '../services/ICertificationService';
+import TYPES from '../config/types';
+import { ICertificationService } from '../services/interfaces/ICertificationService';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 
@@ -15,7 +16,7 @@ interface RequestWithUser extends Request {
 
 @injectable()
 export class CertificationController {
-  constructor(@inject('ICertificationService') private certificationService: ICertificationService) {}
+  constructor(@inject(TYPES.ICertificationService) private _certificationService: ICertificationService) {}
 
   async addCertification(req: Request, res: Response): Promise<void> {
     try {
@@ -29,7 +30,7 @@ export class CertificationController {
       }
 
       const certificationData = req.body;
-      const result = await this.certificationService.addCertification(userId, certificationData);
+      const result = await this._certificationService.addCertification(userId, certificationData);
       
       res.status(HttpStatusCode.CREATED).json(
         buildSuccessResponse(result, 'Certification added successfully')
@@ -53,7 +54,7 @@ export class CertificationController {
         return;
       }
 
-      const certifications = await this.certificationService.getCertifications(userId);
+      const certifications = await this._certificationService.getCertifications(userId);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(certifications, 'Certifications retrieved successfully')
@@ -87,7 +88,7 @@ export class CertificationController {
 
       const updates = req.body;
       console.log('CERTIFICATION-CONTROLLER Received update data:', JSON.stringify(updates, null, 2));
-      const result = await this.certificationService.updateCertification(userId, certificationId, updates);
+      const result = await this._certificationService.updateCertification(userId, certificationId, updates);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Certification updated successfully')
@@ -119,7 +120,7 @@ export class CertificationController {
         return;
       }
 
-      await this.certificationService.deleteCertification(userId, certificationId);
+      await this._certificationService.deleteCertification(userId, certificationId);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(null, 'Certification deleted successfully')
@@ -151,7 +152,7 @@ export class CertificationController {
         return;
       }
 
-      const certification = await this.certificationService.getCertificationById(userId, certificationId);
+      const certification = await this._certificationService.getCertificationById(userId, certificationId);
       
       if (!certification) {
         res.status(HttpStatusCode.NOT_FOUND).json(
