@@ -58,22 +58,6 @@ services:
       KAFKA_JMX_PORT: 9002
       KAFKA_JMX_HOSTNAME: localhost
 
-  mongodb:
-    image: mongo:7.0
-    container_name: job-portal-mongodb
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   user-service:
     build: ./user-service
     container_name: user-service
@@ -149,18 +133,16 @@ services:
     build: ./notification-service
     container_name: notification-service
     ports:
-      - "4005:4005"
+      - "4006:4005"
     environment:
       - NODE_ENV=development
       - PORT=4005
       - KAFKA_BROKERS=kafka:29092
       - FRONTEND_URL=http://localhost:3000
-      - MONGODB_URL=mongodb://admin:password@mongodb:27017/notifications?authSource=admin
+      - MONGODB_URL=your-atlas-connection-string-here
     depends_on:
       kafka:
         condition: service_started
-      mongodb:
-        condition: service_healthy
     volumes:
       - ./notification-service:/app
       - /app/node_modules
@@ -169,7 +151,7 @@ services:
     build: ./customAPI-gateway
     container_name: api-gateway
     ports:
-      - "4000:4000"
+      - "4001:4000"
     environment:
       - NODE_ENV=development
       - PORT=4000
@@ -183,7 +165,45 @@ services:
       - application-service
       - notification-service
 
+  loki:
+    image: grafana/loki:latest
+    container_name: job-portal-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: job-portal-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: job-portal-grafana
+    ports:
+      - "3030:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+
 volumes:
   postgres_data:
   redis_data:
-  mongodb_data:
+  loki_data:
+  prometheus_data:
+  grafana_data:
