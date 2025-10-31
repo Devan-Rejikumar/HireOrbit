@@ -1,8 +1,8 @@
 import { inject, injectable } from "inversify";
 import { PrismaClient, Application, ApplicationStatusHistory, ApplicationNotes, ApplicationStatus } from "@prisma/client";
-import { IApplicationRepository } from "./IApplicationRepository";
-import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from "../dto/schemas/application.schema";
-import { TYPES } from '../config/types';
+import { IApplicationRepository } from "../interface/IApplicationRepository";
+import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from "../../dto/schemas/application.schema";
+import { TYPES } from '../../config/types';
 
 @injectable()
 export class ApplicationRepository implements IApplicationRepository {

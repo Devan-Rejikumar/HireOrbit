@@ -1,5 +1,5 @@
 import { Application, ApplicationStatusHistory, ApplicationNotes, ApplicationStatus } from '@prisma/client';
-import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from '../dto/schemas/application.schema';
+import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from '../../dto/schemas/application.schema';
 
 export interface IApplicationRepository {
   create(data: CreateApplicationInput): Promise<Application>;

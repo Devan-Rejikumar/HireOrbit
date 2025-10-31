@@ -4,5 +4,8 @@ export const TYPES = {
     ApplicationController: Symbol.for('ApplicationController'),
     PrismaClient: Symbol.for('PrismaClient'),
     IEventService: Symbol.for('IEventService'),
-    StatusUpdateService: Symbol.for('StatusUpdateService')
+    StatusUpdateService: Symbol.for('StatusUpdateService'),
+    IInterviewService: Symbol.for('IInterviewService'),
+    IInterviewRepository: Symbol.for('IInterviewRepository'),
+    InterviewController: Symbol.for('InterviewController')
 };
