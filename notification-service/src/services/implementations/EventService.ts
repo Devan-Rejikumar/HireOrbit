@@ -6,7 +6,8 @@ import { TYPES } from '../../config/types';
 import { 
   ApplicationReceivedInput, 
   StatusUpdatedInput, 
-  ApplicationWithdrawnInput 
+  ApplicationWithdrawnInput,
+  InterviewConfirmedInput
 } from '../../dto/mappers/notification.mapper';
 
 interface ApplicationCreatedEventData {
@@ -33,10 +34,27 @@ interface ApplicationWithdrawnEventData {
   jobTitle?: string;
 }
 
+interface InterviewConfirmedEventData {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  scheduledAt: Date | string;
+  type?: string;
+  location?: string;
+  meetingLink?: string;
+  confirmedBy: string;
+  confirmedAt: Date;
+}
+
 @injectable()
 export class EventService implements IEventService {
   private isConnected = false;
   private isRunning = false;
+  private handlers: Map<string, (data: any) => Promise<void>> = new Map();
+  private topics: string[] = [];
 
   constructor(
     @inject(TYPES.INotificationService) private notificationService: INotificationService
@@ -54,27 +72,58 @@ export class EventService implements IEventService {
     if (this.isConnected) {
       await consumer.disconnect();
       this.isConnected = false;
+      this.isRunning = false;
+      this.handlers.clear();
+      this.topics = [];
       console.log('Event Service disconnected from Kafka');
     }
   }
 
   async subscribe<T>(eventType: string, handler: (data: T) => Promise<void>): Promise<void> {
-    await consumer.subscribe({ topic: eventType });
-    if (!this.isRunning) {
-      this.isRunning = true;
-      await consumer.run({
-        eachMessage: async ({ topic, message }) => {
-          try {
-            if (topic === eventType) {
-              const data = JSON.parse(message.value?.toString() || '{}') as T;
-              await handler(data);
-            }
-          } catch (error) {
-            console.error(`Error processing ${topic} event:`, error);
-          }
-        }
-      });
+    if (this.isRunning) {
+      throw new Error('Cannot subscribe to topics after consumer has started running');
     }
+    
+    // Store handler for this topic
+    this.handlers.set(eventType, handler);
+    
+    // Track topics to subscribe
+    if (!this.topics.includes(eventType)) {
+      this.topics.push(eventType);
+    }
+  }
+
+  async startConsumer(): Promise<void> {
+    if (this.isRunning) {
+      return;
+    }
+
+    if (this.topics.length === 0) {
+      console.warn('No topics to subscribe to');
+      return;
+    }
+
+    // Subscribe to all topics at once
+    await consumer.subscribe({ topics: this.topics });
+    console.log(`Subscribed to topics: ${this.topics.join(', ')}`);
+
+    // Start the consumer with a router that dispatches to the correct handler
+    this.isRunning = true;
+    await consumer.run({
+      eachMessage: async ({ topic, message }) => {
+        try {
+          const handler = this.handlers.get(topic);
+          if (handler) {
+            const data = JSON.parse(message.value?.toString() || '{}');
+            await handler(data);
+          } else {
+            console.warn(`No handler found for topic: ${topic}`);
+          }
+        } catch (error) {
+          console.error(`Error processing ${topic} event:`, error);
+        }
+      }
+    });
   }
 
   async handleApplicationCreated(data: ApplicationCreatedEventData): Promise<void> {
@@ -111,5 +160,22 @@ export class EventService implements IEventService {
     };
     
     await this.notificationService.sendApplicationWithdrawnNotification(input);
+  }
+
+  async handleInterviewConfirmed(data: InterviewConfirmedEventData): Promise<void> {
+    const input: InterviewConfirmedInput = {
+      userId: data.userId,
+      interviewId: data.interviewId,
+      applicationId: data.applicationId,
+      jobId: data.jobId,
+      jobTitle: data.jobTitle,
+      companyName: data.companyName,
+      scheduledAt: data.scheduledAt,
+      type: data.type,
+      location: data.location,
+      meetingLink: data.meetingLink
+    };
+    
+    await this.notificationService.sendInterviewConfirmedNotification(input);
   }
 }

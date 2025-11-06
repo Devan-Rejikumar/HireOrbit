@@ -24,6 +24,19 @@ export interface ApplicationWithdrawnInput {
   jobTitle: string;
 }
 
+export interface InterviewConfirmedInput {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  scheduledAt: Date | string;
+  type?: string;
+  location?: string;
+  meetingLink?: string;
+}
+
 export class NotificationMapper {
   static toApplicationReceivedNotification(input: ApplicationReceivedInput): CreateNotificationInput {
     return {
@@ -40,16 +53,18 @@ export class NotificationMapper {
     };
   }
 
-  static toStatusUpdatedNotification(input: StatusUpdatedInput): CreateNotificationInput {
+  static toStatusUpdatedNotification(input: StatusUpdatedInput, jobTitle: string = 'Job'): CreateNotificationInput {
     return {
       recipientId: input.userId,
       type: NotificationType.STATUS_UPDATED,
       title: 'Application Status Updated',
-      message: `Your application status changed to ${input.newStatus}`,
+      message: `${jobTitle} status has been changed to ${input.newStatus}`,
       data: {
         applicationId: input.applicationId,
         jobId: input.jobId,
-        status: input.newStatus
+        jobTitle: jobTitle,
+        oldStatus: input.oldStatus,
+        newStatus: input.newStatus
       }
     };
   }
@@ -65,6 +80,25 @@ export class NotificationMapper {
         jobId: input.jobId,
         applicantName: input.applicantName,
         jobTitle: input.jobTitle
+      }
+    };
+  }
+
+  static toInterviewConfirmedNotification(input: InterviewConfirmedInput): CreateNotificationInput {
+    return {
+      recipientId: input.userId,
+      type: NotificationType.INTERVIEW_CONFIRMED,
+      title: 'Interview Confirmed',
+      message: `Your interview for ${input.jobTitle} has been confirmed`,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        jobTitle: input.jobTitle,
+        interviewId: input.interviewId,
+        scheduledAt: typeof input.scheduledAt === 'string' ? input.scheduledAt : input.scheduledAt.toISOString(),
+        type: input.type,
+        location: input.location,
+        meetingLink: input.meetingLink
       }
     };
   }

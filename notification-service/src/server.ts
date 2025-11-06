@@ -30,6 +30,21 @@ interface StatusUpdatedEventData {
   newStatus: string;
 }
 
+interface InterviewConfirmedEventData {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  scheduledAt: Date | string;
+  type?: string;
+  location?: string;
+  meetingLink?: string;
+  confirmedBy: string;
+  confirmedAt: Date;
+}
+
 interface ApplicationWithdrawnEventData {
   companyId: string;
   applicationId: string;
@@ -50,7 +65,13 @@ const io = new Server(server, {
 });
 
 app.use(helmet());
-app.use(cors());
+// CORS configuration - must specify origin when using credentials
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role']
+}));
 app.use(morgan('combined'));
 app.use(express.json());
 
@@ -77,16 +98,32 @@ async function initializeServices(): Promise<void> {
 
     const eventService = container.get<IEventService>(TYPES.IEventService);
     
-    // Start the consumer
+    // Connect to Kafka first
     await eventService.start();
     console.log('Event Service connected to Kafka');
     
-    // Subscribe to topics
+    // Subscribe to topics BEFORE starting the consumer
     await eventService.subscribe('application.created', async (data) => {
       console.log('Application created event received:', data);
       const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
       await eventServiceInstance.handleApplicationCreated(data as ApplicationCreatedEventData);
     });
+
+    await eventService.subscribe('application.status_updated', async (data) => {
+      console.log('Application status updated event received:', data);
+      const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
+      await eventServiceInstance.handleStatusUpdated(data as StatusUpdatedEventData);
+    });
+
+    await eventService.subscribe('interview.confirmed', async (data) => {
+      console.log('Interview confirmed event received:', data);
+      const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
+      await eventServiceInstance.handleInterviewConfirmed(data as InterviewConfirmedEventData);
+    });
+
+    // Start the consumer after all subscriptions are registered
+    const eventServiceInstance = eventService as EventService;
+    await eventServiceInstance.startConsumer();
 
     console.log('Event service (Kafka) initialized successfully');
 

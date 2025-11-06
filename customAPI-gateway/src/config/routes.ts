@@ -4,6 +4,7 @@ export const ROUTES = {
         '/api/users/register', 
         '/api/users/refresh-token',
         '/api/users/admin/login',
+        '/api/users/admin/refresh-token',
         '/api/company/login',
         '/api/company/register',
         '/api/company/refresh-token'

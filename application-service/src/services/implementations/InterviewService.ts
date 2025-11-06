@@ -2,6 +2,7 @@ import { injectable, inject } from 'inversify';
 import { IInterviewService } from '../interface/IInterviewService';
 import { IInterviewRepository, InterviewWithApplication } from '../../repositories/interface/IInterviewRepository';
 import { IApplicationRepository } from '../../repositories/interface/IApplicationRepository';
+import { IEventService } from '../interface/IEventService';
 import { TYPES } from '../../config/types';
 import { InterviewResponse, InterviewWithDetailsResponse } from '../../dto/responses/interview.response';
 import { CreateInterviewInput, UpdateInterviewInput, InterviewDecisionInput } from '../../dto/schemas/interview.schema';
@@ -31,7 +32,8 @@ interface JobApiResponse {
 export class InterviewService implements IInterviewService {
   constructor(
     @inject(TYPES.IInterviewRepository) private interviewRepository: IInterviewRepository,
-    @inject(TYPES.IApplicationRepository) private applicationRepository: IApplicationRepository
+    @inject(TYPES.IApplicationRepository) private applicationRepository: IApplicationRepository,
+    @inject(TYPES.IEventService) private eventService: IEventService
   ) {}
 
   async scheduleInterview(data: CreateInterviewInput, scheduledBy: string): Promise<InterviewResponse> {
@@ -155,6 +157,7 @@ export class InterviewService implements IInterviewService {
       throw new Error('Interview not found');
     }
 
+    const oldStatus = interview.status;
     const updateData: any = {};
     if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt);
     if (data.duration) updateData.duration = data.duration;
@@ -165,6 +168,34 @@ export class InterviewService implements IInterviewService {
     if (data.status) updateData.status = data.status;
 
     const updatedInterview = await this.interviewRepository.update(id, updateData);
+
+    // Publish Kafka event when interview is confirmed
+    if (data.status === 'CONFIRMED' && oldStatus !== 'CONFIRMED') {
+      try {
+        const application = await this.applicationRepository.findById(interview.applicationId);
+        if (application) {
+          // Fetch job details for the notification
+          const jobDetails = await this.fetchJobDetails(application.jobId);
+          
+          await this.eventService.publish('interview.confirmed', {
+            userId: application.userId,
+            interviewId: updatedInterview.id,
+            applicationId: interview.applicationId,
+            jobId: application.jobId,
+            jobTitle: jobDetails.title,
+            companyName: jobDetails.company,
+            scheduledAt: updatedInterview.scheduledAt,
+            type: updatedInterview.type,
+            location: updatedInterview.location,
+            meetingLink: updatedInterview.meetingLink,
+            confirmedBy: updatedBy,
+            confirmedAt: new Date()
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to publish interview confirmed event:', error);
+      }
+    }
 
     return this.mapToResponse(updatedInterview);
   }

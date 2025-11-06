@@ -40,11 +40,26 @@ interface UserApiResponse {
 }
 
 interface JobApiResponse {
+  success?: boolean;
   data?: {
     job?: {
+      id?: string;
       title?: string;
-      company?: string;
+      company?: string; // Company is a string (company name), not an object
+      companyId?: string;
+      description?: string;
+      location?: string;
+      [key: string]: any; // Allow other fields
     };
+    // Also handle direct response structure
+    title?: string;
+    company?: string;
+  };
+  // Also handle response where job is directly in data
+  job?: {
+    title?: string;
+    company?: string;
+    [key: string]: any;
   };
 }
 
@@ -115,12 +130,50 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     if (!application) {
       throw new Error('Application not found');
     }
-    const externalData = {
+    
+    // Fetch real data from external services
+    let externalData = {
       jobTitle: 'Job Title',
       companyName: 'Company Name', 
       userName: 'User Name',
       userEmail: 'user@example.com' 
     };
+    
+    try {
+      // Fetch user details through API Gateway
+      const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
+      const userRes = await fetch(`${apiGatewayUrl}/api/users/${application.userId}`);
+      if (userRes.ok) {
+        const userData = await userRes.json() as UserApiResponse;
+        externalData.userName = userData.data?.user?.username || userData.data?.user?.name || 'User Name';
+        externalData.userEmail = userData.data?.user?.email || 'user@example.com';
+      }
+    } catch (error) {
+      console.error(`Error fetching user details for ${application.userId}:`, error);
+    }
+    
+    try {
+      // Fetch job details through API Gateway to get job title and company name
+      const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
+      const jobRes = await fetch(`${apiGatewayUrl}/api/jobs/${application.jobId}`);
+      if (jobRes.ok) {
+        const jobData = await jobRes.json() as JobApiResponse;
+        
+        // Extract job title from various possible locations
+        externalData.jobTitle = jobData.data?.job?.title || 
+                               jobData.data?.title || 
+                               jobData.job?.title || 
+                               'Job Title';
+        
+        // Extract company name - company is a string in the job response, not an object
+        externalData.companyName = jobData.data?.job?.company || 
+                                   jobData.data?.company ||
+                                   jobData.job?.company ||
+                                   'Company Name';
+      }
+    } catch (error) {
+      console.error(`Error fetching job details for ${application.jobId}:`, error);
+    }
 
     return mapApplicationToDetailsResponse(application, externalData);
   }
@@ -239,7 +292,9 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     }
     try {
       await this.eventService.publish('application.status_updated', {
+        userId: existingApplication.userId,
         applicationId: updatedApplication.id,
+        jobId: existingApplication.jobId,
         oldStatus: existingApplication.status,
         newStatus: updatedApplication.status,
         changedBy,
@@ -393,6 +448,30 @@ async searchApplications(filters: {
         eligible: false,
         reason: 'You have already applied for this job'
       };
+    }
+
+    // Check if application deadline has passed
+    try {
+      const jobRes = await fetch(`http://localhost:3002/api/jobs/${jobId}`);
+      if (jobRes.ok) {
+        const jobData = await jobRes.json() as { data?: { job?: { applicationDeadline?: string | Date } } };
+        const deadline = jobData.data?.job?.applicationDeadline;
+        
+        if (deadline) {
+          const deadlineDate = new Date(deadline);
+          const now = new Date();
+          
+          if (deadlineDate < now) {
+            return {
+              eligible: false,
+              reason: 'Application deadline has passed'
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking job deadline:', error);
+      // Continue - don't block application if we can't verify deadline
     }
 
     return { eligible: true };

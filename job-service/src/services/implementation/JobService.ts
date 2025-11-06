@@ -35,25 +35,6 @@ export class JobService implements IJobService {
       return null;
     }
     
-    // ✅ Add debugging
-    console.log('JobService.getJobById - Job found:', job.title);
-    console.log('JobService.getJobById - Job isActive:', job.isActive);
-    console.log('JobService.getJobById - Job applicationDeadline:', job.applicationDeadline);
-    console.log('JobService.getJobById - Current date:', new Date());
-    
-    // ✅ Check if job is expired (application deadline passed)
-    const now = new Date();
-    const deadline = new Date(job.applicationDeadline);
-    const isExpired = deadline < now;
-    
-    console.log('JobService.getJobById - Is expired:', isExpired);
-    
-    // ✅ Return job if it exists and is not expired
-    if (isExpired) {
-      console.log('JobService.getJobById - Job expired, not returning');
-      return null;
-    }
-    
     return mapJobToResponse(job);
   }
 

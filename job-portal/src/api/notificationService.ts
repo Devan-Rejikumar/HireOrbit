@@ -1,6 +1,6 @@
-import axios from 'axios';
+import api from './axios';
 
-const API_BASE_URL = 'http://localhost:4000/api/notifications';
+const API_BASE_URL = '/notifications';
 
 export interface NotificationData {
   id: string;
@@ -35,29 +35,33 @@ export interface UnreadCountResponse {
 
 export const notificationService = {
   getNotifications: async (recipientId: string): Promise<NotificationData[]> => {
-    const response = await axios.get<NotificationResponse>(`${API_BASE_URL}/${recipientId}`);
+    const response = await api.get<NotificationResponse>(`${API_BASE_URL}/${recipientId}`);
     return response.data.data;
   },
   getNotificationsPaginated: async (recipientId: string, page: number = 1, limit: number = 10) => {
-    const response = await axios.get(`${API_BASE_URL}/${recipientId}/paginated`, {
+    const response = await api.get(`${API_BASE_URL}/${recipientId}/paginated`, {
       params: { page, limit }
     });
     return response.data;
   },
   getUnreadCount: async (recipientId: string): Promise<number> => {
-    const response = await axios.get<UnreadCountResponse>(`${API_BASE_URL}/${recipientId}/unread-count`);
+    const response = await api.get<UnreadCountResponse>(`${API_BASE_URL}/${recipientId}/unread-count`);
     return response.data.data.count;
   },
   markAsRead: async (notificationId: string) => {
-    const response = await axios.patch(`${API_BASE_URL}/${notificationId}/read`);
+    const response = await api.patch(`${API_BASE_URL}/${notificationId}/read`);
     return response.data;
   },
   markAsUnread: async (notificationId: string) => {
-    const response = await axios.patch(`${API_BASE_URL}/${notificationId}/unread`);
+    const response = await api.patch(`${API_BASE_URL}/${notificationId}/unread`);
+    return response.data;
+  },
+  markAllAsRead: async (recipientId: string) => {
+    const response = await api.patch(`${API_BASE_URL}/${recipientId}/mark-all-read`);
     return response.data;
   },
   deleteNotification: async (notificationId: string) => {
-    const response = await axios.delete(`${API_BASE_URL}/${notificationId}`);
+    const response = await api.delete(`${API_BASE_URL}/${notificationId}`);
     return response.data;
   }
 };

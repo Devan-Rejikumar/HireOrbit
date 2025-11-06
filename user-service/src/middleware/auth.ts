@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../prisma/client';
 
 interface JwtPayload {
   userId: string;
@@ -10,7 +11,7 @@ interface JwtPayload {
   exp?: number;
 }
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     console.log('🔒 Authentication middleware hit for:', req.method, req.url);
     console.log('🔒 Request headers:', req.headers);
@@ -43,6 +44,24 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     console.log('🔒 Token expiration:', new Date(decoded.exp! * 1000));
     console.log('🔒 Current time:', new Date());
     console.log('🔒 Token expired?', new Date() > new Date(decoded.exp! * 1000));
+
+    // Check if user is blocked (only for jobseeker role)
+    if (decoded.role === 'jobseeker') {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { isBlocked: true }
+      });
+
+      if (user?.isBlocked) {
+        console.log('🚫 User is blocked:', decoded.userId);
+        res.status(403).json({
+          success: false,
+          error: 'Account blocked',
+          message: 'Account blocked'
+        });
+        return;
+      }
+    }
 
     // Set user information in headers for controllers to use
     req.headers['x-user-id'] = decoded.userId;

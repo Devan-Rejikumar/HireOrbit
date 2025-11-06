@@ -1,15 +1,13 @@
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, Briefcase, Search, Bell, Settings, Lock, LogOut, Calendar } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Menu, X, Search, LogOut, User, Briefcase } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ChangePasswordModal from './ChangePasswordModal';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from './NotificationBell';
+import { MessagesDropdown } from './MessagesDropdown';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout, isAuthenticated, role } = useAuth();
 
@@ -17,23 +15,6 @@ const Header = () => {
     await logout();
     navigate('/', { replace: true });
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showSettingsDropdown) {
-        const target = event.target as Element;
-        if (!target.closest('.settings-dropdown')) {
-          console.log('Clicking outside dropdown, closing it');
-          setShowSettingsDropdown(false);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSettingsDropdown]);
 
   return (
     <header className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-200/50 shadow-sm z-50">
@@ -64,12 +45,12 @@ const Header = () => {
             >
               Find Jobs
             </button>
-            <a 
-              href="#" 
+            <button 
+              onClick={() => navigate('/companies')} 
               className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
             >
               Companies
-            </a>
+            </button>
             <a 
               href="#" 
               className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
@@ -93,74 +74,27 @@ const Header = () => {
                 {/* Notification Bell - Replaces the old Bell button */}
                 <NotificationBell />
                 
+                {/* Messages Dropdown - Only for jobseekers */}
+                {role === 'jobseeker' && user?.id && (
+                  <MessagesDropdown userId={user.id} />
+                )}
+                
                 <div className="flex items-center space-x-2 pl-2 border-l border-gray-200">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-semibold">
-                      {user.username?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-gray-900">{user.username}</span>
-                    <span className="text-xs text-gray-500 capitalize">{user.role}</span>
-                  </div>
-                  <div className="relative settings-dropdown">
-                    <button 
-                      onClick={() => setShowSettingsDropdown(!showSettingsDropdown)} 
-                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                      title="Settings"
-                    >
-                      <Settings className="h-4 w-4" />
-                    </button>
-                    
-                    {showSettingsDropdown && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                        <button
-                          onClick={() => {
-                            navigate('/profile');
-                            setShowSettingsDropdown(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
-                        >
-                          <User className="h-4 w-4 mr-3" />
-                          Profile
-                        </button>
-                        {role === 'jobseeker' && (
-                          <button
-                            onClick={() => {
-                              navigate('/schedule');
-                              setShowSettingsDropdown(false);
-                            }}
-                            className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
-                          >
-                            <Calendar className="h-4 w-4 mr-3" />
-                            My Schedule
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            console.log('Change Password clicked!');
-                            setIsChangePasswordModalOpen(true);
-                            setShowSettingsDropdown(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
-                        >
-                          <Lock className="h-4 w-4 mr-3" />
-                          Change Password
-                        </button>
-                        <hr className="my-1" />
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setShowSettingsDropdown(false);
-                          }}
-                          className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center"
-                        >
-                          <LogOut className="h-4 w-4 mr-3" />
-                          Logout
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => navigate('/user/dashboard')}
+                    className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                    title="Dashboard"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        {user.username?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-sm font-semibold text-gray-900">{user.username}</span>
+                      <span className="text-xs text-gray-500 capitalize">{user.role}</span>
+                    </div>
+                  </button>
                 </div>
                 <Button 
                   variant="outline" 
@@ -213,12 +147,12 @@ const Header = () => {
               >
                 Find Jobs
               </button>
-              <a 
-                href="#" 
+              <button 
+                onClick={() => {navigate('/companies'); setIsMenuOpen(false);}} 
                 className="text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
               >
                 Companies
-              </a>
+              </button>
               <a 
                 href="#" 
                 className="text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
@@ -247,19 +181,11 @@ const Header = () => {
                     </div>
                     
                     <button 
-                      onClick={() => {navigate('/profile'); setIsMenuOpen(false);}} 
+                      onClick={() => {navigate('/user/dashboard'); setIsMenuOpen(false);}} 
                       className="w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
                     >
-                      Profile Settings
+                      Dashboard
                     </button>
-                    {role === 'jobseeker' && (
-                      <button 
-                        onClick={() => {navigate('/schedule'); setIsMenuOpen(false);}} 
-                        className="w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
-                      >
-                        My Schedule
-                      </button>
-                    )}
                     <Button 
                       variant="outline" 
                       className="w-full justify-start text-gray-700 border-gray-300 hover:border-red-300 hover:text-red-600 hover:bg-red-50" 
@@ -285,11 +211,6 @@ const Header = () => {
           </div>
         )}
       </div>
-      
-      <ChangePasswordModal
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-      />
     </header>
   );
 };
