@@ -7,6 +7,7 @@ export interface INotificationRepository extends IBaseRepository<INotificationDo
   getUnreadCount(recipientId: string): Promise<number>;
   markAsRead(id: string): Promise<void>;
   markAsUnread(id: string): Promise<void>;
+  markAllAsRead(recipientId: string): Promise<void>;
   findByType(recipientId: string, type: string): Promise<INotificationDocument[]>;
   deleteOldNotifications(olderThan: Date): Promise<void>;
 }

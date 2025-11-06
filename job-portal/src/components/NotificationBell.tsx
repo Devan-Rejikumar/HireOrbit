@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Bell, BellRing } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -20,13 +20,24 @@ export const NotificationBell: React.FC = () => {
 
   // Function to format notification message based on type
   const formatNotificationMessage = (notification: any) => {
+    // Use the message from the notification if available (for stored notifications)
+    if (notification.message) {
+      return notification.message;
+    }
+    
+    // Fallback to formatting based on type and data
     switch (notification.type) {
       case 'APPLICATION_RECEIVED':
-        return `${notification.data.applicantName} applied for ${notification.data.jobTitle}`;
+        return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;
       case 'STATUS_UPDATED':
-        return `Your application status changed to ${notification.data.newStatus}`;
+        const jobTitle = notification.data.jobTitle || 'Application';
+        const newStatus = notification.data.newStatus || notification.data.status || 'unknown';
+        return `${jobTitle} status has been changed to ${newStatus}`;
       case 'APPLICATION_WITHDRAWN':
-        return `${notification.data.applicantName} withdrew their application`;
+        return `${notification.data.applicantName || 'Someone'} withdrew their application`;
+      case 'INTERVIEW_CONFIRMED':
+        const interviewJobTitle = notification.data.jobTitle || 'the position';
+        return `Your interview for ${interviewJobTitle} has been confirmed`;
       default:
         return 'New notification';
     }
@@ -75,6 +86,12 @@ export const NotificationBell: React.FC = () => {
         </Button>
       }
       className="w-80"
+      onOpen={useCallback(() => {
+        // Mark all notifications as read when dropdown opens
+        if (unreadCount > 0) {
+          markAllAsRead();
+        }
+      }, [unreadCount, markAllAsRead])}
     >
       <DropdownContent>
         {/* Header with title and mark all as read button */}
@@ -108,16 +125,15 @@ export const NotificationBell: React.FC = () => {
             </div>
           ) : (
             // Show list of notifications
-            notifications.map((notification) => (
+            notifications.map((notification, index) => (
               <DropdownItem
-                key={notification.id}
+                key={notification.id || notification._id || `notification-${index}-${notification.createdAt}`}
                 className={`flex flex-col items-start p-3 border-b border-gray-100 ${
                   !notification.read ? 'bg-blue-50' : ''
                 }`}
                 onClick={() => {
-                  // Handle notification click
+                  // Handle notification click (already marks as read and navigates)
                   handleNotificationClick(notification);
-                  markAsRead(notification.id);
                 }}
               >
                 {/* Notification message and time */}

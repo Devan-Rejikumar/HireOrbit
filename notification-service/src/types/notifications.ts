@@ -13,7 +13,8 @@ export interface Notification {
 export enum NotificationType {
     APPLICATION_RECEIVED = 'APPLICATION_RECEIVED',
     STATUS_UPDATED = 'STATUS_UPDATED',
-    APPLICATION_WITHDRAWN = 'APPLICATION_WITHDRAWN'
+    APPLICATION_WITHDRAWN = 'APPLICATION_WITHDRAWN',
+    INTERVIEW_CONFIRMED = 'INTERVIEW_CONFIRMED'
 }
 
 export interface NotificationData {
@@ -23,7 +24,12 @@ export interface NotificationData {
     applicantName?: string;
     jobTitle?: string
     oldStatus?: string;   
-  newStatus?: string; 
+    newStatus?: string;
+    interviewId?: string;
+    scheduledAt?: string;
+    type?: string;
+    location?: string;
+    meetingLink?: string;
 }
 
 export interface CreateNotificationInput {

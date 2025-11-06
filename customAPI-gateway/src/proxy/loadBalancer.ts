@@ -4,6 +4,7 @@ import { companyServiceProxy } from './companyService';
 import { jobServiceProxy } from './jobService';
 import { applicationServiceProxy, applicationServiceMultipartProxy } from './applicationService';
 import { notificationServiceProxy } from './notificationService';
+import { chatServiceProxy } from './chatService';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
   const path = req.originalUrl;
@@ -47,6 +48,10 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
   } else if (path.startsWith('/api/notifications')) {
     console.log('Routing to Notification Service');
     notificationServiceProxy(req, res, next);
+    
+  } else if (path.startsWith('/api/chat')) {
+    console.log('Routing to Chat Service');
+    chatServiceProxy(req, res, next);
     
   } else {
     console.log('Default routing to User Service');

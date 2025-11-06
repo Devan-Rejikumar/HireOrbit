@@ -110,7 +110,7 @@ export class UserController {
       const { email, password } = validationResult.data; 
       console.log('USER CONTROLLER Login attempt for email:', email);
       const result = await this._userService.login(email, password);
-      console.log('USER CONTROLLERLogin successful for user:', result.user.email);
+      console.log('USER CONTROLLER Login successful for user:', result.user.email);
 
       console.log('USER CONTROLLER About to set cookies...');
       res.cookie('accessToken', result.tokens.accessToken, {
@@ -138,6 +138,13 @@ export class UserController {
       console.log('USER CONTROLLER Error in login:', err);
       const errorMessage = err instanceof Error ? err.message : 'unknown error';
       console.log('USER CONTROLLER Sending error response:', errorMessage);
+      
+      // Handle blocked user with specific status code
+      if (errorMessage === 'Account blocked') {
+        res.status(HttpStatusCode.FORBIDDEN).json(buildErrorResponse('Account blocked', 'Account blocked'));
+        return;
+      }
+      
       res.status(HttpStatusCode.BAD_REQUEST).json(buildErrorResponse(errorMessage,'Login failed'));
     }
     console.log('USER CONTROLLER Login method completed');
@@ -160,6 +167,19 @@ export class UserController {
 
     res.status(HttpStatusCode.OK).json({ message: 'Token refreshed successfully' });
   } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Invalid refresh token';
+    
+    // Handle blocked user
+    if (errorMessage === 'Account blocked') {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      res.status(HttpStatusCode.FORBIDDEN).json({ 
+        error: 'Account blocked',
+        message: 'Account blocked'
+      });
+      return;
+    }
+    
     res.status(HttpStatusCode.FORBIDDEN).json({ error: 'Invalid refresh token' });
   }
 }

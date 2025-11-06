@@ -50,7 +50,7 @@ export class AdminService implements IAdminService {
       userType: 'admin'
     };
 
-    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '2h' });
+    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
     const refreshToken = jwt.sign(tokenPayload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 
     return {
@@ -70,7 +70,7 @@ export class AdminService implements IAdminService {
         userType: decoded.userType
       };
 
-      const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '2h' });
+      const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
       
       return { accessToken: newAccessToken };
     } catch (error) {

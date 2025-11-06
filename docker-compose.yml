@@ -147,6 +147,25 @@ services:
       - ./notification-service:/app
       - /app/node_modules
 
+  chat-service:
+    build: ./chat-service
+    container_name: chat-service
+    ports:
+      - "4007:4007"
+    environment:
+      - NODE_ENV=development
+      - PORT=4007
+      - MONGODB_URI=your-atlas-connection-string-here
+      - KAFKA_BROKERS=kafka:29092
+      - APPLICATION_SERVICE_URL=http://application-service:3004
+      - FRONTEND_URL=http://localhost:5173
+    depends_on:
+      kafka:
+        condition: service_started
+    volumes:
+      - ./chat-service:/app
+      - /app/node_modules
+
   api-gateway:
     build: ./customAPI-gateway
     container_name: api-gateway
@@ -164,6 +183,7 @@ services:
       - job-service
       - application-service
       - notification-service
+      - chat-service
 
   loki:
     image: grafana/loki:latest

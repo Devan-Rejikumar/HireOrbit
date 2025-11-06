@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { applicationService, Application } from '../api/applicationService';
 import { toast } from 'react-toastify';
+import { ChatButton } from './ChatButton';
 
 interface AppliedJobsProps {
   userId: string;
@@ -97,7 +98,7 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
     try {
       await applicationService.withdrawApplication(applicationId);
       toast.success('Application withdrawn successfully');
-      fetchApplications(); // Refresh the list
+      fetchApplications(); 
     } catch (error) {
       console.error('Error withdrawing application:', error);
       toast.error('Failed to withdraw application');
@@ -208,6 +209,10 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
                       >
                         Withdraw
                       </button>
+                    )}
+                    
+                    {application.status === 'SHORTLISTED' && (
+                      <ChatButton applicationId={application.id} size="sm" />
                     )}
 
                     {application.resumeUrl && (

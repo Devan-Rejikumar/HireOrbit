@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, MapPin, Briefcase, Filter, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
@@ -145,24 +145,24 @@ const JobListings = () => {
   const hasPreviousPage = currentPage > 1;
 
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (hasNextPage) {
       handlePageChange(currentPage + 1);
     }
-  };
+  }, [hasNextPage, currentPage, handlePageChange]);
 
-  const handlePreviousPage = () => {
+  const handlePreviousPage = useCallback(() => {
     if (hasPreviousPage) {
       handlePageChange(currentPage - 1);
     }
-  };
+  }, [hasPreviousPage, currentPage, handlePageChange]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchFilters({
       title: '',
       company: '',
@@ -173,7 +173,7 @@ const JobListings = () => {
       workLocation: [],
     });
     setCurrentPage(1);
-  };
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -196,7 +196,7 @@ const JobListings = () => {
     setCurrentPage(1);
   }, [searchFilters]);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (!searchFilters.title && !searchFilters.company && !searchFilters.location && !searchFilters.jobType && !searchFilters.experienceLevel && !searchFilters.education && !searchFilters.workLocation) {
       setSearchError('Please enter at least one search criteria');
       return;
@@ -204,14 +204,15 @@ const JobListings = () => {
     
     setSearchError(''); 
     fetchJobs();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchFilters]);
 
-  const handleApply = (job: Job) => {
+  const handleApply = useCallback((job: Job) => {
     setSelectedJob(job);
     setShowApplicationModal(true);
-  };
+  }, []);
 
-  const handleApplicationSubmit = (applicationData: any) => {
+  const handleApplicationSubmit = useCallback((applicationData: any) => {
     if (selectedJob) {
       setAllJobs(prevJobs => 
         prevJobs.map(job => 
@@ -221,7 +222,7 @@ const JobListings = () => {
     }
 
     toast.success('Job applied successfully! All the best! 🎉');
-  };
+  }, [selectedJob]);
 
   return (
     <div className="min-h-screen bg-gray-50">

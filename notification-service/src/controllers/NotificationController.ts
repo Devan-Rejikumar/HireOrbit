@@ -122,6 +122,25 @@ export class NotificationController {
     }
   }
 
+  async markAllAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const { recipientId } = getNotificationsSchema.parse(req.params);
+      await this.notificationService.markAllAsRead(recipientId);
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: SuccessMessages.NOTIFICATIONS_MARKED_AS_READ
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: ErrorMessages.MARK_ALL_AS_READ_FAILED,
+        error: errorMessage
+      });
+    }
+  }
+
   async deleteNotification(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = deleteNotificationSchema.parse(req.params);
