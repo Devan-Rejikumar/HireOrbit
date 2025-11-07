@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import TYPES from './types';
 
-// Repository Interfaces
 import { IUserRepository } from '../repositories/interfaces/IUserRepository';
 import { IAdminRepository } from '../repositories/interfaces/IAdminRepository';
 import { IProfileRepository } from '../repositories/interfaces/IProfileRepository';
@@ -11,7 +10,6 @@ import { ICertificationRepository } from '../repositories/interfaces/ICertificat
 import { IAchievementRepository } from '../repositories/interfaces/IAchievementRepository';
 import { ICompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
 
-// Repository Implementations
 import { UserRepository } from '../repositories/implementations/UserRepository';
 import { AdminRepository } from '../repositories/implementations/AdminRepository';
 import { ProfileRepository } from '../repositories/implementations/ProfileRepository';

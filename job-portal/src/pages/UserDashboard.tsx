@@ -22,7 +22,7 @@ import AppliedJobs from '@/components/AppliedJobs';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
 import { useTotalUnreadCount, useUserConversations, useMessages, useMarkAsRead } from '@/hooks/useChat';
-import { ConversationResponse } from '@/api/chatService';
+import { ConversationResponse } from '@/api/_chatService';
 import api from '@/api/axios';
 
 const UserDashboard = () => {

@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { FormField } from './ui/FormField';
 import { FileUpload } from './ui/FileUpload';
 import { ExperienceSelector } from './ui/ExperienceSelector';
-import { applicationService, ApplicationResponse } from '../api/applicationService';
+import { _applicationService, ApplicationResponse } from '../api/_applicationService';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -113,7 +113,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       };
 
       // Use the application service
-      const result: ApplicationResponse = await applicationService.applyForJob(applicationData);
+      const result: ApplicationResponse = await _applicationService.applyForJob(applicationData);
       console.log('Application submitted successfully:', result);
       
       // Call the callback to notify parent component

@@ -35,10 +35,7 @@ export class ApplicationRepository implements IApplicationRepository {
     const applicationsWithJobDetails = await Promise.all(
       applications.map(async (app) => {
         try {
-          console.log(`ApplicationRepository Fetching job details for jobId: ${app.jobId}`);
           const jobResponse = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
-          console.log(`ApplicationRepository Job service response status: ${jobResponse.status}`);
-
           if (jobResponse.ok) {
             const jobData = await jobResponse.json() as {
               data?: {

@@ -15,26 +15,21 @@ export class ChatService implements IChatService {
     authHeaders?: Record<string, string>
   ): Promise<{ userId: string; companyId: string; status: string }> {
     try {
-      // Use API Gateway URL instead of direct service URL to ensure authentication works
-      // The API Gateway handles authentication and forwards requests to the application service
       const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
       
-      console.log('📡 [ChatService] Fetching application details for:', applicationId);
-      console.log('📡 [ChatService] Using API Gateway URL:', `${apiGatewayUrl}/api/applications/${applicationId}`);
+      console.log('ChatService] Fetching application details for:', applicationId);
+      console.log('ChatService] Using API Gateway URL:', `${apiGatewayUrl}/api/applications/${applicationId}`);
       
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...authHeaders
       };
-      
-      // Log auth headers for debugging (without exposing sensitive data)
+
       if (authHeaders?.Authorization) {
-        console.log('📡 [ChatService] Auth header present:', authHeaders.Authorization.substring(0, 20) + '...');
+        console.log('ChatService] Auth header present:', authHeaders.Authorization.substring(0, 20) + '...');
       } else {
-        console.warn('⚠️ [ChatService] No Authorization header found in authHeaders');
+        console.warn('ChatService] No Authorization header found in authHeaders');
       }
-      
-      // Forward cookies if present in headers
       const axiosConfig: any = { headers };
       if (headers.Cookie) {
         axiosConfig.withCredentials = true;
@@ -44,10 +39,6 @@ export class ChatService implements IChatService {
         `${apiGatewayUrl}/api/applications/${applicationId}`,
         axiosConfig
       );
-      
-      console.log('✅ [ChatService] Application details response:', response.data);
-      
-      // Handle different response structures
       const applicationData = response.data?.data || response.data;
       
       if (!applicationData || !applicationData.userId || !applicationData.companyId) {
@@ -60,9 +51,6 @@ export class ChatService implements IChatService {
         status: applicationData.status || 'PENDING'
       };
     } catch (error: any) {
-      console.error('❌ [ChatService] Error fetching application details:', error);
-      console.error('❌ [ChatService] Error response:', error.response?.data);
-      console.error('❌ [ChatService] Error status:', error.response?.status);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to fetch application details: ${errorMessage}`);
     }
@@ -73,18 +61,13 @@ export class ChatService implements IChatService {
     userId: string,
     companyId: string
   ): Promise<ConversationResponse> {
-    // First, check if there's already a conversation between this user and company
-    // This ensures one conversation per company, not per application
     const existingConversation = await this._chatRepository.findConversationByUserAndCompany(userId, companyId);
     if (existingConversation) {
-      console.log(`✅ [ChatService] Reusing existing conversation ${existingConversation.id} for user ${userId} and company ${companyId}`);
+      console.log(`[ChatService] Reusing existing conversation ${existingConversation.id} for user ${userId} and company ${companyId}`);
       return ChatResponseMapper.toConversationResponse(existingConversation);
     }
-    
-    // If no conversation exists, create a new one
-    // Note: We still store applicationId for reference, but lookup is by userId + companyId
     const conversation = await this._chatRepository.createConversation(applicationId, userId, companyId);
-    console.log(`✅ [ChatService] Created new conversation ${conversation.id} for user ${userId} and company ${companyId}`);
+    console.log(` [ChatService] Created new conversation ${conversation.id} for user ${userId} and company ${companyId}`);
     return ChatResponseMapper.toConversationResponse(conversation);
   }
 

@@ -27,7 +27,7 @@ declare global {
 @injectable()
 export class InterviewController {
   constructor(
-    @inject(TYPES.IInterviewService) private interviewService: IInterviewService
+    @inject(TYPES.IInterviewService) private _interviewService: IInterviewService
   ) {}
 
   async scheduleInterview(req: Request, res: Response): Promise<void> {
@@ -54,7 +54,7 @@ export class InterviewController {
       }
 
       const validatedData = validationResult.data;
-      const result = await this.interviewService.scheduleInterview(validatedData, userId);
+      const result = await this._interviewService.scheduleInterview(validatedData, userId);
       
       console.log('InterviewController Interview scheduled:', {
         id: result.id,
@@ -88,7 +88,7 @@ export class InterviewController {
       }
 
       const { id } = req.params;
-      const result = await this.interviewService.getInterviewById(id);
+      const result = await this._interviewService.getInterviewById(id);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Interview details retrieved successfully')
@@ -125,7 +125,7 @@ export class InterviewController {
       }
 
       const validatedData = validationResult.data;
-      const result = await this.interviewService.updateInterview(id, validatedData, userId);
+      const result = await this._interviewService.updateInterview(id, validatedData, userId);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Interview updated successfully')
@@ -154,7 +154,7 @@ export class InterviewController {
       const { id } = req.params;
       const { reason } = req.body;
       
-      const result = await this.interviewService.cancelInterview(id, userId, reason);
+      const result = await this._interviewService.cancelInterview(id, userId, reason);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Interview cancelled successfully')
@@ -181,7 +181,7 @@ export class InterviewController {
       }
 
       const { applicationId } = req.params;
-      const result = await this.interviewService.getInterviewsByApplication(applicationId);
+      const result = await this._interviewService.getInterviewsByApplication(applicationId);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Interviews retrieved successfully')
@@ -207,7 +207,7 @@ export class InterviewController {
         return;
       }
 
-      const result = await this.interviewService.getCompanyInterviews(userId);
+      const result = await this._interviewService.getCompanyInterviews(userId);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Company interviews retrieved successfully')
@@ -233,7 +233,7 @@ export class InterviewController {
         return;
       }
 
-      const result = await this.interviewService.getCandidateInterviews(userId);
+      const result = await this._interviewService.getCandidateInterviews(userId);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Candidate interviews retrieved successfully')
@@ -264,7 +264,6 @@ export class InterviewController {
       const { id } = req.params;
       const decisionData = req.body;
 
-      // Validate the decision data
       const validation = InterviewDecisionSchema.safeParse(decisionData);
       if (!validation.success) {
         res.status(HttpStatusCode.BAD_REQUEST).json(
@@ -276,7 +275,7 @@ export class InterviewController {
         return;
       }
 
-      const result = await this.interviewService.makeInterviewDecision(id, validation.data, userId);
+      const result = await this._interviewService.makeInterviewDecision(id, validation.data, userId);
 
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Interview decision recorded successfully')

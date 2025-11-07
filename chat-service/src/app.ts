@@ -5,11 +5,12 @@ import morgan from 'morgan';
 import chatRoutes from './routes/ChatRoutes';
 import { HttpStatusCode } from './enums/StatusCodes';
 import { extractUserFromHeaders } from './middleware/auth.middleware';
+import { logger } from './utils/logger';
+import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 
 const app = express();
 
 app.use(helmet());
-// CORS configuration - must specify origin when using credentials
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
@@ -18,8 +19,41 @@ app.use(cors({
 }));
 app.use(morgan('combined'));
 app.use(express.json());
+app.use((req, res, next) => {
+  const start = Date.now();
+  logger.info({
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+    contentType: req.headers['content-type']
+  });
+  
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    const labels = {
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode
+    };
+    
+    httpRequestDuration.observe(labels, duration);
+    httpRequestCount.inc(labels);
+    
+    logger.info(`Request completed: ${labels.method} ${labels.route} ${labels.status} (${duration.toFixed(3)}s)`);
+  });
+  
+  next();
+});
 
-// Extract user info from headers (forwarded by API Gateway)
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    logger.error('Error generating metrics:', error);
+    res.status(500).end('Error generating metrics');
+  }
+});
 app.use('/api/chat', extractUserFromHeaders);
 
 app.use('/api/chat', chatRoutes);

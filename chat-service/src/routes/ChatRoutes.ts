@@ -4,7 +4,6 @@ import { ChatController } from '../controllers/ChatController';
 import { TYPES } from '../config/types';
 
 const router = Router();
-// Get ChatController directly from container (following project pattern)
 const chatController = container.get<ChatController>(TYPES.ChatController);
 
 router.get('/users/:userId/conversations', (req, res) => chatController.getUserConversations(req, res));

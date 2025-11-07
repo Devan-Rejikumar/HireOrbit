@@ -70,7 +70,7 @@ export interface InterviewListResponse {
   message: string;
 }
 
-export const interviewService = {
+export const _interviewService = {
   scheduleInterview: async (interviewData: CreateInterviewData): Promise<InterviewResponse> => {
     const response = await api.post<InterviewResponse>('/interviews', interviewData, {
       headers: {

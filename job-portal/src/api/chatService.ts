@@ -55,7 +55,7 @@ export interface UnreadCountResponse {
   };
 }
 
-export const chatService = {
+export const _chatService = {
   getUserConversations: async (userId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
       `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations`

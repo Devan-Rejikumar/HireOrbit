@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Video } from 'lucide-react';
-import { interviewService, UpdateInterviewData, InterviewWithDetails } from '@/api/interviewService';
+import { _interviewService, UpdateInterviewData, InterviewWithDetails } from '@/api/_interviewService';
 import { toast } from 'react-toastify';
 
 interface EditInterviewModalProps {

@@ -5,7 +5,7 @@ const CHAT_SERVICE_URL = process.env.CHAT_SERVICE_URL || 'http://localhost:4007'
 
 export const chatServiceProxy = proxy(CHAT_SERVICE_URL, {
   proxyReqPathResolver: (req) => {
-    console.log('🔀 [CHAT-PROXY] Request to:', req.originalUrl);
+    console.log('[CHAT-PROXY] Request to:', req.originalUrl);
     return req.originalUrl;
   },
   
@@ -26,7 +26,7 @@ export const chatServiceProxy = proxy(CHAT_SERVICE_URL, {
       proxyReqOpts.headers['Cookie'] = srcReq.headers.cookie;
     }
     
-    console.log('🔀 [CHAT-PROXY] Forwarding headers:', {
+    console.log('[CHAT-PROXY] Forwarding headers:', {
       'x-user-id': srcReq.headers['x-user-id'],
       'x-user-email': srcReq.headers['x-user-email'],
       'x-user-role': srcReq.headers['x-user-role']
@@ -36,7 +36,7 @@ export const chatServiceProxy = proxy(CHAT_SERVICE_URL, {
   },
   
   userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-    console.log('🔀 [CHAT-PROXY] Response:', proxyRes.statusCode);
+    console.log(' [CHAT-PROXY] Response:', proxyRes.statusCode);
     return proxyResData;
   },
   
