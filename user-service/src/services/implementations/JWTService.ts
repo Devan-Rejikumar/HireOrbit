@@ -58,7 +58,7 @@ export class JWTService {
     });
     return decoded;
   } catch (error) {
-    console.error('❌ JWTService - Token verification failed:', error);
+    console.error('JWTService - Token verification failed:', error);
     throw error;
   }
 }

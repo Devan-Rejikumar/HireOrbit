@@ -26,7 +26,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/interviewService';
+import { _interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/_interviewService';
 import { toast } from 'react-toastify';
 import EditInterviewModal from '@/components/EditInterviewModal';
 import InterviewDecisionModal from '@/components/InterviewDecisionModal';
@@ -65,7 +65,7 @@ const CompanyInterviewManagement = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await interviewService.getCompanyInterviews();
+      const response = await _interviewService.getCompanyInterviews();
       setInterviews(response.data || []);
     } catch (err: any) {
       console.error('Failed to fetch interviews:', err);
@@ -124,7 +124,7 @@ const CompanyInterviewManagement = () => {
 
   const handleUpdateInterview = async (interviewId: string, updateData: UpdateInterviewData) => {
     try {
-      await interviewService.updateInterview(interviewId, updateData);
+      await _interviewService.updateInterview(interviewId, updateData);
       toast.success('Interview updated successfully!');
       setShowEditModal(false);
       setEditingInterview(null);
@@ -141,7 +141,7 @@ const CompanyInterviewManagement = () => {
     }
 
     try {
-      await interviewService.cancelInterview(interviewId, 'Cancelled by company');
+      await _interviewService.cancelInterview(interviewId, 'Cancelled by company');
       toast.success('Interview cancelled successfully!');
       fetchInterviews();
     } catch (err: any) {
@@ -152,7 +152,7 @@ const CompanyInterviewManagement = () => {
 
   const handleStatusUpdate = async (interviewId: string, newStatus: string) => {
     try {
-      await interviewService.updateInterview(interviewId, { status: newStatus as any });
+      await _interviewService.updateInterview(interviewId, { status: newStatus as any });
       toast.success(`Interview status updated to ${newStatus}`);
       fetchInterviews();
     } catch (err: any) {
@@ -165,7 +165,7 @@ const CompanyInterviewManagement = () => {
     if (!decisionInterview) return;
 
     try {
-      await interviewService.makeInterviewDecision(decisionInterview.id, decisionData);
+      await _interviewService.makeInterviewDecision(decisionInterview.id, decisionData);
       toast.success(`Candidate ${decisionData.status.toLowerCase()} successfully!`);
       setShowDecisionModal(false);
       setDecisionInterview(null);

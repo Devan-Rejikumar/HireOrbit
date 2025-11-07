@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { useUserConversations, useCompanyConversations } from '@/hooks/useChat';
-import { MessageResponse } from '@/api/chatService';
+import { MessageResponse } from '@/api/_chatService';
 
 interface GlobalChatContextType {
   isConnected: boolean;

@@ -6,7 +6,7 @@ import { Dropdown, DropdownContent, DropdownItem, DropdownHeader } from './ui/dr
 import { useConversationsWithUnread, useTotalUnreadCount } from '@/hooks/useChat';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ConversationResponse } from '@/api/chatService';
+import { ConversationResponse } from '@/api/_chatService';
 import api from '@/api/axios';
 import { formatDistanceToNow } from 'date-fns';
 

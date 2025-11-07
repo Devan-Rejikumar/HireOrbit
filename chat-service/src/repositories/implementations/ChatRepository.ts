@@ -21,7 +21,6 @@ export class ChatRepository implements IChatRepository {
   }
   
   async findConversationByUserAndCompany(userId: string, companyId: string): Promise<IConversationDocument | null> {
-    // Find conversation where both userId and companyId are participants
     return await ConversationModel.findOne({
       participants: { $all: [userId, companyId] }
     });
@@ -106,14 +105,12 @@ export class ChatRepository implements IChatRepository {
   }
 
   async getTotalUnreadCount(userId: string): Promise<number> {
-    // Get all conversations where user is a participant
     const conversations = await ConversationModel.find({
       participants: userId
     });
     
     if (conversations.length === 0) return 0;
-    
-    // Get total unread messages across all conversations
+
     const conversationIds = conversations.map(conv => conv._id);
     const totalUnread = await MessageModel.countDocuments({
       conversationId: { $in: conversationIds },
@@ -125,14 +122,11 @@ export class ChatRepository implements IChatRepository {
   }
 
   async getConversationsWithUnread(userId: string): Promise<IConversationDocument[]> {
-    // Get all conversations where user is a participant
     const conversations = await ConversationModel.find({
       participants: userId
     });
     
     if (conversations.length === 0) return [];
-    
-    // For each conversation, check if it has unread messages
     const conversationsWithUnread: IConversationDocument[] = [];
     
     for (const conversation of conversations) {
@@ -143,15 +137,12 @@ export class ChatRepository implements IChatRepository {
       });
       
       if (unreadCount > 0) {
-        // Update the unreadCount in the conversation document
         const unreadCountObj = conversation.unreadCount as Record<string, number> || {};
         unreadCountObj[userId] = unreadCount;
         conversation.unreadCount = unreadCountObj as any;
         conversationsWithUnread.push(conversation);
       }
     }
-    
-    // Sort by most recent unread message
     conversationsWithUnread.sort((a, b) => {
       const aUnread = (a.unreadCount as Record<string, number>)?.[userId] || 0;
       const bUnread = (b.unreadCount as Record<string, number>)?.[userId] || 0;

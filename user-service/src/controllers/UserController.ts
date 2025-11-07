@@ -138,8 +138,6 @@ export class UserController {
       console.log('USER CONTROLLER Error in login:', err);
       const errorMessage = err instanceof Error ? err.message : 'unknown error';
       console.log('USER CONTROLLER Sending error response:', errorMessage);
-      
-      // Handle blocked user with specific status code
       if (errorMessage === 'Account blocked') {
         res.status(HttpStatusCode.FORBIDDEN).json(buildErrorResponse('Account blocked', 'Account blocked'));
         return;
@@ -169,7 +167,6 @@ export class UserController {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Invalid refresh token';
     
-    // Handle blocked user
     if (errorMessage === 'Account blocked') {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
@@ -421,8 +418,7 @@ export class UserController {
 
   async updateName(req: Request, res: Response): Promise<void> {
     try {
-      console.log('🔍 [USER-CONTROLLER] updateName called');
-      console.log('🔍 [USER-CONTROLLER] req.user:', req.user);
+
       
       const validationResult = UpdateNameSchema.safeParse(req.body);
       if (!validationResult.success) {

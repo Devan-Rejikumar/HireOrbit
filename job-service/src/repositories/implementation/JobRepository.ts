@@ -27,7 +27,7 @@ export class JobRepository implements IJobRepository {
       where: { 
         OR: [
           { companyId: companyId },
-          { company: companyId } // ✅ Also search by company name as fallback
+          { company: companyId } 
         ],
         isActive: true 
       },

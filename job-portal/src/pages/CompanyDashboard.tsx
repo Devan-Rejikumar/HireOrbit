@@ -13,7 +13,7 @@ import { MessagesSidebar } from '@/components/MessagesSidebar';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
 import { useTotalUnreadCount, useCompanyConversations, useMarkAsRead, useMessages } from '@/hooks/useChat';
-import { ConversationResponse } from '@/api/chatService';
+import { ConversationResponse } from '@/api/_chatService';
 
 interface Company {
   id: string;

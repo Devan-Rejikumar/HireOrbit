@@ -34,7 +34,7 @@ export function mapJobToResponse(job: {
     education: job.education,
     applicationDeadline: job.applicationDeadline,
     workLocation: job.workLocation,
-    isActive: job.isActive ?? true, // ✅ Add isActive field with default true
+    isActive: job.isActive ?? true, 
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   };

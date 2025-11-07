@@ -39,7 +39,6 @@ io.on('connection', (socket) => {
   });
   socket.on('send-message', async (data: unknown) => {
     try {
-      // Validate with Zod
       const validationResult = sendMessageSchema.safeParse(data);
       if (!validationResult.success) {
         const errorDetails = validationResult.error.issues.map(issue => issue.message).join(', ');
@@ -50,8 +49,8 @@ io.on('connection', (socket) => {
         return;
       }
 
-      const chatService = container.get<IChatService>(TYPES.IChatService);
-      const message = await chatService.sendMessage(
+      const _chatService = container.get<IChatService>(TYPES.IChatService);
+      const message = await _chatService.sendMessage(
         validationResult.data.conversationId,
         validationResult.data.senderId,
         validationResult.data.content,
@@ -67,7 +66,7 @@ io.on('connection', (socket) => {
   socket.on('typing', (data: unknown) => {
     const validationResult = typingIndicatorSchema.safeParse(data);
     if (!validationResult.success) {
-      return; // Silently ignore invalid typing events
+      return; 
     }
     
     socket.to(validationResult.data.conversationId).emit('user-typing', {
@@ -78,14 +77,13 @@ io.on('connection', (socket) => {
 
   socket.on('mark-as-read', async (data: unknown) => {
     try {
-      // Validate with Zod
       const validationResult = markAsReadSchema.safeParse(data);
       if (!validationResult.success) {
-        return; // Silently ignore invalid requests
+        return; 
       }
 
-      const chatService = container.get<IChatService>(TYPES.IChatService);
-      await chatService.markAsRead(
+      const _chatService = container.get<IChatService>(TYPES.IChatService);
+      await _chatService.markAsRead(
         validationResult.data.conversationId, 
         validationResult.data.userId
       );
@@ -114,14 +112,14 @@ async function initializeKafkaConsumer(): Promise<void> {
           if (eventData.newStatus === 'SHORTLISTED') {
             console.log('Application shortlisted, creating conversation:', eventData.applicationId);
             
-            const chatService = container.get<IChatService>(TYPES.IChatService);
+            const _chatService = container.get<IChatService>(TYPES.IChatService);
             
             const applicationServiceUrl = process.env.APPLICATION_SERVICE_URL || 'http://localhost:3004';
             const response = await axios.get(`${applicationServiceUrl}/api/applications/${eventData.applicationId}`);
             
             const { userId, companyId } = response.data.data || response.data;
 
-            await chatService.createConversationFromApplication(
+            await _chatService.createConversationFromApplication(
               eventData.applicationId,
               userId,
               companyId

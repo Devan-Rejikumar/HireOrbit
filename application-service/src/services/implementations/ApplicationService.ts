@@ -45,17 +45,16 @@ interface JobApiResponse {
     job?: {
       id?: string;
       title?: string;
-      company?: string; // Company is a string (company name), not an object
+      company?: string; 
       companyId?: string;
       description?: string;
       location?: string;
-      [key: string]: any; // Allow other fields
+      [key: string]: any; 
     };
-    // Also handle direct response structure
+
     title?: string;
     company?: string;
   };
-  // Also handle response where job is directly in data
   job?: {
     title?: string;
     company?: string;
@@ -68,9 +67,9 @@ interface JobApiResponse {
 @injectable()
 export class ApplicationService implements IApplicationService {
   constructor(
-    @inject(TYPES.IApplicationRepository) private applicationRepository: IApplicationRepository,
-    @inject(TYPES.IEventService) private eventService: IEventService,
-    @inject(TYPES.StatusUpdateService) private statusUpdateService: StatusUpdateService
+    @inject(TYPES.IApplicationRepository) private _applicationRepository: IApplicationRepository,
+    @inject(TYPES.IEventService) private _eventService: IEventService,
+    @inject(TYPES.StatusUpdateService) private _statusUpdateService: StatusUpdateService
   ) {}
 
   async applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse> {
@@ -79,12 +78,10 @@ export class ApplicationService implements IApplicationService {
     if (!eligibility.eligible) {
       throw new Error(eligibility.reason || 'Not eligible to apply for this job');
     }
-
-
-    const application = await this.applicationRepository.create(data);
+    const application = await this._applicationRepository.create(data);
     
  try {
-  await this.eventService.publish('application.created', {
+  await this._eventService.publish('application.created', {
     applicationId: application.id,
     userId: application.userId,
     jobId: application.jobId,
@@ -98,10 +95,10 @@ export class ApplicationService implements IApplicationService {
   }
 
   async getUserApplications(userId: string): Promise<UserApplicationsResponse> {
-    const applications = await this.applicationRepository.findByUserId(userId);
+    const applications = await this._applicationRepository.findByUserId(userId);
     const total = applications.length;
 
-    console.log('🔍 [ApplicationService] getUserApplications - applications from repository:', 
+    console.log('ApplicationService] getUserApplications - applications from repository:', 
       applications.map(app => ({ 
         id: app.id, 
         jobTitle: app.jobTitle, 
@@ -114,7 +111,7 @@ export class ApplicationService implements IApplicationService {
 
 async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean; status?: string }> {
   try {
-    const application = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
+    const application = await this._applicationRepository.checkDuplicateApplication(userId, jobId);
     return {
       hasApplied: !!application && application.status !== 'WITHDRAWN',
       status: application?.status
@@ -126,12 +123,11 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
 }
 
   async getApplicationById(id: string): Promise<ApplicationDetailsResponse> {
-    const application = await this.applicationRepository.findWithRelations(id);
+    const application = await this._applicationRepository.findWithRelations(id);
     if (!application) {
       throw new Error('Application not found');
     }
     
-    // Fetch real data from external services
     let externalData = {
       jobTitle: 'Job Title',
       companyName: 'Company Name', 
@@ -140,7 +136,6 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     };
     
     try {
-      // Fetch user details through API Gateway
       const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
       const userRes = await fetch(`${apiGatewayUrl}/api/users/${application.userId}`);
       if (userRes.ok) {
@@ -153,19 +148,14 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     }
     
     try {
-      // Fetch job details through API Gateway to get job title and company name
       const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
       const jobRes = await fetch(`${apiGatewayUrl}/api/jobs/${application.jobId}`);
       if (jobRes.ok) {
         const jobData = await jobRes.json() as JobApiResponse;
-        
-        // Extract job title from various possible locations
         externalData.jobTitle = jobData.data?.job?.title || 
                                jobData.data?.title || 
                                jobData.job?.title || 
                                'Job Title';
-        
-        // Extract company name - company is a string in the job response, not an object
         externalData.companyName = jobData.data?.job?.company || 
                                    jobData.data?.company ||
                                    jobData.job?.company ||
@@ -179,7 +169,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   }
 
   async withdrawApplication(applicationId: string, userId: string): Promise<ApplicationResponse> {
-    const application = await this.applicationRepository.findById(applicationId);
+    const application = await this._applicationRepository.findById(applicationId);
     if (!application) {
       throw new Error('Application not found');
     }
@@ -190,14 +180,14 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       throw new Error('Application already withdrawn');
     }
 
-    const updatedApplication = await this.applicationRepository.updateStatus(
+    const updatedApplication = await this._applicationRepository.updateStatus(
       applicationId,
       { status: 'WITHDRAWN' },
       userId
     );
 
     try {
-      await this.eventService.publish('application.withdrawn', {
+      await this._eventService.publish('application.withdrawn', {
         applicationId: updatedApplication.id,
         userId: updatedApplication.userId,
         jobId: updatedApplication.jobId,
@@ -213,7 +203,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
 
   async getCompanyApplications(companyId: string): Promise<CompanyApplicationsResponse> {
     try {
-      const allApplications = await this.applicationRepository.findByCompanyIdWithRelations(companyId);
+      const allApplications = await this._applicationRepository.findByCompanyIdWithRelations(companyId);
       console.log(`Total applications for company ${companyId}:`, allApplications.length);
       const applications = allApplications.filter(app => app.status !== 'WITHDRAWN');
       console.log(`Active applications (excluding WITHDRAWN):`, applications.length);
@@ -224,10 +214,6 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       await Promise.all(
         applications.map(async (app) => {
           try {
-            console.log(`[ApplicationService] Processing application ${app.id}:`);
-            console.log(` [ApplicationService] - userId: ${app.userId}`);
-            console.log(` [ApplicationService] - jobId: ${app.jobId}`);
-            
             const userRes = await fetch(`http://localhost:3000/api/users/${app.userId}`);
             console.log(` [ApplicationService] - User API response status: ${userRes.status}`);
             
@@ -277,21 +263,21 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
 
   async updateApplicationStatus(applicationId: string, data: UpdateApplicationStatusInput, changedBy: string): Promise<ApplicationDetailsResponse> {
 
-    const existingApplication = await this.applicationRepository.findById(applicationId);
+    const existingApplication = await this._applicationRepository.findById(applicationId);
     if (!existingApplication) {
       throw new Error('Application not found');
     }
-    this.statusUpdateService.validateOrThrow(
+    this._statusUpdateService.validateOrThrow(
       existingApplication.status as ApplicationStatus, 
       data.status as ApplicationStatus
     );
-    const updatedApplication = await this.applicationRepository.updateStatus(applicationId, data, changedBy);
-    const applicationWithRelations = await this.applicationRepository.findWithRelations(applicationId);
+    const updatedApplication = await this._applicationRepository.updateStatus(applicationId, data, changedBy);
+    const applicationWithRelations = await this._applicationRepository.findWithRelations(applicationId);
     if (!applicationWithRelations) {
       throw new Error('Application not found after update');
     }
     try {
-      await this.eventService.publish('application.status_updated', {
+      await this._eventService.publish('application.status_updated', {
         userId: existingApplication.userId,
         applicationId: updatedApplication.id,
         jobId: existingApplication.jobId,
@@ -316,16 +302,16 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   }
 
   async addApplicationNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationDetailsResponse> {
-    const application = await this.applicationRepository.findById(applicationId);
+    const application = await this._applicationRepository.findById(applicationId);
     if (!application) {
       throw new Error('Application not found');
     }
 
     
-    await this.applicationRepository.addNote(applicationId, data);
+    await this._applicationRepository.addNote(applicationId, data);
 
     
-    const updatedApplication = await this.applicationRepository.findWithRelations(applicationId);
+    const updatedApplication = await this._applicationRepository.findWithRelations(applicationId);
     if (!updatedApplication) {
       throw new Error('Application not found after adding note');
     }
@@ -342,7 +328,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   }
 
   async getApplicationDetails(applicationId: string, companyId: string): Promise<ApplicationDetailsResponse> {
-    const application = await this.applicationRepository.findWithRelations(applicationId);
+    const application = await this._applicationRepository.findWithRelations(applicationId);
     if (!application) {
       throw new Error('Application not found');
     }
@@ -380,7 +366,7 @@ async searchApplications(filters: {
   const page = filters.page || 1;
   const limit = filters.limit || 10;
 
-  const result = await this.applicationRepository.findPaginated(page, limit, {
+  const result = await this._applicationRepository.findPaginated(page, limit, {
     companyId: filters.companyId,
     userId: filters.userId,
     status: filters.status as ApplicationStatus,
@@ -406,7 +392,7 @@ async searchApplications(filters: {
     accepted: number;
     withdrawn: number;
   }> {
-    return await this.applicationRepository.getApplicationStats(companyId);
+    return await this._applicationRepository.getApplicationStats(companyId);
   }
   async bulkUpdateApplicationStatus(
     applicationIds: string[], 
@@ -415,7 +401,7 @@ async searchApplications(filters: {
     companyId: string
   ): Promise<void> {
     for (const applicationId of applicationIds) {
-      const application = await this.applicationRepository.findById(applicationId);
+      const application = await this._applicationRepository.findById(applicationId);
       if (!application) {
         throw new Error(`Application ${applicationId} not found`);
       }
@@ -423,13 +409,13 @@ async searchApplications(filters: {
         throw new Error(`Unauthorized to update application ${applicationId}`);
       }
     }
-    await this.applicationRepository.bulkUpdateStatus(
+    await this._applicationRepository.bulkUpdateStatus(
       applicationIds, 
       status as ApplicationStatus, 
       changedBy
     );
 
-    await this.eventService.publish('application.bulk_status_updated', {
+    await this._eventService.publish('application.bulk_status_updated', {
       applicationIds,
       newStatus: status,
       changedBy,
@@ -442,15 +428,13 @@ async searchApplications(filters: {
     eligible: boolean;
     reason?: string;
   }> {
-    const existingApplication = await this.applicationRepository.checkDuplicateApplication(userId, jobId);
+    const existingApplication = await this._applicationRepository.checkDuplicateApplication(userId, jobId);
     if (existingApplication && existingApplication.status !== 'WITHDRAWN') {
       return {
         eligible: false,
         reason: 'You have already applied for this job'
       };
     }
-
-    // Check if application deadline has passed
     try {
       const jobRes = await fetch(`http://localhost:3002/api/jobs/${jobId}`);
       if (jobRes.ok) {
@@ -471,7 +455,6 @@ async searchApplications(filters: {
       }
     } catch (error) {
       console.error('Error checking job deadline:', error);
-      // Continue - don't block application if we can't verify deadline
     }
 
     return { eligible: true };

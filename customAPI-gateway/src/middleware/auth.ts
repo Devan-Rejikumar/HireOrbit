@@ -34,20 +34,13 @@ export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunc
 
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    
-    // Check if user is blocked (only for jobseeker role)
     if (payload.role === 'jobseeker') {
       try {
-        // Call user-service directly (bypassing gateway to avoid recursion)
-        // Use internal service URL directly - should be like http://localhost:3000
         const directUserServiceUrl = process.env.USER_SERVICE_URL || getServiceUrl('user');
-        // Call getUserById which doesn't require auth but returns user data including isBlocked
         const response = await axios.get(`${directUserServiceUrl}/api/users/${payload.userId}`, {
-          timeout: 1000, // 1 second timeout for quick check
-          validateStatus: () => true // Accept all status codes to check response
+          timeout: 1000, 
+          validateStatus: () => true 
         });
-        
-        // Check if user is blocked
         const user = response.data?.data?.user || response.data?.user;
         if (user?.isBlocked) {
           res.status(403).json({ 
@@ -57,9 +50,7 @@ export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunc
           return;
         }
       } catch (checkError: any) {
-        // If check fails for other reasons, log but don't block (to avoid blocking legitimate users if user-service is down)
         console.error('Error checking user blocked status:', checkError.message);
-        // Continue with request - don't block if we can't verify
       }
     }
     

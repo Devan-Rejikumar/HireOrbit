@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { MessageResponse } from '@/api/chatService';
+import { MessageResponse } from '@/api/_chatService';
 
 export interface TypingData {
   userId: string;

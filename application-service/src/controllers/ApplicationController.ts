@@ -8,6 +8,7 @@ import { HttpStatusCode, ValidationStatusCode } from "../enums/StatusCodes";
 import { TYPES } from '../config/types';
 import { uploadToCloudinary } from '../config/cloudinary';
 import { mapApplicationToResponse,mapUserApplicationsResponse} from '../dto/mappers/application.mapper';
+import { Http } from "winston/lib/winston/transports";
 
 declare global {
   namespace Express {
@@ -29,7 +30,7 @@ declare global {
 @injectable()
 export class ApplicationController {
   constructor(
-    @inject(TYPES.IApplicationService) private applicationService: IApplicationService
+    @inject(TYPES.IApplicationService) private _applicationService: IApplicationService
   ) {}
 
   async applyForJob(req: Request, res: Response): Promise<void> {
@@ -41,7 +42,7 @@ export class ApplicationController {
 
       if (!userId || userRole !== 'jobseeker') {
         console.log('ApplicationController Unauthorized access');
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
@@ -102,7 +103,7 @@ export class ApplicationController {
         userId
       };
 
-      const result = await this.applicationService.applyForJob(applicationData);
+      const result = await this._applicationService.applyForJob(applicationData);
       
       console.log('ApplicationController Application created:', {
         id: result.id,
@@ -134,11 +135,11 @@ export class ApplicationController {
 
       if (!userId || userRole !== 'jobseeker') {
         console.log('ApplicationController Unauthorized access');
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
-      const result = await this.applicationService.getUserApplications(userId);
+      const result = await this._applicationService.getUserApplications(userId);
 
       const responseData = mapUserApplicationsResponse(result.applications, result.total);
       
@@ -163,12 +164,12 @@ export class ApplicationController {
 
       if (!userId || userRole !== 'jobseeker') {
         console.log('ApplicationController Unauthorized access');
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
       const { jobId } = req.params;
       
-      const result = await this.applicationService.checkApplicationStatus(userId, jobId);
+      const result = await this._applicationService.checkApplicationStatus(userId, jobId);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Application status checked successfully')
       );
@@ -188,19 +189,19 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || !userRole) {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
       const { id } = req.params;
-      const result = await this.applicationService.getApplicationById(id);
+      const result = await this._applicationService.getApplicationById(id);
       if (userRole === 'jobseeker' && result.userId !== userId) {
-        res.status(403).json({ error: 'You can only view your own applications' });
+        res.status(HttpStatusCode.FORBIDDEN).json({ error: 'You can only view your own applications' });
         return;
       }
       
       if (userRole === 'company' && result.companyId !== userId) {
-        res.status(403).json({ error: 'You can only view applications for your jobs' });
+        res.status(HttpStatusCode.FORBIDDEN).json({ error: 'You can only view applications for your jobs' });
         return;
       }
       const responseData = mapApplicationToResponse(result);
@@ -223,13 +224,13 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'jobseeker') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
       const { id } = req.params;
       
-      const result = await this.applicationService.withdrawApplication(id, userId);
+      const result = await this._applicationService.withdrawApplication(id, userId);
       const responseData = mapApplicationToResponse(result);
       
       res.status(HttpStatusCode.OK).json(
@@ -251,11 +252,11 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
       
-      const result = await this.applicationService.getCompanyApplications(userId);
+      const result = await this._applicationService.getCompanyApplications(userId);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Company applications retrieved successfully')
@@ -275,7 +276,7 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
@@ -291,7 +292,7 @@ export class ApplicationController {
       
       const validatedData = validationResult.data;
       console.log('ApplicationController Validation passed, data:', validatedData);
-      const result = await this.applicationService.updateApplicationStatus(id, validatedData, userId);
+      const result = await this._applicationService.updateApplicationStatus(id, validatedData, userId);
       const responseData = mapApplicationToResponse(result);
   
       
@@ -317,7 +318,7 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
@@ -335,7 +336,7 @@ export class ApplicationController {
       const noteData = { ...validatedData, addedBy: userId };
       
       
-      const result = await this.applicationService.addApplicationNote(id, noteData);
+      const result = await this._applicationService.addApplicationNote(id, noteData);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Note added successfully')
@@ -356,14 +357,14 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
       const { id } = req.params;
       
       
-      const result = await this.applicationService.getApplicationDetails(id, userId);
+      const result = await this._applicationService.getApplicationDetails(id, userId);
       
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(result, 'Application details retrieved successfully')
@@ -383,7 +384,7 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || !userRole) {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
@@ -405,9 +406,9 @@ export class ApplicationController {
         limit: validatedQuery.limit || 10
       };
 
-      console.log(`🔍 [ApplicationController] Searching applications with filters:`, filters);
+      console.log(`ApplicationController] Searching applications with filters:`, filters);
 
-      const result = await this.applicationService.searchApplications(filters);
+      const result = await this._applicationService.searchApplications(filters);
 
       const responseData = {
         applications: result.applications.map(app => mapApplicationToResponse(app)),
@@ -433,11 +434,11 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
       
-      const result = await this.applicationService.getCompanyApplicationStats(userId);
+      const result = await this._applicationService.getCompanyApplicationStats(userId);
 
       const responseData = {
         total: result.total,
@@ -463,22 +464,22 @@ export class ApplicationController {
 
   async viewResume(req: Request, res: Response): Promise<void> {
     try {
-      console.log('👁️ [ApplicationController] viewResume called');
+      console.log('ApplicationController] viewResume called');
       
       const userId = req.user?.userId || req.headers['x-user-id'] as string;
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
       
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
       
       const { applicationId } = req.params;
 
-      const application = await this.applicationService.getApplicationById(applicationId);
+      const application = await this._applicationService.getApplicationById(applicationId);
       
       if (application.companyId !== userId) {
-        res.status(403).json({ error: 'Access denied' });
+        res.status(HttpStatusCode.FORBIDDEN).json({ error: 'Access denied' });
         return;
       }
       
@@ -487,14 +488,14 @@ export class ApplicationController {
         return;
       }
 
-      res.status(200).json({ 
+      res.status(HttpStatusCode.OK).json({ 
         success: true,
         data: { resumeUrl: application.resumeUrl }
       });
       
     } catch (error) {
       console.error('ApplicationController Error viewing resume:', error);
-      res.status(500).json({ error: 'Failed to view resume' });
+      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Failed to view resume' });
     }
   }
 
@@ -506,15 +507,15 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
       
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
       const { applicationId } = req.params;
 
-      const application = await this.applicationService.getApplicationById(applicationId);
+      const application = await this._applicationService.getApplicationById(applicationId);
       
       if (application.companyId !== userId) {
-        res.status(403).json({ error: 'Access denied' });
+        res.status(HttpStatusCode.FORBIDDEN).json({ error: 'Access denied' });
         return;
       }
       
@@ -528,7 +529,7 @@ export class ApplicationController {
       
     } catch (error) {
       console.error('ApplicationController Error downloading resume:', error);
-      res.status(500).json({ error: 'Failed to download resume' });
+      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Failed to download resume' });
     }
   }
 
@@ -538,7 +539,7 @@ export class ApplicationController {
       const userRole = req.user?.role || req.headers['x-user-role'] as string;
 
       if (!userId || userRole !== 'company') {
-        res.status(401).json({ error: 'Unauthorized access' });
+        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Unauthorized access' });
         return;
       }
 
@@ -553,7 +554,7 @@ export class ApplicationController {
 
       
 
-      await this.applicationService.bulkUpdateApplicationStatus(
+      await this._applicationService.bulkUpdateApplicationStatus(
         applicationIds, status, userId, userId
       );
       

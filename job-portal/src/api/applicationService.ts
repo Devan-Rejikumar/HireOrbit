@@ -41,7 +41,7 @@ export interface ApplicationResponse {
   message: string;
 }
 
-export const applicationService = {
+export const _applicationService = {
   applyForJob: async (applicationData: any): Promise<ApplicationResponse> => {
     console.log('🔍 [ApplicationService] Sending application with axios');
     

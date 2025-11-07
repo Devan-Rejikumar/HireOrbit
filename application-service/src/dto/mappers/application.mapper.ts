@@ -119,7 +119,7 @@ export function mapUserApplicationsResponse(
   }>,
   total: number
 ): UserApplicationsResponse {
-  console.log('🔍 [Mapper] mapUserApplicationsResponse - input applications:', 
+  console.log('[Mapper] mapUserApplicationsResponse - input applications:', 
     applications.map(app => ({ 
       id: app.id, 
       jobTitle: app.jobTitle, 
@@ -140,7 +140,7 @@ export function mapUserApplicationsResponse(
         notes: []
       };
       
-      console.log('🔍 [Mapper] mapped application:', { 
+      console.log('[Mapper] mapped application:', { 
         id: mappedApp.id, 
         jobTitle: mappedApp.jobTitle, 
         companyName: mappedApp.companyName 
@@ -151,7 +151,7 @@ export function mapUserApplicationsResponse(
     total,
   };
 
-  console.log('🔍 [Mapper] final result:', result.applications.map(app => ({ 
+  console.log('[Mapper] final result:', result.applications.map(app => ({ 
     id: app.id, 
     jobTitle: app.jobTitle, 
     companyName: app.companyName 

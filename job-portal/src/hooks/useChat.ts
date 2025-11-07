@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { chatService, ConversationResponse, MessageResponse } from '@/api/chatService';
+import { _chatService, ConversationResponse, MessageResponse } from '@/api/_chatService';
 
 export const useUserConversations = (userId: string) => {
   return useQuery({
     queryKey: ['conversations', 'user', userId],
-    queryFn: () => chatService.getUserConversations(userId),
+    queryFn: () => _chatService.getUserConversations(userId),
     enabled: !!userId,
     refetchInterval: 30000
   });
@@ -14,7 +14,7 @@ export const useUserConversations = (userId: string) => {
 export const useCompanyConversations = (companyId: string) => {
   return useQuery({
     queryKey: ['conversations', 'company', companyId],
-    queryFn: () => chatService.getCompanyConversations(companyId),
+    queryFn: () => _chatService.getCompanyConversations(companyId),
     enabled: !!companyId,
     refetchInterval: 30000
   });
@@ -23,7 +23,7 @@ export const useCompanyConversations = (companyId: string) => {
 export const useConversation = (conversationId: string | null) => {
   return useQuery({
     queryKey: ['conversation', conversationId],
-    queryFn: () => chatService.getConversation(conversationId!),
+    queryFn: () => _chatService.getConversation(conversationId!),
     enabled: !!conversationId
   });
 };
@@ -32,7 +32,7 @@ export const useConversationByApplication = (applicationId: string) => {
   return useQuery({
     queryKey: ['conversation', 'application', applicationId],
     queryFn: async () => {
-      const conversation = await chatService.getConversationByApplication(applicationId);
+      const conversation = await _chatService.getConversationByApplication(applicationId);
       return conversation;
     },
     enabled: !!applicationId,
@@ -44,7 +44,7 @@ export const useConversationByApplication = (applicationId: string) => {
 export const useMessages = (conversationId: string | null, limit?: number, skip?: number) => {
   return useQuery({
     queryKey: ['messages', conversationId, limit, skip],
-    queryFn: () => chatService.getMessages(conversationId!, limit, skip),
+    queryFn: () => _chatService.getMessages(conversationId!, limit, skip),
     enabled: !!conversationId
   });
 };
@@ -54,7 +54,7 @@ export const useMarkAsRead = () => {
   
   return useMutation({
     mutationFn: ({ conversationId, userId }: { conversationId: string; userId: string }) =>
-      chatService.markAsRead(conversationId, userId),
+      _chatService.markAsRead(conversationId, userId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
@@ -86,7 +86,7 @@ export const useUnreadCount = (conversationId: string | null, userId: string | n
   
   return useQuery({
     queryKey: ['unread-count', conversationId, userId],
-    queryFn: () => chatService.getUnreadCount(conversationId!, userId!),
+    queryFn: () => _chatService.getUnreadCount(conversationId!, userId!),
     enabled: !!conversationId && !!userId,
     // Only poll when WebSocket is disconnected AND tab is visible (as fallback)
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
@@ -101,7 +101,7 @@ export const useTotalUnreadCount = (userId: string | null, isWebSocketConnected:
   
   return useQuery({
     queryKey: ['total-unread-count', userId],
-    queryFn: () => chatService.getTotalUnreadCount(userId!),
+    queryFn: () => _chatService.getTotalUnreadCount(userId!),
     enabled: !!userId,
     // Only poll when WebSocket is disconnected AND tab is visible (as fallback)
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
@@ -116,7 +116,7 @@ export const useConversationsWithUnread = (userId: string | null, isWebSocketCon
   
   return useQuery({
     queryKey: ['conversations-with-unread', userId],
-    queryFn: () => chatService.getConversationsWithUnread(userId!),
+    queryFn: () => _chatService.getConversationsWithUnread(userId!),
     enabled: !!userId,
     // Only poll when WebSocket is disconnected AND tab is visible (as fallback)
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,

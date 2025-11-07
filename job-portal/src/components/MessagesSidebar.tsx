@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Building2, MessageCircle } from 'lucide-react';
-import { ConversationResponse } from '@/api/chatService';
+import { ConversationResponse } from '@/api/_chatService';
 import { useCompanyConversations, useTotalUnreadCount } from '@/hooks/useChat';
 import api from '@/api/axios';
 import { formatDistanceToNow } from 'date-fns';

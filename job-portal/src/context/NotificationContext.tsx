@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useNavigate } from 'react-router-dom';
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../hooks/useNotifications';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { NotificationData } from '../api/notificationService';
+import { NotificationData } from '../api/_notificationService';
 
 interface NotificationContextType {
   notifications: NotificationData[];

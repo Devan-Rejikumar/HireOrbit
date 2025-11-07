@@ -3,34 +3,66 @@ import { Authenticate, RequireUser, RequireCompany, RequireAdmin } from '@/middl
 import { corsMiddleware } from '@/middleware/cors';
 import { rateLimiterMiddleware } from '@/middleware/rateLimiter';
 import { errorHandler } from '@/middleware/errorHandler';
-import { loggerMiddleware } from '@/middleware/logger';
 import { createProxy } from '@/proxy/loadBalancer';
 import { healthCheck } from '@/monitoring/healthCheck';
-import { getMetrics } from '@/monitoring/metrics';
 import { routeHandler } from './middleware/routeHandler';
+import { logger } from './utils/logger';
+import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 
 const app = express();
 
 app.use(corsMiddleware);
-app.use(loggerMiddleware);
 app.use(rateLimiterMiddleware);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  logger.info({
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+    contentType: req.headers['content-type']
+  });
+  
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    const labels = {
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode,
+      service: 'api-gateway'
+    };
+    
+    httpRequestDuration.observe(labels, duration);
+    httpRequestCount.inc(labels);
+    
+    logger.info(`Request completed: ${labels.method} ${labels.route} ${labels.status} (${duration.toFixed(3)}s)`);
+  });
+  
+  next();
+});
+
 app.get('/health', healthCheck);
-app.get('/metrics', getMetrics);
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    logger.error('Error generating metrics:', error);
+    res.status(500).end('Error generating metrics');
+  }
+});
 app.use('/api/*', (req, res, next) => {
-    console.log(' ===== API GATEWAY REQUEST =====');
-    console.log(' Method:', req.method);
-    console.log(' Path:', req.path);
-    console.log(' URL:', req.url);
-    console.log(' Original URL:', req.originalUrl);
-    console.log(' Base URL:', req.baseUrl);
-    console.log(' Headers:', JSON.stringify(req.headers, null, 2));
-    console.log(' Body:', req.body);
-    console.log(' ================================');
-    console.log(' [GATEWAY] About to call routeHandler...');
+    logger.info('API Gateway Request', {
+      method: req.method,
+      path: req.path,
+      url: req.url,
+      originalUrl: req.originalUrl,
+      baseUrl: req.baseUrl
+    });
     routeHandler(req, res, next);
-    console.log(' [GATEWAY] routeHandler call completed');
 });
 app.use(errorHandler);
 

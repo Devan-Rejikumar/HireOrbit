@@ -5,11 +5,10 @@ import { IEventService } from './services/interface/IEventService';
 import applicationRoutes from './routes/ApplicationRoutes';
 import interviewRoutes from './routes/InterviewRoutes';
 import {TYPES} from './config/types';
-
+import { logger } from './utils/logger';
+import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 
 const app = express();
-
-
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -24,8 +23,39 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 
 app.use((req, res, next) => {
-  console.log(` APP-SERVICE ${req.method} ${req.url} - Body:`, req.body);
+  const start = Date.now();
+  logger.info({
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+    contentType: req.headers['content-type']
+  });
+  
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    const labels = {
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode
+    };
+    
+    httpRequestDuration.observe(labels, duration);
+    httpRequestCount.inc(labels);
+    
+    logger.info(`Request completed: ${labels.method} ${labels.route} ${labels.status} (${duration.toFixed(3)}s)`);
+  });
+  
   next();
+});
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    logger.error('Error generating metrics:', error);
+    res.status(500).end('Error generating metrics');
+  }
 });
 
 app.get('/health', (req, res) => {
@@ -40,7 +70,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/interviews', interviewRoutes);
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Global error handler:', err);
+  logger.error('Global error handler:', { message: err.message, stack: err.stack });
   
   res.status(500).json({
     error: 'Internal server error',
@@ -51,37 +81,37 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 async function initializeServices(): Promise<void> {
   try {
-    const eventService = container.get<IEventService>(TYPES.IEventService);
-    await eventService.start();
-    console.log('Event service (Kafka) initialized successfully');
+    const _eventService = container.get<IEventService>(TYPES.IEventService);
+    await _eventService.start();
+    logger.info('Event service (Kafka) initialized successfully');
   } catch (error: any) {
-    console.warn('Failed to initialize event service (Kafka not available):', error.message);
-    console.log(' Continuing without Kafka - events will not be published');
+    logger.warn('Failed to initialize event service (Kafka not available):', error.message);
+    logger.info('Continuing without Kafka - events will not be published');
   }
 }
 
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully...');
   try {
-    const eventService = container.get<IEventService>(TYPES.IEventService);
-    await eventService.stop();
-    console.log('Event service stopped');
+    const _eventService = container.get<IEventService>(TYPES.IEventService);
+    await _eventService.stop();
+    logger.info('Event service stopped');
     process.exit(0);
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    logger.error('Error during shutdown:', error);
     process.exit(1);
   }
 });
 
 process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down gracefully...');
+  logger.info('SIGINT received, shutting down gracefully...');
   try {
-    const eventService = container.get<IEventService>(TYPES.IEventService);
-    await eventService.stop();
-    console.log('Event service stopped');
+    const _eventService = container.get<IEventService>(TYPES.IEventService);
+    await _eventService.stop();
+    logger.info('Event service stopped');
     process.exit(0);
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    logger.error('Error during shutdown:', error);
     process.exit(1);
   }
 });

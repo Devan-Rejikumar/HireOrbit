@@ -3,8 +3,6 @@ import { env } from '../config/env';
 
 export const notificationServiceProxy = proxy(env.NOTIFICATION_SERVICE_URL, {
   proxyReqPathResolver: (req) => {
-    // The notification service expects /api/notifications prefix
-    // The gateway already has it, so we forward as-is
     const path = req.originalUrl;
     console.log('NOTIFICATION-PROXY Request to:', path);
     console.log('NOTIFICATION-PROXY Forwarding to service:', `${env.NOTIFICATION_SERVICE_URL}${path}`);

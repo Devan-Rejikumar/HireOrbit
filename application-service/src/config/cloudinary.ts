@@ -11,7 +11,7 @@ process.env.CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dgbbdh
 process.env.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '372466265213178';
 process.env.CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'RsbEo43EGP0e-lKgzEKqF2ktw-4';
 
-console.log('🔍 [Cloudinary] Environment variables:');
+console.log('Cloudinary] Environment variables:');
 console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
 console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY);
 console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET);

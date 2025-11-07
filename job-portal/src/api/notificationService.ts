@@ -33,7 +33,7 @@ export interface UnreadCountResponse {
   message: string;
 }
 
-export const notificationService = {
+export const _notificationService = {
   getNotifications: async (recipientId: string): Promise<NotificationData[]> => {
     const response = await api.get<NotificationResponse>(`${API_BASE_URL}/${recipientId}`);
     return response.data.data;

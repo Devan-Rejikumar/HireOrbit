@@ -72,7 +72,6 @@ async sendApplicationReceivedNotification(input: ApplicationReceivedInput): Prom
 }
 
 async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
-  // Fetch job title from job service
   let jobTitle = 'Job';
   try {
     const jobServiceUrl = process.env.JOB_SERVICE_URL || 'http://localhost:3002';
@@ -95,7 +94,6 @@ async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
   const notificationData = NotificationMapper.toStatusUpdatedNotification(input, jobTitle);
   const notification = await this.createNotification(notificationData);
   
-  // Send WebSocket message to user
   io.to(input.userId).emit('notification', {
     type: 'STATUS_UPDATED',
     id: notification._id.toString(),

@@ -57,7 +57,7 @@ export class EventService implements IEventService {
   private topics: string[] = [];
 
   constructor(
-    @inject(TYPES.INotificationService) private notificationService: INotificationService
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService
   ) {}
 
   async start(): Promise<void> {
@@ -84,10 +84,8 @@ export class EventService implements IEventService {
       throw new Error('Cannot subscribe to topics after consumer has started running');
     }
     
-    // Store handler for this topic
     this.handlers.set(eventType, handler);
     
-    // Track topics to subscribe
     if (!this.topics.includes(eventType)) {
       this.topics.push(eventType);
     }
@@ -103,11 +101,9 @@ export class EventService implements IEventService {
       return;
     }
 
-    // Subscribe to all topics at once
     await consumer.subscribe({ topics: this.topics });
     console.log(`Subscribed to topics: ${this.topics.join(', ')}`);
 
-    // Start the consumer with a router that dispatches to the correct handler
     this.isRunning = true;
     await consumer.run({
       eachMessage: async ({ topic, message }) => {
@@ -135,7 +131,7 @@ export class EventService implements IEventService {
       jobTitle: data.jobTitle || 'Unknown Job'
     };
     
-    await this.notificationService.sendApplicationReceivedNotification(input);
+    await this._notificationService.sendApplicationReceivedNotification(input);
   }
 
   async handleStatusUpdated(data: StatusUpdatedEventData): Promise<void> {
@@ -147,7 +143,7 @@ export class EventService implements IEventService {
       newStatus: data.newStatus
     };
     
-    await this.notificationService.sendStatusUpdatedNotification(input);
+    await this._notificationService.sendStatusUpdatedNotification(input);
   }
 
   async handleApplicationWithdrawn(data: ApplicationWithdrawnEventData): Promise<void> {
@@ -159,7 +155,7 @@ export class EventService implements IEventService {
       jobTitle: data.jobTitle || 'Unknown Job'
     };
     
-    await this.notificationService.sendApplicationWithdrawnNotification(input);
+    await this._notificationService.sendApplicationWithdrawnNotification(input);
   }
 
   async handleInterviewConfirmed(data: InterviewConfirmedEventData): Promise<void> {
@@ -176,6 +172,6 @@ export class EventService implements IEventService {
       meetingLink: data.meetingLink
     };
     
-    await this.notificationService.sendInterviewConfirmedNotification(input);
+    await this._notificationService.sendInterviewConfirmedNotification(input);
   }
 }
