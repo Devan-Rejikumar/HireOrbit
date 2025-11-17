@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { _chatService, ConversationResponse, MessageResponse } from '@/api/_chatService';
+import { _chatService, ConversationResponse, MessageResponse } from '@/api/chatService';
 
 export const useUserConversations = (userId: string) => {
   return useQuery({

@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { FormField } from './ui/FormField';
 import { FileUpload } from './ui/FileUpload';
 import { ExperienceSelector } from './ui/ExperienceSelector';
-import { _applicationService, ApplicationResponse } from '../api/_applicationService';
+import { _applicationService, ApplicationResponse } from '../api/applicationService';
 
 interface JobApplicationModalProps {
   isOpen: boolean;

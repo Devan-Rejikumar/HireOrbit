@@ -12,7 +12,7 @@ import {
   Download,
   ExternalLink
 } from 'lucide-react';
-import { _applicationService, Application } from '../api/_applicationService';
+import { _applicationService, Application } from '../api/applicationService';
 import { toast } from 'react-toastify';
 import { ChatButton } from './ChatButton';
 

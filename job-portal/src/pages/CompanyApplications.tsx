@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, HelpCircle, Settings, ChevronLeft, ChevronRight, User, Bell, LogOut, Plus } from 'lucide-react';
 import api from '@/api/axios';
 import ScheduleInterviewModal from '@/components/ScheduleInterviewModal';
-import { _interviewService } from '@/api/_interviewService';
+import { _interviewService } from '@/api/interviewService';
 import { ChatButton } from '@/components/ChatButton';
 
 interface Application {

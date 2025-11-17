@@ -54,12 +54,14 @@ export const _applicationService = {
     
     return response.data;
   },
+  
   getUserApplications: async () => {
     const response = await api.get<{
       data: { applications: Application[] };
     }>('/applications/user/applications');
     return response.data;
   },
+
   getApplicationDetails: async (applicationId: string) => {
     const response = await api.get<{
       data: Application;
