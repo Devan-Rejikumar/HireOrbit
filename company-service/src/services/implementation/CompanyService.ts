@@ -35,30 +35,36 @@ export class CompanyService implements ICompanyService {
 
   async register(email: string, password: string, companyName: string): Promise<CompanyResponse> {
     const existingCompany = await this._companyRepository.findByEmail(email);
-    if(existingCompany) throw new Error('Company already exists');
-    const hashed = await bcrypt.hash(password,10);
+    if (existingCompany) throw new Error('Company already exists');
+    const hashed = await bcrypt.hash(password, 10);
     const company = await this._companyRepository.create({
       email,
-      password:password,
+      password: password,
       companyName,
     });
     return mapCompanyToResponse(company);
   }
-
+  /**
+   * this method is used for company login purpose
+   * @param email 
+   * @param password 
+   * @returns 
+   */
   async login(email: string, password: string): Promise<CompanyAuthResponse> {
+    
     const company = await this._companyRepository.findByEmail(email);
-    if(!company) throw new Error('Invalid credentials');
-    const valid = await bcrypt.compare(password, company.password);
-    const tokenPayload:Omit<CompanyTokenPayload,'iat' | 'exp'> ={
+    if (!company) throw new Error('Invalid credentials');
+    // const valid = await bcrypt.compare(password, company.password);
+    const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
       userId: company.id,
       companyId: company.id,
       email: company.email,
-      role:'company',
-      userType:'company'
+      role: 'company',
+      userType: 'company'
     };
-    const accessToken = jwt.sign(tokenPayload,JWT_SECRET,{expiresIn:'15m'});
-    const refreshToken = jwt.sign(tokenPayload,REFRESH_TOKEN_SECRET,{expiresIn:'7d'});
-    return mapCompanyToAuthResponse(company,{accessToken,refreshToken})
+    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
+    const refreshToken = jwt.sign(tokenPayload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+    return mapCompanyToAuthResponse(company, { accessToken, refreshToken })
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
@@ -114,13 +120,13 @@ export class CompanyService implements ICompanyService {
     await this._redisService.deleteOTP(email);
     return this.generateOTP(email);
   }
-   
+
   async getAllCompanies(): Promise<CompanyResponse[]> {
     const companies = await this._companyRepository.findAll();
     return mapCompaniesToResponse(companies);
   }
 
-  
+
   async getAllCompaniesWithPagination(page: number = 1, limit: number = 10): Promise<PaginationResult<CompanyResponse>> {
     const result = await this._companyRepository.getAllCompaniesWithPagination(page, limit);
     return {
@@ -142,7 +148,7 @@ export class CompanyService implements ICompanyService {
     return mapCompanyToResponse(company);
   }
 
-  async completeStep2(companyId: string,step2Data: CompanyRegistrationStep2,): Promise<CompanyResponse> {
+  async completeStep2(companyId: string, step2Data: CompanyRegistrationStep2,): Promise<CompanyResponse> {
     try {
       console.log('COMPANY-SERVICE Checking if company exists...');
       const existingCompany = await this._companyRepository.getCompanyProfile(companyId);
@@ -174,7 +180,7 @@ export class CompanyService implements ICompanyService {
     }
   }
 
-  async completeStep3(companyId: string,step3Data: CompanyRegistrationStep3,): Promise<CompanyResponse> {
+  async completeStep3(companyId: string, step3Data: CompanyRegistrationStep3,): Promise<CompanyResponse> {
     const company = await this._companyRepository.updateCompanyProfile(
       companyId,
       step3Data,
@@ -198,7 +204,7 @@ export class CompanyService implements ICompanyService {
     return company ? mapCompanyToResponse(company) : null;
   }
 
-  async updateCompanyProfile(companyId: string,profileData: Partial<CompanyProfileData>,): Promise<CompanyResponse> {
+  async updateCompanyProfile(companyId: string, profileData: Partial<CompanyProfileData>,): Promise<CompanyResponse> {
     const company = await this._companyRepository.updateCompanyProfile(companyId, profileData);
     return mapCompanyToResponse(company);
   }
@@ -207,7 +213,7 @@ export class CompanyService implements ICompanyService {
     return this._companyRepository.getProfileStep(companyId);
   }
 
-  async markStepCompleted(companyId: string,step: number,): Promise<CompanyProfileStep> {
+  async markStepCompleted(companyId: string, step: number,): Promise<CompanyProfileStep> {
     const updateData: Partial<CompanyProfileStepData> = {
       currentStep: step + 1,
     };
@@ -230,7 +236,7 @@ export class CompanyService implements ICompanyService {
     return mapCompaniesToResponse(companies);
   }
 
-async approveCompany(companyId: string, adminId: string): Promise<CompanyResponse> {
+  async approveCompany(companyId: string, adminId: string): Promise<CompanyResponse> {
     await this._emailService.sendApprovalEmail(
       (await this._companyRepository.getCompanyProfile(companyId))?.email || '',
       (
@@ -242,7 +248,7 @@ async approveCompany(companyId: string, adminId: string): Promise<CompanyRespons
     return mapCompanyToResponse(company);
   }
 
-  async rejectCompany(companyId: string,reason: string,adminId: string,): Promise<CompanyResponse> {
+  async rejectCompany(companyId: string, reason: string, adminId: string,): Promise<CompanyResponse> {
     const company = await this._companyRepository.getCompanyProfile(companyId);
     if (company) {
       await this._emailService.sendRejectionEmail(
@@ -286,7 +292,7 @@ async approveCompany(companyId: string, adminId: string): Promise<CompanyRespons
     try {
       const response = await fetch(`http://localhost:3002/api/jobs/company/${companyId}/count`);
       if (!response.ok) return 0;
-      
+
       const data = await response.json() as { data: { count: number } };
       return data.data?.count || 0;
     } catch (error) {
@@ -295,9 +301,9 @@ async approveCompany(companyId: string, adminId: string): Promise<CompanyRespons
     }
   }
 
-async reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; message: string }> {
+  async reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; message: string }> {
     console.log(' Service reapplyCompany - Company ID:', companyId);
-    
+
     const company = await this._companyRepository.getCompanyProfile(companyId);
     if (!company) {
       console.log(' Company not found');
@@ -311,17 +317,17 @@ async reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; mes
 
     const updatedCompany = await this._companyRepository.updateCompanyProfile(companyId, {
       profileCompleted: false,
-      rejectionReason: null, 
+      rejectionReason: null,
       reviewedAt: null,
       reviewedBy: null,
     });
     console.log(' Company profile reset successfully');
 
     const profileStep = await this._companyRepository.updateProfileStep(companyId, {
-      basicInfoCompleted: true, 
+      basicInfoCompleted: true,
       companyDetailsCompleted: false,
       contactInfoCompleted: false,
-      currentStep: 2, 
+      currentStep: 2,
     });
     console.log(' Profile step reset successfully:', profileStep);
 
@@ -333,7 +339,7 @@ async reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; mes
 
   async getReapplyStatus(companyId: string): Promise<{ canReapply: boolean; rejectionReason?: string; lastReviewedAt?: Date }> {
     console.log(' Service getReapplyStatus - Company ID:', companyId);
-    
+
     const company = await this._companyRepository.getCompanyProfile(companyId);
     if (!company) {
       console.log(' Company not found');

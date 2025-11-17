@@ -374,4 +374,5 @@ export class ApplicationRepository implements IApplicationRepository {
       });
     });
   }
+
 }
