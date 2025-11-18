@@ -1,5 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 import LokiTransport from 'winston-loki';
+import { env } from '@/config/env';
 
 const { combine, timestamp, printf, colorize, json } = format;
 const serviceName = 'api-gateway';
@@ -9,7 +10,7 @@ const consoleFormat = printf(({ level, message, timestamp }) => {
 });
 
 export const logger = createLogger({
-  level: 'info',
+  level: env.LOG_LEVEL || 'info',
   format: combine(timestamp(), json()),
   defaultMeta: { service: serviceName },
   transports: [
@@ -17,10 +18,9 @@ export const logger = createLogger({
       format: combine(colorize(), timestamp(), consoleFormat),
     }),
     new LokiTransport({
-      host: 'http://localhost:3100',
+      host: process.env.LOKI_URL || 'http://localhost:3100',
       labels: { service: serviceName },
       json: true,
     }),
   ],
 });
-

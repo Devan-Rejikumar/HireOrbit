@@ -35,12 +35,20 @@ export const services = {
   } as ServiceConfig,
 
   notification: {
-  url: env.NOTIFICATION_SERVICE_URL,
-  healthCheck: `${env.NOTIFICATION_SERVICE_URL}/health`,
-  timeout: 5000,
-  retries: 3
-} as ServiceConfig
+    url: env.NOTIFICATION_SERVICE_URL,
+    healthCheck: `${env.NOTIFICATION_SERVICE_URL}/health`,
+    timeout: 5000,
+    retries: 3
+  } as ServiceConfig,
+
+  chat: {
+    url: env.CHAT_SERVICE_URL,
+    healthCheck: `${env.CHAT_SERVICE_URL}/health`,
+    timeout: 5000,
+    retries: 3
+  } as ServiceConfig
 };
+
 export function getServiceUrl(serviceName: keyof typeof services): string {
   return services[serviceName].url;
 }
@@ -62,7 +70,8 @@ export const SERVICE_NAMES = {
   COMPANY: 'company',
   JOB: 'job',
   APPLICATION: 'application',
-  NOTIFICATION:'notification'
+  NOTIFICATION: 'notification',
+  CHAT: 'chat'
 } as const;
 
 export default services;

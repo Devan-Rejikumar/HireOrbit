@@ -13,7 +13,7 @@ import { MessagesSidebar } from '@/components/MessagesSidebar';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
 import { useTotalUnreadCount, useCompanyConversations, useMarkAsRead, useMessages } from '@/hooks/useChat';
-import { ConversationResponse } from '@/api/_chatService';
+import { ConversationResponse } from '@/api/chatService';
 
 interface Company {
   id: string;
@@ -107,10 +107,48 @@ const CompanyDashboard = () => {
   
   // Get messages for selected conversation
   const { data: messages = [], isLoading: messagesLoading } = useMessages(
-    selectedConversation?.id || null,
-    company?.id || ''
+    selectedConversation?.id || null
   );
   const markAsReadMutation = useMarkAsRead();
+
+  // Fetch participant name when conversation is selected
+  useEffect(() => {
+    const fetchOtherParticipantName = async () => {
+      if (!selectedConversation || role !== 'company') {
+        setOtherParticipantName('');
+        return;
+      }
+
+      try {
+        // For company role, fetch the user name
+        const otherParticipantId = selectedConversation.userId;
+        
+        interface UserData {
+          username?: string;
+          name?: string;
+          id: string;
+        }
+
+        interface UserApiResponse {
+          success: boolean;
+          data: {
+            user: UserData;
+          };
+        }
+
+        const response = await api.get<UserApiResponse>(`/users/${otherParticipantId}`);
+        const userName = response.data?.data?.user?.username || 
+                        response.data?.data?.user?.name || 
+                        'User';
+        setOtherParticipantName(userName);
+      } catch (error) {
+        console.error('Error fetching participant name:', error);
+        setOtherParticipantName('User');
+      }
+    };
+
+    fetchOtherParticipantName();
+  }, [selectedConversation, role]);
 
   useEffect(() => {
     fetchCompanyProfile();
