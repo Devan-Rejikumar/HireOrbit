@@ -1,3 +1,4 @@
+import { HttpStatusCode } from '@/enums/HttpStatusCode';
 import { Request, Response, NextFunction } from 'express';
 let metricsData = {
   requests: 0,
@@ -17,7 +18,7 @@ export const getMetrics = (req: Request, res: Response, next: NextFunction): voi
     timestamp: new Date().toISOString()
   };
 
-  res.status(200).json(response);
+  res.status(HttpStatusCode.OK).json(response);
 };
 
 export const incrementRequests = (): void => {

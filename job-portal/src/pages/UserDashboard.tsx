@@ -43,8 +43,7 @@ const UserDashboard = () => {
   
   // Get messages for selected conversation
   const { data: messages = [], isLoading: messagesLoading } = useMessages(
-    selectedConversation?.id || null,
-    currentUserId
+    selectedConversation?.id || null
   );
   
   const markAsReadMutation = useMarkAsRead();

@@ -8,6 +8,7 @@ import { healthCheck } from '@/monitoring/healthCheck';
 import { routeHandler } from './middleware/routeHandler';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { HttpStatusCode } from './enums/HttpStatusCode';
 
 const app = express();
 
@@ -51,7 +52,7 @@ app.get('/metrics', async (req, res) => {
     res.end(await register.metrics());
   } catch (error) {
     logger.error('Error generating metrics:', error);
-    res.status(500).end('Error generating metrics');
+    res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end('Error generating metrics');
   }
 });
 app.use('/api/*', (req, res, next) => {

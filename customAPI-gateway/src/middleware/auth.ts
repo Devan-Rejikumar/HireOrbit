@@ -3,14 +3,21 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { JWT_SECRET } from '@/config';
 import { getServiceUrl } from '@/config/services';
-interface JwtPayload {userId: string;email: string;role: string;}
+import { Role } from '@/enums/Role';
+import { HttpStatusCode } from '@/enums/HttpStatusCode';
+import { CommonMessages } from '@/constants/CommonMessages';
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
 
 interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
-
-export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunction): Promise<void> => {
+export const Authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   let token: string | undefined;
   const authHeader = req.headers.authorization;
   if (authHeader) {
@@ -28,13 +35,13 @@ export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunc
   }
   
   if (!token) {
-    res.status(401).json({ message: 'No token provided' });
+    res.status(HttpStatusCode.UNAUTHORIZED).json({ message: CommonMessages.NO_TOKEN_PROVIDED });
     return;
   }
 
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    if (payload.role === 'jobseeker') {
+    if (payload.role === Role.JOBSEEKER) {
       try {
         const directUserServiceUrl = process.env.USER_SERVICE_URL || getServiceUrl('user');
         const response = await axios.get(`${directUserServiceUrl}/api/users/${payload.userId}`, {
@@ -43,9 +50,9 @@ export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunc
         });
         const user = response.data?.data?.user || response.data?.user;
         if (user?.isBlocked) {
-          res.status(403).json({ 
-            error: 'Account blocked',
-            message: 'Account blocked'
+          res.status(HttpStatusCode.FORBIDDEN).json({ 
+            error: CommonMessages.ACCOUNT_BLOCKED,
+            message: CommonMessages.ACCOUNT_BLOCKED
           });
           return;
         }
@@ -57,7 +64,7 @@ export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunc
     req.user = payload;
     next();
   } catch (error) {
-    res.status(403).json({ message: 'Invalid token' });
+    res.status(HttpStatusCode.FORBIDDEN).json({ message: CommonMessages.INVALID_TOKEN });
     return;
   }
 };
@@ -65,19 +72,19 @@ export const Authenticate = async (req: AuthRequest,res: Response,next: NextFunc
 export const AuthorizeRole = (roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(HttpStatusCode.UNAUTHORIZED).json({ message: CommonMessages.UNAUTHORIZED });
       return;
     }
     if (!req.user.role || !roles.includes(req.user.role)) {
-      res.status(403).json({ message: 'Forbidden' });
+      res.status(HttpStatusCode.FORBIDDEN).json({ message: CommonMessages.FORBIDDEN });
       return;
     }
     next();
   };
 };
 
-export const RequireUser = AuthorizeRole(['user']);
-export const RequireCompany = AuthorizeRole(['company']);
-export const RequireAdmin = AuthorizeRole(['admin']);
-export const RequireUserOrCompany = AuthorizeRole(['user', 'company']);
-export const RequireCompanyOrAdmin = AuthorizeRole(['company', 'admin']);
+export const RequireUser = AuthorizeRole([Role.JOBSEEKER]);
+export const RequireCompany = AuthorizeRole([Role.COMPANY]);
+export const RequireAdmin = AuthorizeRole([Role.ADMIN]);
+export const RequireUserOrCompany = AuthorizeRole([Role.JOBSEEKER, Role.COMPANY]);
+export const RequireCompanyOrAdmin = AuthorizeRole([Role.COMPANY, Role.ADMIN]);
