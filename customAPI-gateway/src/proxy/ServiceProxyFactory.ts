@@ -3,25 +3,50 @@ import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '@/enums/HttpStatusCode';
 import { CommonMessages } from '@/constants/CommonMessages';
 
-/**
- * Configuration interface for creating service proxies
- */
 export interface ProxyConfig {
   serviceUrl: string;
   serviceName: string;
   enableLogging?: boolean;
 }
 
-/**
- * Factory class for creating standardized service proxies
- * Eliminates code duplication across all service proxy files
- */
+const USER_HEADERS = ['x-user-id', 'x-user-email', 'x-user-role'] as const;
+
+const stripClientUserHeaders = (headers: Record<string, any>): void => {
+  USER_HEADERS.forEach(header => {
+    delete headers[header];
+  });
+};
+
+const forwardServerUserHeaders = (sourceHeaders: Record<string, any>, targetHeaders: Record<string, any>): void => {
+  USER_HEADERS.forEach(header => {
+    if (sourceHeaders[header]) {
+      targetHeaders[header] = sourceHeaders[header];
+    }
+  });
+};
+
+const forwardStandardHeaders = (sourceHeaders: Record<string, any>, targetHeaders: Record<string, any>): void => {
+  if (sourceHeaders.authorization) {
+    targetHeaders['Authorization'] = sourceHeaders.authorization;
+  }
+  if (sourceHeaders.cookie) {
+    targetHeaders['Cookie'] = sourceHeaders.cookie;
+  }
+};
+
+const createProxyErrorHandler = (serviceName: string) => {
+  return (err: Error, res: Response, next: NextFunction): void => {
+    console.error(`[${serviceName.toUpperCase()}-PROXY] Error:`, err);
+    res.status(HttpStatusCode.SERVICE_UNAVAILABLE).json({
+      success: false,
+      error: CommonMessages.SERVICE_ERROR(serviceName),
+      message: CommonMessages.SERVICE_UNAVAILABLE(serviceName),
+      timeStamp: new Date().toISOString()
+    });
+  };
+};
+
 export class ServiceProxyFactory {
-  /**
-   * Creates a standard JSON proxy for a service
-   * @param config - Proxy configuration including service URL and name
-   * @returns Configured proxy middleware
-   */
   static createProxy(config: ProxyConfig) {
     const { serviceUrl, serviceName, enableLogging = true } = config;
 
@@ -34,21 +59,10 @@ export class ServiceProxyFactory {
       },
 
       proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-        if (srcReq.headers['x-user-id']) {
-          proxyReqOpts.headers['x-user-id'] = srcReq.headers['x-user-id'];
-        }
-        if (srcReq.headers['x-user-email']) {
-          proxyReqOpts.headers['x-user-email'] = srcReq.headers['x-user-email'];
-        }
-        if (srcReq.headers['x-user-role']) {
-          proxyReqOpts.headers['x-user-role'] = srcReq.headers['x-user-role'];
-        }
-        if (srcReq.headers.authorization) {
-          proxyReqOpts.headers['Authorization'] = srcReq.headers.authorization;
-        }
-        if (srcReq.headers.cookie) {
-          proxyReqOpts.headers['Cookie'] = srcReq.headers.cookie;
-        }
+        stripClientUserHeaders(proxyReqOpts.headers);
+        
+        forwardServerUserHeaders(srcReq.headers, proxyReqOpts.headers);
+        forwardStandardHeaders(srcReq.headers, proxyReqOpts.headers);
 
         if (enableLogging) {
           console.log(`[${serviceName.toUpperCase()}-PROXY] Forwarding headers:`, {
@@ -68,23 +82,10 @@ export class ServiceProxyFactory {
         return proxyResData;
       },
 
-      proxyErrorHandler: (err: Error, res: Response, next: NextFunction) => {
-        console.error(`[${serviceName.toUpperCase()}-PROXY] Error:`, err);
-        res.status(HttpStatusCode.SERVICE_UNAVAILABLE).json({
-          success: false,
-          error: CommonMessages.SERVICE_ERROR(serviceName),
-          message: CommonMessages.SERVICE_UNAVAILABLE(serviceName),
-          timeStamp: new Date().toISOString()
-        });
-      }
+      proxyErrorHandler: createProxyErrorHandler(serviceName)
     });
   }
 
-  /**
-   * Creates a multipart/form-data proxy for file uploads
-   * @param config - Proxy configuration including service URL and name
-   * @returns Configured multipart proxy middleware
-   */
   static createMultipartProxy(config: ProxyConfig) {
     const { serviceUrl, serviceName, enableLogging = true } = config;
 
@@ -95,25 +96,14 @@ export class ServiceProxyFactory {
         }
         return req.originalUrl;
       },
+      
       parseReqBody: false,
 
       proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-        if (srcReq.headers['x-user-id']) {
-          proxyReqOpts.headers['x-user-id'] = srcReq.headers['x-user-id'];
-        }
-        if (srcReq.headers['x-user-email']) {
-          proxyReqOpts.headers['x-user-email'] = srcReq.headers['x-user-email'];
-        }
-        if (srcReq.headers['x-user-role']) {
-          proxyReqOpts.headers['x-user-role'] = srcReq.headers['x-user-role'];
-        }
-        if (srcReq.headers.authorization) {
-          proxyReqOpts.headers['Authorization'] = srcReq.headers.authorization;
-        }
-
-        if (srcReq.headers.cookie) {
-          proxyReqOpts.headers['Cookie'] = srcReq.headers.cookie;
-        }
+        stripClientUserHeaders(proxyReqOpts.headers);
+        
+        forwardServerUserHeaders(srcReq.headers, proxyReqOpts.headers);
+        forwardStandardHeaders(srcReq.headers, proxyReqOpts.headers);
 
         if (enableLogging) {
           console.log(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Forwarding headers:`, {
