@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { HttpStatusCode } from '../enums/StatusCodes';
 
 declare global {
   namespace Express {
@@ -14,41 +14,47 @@ declare global {
   }
 }
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => { 
-  let token: string | undefined;
-  const authHeader = req.headers.authorization;
-  
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.substring(7); 
-    console.log('JOB-AUTH-MIDDLEWARE Token found in Authorization header');
-  } else if (req.cookies.accessToken) {
+const USER_ID_HEADER = 'x-user-id';
+const USER_EMAIL_HEADER = 'x-user-email';
+const USER_ROLE_HEADER = 'x-user-role';
 
-    token = req.cookies.accessToken;
-    console.log('JOB-AUTH-MIDDLEWARE Token found in cookies (fallback)');
+const extractUserFromHeaders = (req: Request): { userId: string; email: string; role: string } | null => {
+  const userId = req.headers[USER_ID_HEADER] as string;
+  const userEmail = req.headers[USER_EMAIL_HEADER] as string;
+  const userRole = req.headers[USER_ROLE_HEADER] as string;
+
+  if (!userId) {
+    return null;
   }
-  
-  if (!token) {
-    console.log('JOB-AUTH-MIDDLEWARE No access token found in Authorization header or cookies');
-    res.status(401).json({ error: 'User not authenticated' });
+
+  return { userId, email: userEmail, role: userRole };
+};
+
+const determineUserType = (role: string): string => {
+  return role === 'company' ? 'company' : 'individual';
+};
+
+const createUnauthorizedResponse = () => ({
+  error: 'User not authenticated. Request must go through API Gateway.'
+});
+
+export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
+  const userInfo = extractUserFromHeaders(req);
+
+  if (!userInfo) {
+    res.status(HttpStatusCode.UNAUTHORIZED).json(createUnauthorizedResponse());
     return;
   }
 
-  try {
-    console.log('JOB-AUTH-MIDDLEWARE Token found, verifying...');
-    const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-      userType: decoded.userType || 'individual'
-    };
-    
-    console.log('JOB-AUTH-MIDDLEWARE User context set:', req.user);
-    
-    next();
-  } catch (error) {
-    console.error('JOB-AUTH-MIDDLEWARE Token verification failed:', error);
-    res.status(401).json({ error: 'User not authenticated' });
-  }
+  const { userId, email, role } = userInfo;
+
+  req.user = {
+    userId,
+    email,
+    role,
+    userType: determineUserType(role)
+  };
+
+  console.log('JOB-AUTH-MIDDLEWARE User context set from API Gateway headers:', req.user);
+  next();
 };

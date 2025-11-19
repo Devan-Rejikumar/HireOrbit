@@ -1,90 +1,190 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import axios from 'axios';
-import { JWT_SECRET } from '@/config';
-import { getServiceUrl } from '@/config/services';
-import { Role } from '@/enums/Role';
-import { HttpStatusCode } from '@/enums/HttpStatusCode';
-import { CommonMessages } from '@/constants/CommonMessages';
+import { HttpStatusCode } from '../enums/HttpStatusCode';
+import { RequestWithUser } from '../types/express/RequestWithUser';
+import { CommonMessages } from '../constants/CommonMessages';
+import { env } from '../config/env';
 
-interface JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
-}
+const USER_ID_HEADER = 'x-user-id';
+const USER_EMAIL_HEADER = 'x-user-email';
+const USER_ROLE_HEADER = 'x-user-role';
 
-interface AuthRequest extends Request {
-  user?: JwtPayload;
-}
+/**
+ * Extracts JWT token from request cookies or Authorization header
+ */
+const extractToken = (req: Request): string | null => {
+  // Try to get token from cookie first (requires cookie-parser middleware)
+  if (req.cookies) {
+    const tokenFromCookie = req.cookies.accessToken || req.cookies.adminAccessToken || req.cookies.companyAccessToken;
+    if (tokenFromCookie) {
+      console.log('[AUTH] Token found in cookies');
+      return tokenFromCookie;
+    }
+    console.log('[AUTH] No token in cookies. Available cookies:', Object.keys(req.cookies));
+  } else {
+    console.log('[AUTH] req.cookies is undefined - cookie-parser may not be configured');
+  }
 
-export const Authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  let token: string | undefined;
+  // Try to get token from Authorization header
   const authHeader = req.headers.authorization;
-  if (authHeader) {
-    token = authHeader.split(' ')[1];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    console.log('[AUTH] Token found in Authorization header');
+    return authHeader.substring(7);
   }
   
-  if (!token && req.headers.cookie) {
-    const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-    
-    token = cookies.accessToken;
-  }
-  
+  console.log('[AUTH] No token found in Authorization header');
+
+  return null;
+};
+
+/**
+ * Creates an unauthorized response object
+ */
+const createUnauthorizedResponse = (message: string) => ({
+  success: false,
+  error: CommonMessages.UNAUTHORIZED,
+  message
+});
+
+/**
+ * Main authentication middleware - Verifies JWT token and sets user info
+ * This is the primary authentication middleware used by the API Gateway
+ */
+export const Authenticate = (req: Request, res: Response, next: NextFunction): void => {
+  console.log('[AUTH] Authenticate middleware called for:', req.method, req.path);
+  const token = extractToken(req);
+
   if (!token) {
-    res.status(HttpStatusCode.UNAUTHORIZED).json({ message: CommonMessages.NO_TOKEN_PROVIDED });
+    console.log('[AUTH] No token provided - returning 401');
+    res.status(HttpStatusCode.UNAUTHORIZED).json(
+      createUnauthorizedResponse('No token provided')
+    );
     return;
   }
 
+  console.log('[AUTH] Token found, verifying with JWT_SECRET...');
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    if (payload.role === Role.JOBSEEKER) {
-      try {
-        const directUserServiceUrl = process.env.USER_SERVICE_URL || getServiceUrl('user');
-        const response = await axios.get(`${directUserServiceUrl}/api/users/${payload.userId}`, {
-          timeout: 1000, 
-          validateStatus: () => true 
-        });
-        const user = response.data?.data?.user || response.data?.user;
-        if (user?.isBlocked) {
-          res.status(HttpStatusCode.FORBIDDEN).json({ 
-            error: CommonMessages.ACCOUNT_BLOCKED,
-            message: CommonMessages.ACCOUNT_BLOCKED
-          });
-          return;
-        }
-      } catch (checkError: any) {
-        console.error('Error checking user blocked status:', checkError.message);
-      }
-    }
+    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string; email: string; role: string };
+    console.log('[AUTH] Token verified successfully:', { userId: decoded.userId, email: decoded.email, role: decoded.role });
     
-    req.user = payload;
+    const authReq = req as RequestWithUser;
+    authReq.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+      userType: decoded.role
+    };
+
     next();
   } catch (error) {
-    res.status(HttpStatusCode.FORBIDDEN).json({ message: CommonMessages.INVALID_TOKEN });
-    return;
+    console.log('[AUTH] Token verification failed:', error);
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(HttpStatusCode.UNAUTHORIZED).json(
+        createUnauthorizedResponse('Token expired')
+      );
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      res.status(HttpStatusCode.UNAUTHORIZED).json(
+        createUnauthorizedResponse('Invalid token')
+      );
+    } else {
+      res.status(HttpStatusCode.UNAUTHORIZED).json(
+        createUnauthorizedResponse('Authentication failed')
+      );
+    }
   }
 };
 
-export const AuthorizeRole = (roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(HttpStatusCode.UNAUTHORIZED).json({ message: CommonMessages.UNAUTHORIZED });
-      return;
-    }
-    if (!req.user.role || !roles.includes(req.user.role)) {
-      res.status(HttpStatusCode.FORBIDDEN).json({ message: CommonMessages.FORBIDDEN });
+/**
+ * Middleware to require user role (jobseeker)
+ */
+export const RequireUser = (req: Request, res: Response, next: NextFunction): void => {
+  Authenticate(req, res, () => {
+    const authReq = req as RequestWithUser;
+    if (authReq.user?.role !== 'jobseeker') {
+      res.status(HttpStatusCode.FORBIDDEN).json(
+        createUnauthorizedResponse('Access denied. User role required.')
+      );
       return;
     }
     next();
-  };
+  });
 };
 
-export const RequireUser = AuthorizeRole([Role.JOBSEEKER]);
-export const RequireCompany = AuthorizeRole([Role.COMPANY]);
-export const RequireAdmin = AuthorizeRole([Role.ADMIN]);
-export const RequireUserOrCompany = AuthorizeRole([Role.JOBSEEKER, Role.COMPANY]);
-export const RequireCompanyOrAdmin = AuthorizeRole([Role.COMPANY, Role.ADMIN]);
+/**
+ * Middleware to require company role
+ */
+export const RequireCompany = (req: Request, res: Response, next: NextFunction): void => {
+  Authenticate(req, res, () => {
+    const authReq = req as RequestWithUser;
+    if (authReq.user?.role !== 'company') {
+      res.status(HttpStatusCode.FORBIDDEN).json(
+        createUnauthorizedResponse('Access denied. Company role required.')
+      );
+      return;
+    }
+    next();
+  });
+};
+
+/**
+ * Middleware to require admin role
+ */
+export const RequireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  Authenticate(req, res, () => {
+    const authReq = req as RequestWithUser;
+    if (authReq.user?.role !== 'admin') {
+      res.status(HttpStatusCode.FORBIDDEN).json(
+        createUnauthorizedResponse('Access denied. Admin role required.')
+      );
+      return;
+    }
+    next();
+  });
+};
+
+/**
+ * Extracts user information from request headers set by API Gateway
+ * These headers are set by the gateway after verifying JWT token
+ */
+const extractUserFromHeaders = (req: Request): { userId: string; email: string; role: string } | null => {
+  const userId = req.headers[USER_ID_HEADER] as string;
+  const userEmail = req.headers[USER_EMAIL_HEADER] as string;
+  const userRole = req.headers[USER_ROLE_HEADER] as string;
+
+  if (!userId) {
+    return null;
+  }
+
+  return { userId, email: userEmail, role: userRole };
+};
+
+/**
+ * Middleware to validate user headers from API Gateway
+ * 
+ * This middleware:
+ * - Validates that user headers exist (ensures request came through API Gateway)
+ * - Attaches user information to req.user for use in controllers
+ * 
+ * Note: Token verification and blocked status check are handled by API Gateway.
+ * This middleware only validates the presence of verified headers.
+ */
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const userInfo = extractUserFromHeaders(req);
+  if (!userInfo) {
+    res.status(HttpStatusCode.UNAUTHORIZED).json(
+      createUnauthorizedResponse('User identification required. Request must go through API Gateway.')
+    );
+    return;
+  }
+
+  const { userId, email, role } = userInfo;
+  const authReq = req as RequestWithUser;
+  authReq.user = {
+    userId,
+    email,
+    role,
+    userType: role
+  };
+
+  next();
+};

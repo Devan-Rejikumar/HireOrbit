@@ -1,5 +1,4 @@
 import api from './axios';
-import { getAuthHeaders } from '../utils/authUtils';
 
 export interface Interview {
   id: string;
@@ -70,71 +69,67 @@ export interface InterviewListResponse {
   message: string;
 }
 
+const CONTENT_TYPE_JSON = 'application/json';
+const INTERVIEWS_ENDPOINT = '/interviews';
+
 export const _interviewService = {
   scheduleInterview: async (interviewData: CreateInterviewData): Promise<InterviewResponse> => {
-    const response = await api.post<InterviewResponse>('/interviews', interviewData, {
+    const response = await api.post<InterviewResponse>(INTERVIEWS_ENDPOINT, interviewData, {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
+        'Content-Type': CONTENT_TYPE_JSON
       }
     });
     return response.data;
   },
 
   getInterviewById: async (interviewId: string): Promise<InterviewWithDetailsResponse> => {
-    const response = await api.get<InterviewWithDetailsResponse>(`/interviews/${interviewId}`, {
-      headers: getAuthHeaders()
-    });
+    const response = await api.get<InterviewWithDetailsResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}`);
     return response.data;
   },
 
   updateInterview: async (interviewId: string, updateData: UpdateInterviewData): Promise<InterviewResponse> => {
-    const response = await api.put<InterviewResponse>(`/interviews/${interviewId}`, updateData, {
+    const response = await api.put<InterviewResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}`, updateData, {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
+        'Content-Type': CONTENT_TYPE_JSON
       }
     });
     return response.data;
   },
 
   cancelInterview: async (interviewId: string, reason?: string): Promise<InterviewResponse> => {
-    const response = await api.delete<InterviewResponse>(`/interviews/${interviewId}`, {
-      data: { reason },
+    const config = {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
-      }
-    });
+        'Content-Type': CONTENT_TYPE_JSON
+      },
+      ...(reason && { data: { reason } })
+    };
+    
+    const response = await api.delete<InterviewResponse>(
+      `${INTERVIEWS_ENDPOINT}/${interviewId}`,
+      config
+    );
     return response.data;
   },
 
   getInterviewsByApplication: async (applicationId: string): Promise<InterviewListResponse> => {
-    const response = await api.get<InterviewListResponse>(`/interviews/application/${applicationId}`, {
-      headers: getAuthHeaders()
-    });
+    const response = await api.get<InterviewListResponse>(`${INTERVIEWS_ENDPOINT}/application/${applicationId}`);
     return response.data;
   },
 
   getCompanyInterviews: async (): Promise<InterviewListResponse> => {
-    const response = await api.get<InterviewListResponse>('/interviews/company/all', {
-      headers: getAuthHeaders()
-    });
+    const response = await api.get<InterviewListResponse>(`${INTERVIEWS_ENDPOINT}/company/all`);
     return response.data;
   },
 
   getCandidateInterviews: async (): Promise<InterviewListResponse> => {
-    const response = await api.get<InterviewListResponse>('/interviews/candidate/all', {
-      headers: getAuthHeaders()
-    });
+    const response = await api.get<InterviewListResponse>(`${INTERVIEWS_ENDPOINT}/candidate/all`);
     return response.data;
   },
 
   makeInterviewDecision: async (interviewId: string, decisionData: InterviewDecisionData): Promise<InterviewResponse> => {
-    const response = await api.post<InterviewResponse>(`/interviews/${interviewId}/decision`, decisionData, {
+    const response = await api.post<InterviewResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}/decision`, decisionData, {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
+        'Content-Type': CONTENT_TYPE_JSON
       }
     });
     return response.data;

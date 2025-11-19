@@ -94,19 +94,37 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
         console.log('Route Handler About to call Authenticatee');
         Authenticate(req,res,(err)=>{
             if(err){
+                console.log('[ROUTE HANDLER] Authentication error:', err);
                 return next(err);
             }
-            console.log('Authorization successsfukl- proceeding to proxy');
-            if(req.user){
-                req.headers['x-user-id'] = req.user.userId;
-                req.headers['x-user-email'] = req.user.email;
-                req.headers['x-user-role'] = req.user.role;
-                console.log('Route handler USer headers set: ',{
-                    'x-user-id': req.user.userId,
-                    'x-user-email': req.user.email,
-                    'x-user-role': req.user.role
-                })
+            
+            // Check if response was already sent (authentication failed)
+            if(res.headersSent){
+                console.log('[ROUTE HANDLER] Response already sent, authentication failed');
+                return;
             }
+            
+            // Check if user is authenticated
+            if(!req.user){
+                console.log('[ROUTE HANDLER] No user found after authentication');
+                return;
+            }
+            
+            console.log('Authorization successsfukl- proceeding to proxy');
+            // Strip any client-provided user headers (security: prevent spoofing)
+            delete req.headers['x-user-id'];
+            delete req.headers['x-user-email'];
+            delete req.headers['x-user-role'];
+            // Set headers from verified JWT token
+            req.headers['x-user-id'] = req.user.userId;
+            req.headers['x-user-email'] = req.user.email;
+            req.headers['x-user-role'] = req.user.role;
+            console.log('Route handler USer headers set: ',{
+                'x-user-id': req.user.userId,
+                'x-user-email': req.user.email,
+                'x-user-role': req.user.role
+            });
+            
             console.log('[ROUTE HANDLER] About to call createProxy after auth...');
             createProxy(req,res,next);
             console.log('[ROUTE HANDLER] createProxy call completed after auth');
@@ -128,13 +146,28 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
             console.log('Authorization failed:', err);
             return next(err);
         }
-        console.log('Authorization successful - proceeding to proxy');
         
-        if (req.user) {
-            req.headers['x-user-id'] = req.user.userId;
-            req.headers['x-user-email'] = req.user.email;
-            req.headers['x-user-role'] = req.user.role;
+        // Check if response was already sent (authentication failed)
+        if(res.headersSent){
+            console.log('[ROUTE HANDLER] Response already sent, authentication failed');
+            return;
         }
+        
+        // Check if user is authenticated
+        if(!req.user){
+            console.log('[ROUTE HANDLER] No user found after authentication');
+            return;
+        }
+        
+        console.log('Authorization successful - proceeding to proxy');
+        // Strip any client-provided user headers (security: prevent spoofing)
+        delete req.headers['x-user-id'];
+        delete req.headers['x-user-email'];
+        delete req.headers['x-user-role'];
+        // Set headers from verified JWT token
+        req.headers['x-user-id'] = req.user.userId;
+        req.headers['x-user-email'] = req.user.email;
+        req.headers['x-user-role'] = req.user.role;
         
         createProxy(req, res, next);
     });

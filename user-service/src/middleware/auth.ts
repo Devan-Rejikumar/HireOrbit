@@ -1,93 +1,67 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../prisma/client';
 import { HttpStatusCode } from '../enums/StatusCodes';
+import { RequestWithUser } from '../types/express/RequestWithUser';
+import { Messages } from '../constants/Messages';
 
-interface JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
-  userType: string;
-  iat?: number;
-  exp?: number;
-}
+const USER_ID_HEADER = 'x-user-id';
+const USER_EMAIL_HEADER = 'x-user-email';
+const USER_ROLE_HEADER = 'x-user-role';
 
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = req.cookies['accessToken']
+/**
+ * Extracts user information from request headers set by API Gateway
+ * These headers are set by the gateway after verifying JWT token
+ */
+const extractUserFromHeaders = (req: Request): { userId: string; email: string; role: string } | null => {
+  const userId = req.headers[USER_ID_HEADER] as string;
+  const userEmail = req.headers[USER_EMAIL_HEADER] as string;
+  const userRole = req.headers[USER_ROLE_HEADER] as string;
 
-
-    if (!token) {
-      res.status(HttpStatusCode.UNAUTHORIZED).json({ 
-        success: false, 
-        error: 'Access token required',
-        message: 'Please provide a valid access token'
-      });
-      return;
-    }
-    const jwtSecret = process.env.JWT_SECRET || 'supersecret'; 
-    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
-
-    if (decoded.role === 'jobseeker') {
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.userId },
-        select: { isBlocked: true }
-      });
-
-      if (user?.isBlocked) {
-        console.log(' User is blocked:', decoded.userId);
-        res.status(HttpStatusCode.FORBIDDEN).json({
-          success: false,
-          error: 'Account blocked',
-          message: 'Account blocked'
-        });
-        return;
-      }
-    }
-
-    req.headers['x-user-id'] = decoded.userId;
-    req.headers['x-user-email'] = decoded.email;
-    req.headers['x-user-role'] = decoded.role;
-    (req as any).user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-      userType: decoded.userType
-    };
-
-    console.log('Authentication successful:', {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role
-    });
-
-    next();
-  } catch (error) {
-    console.log('Token verification failed:', error);
-    
-    if (error instanceof jwt.TokenExpiredError) {
-      res.status(HttpStatusCode.UNAUTHORIZED).json({
-        success: false,
-        error: 'Token expired',
-        message: 'Your session has expired. Please login again.'
-      });
-      return;
-    }
-    
-    if (error instanceof jwt.JsonWebTokenError) {
-      res.status(HttpStatusCode.UNAUTHORIZED).json({
-        success: false,
-        error: 'Invalid token',
-        message: 'Invalid access token. Please login again.'
-      });
-      return;
-    }
-
-    res.status(HttpStatusCode.UNAUTHORIZED).json({
-      success: false,
-      error: 'Authentication failed',
-      message: 'Unable to verify your identity. Please login again.'
-    });
+  if (!userId) {
+    return null;
   }
+
+  return { userId, email: userEmail, role: userRole };
+};
+
+/**
+ * Creates an unauthorized response object
+ */
+const createUnauthorizedResponse = (message: string) => ({
+  success: false,
+  error: Messages.AUTH.AUTHENTICATION_REQUIRED,
+  message
+});
+
+/**
+ * Middleware to validate user headers from API Gateway
+ * 
+ * This middleware:
+ * - Validates that user headers exist (ensures request came through API Gateway)
+ * - Attaches user information to req.user for use in controllers
+ * 
+ * Note: Token verification and blocked status check are handled by API Gateway.
+ * This middleware only validates the presence of verified headers.
+ */
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  const userInfo = extractUserFromHeaders(req);
+
+  // Trust boundary: Ensure request came through API Gateway
+  if (!userInfo) {
+    res.status(HttpStatusCode.UNAUTHORIZED).json(
+      createUnauthorizedResponse('User identification required. Request must go through API Gateway.')
+    );
+    return;
+  }
+
+  const { userId, email, role } = userInfo;
+  
+  const authReq = req as RequestWithUser;
+  authReq.user = {
+    userId,
+    email,
+    role,
+    userType: role
+  };
+
+  next();
 };

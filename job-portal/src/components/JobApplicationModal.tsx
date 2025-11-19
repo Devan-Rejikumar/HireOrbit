@@ -12,7 +12,7 @@ interface JobApplicationModalProps {
   jobId: string;
   jobTitle: string;
   companyName: string;
-  companyId: string;
+  companyId?: string;
   onApplicationSubmit: (applicationData: ApplicationData) => void;
 }
 
@@ -96,11 +96,9 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
     try {
       setSubmitting(true);
-      
-      // Convert file to base64
+
       const resumeBase64 = await fileToBase64(formData.resume!);
-      
-      // Create JSON payload for the application
+
       const applicationData = {
         jobId,
         companyId: companyId || companyName, // Use companyId if available, fallback to companyName

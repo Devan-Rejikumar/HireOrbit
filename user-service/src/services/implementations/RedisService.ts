@@ -1,6 +1,13 @@
 import { injectable } from 'inversify';
 import Redis from 'ioredis';
 
+/**
+ * Interface for user session data stored in Redis
+ */
+export interface UserSessionData {
+  [key: string]: unknown;
+}
+
 @injectable()
 export class RedisService {
   private _redis: Redis;
@@ -120,17 +127,17 @@ export class RedisService {
 
   async storeUserSession(
     userId: string,
-    sessionData: any,
+    sessionData: UserSessionData,
     expiresIn: number = 86400
   ): Promise<void> {
     const key = `session:${userId}`;
     await this._redis.setex(key, expiresIn, JSON.stringify(sessionData));
   }
 
-  async getUserSession(userId: string): Promise<any | null> {
+  async getUserSession(userId: string): Promise<UserSessionData | null> {
     const key = `session:${userId}`;
     const session = await this._redis.get(key);
-    return session ? JSON.parse(session) : null;
+    return session ? JSON.parse(session) as UserSessionData : null;
   }
 
   async deleteUserSession(userId: string): Promise<void> {
@@ -139,34 +146,34 @@ export class RedisService {
   }
 
   async storeRefreshToken(userId: string, tokenId: string, refreshToken: string, expiresIn: number = 604800): Promise<void> {
-  const key = `refresh_token:${userId}:${tokenId}`;
-  console.log(' RedisService - Storing refresh token:', { userId, tokenId, key });
-  
-  try {
-    await this._redis.setex(key, expiresIn, refreshToken);
-    console.log(' RedisService - Token stored successfully');
-  } catch (error) {
-    console.error(' RedisService - Failed to store token:', error);
-    throw error;
+    const key = `refresh_token:${userId}:${tokenId}`;
+    console.log(' RedisService - Storing refresh token:', { userId, tokenId, key });
+    
+    try {
+      await this._redis.setex(key, expiresIn, refreshToken);
+      console.log(' RedisService - Token stored successfully');
+    } catch (error) {
+      console.error(' RedisService - Failed to store token:', error);
+      throw error;
+    }
   }
-}
 
   async getRefreshToken(userId: string, tokenId: string): Promise<string | null> {
-  const key = `refresh_token:${userId}:${tokenId}`;
-  console.log(' RedisService - Getting refresh token:', { userId, tokenId, key });
-  
-  try {
-    const token = await this._redis.get(key);
-    console.log(' RedisService - Get result:', {
-      key,
-      found: !!token
-    });
-    return token;
-  } catch (error) {
-    console.error(' RedisService - Redis error:', error);
-    throw error;
+    const key = `refresh_token:${userId}:${tokenId}`;
+    console.log(' RedisService - Getting refresh token:', { userId, tokenId, key });
+    
+    try {
+      const token = await this._redis.get(key);
+      console.log(' RedisService - Get result:', {
+        key,
+        found: !!token
+      });
+      return token;
+    } catch (error) {
+      console.error(' RedisService - Redis error:', error);
+      throw error;
+    }
   }
-}
 
   async deleteRefreshToken(userId: string, tokenId: string): Promise<void> {
     const key = `refresh_token:${userId}:${tokenId}`;

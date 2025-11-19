@@ -1,12 +1,17 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import './types/express';
 import userRoutes from './routes/UserRoutes';
 import adminRoutes from './routes/AdminRoutes';
 import profileRoutes from './routes/ProfileRoutes';
 import { authenticateToken } from './middleware/auth';
 import {logger} from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { HttpStatusCode } from './enums/StatusCodes';
+import { Request, Response, NextFunction } from 'express';
+import { Messages } from './constants/Messages';
+import { ErrorHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -92,7 +97,7 @@ app.get('/metrics', async (req, res) => {
     res.end(await register.metrics());
   } catch (error) {
     logger.error('Error generating metrics:', error);
-    res.status(500).end('Error generating metrics');
+    res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end('Error generating metrics');
   }
 });
 
@@ -108,52 +113,8 @@ logger.info('Admin routes: /api/users/admin');
 logger.info('Profile routes: /api/profile');
 logger.info('========================');
 
-app.get('/test', (req, res) => {
-  logger.info('Test route hit');
-  res.json({ message: 'Server is working!' });
-});
 
-app.get('/test-auth', authenticateToken, (req, res) => {
-  logger.info('Test auth route hit');
-  res.json({ message: 'Auth test successful!', user: req.user });
-});
-
-app.get('/test-no-auth', (req, res) => {
-  logger.info('Test no-auth route hit');
-  res.json({ message: 'No auth test successful!', headers: req.headers });
-});
-
-
-app.use((err: any, req: any, res: any, next: any) => {
-  logger.error('Global error handler:', { message: err.message, stack: err.stack });
-  
-  if (err.message === 'Invalid JSON') {
-    return res.status(400).json({ 
-      success: false, 
-      error: 'Invalid JSON format',
-      message: 'Request body must be valid JSON'
-    });
-  }
-  
-  if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ 
-      success: false, 
-      error: 'JSON parse error',
-      message: 'Invalid JSON in request body'
-    });
-  }
-  
-  if (err.code === 'ECONNRESET' || err.message.includes('request aborted')) {
-    logger.warn('Request aborted or connection reset');
-    return;
-  }
-  
-  logger.error('Unhandled error:', err);
-  res.status(500).json({ 
-    success: false, 
-    error: 'Internal server error',
-    message: 'An unexpected error occurred'
-  });
-});
+// Global error handler (must be last)
+app.use(ErrorHandler);
 
 export default app;

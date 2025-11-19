@@ -1,4 +1,5 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { Authenticate, RequireUser, RequireCompany, RequireAdmin } from '@/middleware/auth';
 import { corsMiddleware } from '@/middleware/cors';
 import { rateLimiterMiddleware } from '@/middleware/rateLimiter';
@@ -14,6 +15,7 @@ const app = express();
 
 app.use(corsMiddleware);
 app.use(rateLimiterMiddleware);
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
