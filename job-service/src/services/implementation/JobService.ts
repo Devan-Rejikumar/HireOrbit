@@ -6,6 +6,9 @@ import { JobSearchFilters } from '../../types/job';
 import TYPES from '../../config/types';
 import { mapJobToResponse, mapJobsToResponse } from '../../dto/mappers/job.mapper';
 import { JobResponse } from '../../dto/responses/job.response';
+import { AppError } from '../../utils/errors/AppError';
+import { Messages } from '../../constants/Messages';
+import { HttpStatusCode } from '../../enums/StatusCodes';
 
 @injectable()
 export class JobService implements IJobService {
@@ -20,7 +23,7 @@ export class JobService implements IJobService {
     );
     
     if (duplicate) {
-      throw new Error('Job with this title already exists for this company');
+      throw new AppError(Messages.JOB.DUPLICATE_TITLE, HttpStatusCode.CONFLICT);
     }
 
     const job = await this._jobRepository.create(jobData);
@@ -31,7 +34,6 @@ export class JobService implements IJobService {
     const job = await this._jobRepository.findById(jobId);
     
     if (!job) {
-      console.log('JobService.getJobById - Job not found');
       return null;
     }
     

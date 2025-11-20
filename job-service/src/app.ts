@@ -5,22 +5,11 @@ import dotenv from 'dotenv';
 import jobRoutes from './routes/JobRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { ErrorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
 const app = express();
-
-app.use((req, res, next) => {
-  console.log(`Job Service: ${req.method} ${req.url}`);
-  console.log('Job Service: Headers:', req.headers);
-  console.log('Job Service: Body:', req.body);
-  next();
-});
-
-app.use((req, res, next) => {
-  console.log(`[${req.method}] ${req.url}`);
-  next();
-});
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
@@ -71,5 +60,8 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/jobs', jobRoutes);
+
+// Global error handler (must be last)
+app.use(ErrorHandler);
 
 export default app;
