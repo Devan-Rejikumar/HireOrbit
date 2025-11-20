@@ -26,11 +26,25 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { _interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/_interviewService';
+import { _interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/interviewService';
 import { toast } from 'react-toastify';
 import EditInterviewModal from '@/components/EditInterviewModal';
 import InterviewDecisionModal from '@/components/InterviewDecisionModal';
 import api from '@/api/axios';
+
+interface CompanyProfile {
+  companyName?: string;
+  email?: string;
+}
+
+interface CompanyProfileResponse {
+  success: boolean;
+  data: {
+    company: CompanyProfile;
+    profileStep?: unknown;
+  };
+  message: string;
+}
 
 const CompanyInterviewManagement = () => {
   const navigate = useNavigate();
@@ -45,7 +59,7 @@ const CompanyInterviewManagement = () => {
   const [selectedDecision, setSelectedDecision] = useState<'SELECTED' | 'REJECTED' | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [company, setCompany] = useState<{ companyName?: string; email?: string } | null>(null);
+  const [company, setCompany] = useState<CompanyProfile | null>(null);
 
   useEffect(() => {
     fetchInterviews();
@@ -54,7 +68,7 @@ const CompanyInterviewManagement = () => {
 
   const fetchCompanyProfile = async () => {
     try {
-      const response = await api.get('/company/profile');
+      const response = await api.get<CompanyProfileResponse>('/company/profile');
       setCompany(response.data?.data?.company || null);
     } catch (error) {
       console.error('Error fetching company profile:', error);
@@ -489,7 +503,7 @@ const CompanyInterviewManagement = () => {
                       )}
 
                       {/* Decision Buttons for Completed Interviews */}
-                      {interview.status === 'COMPLETED' && interview.status !== 'SELECTED' && interview.status !== 'REJECTED' && (
+                      {interview.status === 'COMPLETED' && (
                         <div className="flex flex-col gap-2 ml-4">
                           <div className="text-sm font-medium text-gray-700 mb-2">Interview Decision:</div>
                           <Button

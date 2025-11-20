@@ -39,6 +39,12 @@ const isProtectedRoute = (path: string): boolean =>{
     
     if (result) return true;
 
+
+    if (clean.match(/^\/api\/jobs\/company\/[a-zA-Z0-9_-]+$/)) {
+        console.log(' Matched company job route:', clean);
+        return true;
+    }
+
     if (clean.match(/^\/api\/applications\/[a-zA-Z0-9_-]+\/status$/)) {
         console.log(' Matched application status update route:', clean);
         return true;
