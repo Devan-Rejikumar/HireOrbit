@@ -14,13 +14,13 @@ import {
 @injectable()
 export class NotificationController {
   constructor(
-    @inject(TYPES.INotificationService) private notificationService: INotificationService
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService
   ) {}
 
   async getNotifications(req: Request, res: Response): Promise<void> {
     try {
       const { recipientId } = getNotificationsSchema.parse(req.params);
-      const notifications = await this.notificationService.getNotificationsByRecipient(recipientId);
+      const notifications = await this._notificationService.getNotificationsByRecipient(recipientId);
       
       res.status(StatusCodes.OK).json({
         success: true,
@@ -43,7 +43,7 @@ export class NotificationController {
       const { recipientId } = getNotificationsSchema.parse(req.params);
       const { page, limit } = getNotificationsPaginatedSchema.parse(req.query);
       
-      const notifications = await this.notificationService.getNotificationsPaginated(recipientId, page, limit);
+      const notifications = await this._notificationService.getNotificationsPaginated(recipientId, page, limit);
       
       res.status(StatusCodes.OK).json({
         success: true,
@@ -69,7 +69,7 @@ export class NotificationController {
   async getUnreadCount(req: Request, res: Response): Promise<void> {
     try {
       const { recipientId } = getNotificationsSchema.parse(req.params);
-      const count = await this.notificationService.getUnreadCount(recipientId);
+      const count = await this._notificationService.getUnreadCount(recipientId);
       res.status(StatusCodes.OK).json({
         success: true,
         data: { count },
@@ -88,7 +88,7 @@ export class NotificationController {
   async markAsRead(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = markAsReadSchema.parse(req.params);
-      await this.notificationService.markAsRead(notificationId);
+      await this._notificationService.markAsRead(notificationId);
       res.status(StatusCodes.OK).json({
         success: true,
         message: SuccessMessages.NOTIFICATION_MARKED_AS_READ
@@ -106,7 +106,7 @@ export class NotificationController {
   async markAsUnread(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = markAsUnreadSchema.parse(req.params);
-      await this.notificationService.markAsUnread(notificationId);
+      await this._notificationService.markAsUnread(notificationId);
       res.status(StatusCodes.OK).json({
         success: true,
         message: SuccessMessages.NOTIFICATION_MARKED_AS_UNREAD
@@ -122,10 +122,29 @@ export class NotificationController {
     }
   }
 
+  async markAllAsRead(req: Request, res: Response): Promise<void> {
+    try {
+      const { recipientId } = getNotificationsSchema.parse(req.params);
+      await this._notificationService.markAllAsRead(recipientId);
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: SuccessMessages.NOTIFICATIONS_MARKED_AS_READ
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: ErrorMessages.MARK_ALL_AS_READ_FAILED,
+        error: errorMessage
+      });
+    }
+  }
+
   async deleteNotification(req: Request, res: Response): Promise<void> {
     try {
       const { notificationId } = deleteNotificationSchema.parse(req.params);
-      await this.notificationService.deleteNotification(notificationId);
+      await this._notificationService.deleteNotification(notificationId);
       res.status(StatusCodes.OK).json({
         success: true,
         message: SuccessMessages.NOTIFICATION_DELETED

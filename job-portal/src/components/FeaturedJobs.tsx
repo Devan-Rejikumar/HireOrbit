@@ -2,53 +2,12 @@ import { MapPin, Clock, Building, DollarSign, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../api/axios';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  company: string;
-  companyId?: string;
-  location: string;
-  salary?: string;
-  jobType: string;
-  requirements: string[];
-  benefits: string[];
-  createdAt: string;
-}
+import { useFeaturedJobs } from '@/hooks/useJobs';
 
 const FeaturedJobs = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: jobs = [], isLoading: loading } = useFeaturedJobs();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchFeaturedJobs = async () => {
-      try {
-        const response = await api.get<{success: boolean, data: {jobs: Job[]}, message: string}>('/jobs');
-        console.log('FeaturedJobs API Response:', response.data);
-        
-        // Check if response has the expected structure
-        if (response.data.success && response.data.data && response.data.data.jobs) {
-          // Show only first 4 jobs as featured
-          setJobs(response.data.data.jobs.slice(0, 4));
-        } else {
-          console.error('Unexpected API response structure:', response.data);
-          setJobs([]);
-        }
-      } catch (error) {
-        console.error('Error fetching featured jobs:', error);
-        setJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFeaturedJobs();
-  }, []);
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);

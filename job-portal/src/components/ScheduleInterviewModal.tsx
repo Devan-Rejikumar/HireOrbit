@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, MapPin, Video, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
-import { interviewService, CreateInterviewData } from '@/api/interviewService';
+import { _interviewService, CreateInterviewData } from '@/api/interviewService';
 import { toast } from 'react-toastify';
 
 interface ScheduleInterviewModalProps {
@@ -181,7 +181,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
         notes: formData.notes || undefined
       };
 
-      await interviewService.scheduleInterview(interviewData);
+      await _interviewService.scheduleInterview(interviewData);
       
       toast.success('Interview scheduled successfully!');
       onSuccess();

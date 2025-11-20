@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
-import { getAuthHeaders } from '../utils/authUtils';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import JobApplicationModal from '@/components/JobApplicationModal';
@@ -65,7 +64,6 @@ const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, role } = useAuth();
-
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
@@ -125,16 +123,14 @@ const JobDetails = () => {
 
       const response = await api.get<{
         data: { hasApplied: boolean; status?: string };
-      }>(`/applications/check-status/${id}`, {
-        headers: getAuthHeaders()
-      });
+      }>(`/applications/check-status/${id}`);
       const hasApplied = response.data.data?.hasApplied || false;
       const status = response.data.data?.status;
       setApplied(hasApplied);
       setApplicationStatus(status || null);
 
-      console.log('🔍 [JobDetails] Check status response:', response.data);
-      console.log('🔍 [JobDetails] Application status:', hasApplied, 'Status:', status);
+      console.log('[JobDetails] Check status response:', response.data);
+      console.log('[JobDetails] Application status:', hasApplied, 'Status:', status);
     } catch (error) {
       console.error('Error checking application status:', error);
       setApplied(false);

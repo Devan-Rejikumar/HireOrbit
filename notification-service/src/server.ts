@@ -12,6 +12,8 @@ import { IEventService } from './services/interfaces/IEventService';
 import { TYPES } from './config/types';
 import notificationRoutes from './routes/NotificationRoutes';
 import { EventService } from './services/implementations/EventService';
+import { logger } from './utils/logger';
+import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 
 
 interface ApplicationCreatedEventData {
@@ -28,6 +30,21 @@ interface StatusUpdatedEventData {
   jobId: string;
   oldStatus: string;
   newStatus: string;
+}
+
+interface InterviewConfirmedEventData {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  scheduledAt: Date | string;
+  type?: string;
+  location?: string;
+  meetingLink?: string;
+  confirmedBy: string;
+  confirmedAt: Date;
 }
 
 interface ApplicationWithdrawnEventData {
@@ -50,60 +67,114 @@ const io = new Server(server, {
 });
 
 app.use(helmet());
-app.use(cors());
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role']
+}));
 app.use(morgan('combined'));
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  logger.info({
+    method: req.method,
+    url: req.url,
+    ip: req.ip,
+    contentType: req.headers['content-type']
+  });
+  
+  res.on('finish', () => {
+    const duration = (Date.now() - start) / 1000;
+    const labels = {
+      method: req.method,
+      route: req.route?.path || req.path,
+      status: res.statusCode
+    };
+    
+    httpRequestDuration.observe(labels, duration);
+    httpRequestCount.inc(labels);
+    
+    logger.info(`Request completed: ${labels.method} ${labels.route} ${labels.status} (${duration.toFixed(3)}s)`);
+  });
+  
+  next();
+});
+
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    logger.error('Error generating metrics:', error);
+    res.status(500).end('Error generating metrics');
+  }
+});
 
 app.use('/api/notifications', notificationRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'notification-service' });
 });
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  logger.info('User connected:', { socketId: socket.id });
   socket.on('join-room', (roomId: string) => {
     socket.join(roomId);
-    console.log(`User ${socket.id} joined room: ${roomId}`);
+    logger.info(`User ${socket.id} joined room: ${roomId}`);
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    logger.info('User disconnected:', { socketId: socket.id });
   });
 });
 
 async function initializeServices(): Promise<void> {
   try {
     await connectMongoDB();
-    console.log('MongoDB connected successfully');
+    logger.info('MongoDB connected successfully');
 
-    const eventService = container.get<IEventService>(TYPES.IEventService);
+    const _eventService = container.get<IEventService>(TYPES.IEventService);
     
-    // Start the consumer
-    await eventService.start();
-    console.log('Event Service connected to Kafka');
-    
-    // Subscribe to topics
-    await eventService.subscribe('application.created', async (data) => {
-      console.log('Application created event received:', data);
+    await _eventService.start();
+    logger.info('Event Service connected to Kafka');
+    await _eventService.subscribe('application.created', async (data) => {
+      logger.info('Application created event received:', data);
       const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
       await eventServiceInstance.handleApplicationCreated(data as ApplicationCreatedEventData);
     });
 
-    console.log('Event service (Kafka) initialized successfully');
+    await _eventService.subscribe('application.status_updated', async (data) => {
+      logger.info('Application status updated event received:', data);
+      const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
+      await eventServiceInstance.handleStatusUpdated(data as StatusUpdatedEventData);
+    });
+
+    await _eventService.subscribe('interview.confirmed', async (data) => {
+      logger.info('Interview confirmed event received:', data);
+      const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
+      await eventServiceInstance.handleInterviewConfirmed(data as InterviewConfirmedEventData);
+    });
+
+    const eventServiceInstance = _eventService as EventService;
+    await eventServiceInstance.startConsumer();
+
+    logger.info('Event service (Kafka) initialized successfully');
 
   } catch (error: any) {
-    console.error('Failed to initialize services:', error);
+    logger.error('Failed to initialize services:', error);
     process.exit(1);
   }
 }
 
 process.on('SIGTERM', async () => {
-  console.log('Shutting down notification service...');
+  logger.info('Shutting down notification service...');
   try {
-    const eventService = container.get<IEventService>(TYPES.IEventService);
-    await eventService.stop();
-    console.log('Event service stopped');
+    const _eventService = container.get<IEventService>(TYPES.IEventService);
+    await _eventService.stop();
+    logger.info('Event service stopped');
   } catch (error) {
-    console.error('Error stopping event service:', error);
+    logger.error('Error stopping event service:', error);
   }
   process.exit(0);
 });

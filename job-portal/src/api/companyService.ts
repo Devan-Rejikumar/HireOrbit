@@ -53,11 +53,18 @@ export const companyService = {
   },
 
   searchCompanyByName: async (companyName: string) => {
-    const response = await api.get<{
-      success: boolean;
-      data: { company: CompanyProfile };
-      message: string;
-    }>(`/company/search?name=${encodeURIComponent(companyName)}`);
-    return response.data;
+    try {
+      const response = await api.get<{
+        success: boolean;
+        data: { company: CompanyProfile };
+        message: string;
+      }>(`/company/search?name=${encodeURIComponent(companyName)}`);
+      return response.data;
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        return { success: false, data: null, message: 'Company not found' };
+      }
+      throw error;
+    }
   }
 };

@@ -15,12 +15,36 @@ import {
   User,
   Building2,
   Filter,
-  Search
+  Search,
+  Home,
+  MessageSquare,
+  Briefcase,
+  Calendar as CalendarIcon,
+  CreditCard,
+  HelpCircle,
+  Settings,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
-import { interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/interviewService';
+import { _interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/interviewService';
 import { toast } from 'react-toastify';
 import EditInterviewModal from '@/components/EditInterviewModal';
 import InterviewDecisionModal from '@/components/InterviewDecisionModal';
+import api from '@/api/axios';
+
+interface CompanyProfile {
+  companyName?: string;
+  email?: string;
+}
+
+interface CompanyProfileResponse {
+  success: boolean;
+  data: {
+    company: CompanyProfile;
+    profileStep?: unknown;
+  };
+  message: string;
+}
 
 const CompanyInterviewManagement = () => {
   const navigate = useNavigate();
@@ -34,16 +58,28 @@ const CompanyInterviewManagement = () => {
   const [decisionInterview, setDecisionInterview] = useState<InterviewWithDetails | null>(null);
   const [selectedDecision, setSelectedDecision] = useState<'SELECTED' | 'REJECTED' | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [company, setCompany] = useState<CompanyProfile | null>(null);
 
   useEffect(() => {
     fetchInterviews();
+    fetchCompanyProfile();
   }, []);
+
+  const fetchCompanyProfile = async () => {
+    try {
+      const response = await api.get<CompanyProfileResponse>('/company/profile');
+      setCompany(response.data?.data?.company || null);
+    } catch (error) {
+      console.error('Error fetching company profile:', error);
+    }
+  };
 
   const fetchInterviews = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await interviewService.getCompanyInterviews();
+      const response = await _interviewService.getCompanyInterviews();
       setInterviews(response.data || []);
     } catch (err: any) {
       console.error('Failed to fetch interviews:', err);
@@ -102,7 +138,7 @@ const CompanyInterviewManagement = () => {
 
   const handleUpdateInterview = async (interviewId: string, updateData: UpdateInterviewData) => {
     try {
-      await interviewService.updateInterview(interviewId, updateData);
+      await _interviewService.updateInterview(interviewId, updateData);
       toast.success('Interview updated successfully!');
       setShowEditModal(false);
       setEditingInterview(null);
@@ -119,7 +155,7 @@ const CompanyInterviewManagement = () => {
     }
 
     try {
-      await interviewService.cancelInterview(interviewId, 'Cancelled by company');
+      await _interviewService.cancelInterview(interviewId, 'Cancelled by company');
       toast.success('Interview cancelled successfully!');
       fetchInterviews();
     } catch (err: any) {
@@ -130,7 +166,7 @@ const CompanyInterviewManagement = () => {
 
   const handleStatusUpdate = async (interviewId: string, newStatus: string) => {
     try {
-      await interviewService.updateInterview(interviewId, { status: newStatus as any });
+      await _interviewService.updateInterview(interviewId, { status: newStatus as any });
       toast.success(`Interview status updated to ${newStatus}`);
       fetchInterviews();
     } catch (err: any) {
@@ -143,7 +179,7 @@ const CompanyInterviewManagement = () => {
     if (!decisionInterview) return;
 
     try {
-      await interviewService.makeInterviewDecision(decisionInterview.id, decisionData);
+      await _interviewService.makeInterviewDecision(decisionInterview.id, decisionData);
       toast.success(`Candidate ${decisionData.status.toLowerCase()} successfully!`);
       setShowDecisionModal(false);
       setDecisionInterview(null);
@@ -173,21 +209,142 @@ const CompanyInterviewManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/company/dashboard')} 
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
-        </Button>
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Interview Management</h1>
-            <p className="text-gray-600">Manage and track all your scheduled interviews</p>
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">H</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
+            </div>
           </div>
+        </div>
+      </header>
+
+      <div className="flex min-h-screen relative">
+        {/* Sidebar */}
+        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 relative transition-all duration-300`}>
+          <nav className="p-6">
+            <div className="space-y-1 mb-8">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
+              <button 
+                type="button"
+                onClick={() => navigate('/company/dashboard')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <Home className="h-5 w-5" />
+                Dashboard
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/chat')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <MessageSquare className="h-5 w-5" />
+                Messages
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/company/dashboard')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <Building2 className="h-5 w-5" />
+                Company Profile
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/company/applications')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <User className="h-5 w-5" />
+                All Applicants
+              </button>
+              <button 
+                type="button"
+                onClick={() => navigate('/company/jobs')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <Briefcase className="h-5 w-5" />
+                Job Listing
+              </button>
+              <button 
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium w-full text-left"
+                disabled
+              >
+                <CalendarIcon className="h-5 w-5" />
+                Interview Management
+              </button>
+              <button 
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                disabled
+              >
+                <CreditCard className="h-5 w-5" />
+                Plans & Billing
+              </button>
+            </div>
+            
+            <div className="space-y-1">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
+              <button 
+                type="button"
+                onClick={() => navigate('/company/settings')} 
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <Settings className="h-5 w-5" />
+                Settings
+              </button>
+              <button 
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                disabled
+              >
+                <HelpCircle className="h-5 w-5" />
+                Help Center
+              </button>
+            </div>
+          </nav>
+          
+          <div className="absolute bottom-6 left-6 right-6">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <Building2 className="h-4 w-4 text-purple-600" />
+              </div>
+              <div>
+                <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
+                <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Toggle Sidebar Button */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 ${
+            isSidebarCollapsed ? 'left-0' : 'left-64'
+          }`}
+          aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+        >
+          {isSidebarCollapsed ? (
+            <ChevronRight className="h-5 w-5 text-gray-600" />
+          ) : (
+            <ChevronLeft className="h-5 w-5 text-gray-600" />
+          )}
+        </button>
+
+        {/* Main Content */}
+        <main className="flex-1 p-6">
+          <div className="mb-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Interview Management</h1>
+                <p className="text-gray-600">Manage and track all your scheduled interviews</p>
+              </div>
           <div className="flex items-center gap-4">
             <select
               value={statusFilter}
@@ -346,7 +503,7 @@ const CompanyInterviewManagement = () => {
                       )}
 
                       {/* Decision Buttons for Completed Interviews */}
-                      {interview.status === 'COMPLETED' && interview.status !== 'SELECTED' && interview.status !== 'REJECTED' && (
+                      {interview.status === 'COMPLETED' && (
                         <div className="flex flex-col gap-2 ml-4">
                           <div className="text-sm font-medium text-gray-700 mb-2">Interview Decision:</div>
                           <Button
@@ -442,6 +599,8 @@ const CompanyInterviewManagement = () => {
         decision={selectedDecision}
         onSuccess={handleMakeDecision}
       />
+        </main>
+      </div>
     </div>
   );
 };

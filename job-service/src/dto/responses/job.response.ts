@@ -13,7 +13,7 @@ export interface JobResponse {
   education: string;
   applicationDeadline: Date;
   workLocation: string;
-  isActive: boolean; // ✅ Add isActive field
+  isActive: boolean; 
   createdAt: Date;
   updatedAt: Date;
 }

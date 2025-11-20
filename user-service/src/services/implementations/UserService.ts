@@ -44,7 +44,7 @@ export class UserService implements IUserService {
     if (!user) throw new Error('Invalid credentials');
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error('Invalid credentials');
-    if (user.isBlocked) throw new Error('Account is bloacked');
+    if (user.isBlocked) throw new Error('Account blocked');
     const tokens = this._jwtService.generateTokenPair({
       userId: user.id,
       email: user.email,
@@ -71,6 +71,13 @@ export class UserService implements IUserService {
       console.log('UserService - Verifying refresh token');
       const refreshTokenPayload = this._jwtService.verifyRefreshToken(refreshToken);
       console.log('UserService - Refresh token verified:', refreshTokenPayload);
+      
+      // Check if user is blocked before generating new token
+      const user = await this._userRepository.findById(refreshTokenPayload.userId);
+      if (user?.isBlocked) {
+        throw new Error('Account blocked');
+      }
+      
       console.log('UserService - Checking Redis for stored token');
       const storedToken = await this._redisService.getRefreshToken(
         refreshTokenPayload.userId,
@@ -89,6 +96,10 @@ export class UserService implements IUserService {
       return { accessToken: newAccessToken };
     } catch (error) {
       console.error('UserService - Refresh token error:', error);
+      // Preserve "Account blocked" error message
+      if (error instanceof Error && error.message === 'Account blocked') {
+        throw error;
+      }
       throw new Error('Invalid refresh token');
     }
   }

@@ -38,6 +38,36 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    // Check if user is blocked (403 with "Account blocked" message)
+    const isBlockedUser = error.response?.status === 403 && 
+                         (error.response?.data?.error === 'Account blocked' || 
+                          error.response?.data?.message === 'Account blocked' ||
+                          error.response?.data?.data?.error === 'Account blocked');
+    
+    if (isBlockedUser) {
+      // Clear user data and redirect to blocked page
+      localStorage.removeItem('role');
+      // Clear all cookies
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = '/blocked';
+      return Promise.reject(error);
+    }
+    
+    // Suppress console errors for 404s on company search endpoints (expected behavior)
+    // These are handled gracefully in companyService
+    const isCompanySearch404 = error.response?.status === 404 && 
+                               originalRequest.url?.includes('/company/search');
+    
+    if (isCompanySearch404) {
+      // Return error without logging to console - this is expected when company doesn't exist
+      return Promise.reject(error);
+    }
+    
     if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
       const isAuthEndpoint = originalRequest.url?.includes('/login') || 
@@ -57,18 +87,21 @@ api.interceptors.response.use(
           refreshEndpoint = '/api/company/refresh-token';
         } else if (role === 'admin') {
           refreshEndpoint = '/api/users/admin/refresh-token';
+          console.log('🔄 Admin token expired, attempting to refresh...');
         }
         
+        console.log('🔄 Calling refresh endpoint:', refreshEndpoint);
         const response = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:4000'}${refreshEndpoint}`,
           {},
           { withCredentials: true }
         );
         if (response.status === 200) {
+          console.log('✅ Token refresh successful, retrying original request');
           return api(originalRequest);
         }
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
+        console.error('❌ Token refresh failed:', refreshError);
         localStorage.removeItem('role');
         window.location.href = '/login';
       }

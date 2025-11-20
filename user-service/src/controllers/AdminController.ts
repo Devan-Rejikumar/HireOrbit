@@ -3,325 +3,185 @@ import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
 import { IAdminService } from '../services/interfaces/IAdminService';
 import { IUserService } from '../services/interfaces/IUserService';
+import { CookieService } from '../services/implementations/CookieService';
+import { Messages } from '../constants/Messages';
 import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { getAdminIdFromRequest } from '../utils/requestHelpers';
+import { RequestWithUser } from '../types/express/RequestWithUser';
+import { AppError } from '../utils/errors/AppError';
+
 
 @injectable()
 export class AdminController {
   constructor(
     @inject(TYPES.IAdminService) private _adminService: IAdminService,
-    @inject(TYPES.IUserService) private _userService: IUserService
+    @inject(TYPES.IUserService) private _userService: IUserService,
+    @inject(TYPES.CookieService) private _cookieService: CookieService
   ) {}
 
-
-
   async login(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password } = req.body;
-      console.log(`[AdminController] 2. Attempting login for email: ${email}`);
+    const { email, password } = req.body;
+    console.log(`[AdminController] 2. Attempting login for email: ${email}`);
 
-      if (!email || !password) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json({ 
-          error: 'Email and password are required' 
-        });
-        return;
-      }
-
-      const { admin, tokens } = await this._adminService.login(email, password);
-      console.log('[AdminController] 3. Tokens generated successfully');
-      
-      res.cookie('adminAccessToken', tokens.accessToken, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 2 * 60 * 60 * 1000, 
-      });
-      res.cookie('adminRefreshToken', tokens.refreshToken, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', 
-        maxAge: 7 * 24 * 60 * 60 * 1000, 
-      });
-
-      console.log('[AdminController] 3a. Response headers prepared in user-service:', res.getHeaders());
-
-      res.status(AuthStatusCode.LOGIN_SUCCESS).json({ admin });
-
-    } catch (err: any) {
-      if (err.message === 'Invalid credentials' || err.message === 'Admin not found') {
-        res.status(AuthStatusCode.INVALID_CREDENTIALS).json({ error: 'Invalid email or password' });
-      } else if (err.message === 'Account blocked') {
-        res.status(AuthStatusCode.ACCOUNT_BLOCKED).json({ error: err.message });
-      } else {
-        res.status(HttpStatusCode.BAD_REQUEST).json({ error: err.message });
-      }
+    if (!email || !password) {
+      throw new AppError(Messages.VALIDATION.EMAIL_AND_PASSWORD_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const { admin, tokens } = await this._adminService.login(email, password);
+    console.log('[AdminController] 3. Tokens generated successfully');
+    
+    this._cookieService.setAdminAccessToken(res, tokens.accessToken);
+    this._cookieService.setAdminRefreshToken(res, tokens.refreshToken);
+
+    console.log('[AdminController] 3a. Response headers prepared in user-service:', res.getHeaders());
+
+    res.status(AuthStatusCode.LOGIN_SUCCESS).json({ admin });
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
-    try {
-      const refreshToken = req.cookies.adminRefreshToken || req.body.refreshToken;
-      
-      if (!refreshToken) {
-        res.status(HttpStatusCode.BAD_REQUEST).json({ error: 'Admin refresh token is required' });
-        return;
-      }
-
-      const result = await this._adminService.refreshToken(refreshToken);
-      
-      res.cookie('adminAccessToken', result.accessToken, {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 2 * 60 * 60 * 1000 
-      });
-
-      res.status(HttpStatusCode.OK).json({ message: 'Admin token refreshed successfully' });
-    } catch (error) {
-      res.status(HttpStatusCode.FORBIDDEN).json({ error: 'Invalid admin refresh token' });
+    const refreshToken = req.cookies.adminRefreshToken || req.body.refreshToken;
+    
+    if (!refreshToken) {
+      throw new AppError(Messages.AUTH.ADMIN_REFRESH_TOKEN_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const result = await this._adminService.refreshToken(refreshToken);
+    
+    this._cookieService.setAdminAccessToken(res, result.accessToken);
+
+    res.status(HttpStatusCode.OK).json({ 
+      message: Messages.AUTH.ADMIN_TOKEN_REFRESH_SUCCESS 
+    });
   }
 
   async getAllUsers(req: Request, res: Response): Promise<void> {
-    try {
-      const adminId = req.headers['x-user-id'] as string;
-      const adminRole = req.headers['x-user-role'] as string;
-      
-      if (!adminId || adminRole !== 'admin') {
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin authentication required' });
-        return;
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const result = await this._adminService.getAllUsersWithPagination(page, limit);
+    res.status(HttpStatusCode.OK).json({ 
+      users: result.data,
+      pagination: {
+        currentPage: result.page,
+        totalPages: result.totalPages,
+        totalUsers: result.total,
+        pageSize: limit
       }
-
-      
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-
-      const result = await this._adminService.getAllUsersWithPagination(page, limit);
-      res.status(HttpStatusCode.OK).json({ 
-        users: result.data,
-        pagination: {
-          currentPage: result.page,
-          totalPages: result.totalPages,
-          totalUsers: result.total,
-          pageSize: limit
-        }
-      });
-    } catch (error: any) {
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch users' });
-    }
+    });
   }
 
   async blockUser(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const adminId = req.headers['x-user-id'] as string;
-      const adminRole = req.headers['x-user-role'] as string;
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
 
-      if (!adminId || adminRole !== 'admin') {
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin authentication required' });
-        return;
-      }
+    const { id } = req.params;
 
-      if (!id) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json({ 
-          error: 'User ID is required' 
-        });
-        return;
-      }
-
-      const user = await this._userService.blockUser(id);
-      res.status(HttpStatusCode.OK).json({ 
-        message: 'User blocked successfully', 
-        user 
-      });
-    } catch (error: any) {
-      if (error.message === 'User not found') {
-        res.status(HttpStatusCode.NOT_FOUND).json({ error: error.message });
-      } else if (error.message === 'User already blocked') {
-        res.status(HttpStatusCode.CONFLICT).json({ error: error.message });
-      } else {
-        res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-      }
+    if (!id) {
+      throw new AppError(Messages.USER.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const user = await this._userService.blockUser(id);
+    res.status(HttpStatusCode.OK).json({ 
+      message: Messages.USER.BLOCKED_SUCCESS, 
+      user 
+    });
   }
 
   async unblockUser(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const adminId = req.headers['x-user-id'] as string;
-      const adminRole = req.headers['x-user-role'] as string;
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
 
-      if (!adminId || adminRole !== 'admin') {
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin authentication required' });
-        return;
-      }
+    const { id } = req.params;
 
-      if (!id) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json({ 
-          error: 'User ID is required' 
-        });
-        return;
-      }
-
-      const user = await this._userService.unblockUser(id);
-      res.status(HttpStatusCode.OK).json({ 
-        message: 'User unblocked successfully', 
-        user 
-      });
-    } catch (error: any) {
-      if (error.message === 'User not found') {
-        res.status(HttpStatusCode.NOT_FOUND).json({ error: error.message });
-      } else if (error.message === 'User not blocked') {
-        res.status(HttpStatusCode.CONFLICT).json({ error: error.message });
-      } else {
-        res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-      }
+    if (!id) {
+      throw new AppError(Messages.USER.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const user = await this._userService.unblockUser(id);
+    res.status(HttpStatusCode.OK).json({ 
+      message: Messages.USER.UNBLOCKED_SUCCESS, 
+      user 
+    });
   }
 
-  async logout(req: Request, res: Response): Promise<void>{
-    try {
-      const refreshToken = req.cookies.adminRefreshToken;
-      if(refreshToken){
-        await this._adminService.logoutWithToken(refreshToken);
-      }
-      res.clearCookie('adminAccessToken', {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/'
-      });
-    
-      res.clearCookie('adminRefreshToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/'
-      });
-    
-      res.status(200).json({ message: 'Admin logged out successfully' });
-    } catch (error) {
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Admin logout failed' });
+  async logout(req: Request, res: Response): Promise<void> {
+    const refreshToken = req.cookies.adminRefreshToken;
+    if(refreshToken){
+      await this._adminService.logoutWithToken(refreshToken);
     }
+    this._cookieService.clearAdminAccessToken(res);
+    this._cookieService.clearAdminRefreshToken(res);
+  
+    res.status(HttpStatusCode.OK).json({ 
+      message: Messages.AUTH.ADMIN_LOGOUT_SUCCESS 
+    });
   }
 
   async me(req: Request, res: Response): Promise<void> {
-    const adminId = req.headers['x-user-id'] as string;
-    const adminEmail = req.headers['x-user-email'] as string;
-    const adminRole = req.headers['x-user-role'] as string;
-    
-    if (!adminId || adminRole !== 'admin') {
-      res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin not authenticated' });
-      return;
-    }
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
 
+    const reqWithUser = req as RequestWithUser;
     const admin = {
       id: adminId,
-      email: adminEmail,
-      role: adminRole
+      email: reqWithUser.user?.email || '',
+      role: reqWithUser.user?.role || 'admin'
     };
 
     res.status(HttpStatusCode.OK).json({ admin });
   }
 
   async getPendingCompanies(req: Request, res: Response): Promise<void> {
-    try {
-      const adminId = req.headers['x-user-id'] as string;
-      const adminRole = req.headers['x-user-role'] as string;
-      
-      if (!adminId || adminRole !== 'admin') {
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin authentication required' });
-        return;
-      }
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
 
-      const companies = await this._adminService.getPendingCompanies();
-      res.status(HttpStatusCode.OK).json({ companies });
-    } catch (error: any) {
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: error.message });
-    }
+    const companies = await this._adminService.getPendingCompanies();
+    res.status(HttpStatusCode.OK).json({ companies });
   }
 
   async approveCompany(req: Request, res: Response): Promise<void> {
-    try {
-      const { id: companyId } = req.params;
-      const adminId = req.headers['x-user-id'] as string;
-      const adminRole = req.headers['x-user-role'] as string;
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
 
-      if (!adminId || adminRole !== 'admin') {
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin not authenticated' });
-        return;
-      }
+    const { id: companyId } = req.params;
 
-      if (!companyId) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json({ 
-          error: 'Company ID is required' 
-        });
-        return;
-      }
-
-      const result = await this._adminService.approveCompany(companyId, adminId);
-      res.status(HttpStatusCode.OK).json({
-        message: 'Company approved successfully',
-        result
-      });
-    } catch (error: any) {
-      if (error.message === 'Company not found') {
-        res.status(HttpStatusCode.NOT_FOUND).json({ error: error.message });
-      } else if (error.message === 'Company already approved') {
-        res.status(HttpStatusCode.CONFLICT).json({ error: error.message });
-      } else if (error.message === 'Company profile not completed') {
-        res.status(HttpStatusCode.BAD_REQUEST).json({ error: error.message });
-      } else {
-        res.status(HttpStatusCode.BAD_REQUEST).json({ error: error.message });
-      }
+    if (!companyId) {
+      throw new AppError(Messages.COMPANY.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const result = await this._adminService.approveCompany(companyId, adminId);
+    res.status(HttpStatusCode.OK).json({
+      message: Messages.COMPANY.APPROVED_SUCCESS,
+      result
+    });
   }
 
   async rejectCompany(req: Request, res: Response): Promise<void> {
-    try {
-      const { id: companyId } = req.params;
-      const { reason } = req.body;
-      const adminId = req.headers['x-user-id'] as string;
-      const adminRole = req.headers['x-user-role'] as string;
+    const adminId = getAdminIdFromRequest(req, res);
+    if (!adminId) return;
 
-      if (!adminId || adminRole !== 'admin') {
-        res.status(HttpStatusCode.UNAUTHORIZED).json({ error: 'Admin not authenticated' });
-        return;
-      }
+    const { id: companyId } = req.params;
+    const { reason } = req.body;
 
-      if (!companyId) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json({ 
-          error: 'Company ID is required' 
-        });
-        return;
-      }
-
-      if (!reason || !reason.trim()) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json({ 
-          error: 'Rejection reason is required' 
-        });
-        return;
-      }
-
-      if (reason.trim().length < 10) {
-        res.status(ValidationStatusCode.VALIDATION_ERROR).json({ 
-          error: 'Rejection reason must be at least 10 characters long' 
-        });
-        return;
-      }
-
-      const result = await this._adminService.rejectCompany(companyId, reason.trim(), adminId);
-      res.status(HttpStatusCode.OK).json({
-        message: 'Company rejected successfully',
-        result
-      });
-    } catch (error: any) {
-      if (error.message === 'Company not found') {
-        res.status(HttpStatusCode.NOT_FOUND).json({ error: error.message });
-      } else if (error.message === 'Company already processed') {
-        res.status(HttpStatusCode.CONFLICT).json({ error: error.message });
-      } else {
-        res.status(HttpStatusCode.BAD_REQUEST).json({ error: error.message });
-      }
+    if (!companyId) {
+      throw new AppError(Messages.COMPANY.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    if (!reason || !reason.trim()) {
+      throw new AppError(Messages.COMPANY.REJECTION_REASON_REQUIRED, HttpStatusCode.BAD_REQUEST);
+    }
+
+    if (reason.trim().length < 10) {
+      throw new AppError(Messages.COMPANY.REJECTION_REASON_MIN_LENGTH, HttpStatusCode.BAD_REQUEST);
+    }
+
+    const result = await this._adminService.rejectCompany(companyId, reason.trim(), adminId);
+    res.status(HttpStatusCode.OK).json({
+      message: Messages.COMPANY.REJECTED_SUCCESS,
+      result
+    });
   }
 }

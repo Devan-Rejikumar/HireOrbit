@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { FormField } from './ui/FormField';
 import { FileUpload } from './ui/FileUpload';
 import { ExperienceSelector } from './ui/ExperienceSelector';
-import { applicationService, ApplicationResponse } from '../api/applicationService';
+import { _applicationService, ApplicationResponse } from '../api/applicationService';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface JobApplicationModalProps {
   jobId: string;
   jobTitle: string;
   companyName: string;
-  companyId: string;
+  companyId?: string;
   onApplicationSubmit: (applicationData: ApplicationData) => void;
 }
 
@@ -96,11 +96,9 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
     try {
       setSubmitting(true);
-      
-      // Convert file to base64
+
       const resumeBase64 = await fileToBase64(formData.resume!);
-      
-      // Create JSON payload for the application
+
       const applicationData = {
         jobId,
         companyId: companyId || companyName, // Use companyId if available, fallback to companyName
@@ -113,7 +111,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       };
 
       // Use the application service
-      const result: ApplicationResponse = await applicationService.applyForJob(applicationData);
+      const result: ApplicationResponse = await _applicationService.applyForJob(applicationData);
       console.log('Application submitted successfully:', result);
       
       // Call the callback to notify parent component

@@ -8,7 +8,8 @@ import {
   NotificationMapper, 
   ApplicationReceivedInput, 
   StatusUpdatedInput, 
-  ApplicationWithdrawnInput 
+  ApplicationWithdrawnInput,
+  InterviewConfirmedInput
 } from '../../dto/mappers/notification.mapper';
 import { io } from '../../server';
 
@@ -42,6 +43,10 @@ export class NotificationService implements INotificationService {
     await this._notificationRepository.markAsUnread(notificationId);
   }
 
+  async markAllAsRead(recipientId: string): Promise<void> {
+    await this._notificationRepository.markAllAsRead(recipientId);
+  }
+
   async deleteNotification(notificationId: string): Promise<void> {
     await this._notificationRepository.delete(notificationId);
   }
@@ -67,10 +72,28 @@ async sendApplicationReceivedNotification(input: ApplicationReceivedInput): Prom
 }
 
 async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
-  const notificationData = NotificationMapper.toStatusUpdatedNotification(input);
+  let jobTitle = 'Job';
+  try {
+    const jobServiceUrl = process.env.JOB_SERVICE_URL || 'http://localhost:3002';
+    const jobResponse = await fetch(`${jobServiceUrl}/api/jobs/${input.jobId}`);
+    if (jobResponse.ok) {
+      const jobData = await jobResponse.json() as {
+        data?: {
+          job?: {
+            title?: string;
+          };
+          title?: string;
+        };
+      };
+      jobTitle = jobData.data?.job?.title || jobData.data?.title || 'Job';
+    }
+  } catch (error) {
+    console.error(`Error fetching job title for jobId ${input.jobId}:`, error);
+  }
+
+  const notificationData = NotificationMapper.toStatusUpdatedNotification(input, jobTitle);
   const notification = await this.createNotification(notificationData);
   
-  // Send WebSocket message to user
   io.to(input.userId).emit('notification', {
     type: 'STATUS_UPDATED',
     id: notification._id.toString(),
@@ -78,6 +101,7 @@ async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
     data: {
       applicationId: input.applicationId,
       jobId: input.jobId,
+      jobTitle: jobTitle,
       oldStatus: input.oldStatus,
       newStatus: input.newStatus
     },
@@ -104,5 +128,29 @@ async sendApplicationWithdrawnNotification(input: ApplicationWithdrawnInput): Pr
   });
   
   console.log('Application withdrawn notification created and sent via WebSocket:', notification.id);
+}
+
+async sendInterviewConfirmedNotification(input: InterviewConfirmedInput): Promise<void> {
+  const notificationData = NotificationMapper.toInterviewConfirmedNotification(input);
+  const notification = await this.createNotification(notificationData);
+  
+  io.to(input.userId).emit('notification', {
+    type: 'INTERVIEW_CONFIRMED',
+    id: notification._id.toString(),
+    recipientId: input.userId,
+    data: {
+      applicationId: input.applicationId,
+      jobId: input.jobId,
+      jobTitle: input.jobTitle,
+      interviewId: input.interviewId,
+      scheduledAt: typeof input.scheduledAt === 'string' ? input.scheduledAt : input.scheduledAt.toISOString(),
+      type: input.type,
+      location: input.location,
+      meetingLink: input.meetingLink
+    },
+    timestamp: new Date().toISOString()
+  });
+  
+  console.log('Interview confirmed notification created and sent via WebSocket:', notification.id);
 }
 }

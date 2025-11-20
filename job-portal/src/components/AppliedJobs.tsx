@@ -12,8 +12,9 @@ import {
   Download,
   ExternalLink
 } from 'lucide-react';
-import { applicationService, Application } from '../api/applicationService';
+import { _applicationService, Application } from '../api/applicationService';
 import { toast } from 'react-toastify';
+import { ChatButton } from './ChatButton';
 
 interface AppliedJobsProps {
   userId: string;
@@ -32,7 +33,7 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response = await applicationService.getUserApplications();
+      const response = await _applicationService.getUserApplications();
       setApplications(response.data.applications || []);
     } catch (error) {
       console.error('Error fetching applications:', error);
@@ -95,9 +96,9 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
 
   const handleWithdrawApplication = async (applicationId: string) => {
     try {
-      await applicationService.withdrawApplication(applicationId);
+      await _applicationService.withdrawApplication(applicationId);
       toast.success('Application withdrawn successfully');
-      fetchApplications(); // Refresh the list
+      fetchApplications(); 
     } catch (error) {
       console.error('Error withdrawing application:', error);
       toast.error('Failed to withdraw application');
@@ -208,6 +209,10 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
                       >
                         Withdraw
                       </button>
+                    )}
+                    
+                    {application.status === 'SHORTLISTED' && (
+                      <ChatButton applicationId={application.id} size="sm" />
                     )}
 
                     {application.resumeUrl && (

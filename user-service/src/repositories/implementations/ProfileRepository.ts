@@ -49,7 +49,7 @@ export class ProfileRepository extends BaseRepository<UserProfile> implements IP
     userId: string,
     profileData: Partial<ProfileData>
   ): Promise<UserProfile> {
-    console.log('🔍 ProfileRepository: updateUserProfile called with userId:', userId);
+    console.log(' ProfileRepository: updateUserProfile called with userId:', userId);
     console.log(' ProfileRepository: profileData:', JSON.stringify(profileData, null, 2));
     
     const updateData = {
@@ -91,10 +91,7 @@ export class ProfileRepository extends BaseRepository<UserProfile> implements IP
         education: true,
       },
     });
-    
-    console.log('🔍 ProfileRepository - Raw profile from DB:', profile);
-    console.log('🔍 ProfileRepository - Certifications:', profile?.certifications);
-    console.log('🔍 ProfileRepository - Achievements:', profile?.achievements);
+
     
     return profile;
   }
