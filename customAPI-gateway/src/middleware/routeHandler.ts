@@ -3,8 +3,6 @@ import { ROUTES } from "@/config/routes";
 import { Authenticate } from "./auth";
 import { createProxy } from "@/proxy/loadBalancer"; 
 
-
-
 interface AuthRequest extends Request {
     user?: {
         userId: string;
@@ -28,8 +26,21 @@ const isAuthenticationRoute = (path:string): boolean =>{
     return result;
 }
 
-const isProtectedRoute = (path: string): boolean =>{
+const isProtectedRoute = (path: string, method: string): boolean =>{
     const clean = cleanPath(path);
+    
+    if (clean === '/api/jobs' && method === 'POST') {
+        return true;
+    }
+    
+    if (clean.match(/^\/api\/jobs\/[a-zA-Z0-9_-]+$/) && method === 'PUT') {
+        return true;
+    }
+    
+    if (clean.match(/^\/api\/jobs\/[a-zA-Z0-9_-]+$/) && method === 'DELETE') {
+        return true;
+    }
+    
     const result = ROUTES.protected.some(route =>{
         if(clean === route){
             return true;
@@ -38,7 +49,6 @@ const isProtectedRoute = (path: string): boolean =>{
     })
     
     if (result) return true;
-
 
     if (clean.match(/^\/api\/jobs\/company\/[a-zA-Z0-9_-]+$/)) {
         console.log(' Matched company job route:', clean);
@@ -63,14 +73,25 @@ const isProtectedRoute = (path: string): boolean =>{
     return false;
 }
 
-const isPublicRoute = (path: string): boolean =>{
+const isPublicRoute = (path: string, method: string): boolean =>{
     const clean = cleanPath(path);
+    if (clean === '/api/jobs' && method === 'GET') {
+        return true;
+    }
+    
+
+    if (clean.match(/^\/api\/jobs\/[a-zA-Z0-9_-]+$/) && method === 'GET') {
+        return true;
+    }
+    
     const result = ROUTES.public.some(route =>{
         if(clean === route){
             return true;
         }
         if(route === '/api/jobs' && clean.startsWith('/api/jobs/') && clean !== '/api/jobs'){
-            return true;
+            if (method === 'GET') {
+                return true;
+            }
         }
         return false
     })
@@ -95,7 +116,7 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
         return
     }
 
-    if(isProtectedRoute(path)){
+    if(isProtectedRoute(path, req.method)){
         console.log('Protected Route - Requirinmg authorization');
         console.log('Route Handler About to call Authenticatee');
         Authenticate(req,res,(err)=>{
@@ -104,24 +125,20 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
                 return next(err);
             }
             
-            // Check if response was already sent (authentication failed)
             if(res.headersSent){
                 console.log('[ROUTE HANDLER] Response already sent, authentication failed');
                 return;
             }
-            
-            // Check if user is authenticated
             if(!req.user){
                 console.log('[ROUTE HANDLER] No user found after authentication');
                 return;
             }
             
             console.log('Authorization successsfukl- proceeding to proxy');
-            // Strip any client-provided user headers (security: prevent spoofing)
+
             delete req.headers['x-user-id'];
             delete req.headers['x-user-email'];
             delete req.headers['x-user-role'];
-            // Set headers from verified JWT token
             req.headers['x-user-id'] = req.user.userId;
             req.headers['x-user-email'] = req.user.email;
             req.headers['x-user-role'] = req.user.role;
@@ -138,7 +155,7 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
         return
     }
 
-    if(isPublicRoute(path)){
+    if(isPublicRoute(path, req.method)){
         console.log('Public ROUTE - No authorisation required');
         console.log('Route handler About tot call createProxy');
         createProxy(req,res,next);
@@ -152,25 +169,20 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
             console.log('Authorization failed:', err);
             return next(err);
         }
-        
-        // Check if response was already sent (authentication failed)
+
         if(res.headersSent){
             console.log('[ROUTE HANDLER] Response already sent, authentication failed');
             return;
         }
-        
-        // Check if user is authenticated
         if(!req.user){
             console.log('[ROUTE HANDLER] No user found after authentication');
             return;
         }
         
         console.log('Authorization successful - proceeding to proxy');
-        // Strip any client-provided user headers (security: prevent spoofing)
         delete req.headers['x-user-id'];
         delete req.headers['x-user-email'];
         delete req.headers['x-user-role'];
-        // Set headers from verified JWT token
         req.headers['x-user-id'] = req.user.userId;
         req.headers['x-user-email'] = req.user.email;
         req.headers['x-user-role'] = req.user.role;

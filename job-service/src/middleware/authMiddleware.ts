@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '../enums/StatusCodes';
+import { logger } from '../utils/logger';
 
 declare global {
   namespace Express {
@@ -55,6 +56,6 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     userType: determineUserType(role)
   };
 
-  console.log('JOB-AUTH-MIDDLEWARE User context set from API Gateway headers:', req.user);
+  logger.info('User context set from API Gateway headers', { userId, email, role });
   next();
 };
