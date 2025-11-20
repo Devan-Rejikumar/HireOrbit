@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import companyRoutes from './routes/CompanyRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { ErrorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -66,6 +67,9 @@ app.get('/health', (req, res) => {
   res.json({ message: 'Company Service is running!' });
 });
 
-app.use('/api/company',companyRoutes);
+app.use('/api/company', companyRoutes);
+
+// Global error handler (must be last)
+app.use(ErrorHandler);
 
 export default app; 

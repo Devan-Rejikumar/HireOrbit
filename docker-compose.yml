@@ -49,8 +49,12 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -118,8 +122,8 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3004
-      - DATABASE_URL=postgresql://job_portal_user:devan@postgres:5432/job_portal
       - KAFKA_BROKERS=kafka:29092
+      - DATABASE_URL=postgresql://job_portal_user:devan@postgres:5432/job_portal
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,9 +141,9 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=4005
-      - KAFKA_BROKERS=kafka:29092
+      - KAFKA_BROKERS=localhost:9092
       - FRONTEND_URL=http://localhost:3000
-      - MONGODB_URL=your-atlas-connection-string-here
+      - MONGODB_URL=mongodb+srv://devanrejikumar007_db_user:devan@cluster0.r3yinx6.mongodb.net/
     depends_on:
       kafka:
         condition: service_started
@@ -174,9 +178,6 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=4000
-    volumes:
-      - ./customAPI-gateway:/app
-      - /app/node_modules
     depends_on:
       - user-service
       - company-service
@@ -184,6 +185,9 @@ services:
       - application-service
       - notification-service
       - chat-service
+    volumes:
+      - ./customAPI-gateway:/app
+      - /app/node_modules
 
   loki:
     image: grafana/loki:latest

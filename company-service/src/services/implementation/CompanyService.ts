@@ -1,13 +1,10 @@
 import { injectable, inject } from 'inversify';
-import bcrypt from 'bcryptjs';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import TYPES from '../../config/types';
 import { ICompanyRepository } from '../../repositories/interface/ICompanyRepository';
 import { ICompanyService } from '../interface/ICompanyService';
-import { Company } from '@prisma/client';
 import { IEmailService } from '../interface/IEmailService';
 import { CompanyProfileData, CompanyRegistrationStep2, CompanyRegistrationStep3, CompanyProfileStep, CompanyProfileStepData } from '../../types/company';
-import { EmailService } from '../implementation/EmailService';
 import { RedisService } from './RedisService';
 import { PaginationResult } from '../../repositories/interface/IBaseRepository';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
@@ -36,7 +33,6 @@ export class CompanyService implements ICompanyService {
   async register(email: string, password: string, companyName: string): Promise<CompanyResponse> {
     const existingCompany = await this._companyRepository.findByEmail(email);
     if (existingCompany) throw new Error('Company already exists');
-    const hashed = await bcrypt.hash(password, 10);
     const company = await this._companyRepository.create({
       email,
       password: password,
@@ -54,7 +50,6 @@ export class CompanyService implements ICompanyService {
     
     const company = await this._companyRepository.findByEmail(email);
     if (!company) throw new Error('Invalid credentials');
-    // const valid = await bcrypt.compare(password, company.password);
     const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
       userId: company.id,
       companyId: company.id,

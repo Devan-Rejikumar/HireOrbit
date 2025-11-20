@@ -1,6 +1,7 @@
 import { Company, CompanyProfileStep } from '@prisma/client';
-import { CompanyProfileData, CompanyProfileStepData,CompanyRegistrationStep1,CompanyRegistrationStep2,CompanyRegistrationStep3,} from '../../types/company';
+import { CompanyProfileData, CompanyProfileStepData,CompanyRegistrationStep2,CompanyRegistrationStep3,} from '../../types/company';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
+import { PaginationResult } from '../../repositories/interface/IBaseRepository';
 
 export interface ICompanyService{
     register(email:string,password:string,companyName:string):Promise<CompanyResponse>;
@@ -10,8 +11,10 @@ export interface ICompanyService{
     verifyOTP(email:string,otp:number):Promise<{message:string}>;
     resendOTP(email:string):Promise<{message:string}>;
     getAllCompanies():Promise<CompanyResponse[]>;
+    getAllCompaniesWithPagination(page: number, limit: number): Promise<PaginationResult<CompanyResponse>>;
     blockCompany(id:string):Promise<void>;
     unblockCompany(id:string):Promise<void>;
+    completeProfile(companyId: string, profileData: CompanyProfileData): Promise<CompanyResponse>;
     completeStep2(companyId: string, step2Data: CompanyRegistrationStep2): Promise<CompanyResponse>;
     completeStep3(companyId: string, step3Data: CompanyRegistrationStep3): Promise<CompanyResponse>;
     getCompanyProfile(companyId: string): Promise<CompanyResponse | null>;
@@ -20,6 +23,7 @@ export interface ICompanyService{
     markStepCompleted(companyId: string, step: number): Promise<CompanyProfileStep>;
     getPendingCompanies(): Promise<CompanyResponse[]>;
     getAllCompaniesForAdmin(): Promise<CompanyResponse[]>;
+    getAllCompaniesForAdminWithPagination(page: number, limit: number): Promise<PaginationResult<CompanyResponse>>;
     getCompanyDetailsForAdmin(companyId: string): Promise<CompanyResponse>;
     approveCompany(companyId: string, adminId: string): Promise<CompanyResponse>;
     rejectCompany(companyId: string, reason: string, adminId: string): Promise<CompanyResponse>;
