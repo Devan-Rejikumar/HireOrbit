@@ -79,27 +79,19 @@ const CompanyJobListing = () => {
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-  
-  // Pagination
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 8;
-  
-  // Search functionality
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Filter jobs based on search query - prioritize title matches
   const filteredJobs = useMemo(() => {
     if (!searchQuery.trim()) return jobs;
     
     const query = searchQuery.toLowerCase().trim();
     
     return jobs.filter(job => {
-      // Priority 1: Exact title match (most important)
       if (job.title.toLowerCase().includes(query)) {
         return true;
       }
-      
-      // Priority 2: Other key fields (location, job type, experience level)
       if (
         job.location.toLowerCase().includes(query) ||
         (job.jobType && job.jobType.toLowerCase().includes(query)) ||
@@ -109,10 +101,8 @@ const CompanyJobListing = () => {
       ) {
         return true;
       }
-      
-      // Priority 3: Description match (only for very specific multi-word queries)
+
       if (job.description && job.description.toLowerCase().includes(query)) {
-        // Only include if the query has 3+ words (like "Senior Business Analyst")
         const words = query.split(' ').filter(word => word.length > 2);
         if (words.length >= 3) {
           return true;
@@ -130,29 +120,43 @@ const CompanyJobListing = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      // Get company profile first to get company ID
-      const companyResponse = await api.get('/company/profile');
+      
+      interface CompanyResponse {
+        success?: boolean;
+        data?: {
+          company?: Company;
+        };
+        company?: Company;
+      }
+      
+      const companyResponse = await api.get<CompanyResponse>('/company/profile');
       let companyData: Company | null = null;
       let companyId = '';
       
-      if (companyResponse.data && companyResponse.data.success && companyResponse.data.data && companyResponse.data.data.company) {
+      if (companyResponse.data?.success && companyResponse.data.data?.company) {
         companyData = companyResponse.data.data.company;
-        companyId = companyData.id; // ✅ Use company.id instead of companyName
-      } else if (companyResponse.data && companyResponse.data.company) {
+        companyId = companyData?.id || ''; 
+      } else if (companyResponse.data?.company) {
         companyData = companyResponse.data.company;
-        companyId = companyData.id; // ✅ Use company.id instead of companyName
+        companyId = companyData?.id || '';
       }
       
       setCompany(companyData);
       
-      if (!companyId) {
+      if (!companyId || !companyData) {
         console.error('No company ID found');
         setJobs([]);
         return;
       }
+ 
+      interface JobsResponse {
+        success?: boolean;
+        data?: {
+          jobs?: Job[];
+        };
+      }
       
-      // Fetch jobs for the company using company ID
-      const jobsResponse = await api.get(`/jobs/company/${companyId}`); // ✅ Use companyId directly
+      const jobsResponse = await api.get<JobsResponse>(`/jobs/company/${companyId}`);
       const jobsList = jobsResponse.data?.data?.jobs ?? [];
       setJobs(Array.isArray(jobsList) ? jobsList : []);
     } catch (error) {
@@ -199,24 +203,19 @@ const CompanyJobListing = () => {
   };
 
   const handleCompanyProfileClick = () => {
-    // TODO: Open company details modal if needed
     navigate('/company/dashboard');
   };
 
   const handleLogout = async () => {
-    // TODO: Add logout logic from auth context
     navigate('/login', { replace: true });
   };
 
-  // Pagination helpers
+
   const totalPages = Math.max(1, Math.ceil(filteredJobs.length / pageSize));
   const pagedJobs = filteredJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const goToPage = (p: number) => setCurrentPage(Math.min(Math.max(1, p), totalPages));
-
-  // Calculate active jobs count
   const activeJobsCount = jobs.filter(job => job.isActive !== false && job.status !== 'deleted').length;
   
-  // Reset pagination when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
@@ -316,36 +315,58 @@ const CompanyJobListing = () => {
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
+                type="button"
                 onClick={() => navigate('/company/dashboard')}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Home className="h-5 w-5" />
                 Dashboard
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                type="button"
+                onClick={() => navigate('/chat')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
                 <MessageSquare className="h-5 w-5" />
                 Messages
               </button>
-              <button onClick={handleCompanyProfileClick} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                type="button"
+                onClick={handleCompanyProfileClick} 
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
                 <Building2 className="h-5 w-5" />
                 Company Profile
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                type="button"
+                onClick={() => navigate('/company/applications')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
                 <User className="h-5 w-5" />
                 All Applicants
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium w-full text-left">
+              <button 
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium w-full text-left"
+                disabled
+              >
                 <Briefcase className="h-5 w-5" />
                 Job Listing
               </button>
               <button 
+                type="button"
                 onClick={() => navigate('/company/interviews')}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CalendarIcon className="h-5 w-5" />
                 Interview Management
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                disabled
+              >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing
               </button>
@@ -353,14 +374,22 @@ const CompanyJobListing = () => {
             
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button onClick={() => navigate('/company/settings')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                type="button"
+                onClick={() => navigate('/company/settings')} 
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
                 <Settings className="h-5 w-5" />
                 Settings
               </button>
-              <a href="#" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
+              <button 
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                disabled
+              >
                 <HelpCircle className="h-5 w-5" />
                 Help Center
-              </a>
+              </button>
             </div>
           </nav>
           
@@ -469,8 +498,10 @@ const CompanyJobListing = () => {
                     />
                     {searchQuery && (
                       <button
+                        type="button"
                         onClick={() => setSearchQuery('')}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        aria-label="Clear search"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -646,7 +677,21 @@ const CompanyJobListing = () => {
       <EditJobModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        job={selectedJob}
+        job={selectedJob ? {
+          id: selectedJob.id,
+          title: selectedJob.title,
+          description: selectedJob.description,
+          company: selectedJob.company,
+          location: selectedJob.location,
+          salary: selectedJob.salary,
+          jobType: selectedJob.jobType || 'Full-time',
+          requirements: selectedJob.requirements,
+          benefits: selectedJob.benefits,
+          experienceLevel: selectedJob.experienceLevel || 'Not specified',
+          education: selectedJob.education || 'Not specified',
+          applicationDeadline: selectedJob.applicationDeadline || new Date().toISOString(),
+          workLocation: selectedJob.workLocation || 'Not specified'
+        } : null}
         onJobUpdated={handleJobUpdated}
       />
 
@@ -656,7 +701,7 @@ const CompanyJobListing = () => {
         company={company}
         onProfileUpdated={() => {
           setIsEditProfileModalOpen(false);
-          fetchJobs(); // Refresh data
+          fetchJobs(); 
         }}
       />
 

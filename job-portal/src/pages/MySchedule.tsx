@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Clock, MapPin, Video, Phone, ArrowLeft, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { interviewService, InterviewWithDetails } from '@/api/interviewService';
+import { _interviewService, InterviewWithDetails } from '@/api/_interviewService';
 import { toast } from 'react-toastify';
 
 const MySchedule = () => {
@@ -26,7 +26,7 @@ const MySchedule = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await interviewService.getCandidateInterviews();
+      const response = await _interviewService.getCandidateInterviews();
       setInterviews(response.data || []);
     } catch (err: any) {
       console.error('Failed to fetch interviews:', err);

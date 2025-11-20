@@ -4,175 +4,92 @@ import TYPES from '../config/types';
 import { IAchievementService } from '../services/interfaces/IAchievementService';
 import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
-
-interface RequestWithUser extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: string;
-    userType: string;
-  };
-}
+import { Messages } from '../constants/Messages';
+import { getUserIdFromRequest } from '../utils/requestHelpers';
+import { AppError } from '../utils/errors/AppError';
 
 @injectable()
 export class AchievementController {
   constructor(@inject(TYPES.IAchievementService) private _achievementService: IAchievementService) {}
 
   async addAchievement(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
-      
-      if (!userId) {
-        res.status(HttpStatusCode.UNAUTHORIZED).json(
-          buildErrorResponse('User not authenticated', 'UNAUTHORIZED')
-        );
-        return;
-      }
+    const userId = getUserIdFromRequest(req, res);
+    if (!userId) return;
 
-      const achievementData = req.body;
-      const result = await this._achievementService.addAchievement(userId, achievementData);
-      
-      res.status(HttpStatusCode.CREATED).json(
-        buildSuccessResponse(result, 'Achievement added successfully')
-      );
-    } catch (error) {
-      console.error('Error adding achievement:', error);
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse(error instanceof Error ? error.message : 'Failed to add achievement', 'INTERNAL_SERVER_ERROR')
-      );
-    }
+    const achievementData = req.body;
+    const result = await this._achievementService.addAchievement(userId, achievementData);
+    
+    res.status(HttpStatusCode.CREATED).json(
+      buildSuccessResponse(result, Messages.ACHIEVEMENT.ADDED_SUCCESS)
+    );
   }
 
   async getAchievements(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
-      
-      if (!userId) {
-        res.status(HttpStatusCode.UNAUTHORIZED).json(
-          buildErrorResponse('User not authenticated', 'UNAUTHORIZED')
-        );
-        return;
-      }
+    const userId = getUserIdFromRequest(req, res);
+    if (!userId) return;
 
-      const achievements = await this._achievementService.getAchievements(userId);
-      
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse(achievements, 'Achievements retrieved successfully')
-      );
-    } catch (error) {
-      console.error('Error getting achievements:', error);
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse(error instanceof Error ? error.message : 'Failed to get achievements', 'INTERNAL_SERVER_ERROR')
-      );
-    }
+    const achievements = await this._achievementService.getAchievements(userId);
+    
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(achievements, Messages.ACHIEVEMENT.RETRIEVED_ALL_SUCCESS)
+    );
   }
 
   async updateAchievement(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
-      const { achievementId } = req.params;
-      
-      if (!userId) {
-        res.status(HttpStatusCode.UNAUTHORIZED).json(
-          buildErrorResponse('User not authenticated', 'UNAUTHORIZED')
-        );
-        return;
-      }
+    const userId = getUserIdFromRequest(req, res);
+    if (!userId) return;
 
-      if (!achievementId) {
-        res.status(HttpStatusCode.BAD_REQUEST).json(
-          buildErrorResponse('Achievement ID is required', 'BAD_REQUEST')
-        );
-        return;
-      }
-
-      const updates = req.body;
-      console.log('🔍 [ACHIEVEMENT-CONTROLLER] Received update data:', JSON.stringify(updates, null, 2));
-      const result = await this._achievementService.updateAchievement(userId, achievementId, updates);
-      
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse(result, 'Achievement updated successfully')
-      );
-    } catch (error) {
-      console.error('Error updating achievement:', error);
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse(error instanceof Error ? error.message : 'Failed to update achievement', 'INTERNAL_SERVER_ERROR')
-      );
+    const { achievementId } = req.params;
+    if (!achievementId) {
+      throw new AppError(Messages.ACHIEVEMENT.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const updates = req.body;
+    console.log('🔍 [ACHIEVEMENT-CONTROLLER] Received update data:', JSON.stringify(updates, null, 2));
+    const result = await this._achievementService.updateAchievement(userId, achievementId, updates);
+    
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(result, Messages.ACHIEVEMENT.UPDATED_SUCCESS)
+    );
   }
 
   async deleteAchievement(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
-      const { achievementId } = req.params;
-      
-      console.log('DELETE-ACHIEVEMENT User ID:', userId);
-      console.log('DELETE-ACHIEVEMENT Achievement ID:', achievementId);
-      
-      if (!userId) {
-        res.status(HttpStatusCode.UNAUTHORIZED).json(
-          buildErrorResponse('User not authenticated', 'UNAUTHORIZED')
-        );
-        return;
-      }
+    const userId = getUserIdFromRequest(req, res);
+    if (!userId) return;
 
-      if (!achievementId) {
-        res.status(HttpStatusCode.BAD_REQUEST).json(
-          buildErrorResponse('Achievement ID is required', 'BAD_REQUEST')
-        );
-        return;
-      }
-
-      await this._achievementService.deleteAchievement(userId, achievementId);
-      
-      console.log('DELETE-ACHIEVEMENT Achievement deleted successfully');
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse(null, 'Achievement deleted successfully')
-      );
-    } catch (error) {
-      console.error('DELETE-ACHIEVEMENT Error deleting achievement:', error);
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse(error instanceof Error ? error.message : 'Failed to delete achievement', 'INTERNAL_SERVER_ERROR')
-      );
+    const { achievementId } = req.params;
+    if (!achievementId) {
+      throw new AppError(Messages.ACHIEVEMENT.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    console.log('DELETE-ACHIEVEMENT User ID:', userId);
+    console.log('DELETE-ACHIEVEMENT Achievement ID:', achievementId);
+    
+    await this._achievementService.deleteAchievement(userId, achievementId);
+    
+    console.log('DELETE-ACHIEVEMENT Achievement deleted successfully');
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(null, Messages.ACHIEVEMENT.DELETED_SUCCESS)
+    );
   }
 
   async getAchievementById(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as RequestWithUser).user?.userId || req.headers['x-user-id'] as string;
-      const { achievementId } = req.params;
-      
-      if (!userId) {
-        res.status(HttpStatusCode.UNAUTHORIZED).json(
-          buildErrorResponse('User not authenticated', 'UNAUTHORIZED')
-        );
-        return;
-      }
+    const userId = getUserIdFromRequest(req, res);
+    if (!userId) return;
 
-      if (!achievementId) {
-        res.status(HttpStatusCode.BAD_REQUEST).json(
-          buildErrorResponse('Achievement ID is required', 'BAD_REQUEST')
-        );
-        return;
-      }
-
-      const achievement = await this._achievementService.getAchievementById(userId, achievementId);
-      
-      if (!achievement) {
-        res.status(HttpStatusCode.NOT_FOUND).json(
-          buildErrorResponse('Achievement not found', 'NOT_FOUND')
-        );
-        return;
-      }
-
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse(achievement, 'Achievement retrieved successfully')
-      );
-    } catch (error) {
-      console.error('Error getting achievement by ID:', error);
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse(error instanceof Error ? error.message : 'Failed to get achievement', 'INTERNAL_SERVER_ERROR')
-      );
+    const { achievementId } = req.params;
+    if (!achievementId) {
+      throw new AppError(Messages.ACHIEVEMENT.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
+
+    const achievement = await this._achievementService.getAchievementById(userId, achievementId);
+    
+    if (!achievement) {
+      throw new AppError(Messages.ACHIEVEMENT.NOT_FOUND, HttpStatusCode.NOT_FOUND);
+    }
+
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(achievement, Messages.ACHIEVEMENT.RETRIEVED_SUCCESS)
+    );
   }
 }

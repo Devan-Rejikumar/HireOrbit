@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
@@ -17,35 +17,70 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { isAuthenticated, role } = useAuth();
   const navigate = useNavigate();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-   
-    if (redirectIfAuthenticated && isAuthenticated && role) {
-      switch (role) {
-      case 'jobseeker':
-        navigate('/', { replace: true });
-        break;
-      case 'company':
-        navigate('/company/dashboard', { replace: true });
-        break;
-      case 'admin':
+    // Prevent multiple redirects
+    if (hasRedirected.current) return;
+
+    // For login pages, check cookies directly for immediate redirect (before AuthContext loads)
+    if (redirectIfAuthenticated) {
+      const cookies = document.cookie.split(';');
+      
+      // Check for admin token
+      const hasAdminToken = cookies.some(cookie => cookie.trim().startsWith('adminAccessToken='));
+      if (hasAdminToken) {
+        hasRedirected.current = true;
         navigate('/admin/dashboard', { replace: true });
-        break;
-      default:
-        navigate('/', { replace: true });
+        return;
       }
-      return;
+      
+      // Check for company token
+      const hasCompanyToken = cookies.some(cookie => cookie.trim().startsWith('companyAccessToken='));
+      if (hasCompanyToken) {
+        hasRedirected.current = true;
+        navigate('/company/dashboard', { replace: true });
+        return;
+      }
+      
+      // Check for regular user token
+      const hasUserToken = cookies.some(cookie => cookie.trim().startsWith('accessToken='));
+      if (hasUserToken) {
+        hasRedirected.current = true;
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      // Fallback to AuthContext check if cookies not found but context is ready
+      if (isAuthenticated && role) {
+        hasRedirected.current = true;
+        switch (role) {
+        case 'jobseeker':
+          navigate('/', { replace: true });
+          break;
+        case 'company':
+          navigate('/company/dashboard', { replace: true });
+          break;
+        case 'admin':
+          navigate('/admin/dashboard', { replace: true });
+          break;
+        default:
+          navigate('/', { replace: true });
+        }
+        return;
+      }
     }
 
     
     if (requireAuth && !isAuthenticated) {
+      hasRedirected.current = true;
       navigate('/login', { replace: true });
       return;
     }
 
    
     if (requireAuth && isAuthenticated && allowedRoles.length > 0 && role && !allowedRoles.includes(role)) {
-   
+      hasRedirected.current = true;
       switch (role) {
       case 'jobseeker':
         navigate('/', { replace: true });
@@ -58,7 +93,7 @@ const ProtectedRoute = ({
         break;
       }
     }
-  }, [isAuthenticated, role, navigate, redirectIfAuthenticated, requireAuth, allowedRoles]);
+  }, [isAuthenticated, role, redirectIfAuthenticated, requireAuth, allowedRoles]); // Removed navigate from deps
 
   return <>{children}</>;
 };

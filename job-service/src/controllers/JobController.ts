@@ -2,9 +2,11 @@ import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
 import { IJobService } from '../services/interface/IJobService';
-import { HttpStatusCode, JobStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { JobStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { CreateJobSchema, JobSearchSchema, JobSuggestionsSchema, UpdateJobSchema } from '../dto/schemas/job.schema';
-import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
+import { buildSuccessResponse } from 'shared-dto';
+import { AppError } from '../utils/errors/AppError';
+import { Messages } from '../constants/Messages';
 
 declare global {
   namespace Express {
@@ -24,241 +26,176 @@ export class JobController {
   constructor(@inject(TYPES.IJobService) private _jobService: IJobService) {}
 
   async createJob(req: Request, res: Response): Promise<void> {
-    try {
-       console.log('JobController: req.user =', req.user);
-    console.log('JobController: req.headers =', req.headers);
-    console.log('JobController: req.cookies =', req.cookies);
-      const validationResult = CreateJobSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        res.status(ValidationStatusCode.VALIDATION_ERROR).json(
-          buildErrorResponse('Validation failed', validationResult.error.message)
-        );
-        return;
-      }
-      
-      const jobData = validationResult.data;
-      const companyId = req.user?.userId || req.headers['x-user-id'] as string;
-          if (!companyId) {
-      res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json(
-        buildErrorResponse('Company ID is required', 'User must be authenticated to create jobs')
-      );
-      return;
-    }
-      
-      const completeJobData = {
-        ...jobData,
-        companyId: companyId,
-        applicationDeadline: new Date(jobData.applicationDeadline),
-      };
-      
-      const job = await this._jobService.createJob(completeJobData);
-      
-      res.status(JobStatusCode.JOB_CREATED).json(
-        buildSuccessResponse({ job }, 'Job created successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Job creation failed', errorMessage)
+    const validationResult = CreateJobSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      throw new AppError(
+        `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
+        ValidationStatusCode.VALIDATION_ERROR
       );
     }
+    
+    const jobData = validationResult.data;
+    const companyId = req.user?.userId || req.headers['x-user-id'] as string;
+    
+    if (!companyId) {
+      throw new AppError(
+        Messages.VALIDATION.COMPANY_ID_REQUIRED,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS
+      );
+    }
+    
+    const completeJobData = {
+      ...jobData,
+      companyId: companyId,
+      applicationDeadline: new Date(jobData.applicationDeadline),
+    };
+    
+    const job = await this._jobService.createJob(completeJobData);
+    
+    res.status(JobStatusCode.JOB_CREATED).json(
+      buildSuccessResponse({ job }, Messages.JOB.CREATED_SUCCESS)
+    );
   }
 
   async getAllJobs(req: Request, res: Response): Promise<void> {
-    try {
-      const jobs = await this._jobService.getAllJobs();
-      
-      res.status(JobStatusCode.JOBS_RETRIEVED).json(
-        buildSuccessResponse({ jobs }, 'Jobs retrieved successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Failed to retrieve jobs', errorMessage)
-      );
-    }
+    const jobs = await this._jobService.getAllJobs();
+    
+    res.status(JobStatusCode.JOBS_RETRIEVED).json(
+      buildSuccessResponse({ jobs }, Messages.JOB.RETRIEVED_SUCCESS)
+    );
   }
 
   async getJobById(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      
-      if (!id) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json(
-          buildErrorResponse('Job ID is required', 'Missing job ID parameter')
-        );
-        return;
-      }
-      
-      const job = await this._jobService.getJobById(id);
-      
-      if (!job) {
-        res.status(JobStatusCode.JOB_NOT_FOUND).json(
-          buildErrorResponse('Job not found', 'No job found with the provided ID')
-        );
-        return;
-      }
-      
-      res.status(JobStatusCode.JOB_RETRIEVED).json(
-        buildSuccessResponse({ job }, 'Job retrieved successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Failed to retrieve job', errorMessage)
+    const { id } = req.params;
+    
+    if (!id) {
+      throw new AppError(
+        Messages.VALIDATION.MISSING_JOB_ID,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS
       );
     }
+    
+    const job = await this._jobService.getJobById(id);
+    
+    if (!job) {
+      throw new AppError(
+        Messages.JOB.NOT_FOUND,
+        JobStatusCode.JOB_NOT_FOUND
+      );
+    }
+    
+    res.status(JobStatusCode.JOB_RETRIEVED).json(
+      buildSuccessResponse({ job }, Messages.JOB.RETRIEVED_SUCCESS)
+    );
   }
 
   async searchJobs(req: Request, res: Response): Promise<void> {
-    try {
-      const searchValidation = JobSearchSchema.safeParse(req.query);
-      
-      if (!searchValidation.success) {
-        res.status(ValidationStatusCode.VALIDATION_ERROR).json(
-          buildErrorResponse('Validation failed', searchValidation.error.message)
-        );
-        return;
-      }
-      
-      const jobs = await this._jobService.searchJobs(searchValidation.data);
-      
-      res.status(JobStatusCode.JOBS_SEARCHED).json(
-        buildSuccessResponse({ jobs }, 'Jobs searched successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Job search failed', errorMessage)
+    const searchValidation = JobSearchSchema.safeParse(req.query);
+    
+    if (!searchValidation.success) {
+      throw new AppError(
+        `${Messages.VALIDATION.VALIDATION_FAILED}: ${searchValidation.error.message}`,
+        ValidationStatusCode.VALIDATION_ERROR
       );
     }
+    
+    const jobs = await this._jobService.searchJobs(searchValidation.data);
+    
+    res.status(JobStatusCode.JOBS_SEARCHED).json(
+      buildSuccessResponse({ jobs }, Messages.JOB.SEARCHED_SUCCESS)
+    );
   }
 
   async getJobSuggestions(req: Request, res: Response): Promise<void> {
-    try {
-      const validationResult = JobSuggestionsSchema.safeParse(req.query);
-      if (!validationResult.success) {
-        res.status(ValidationStatusCode.VALIDATION_ERROR).json(
-          buildErrorResponse('Validation failed', validationResult.error.message)
-        );
-        return;
-      }
-      
-      const { q } = validationResult.data;
-      const suggestions = await this._jobService.getJobSuggestions(q);
-      
-      res.status(JobStatusCode.SUGGESTIONS_RETRIEVED).json(
-        buildSuccessResponse({ suggestions }, 'Job suggestions retrieved successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Failed to get job suggestions', errorMessage)
+    const validationResult = JobSuggestionsSchema.safeParse(req.query);
+    if (!validationResult.success) {
+      throw new AppError(
+        `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
+        ValidationStatusCode.VALIDATION_ERROR
       );
     }
+    
+    const { q } = validationResult.data;
+    const suggestions = await this._jobService.getJobSuggestions(q);
+    
+    res.status(JobStatusCode.SUGGESTIONS_RETRIEVED).json(
+      buildSuccessResponse({ suggestions }, Messages.JOB.SUGGESTIONS_RETRIEVED_SUCCESS)
+    );
   }
 
   async getJobCountByCompany(req: Request, res: Response): Promise<void> {
-    try {
-      const { companyId } = req.params;
-      
-      const count = await this._jobService.getJobCountByCompany(companyId);
-      
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse({ count }, 'Job count retrieved successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Failed to get job count', errorMessage)
-      );
-    }
+    const { companyId } = req.params;
+    
+    const count = await this._jobService.getJobCountByCompany(companyId);
+    
+    res.status(JobStatusCode.JOBS_RETRIEVED).json(
+      buildSuccessResponse({ count }, Messages.JOB.COUNT_RETRIEVED_SUCCESS)
+    );
   }
 
   async getJobsByCompany(req: Request, res: Response): Promise<void> {
-    try {
-      const { companyId } = req.params;
-      
-      if (!companyId) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json(
-          buildErrorResponse('Company ID is required', 'Missing company ID parameter')
-        );
-        return;
-      }
-      
-      const jobs = await this._jobService.getJobsByCompany(companyId);
-      
-      res.status(JobStatusCode.JOBS_RETRIEVED).json(
-        buildSuccessResponse({ jobs }, 'Jobs retrieved successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Failed to retrieve jobs', errorMessage)
+    const { companyId } = req.params;
+    
+    if (!companyId) {
+      throw new AppError(
+        Messages.VALIDATION.MISSING_COMPANY_ID,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS
       );
     }
+    
+    const jobs = await this._jobService.getJobsByCompany(companyId);
+    
+    res.status(JobStatusCode.JOBS_RETRIEVED).json(
+      buildSuccessResponse({ jobs }, Messages.JOB.RETRIEVED_SUCCESS)
+    );
   }
 
   async updateJob(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      
-      if (!id) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json(
-          buildErrorResponse('Job ID is required', 'Missing job ID parameter')
-        );
-        return;
-      }
-
-      const validationResult = UpdateJobSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        res.status(ValidationStatusCode.VALIDATION_ERROR).json(
-          buildErrorResponse('Validation failed', validationResult.error.message)
-        );
-        return;
-      }
-
-      const jobData = {
-        ...validationResult.data,
-        applicationDeadline: validationResult.data.applicationDeadline 
-          ? new Date(validationResult.data.applicationDeadline) 
-          : undefined,
-      };
-      
-      const job = await this._jobService.updateJob(id, jobData);
-      
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse({ job }, 'Job updated successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Job update failed', errorMessage)
+    const { id } = req.params;
+    
+    if (!id) {
+      throw new AppError(
+        Messages.VALIDATION.MISSING_JOB_ID,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS
       );
     }
+
+    const validationResult = UpdateJobSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      throw new AppError(
+        `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
+        ValidationStatusCode.VALIDATION_ERROR
+      );
+    }
+
+    const jobData = {
+      ...validationResult.data,
+      applicationDeadline: validationResult.data.applicationDeadline 
+        ? new Date(validationResult.data.applicationDeadline) 
+        : undefined,
+    };
+    
+    const job = await this._jobService.updateJob(id, jobData);
+    
+    res.status(JobStatusCode.JOB_UPDATED).json(
+      buildSuccessResponse({ job }, Messages.JOB.UPDATED_SUCCESS)
+    );
   }
 
   async deleteJob(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      
-      if (!id) {
-        res.status(ValidationStatusCode.MISSING_REQUIRED_FIELDS).json(
-          buildErrorResponse('Job ID is required', 'Missing job ID parameter')
-        );
-        return;
-      }
-      
-      await this._jobService.deleteJob(id);
-      
-      res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse({}, 'Job deleted successfully')
-      );
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json(
-        buildErrorResponse('Job deletion failed', errorMessage)
+    const { id } = req.params;
+    
+    if (!id) {
+      throw new AppError(
+        Messages.VALIDATION.MISSING_JOB_ID,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS
       );
     }
+    
+    await this._jobService.deleteJob(id);
+    
+    res.status(JobStatusCode.JOB_DELETED).json(
+      buildSuccessResponse({}, Messages.JOB.DELETED_SUCCESS)
+    );
   }
 }

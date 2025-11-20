@@ -33,6 +33,13 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
     await this.model.findByIdAndUpdate(id, { read: false, readAt: null });
   }
 
+  async markAllAsRead(recipientId: string): Promise<void> {
+    await this.model.updateMany(
+      { recipientId, read: false },
+      { read: true, readAt: new Date() }
+    );
+  }
+
   async findByType(recipientId: string, type: string): Promise<INotificationDocument[]> {
     return await this.model.find({ recipientId, type }).sort({ createdAt: -1 });
   }

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNotifications, useUnreadCount, useMarkAsRead, useDeleteNotification } from '../hooks/useNotifications';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../hooks/useNotifications';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { NotificationData } from '../api/notificationService';
+import { NotificationData } from '../api/_notificationService';
 
 interface NotificationContextType {
   notifications: NotificationData[];
@@ -34,14 +35,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
   recipientId
 }) => {
+  const navigate = useNavigate();
 
   const { data: notifications = [], isLoading, isError, error } = useNotifications(recipientId);
-  const { data: unreadCount = 0 } = useUnreadCount(recipientId);
+  const { isConnected, realTimeNotifications, joinRoom, leaveRoom } = useWebSocket(recipientId);
+  // Pass WebSocket connection status to disable polling when connected
+  const { data: unreadCount = 0 } = useUnreadCount(recipientId, isConnected);
  
   const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
-
-  const { isConnected, realTimeNotifications, joinRoom, leaveRoom } = useWebSocket(recipientId);
 
   const [allNotifications, setAllNotifications] = useState<NotificationData[]>([]);
 
@@ -77,6 +80,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         return 'Status Update';
       case 'APPLICATION_WITHDRAWN':
         return 'Application Withdrawn';
+      case 'INTERVIEW_CONFIRMED':
+        return 'Interview Confirmed';
       default:
         return 'Notification';
     }
@@ -85,13 +90,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const getNotificationMessage = (notification: any) => {
     switch (notification.type) {
       case 'APPLICATION_RECEIVED':
-        return `${notification.data.applicantName} applied for ${notification.data.jobTitle}`;
+        return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;
       case 'STATUS_UPDATED':
-        return `Your application status changed to ${notification.data.newStatus}`;
+        const jobTitle = notification.data.jobTitle || 'Application';
+        const newStatus = notification.data.newStatus || notification.data.status || 'unknown';
+        return `${jobTitle} status has been changed to ${newStatus}`;
       case 'APPLICATION_WITHDRAWN':
-        return `${notification.data.applicantName} withdrew their application`;
+        return `${notification.data.applicantName || 'Someone'} withdrew their application`;
+      case 'INTERVIEW_CONFIRMED':
+        const interviewJobTitle = notification.data.jobTitle || notification.message?.split('for ')[1]?.split(' has')[0] || 'the position';
+        return notification.message || `Your interview for ${interviewJobTitle} has been confirmed`;
       default:
-        return 'New notification';
+        return notification.message || 'New notification';
     }
   };
 
@@ -105,18 +115,37 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
 
-  const markAllAsRead = () => {
-    allNotifications.forEach(notification => {
-      if (!notification.read) {
-        markAsRead(notification.id);
-      }
-    });
-  };
+  const markAllAsRead = useCallback(() => {
+    if (unreadCount > 0) {
+      markAllAsReadMutation.mutate(recipientId);
+    }
+  }, [unreadCount, recipientId, markAllAsReadMutation]);
 
  
-  const handleNotificationClick = (notification: NotificationData) => {
-    console.log('Notification clicked:', notification);
-  };
+  const handleNotificationClick = useCallback((notification: NotificationData) => {
+    // Mark notification as read
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    
+    // Navigate based on notification type
+    if (notification.type === 'STATUS_UPDATED') {
+      // Navigate to profile page with applied jobs tab
+      navigate('/profile#applied-jobs');
+    } else if (notification.type === 'INTERVIEW_CONFIRMED') {
+      // Navigate to schedule page for interview details
+      navigate('/schedule');
+    } else if (notification.type === 'APPLICATION_RECEIVED') {
+      // For companies, navigate to company applications
+      navigate('/company/applications');
+    } else if (notification.type === 'APPLICATION_WITHDRAWN') {
+      // For companies, navigate to company applications
+      navigate('/company/applications');
+    } else {
+      // Default: navigate to profile
+      navigate('/profile');
+    }
+  }, [navigate, markAsRead]);
 
 
   const contextValue: NotificationContextType = {

@@ -25,7 +25,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CertificationModal from '@/components/CertificationModal';
 import AchievementModal from '@/components/AchievementModal';
-import AppliedJobs from '@/components/AppliedJobs';
 import VerificationModal from '@/components/VerificationModal';
 
 interface Experience {
@@ -117,7 +116,6 @@ const UserProfile = () => {
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [isResumeUploading, setIsResumeUploading] = useState(false);
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'applied-jobs'>('profile');
 
   useEffect(() => {
     fetchProfile();
@@ -583,30 +581,6 @@ const UserProfile = () => {
 
               {/* Action Buttons */}
               <div className="flex gap-4">
-                {/* Tab Buttons */}
-                <div className="flex bg-gray-100 rounded-xl p-1">
-                  <button
-                    onClick={() => setActiveTab('profile')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                      activeTab === 'profile'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('applied-jobs')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                      activeTab === 'applied-jobs'
-                        ? 'bg-white text-blue-600 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Applied Jobs
-                  </button>
-                </div>
-                
                 <button
                   onClick={() => setIsEditModalOpen(true)}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
@@ -618,9 +592,8 @@ const UserProfile = () => {
             </div>
           </div>
 
-          {/* Tab Content */}
-          {activeTab === 'profile' && (
-            <>
+          {/* Profile Content */}
+          <>
               {/* About Section */}
           <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
             <div className="flex items-center justify-between mb-6">
@@ -1046,12 +1019,6 @@ const UserProfile = () => {
             )}
           </div>
             </>
-          )}
-
-          {/* Applied Jobs Tab Content */}
-          {activeTab === 'applied-jobs' && (
-            <AppliedJobs userId={profile.id} />
-          )}
         </div>
       </div>
 

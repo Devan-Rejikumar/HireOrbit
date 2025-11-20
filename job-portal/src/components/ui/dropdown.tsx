@@ -4,16 +4,20 @@ interface DropdownProps {
   children: React.ReactNode;
   align?: 'left' | 'right' | 'center';
   className?: string;
+  onOpen?: () => void;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
   trigger,
   children,
   align = 'right',
-  className = ''
+  className = '',
+  onOpen
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevIsOpenRef = useRef(false);
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -26,6 +30,14 @@ export const Dropdown: React.FC<DropdownProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    // Only call onOpen when transitioning from closed to open
+    if (isOpen && !prevIsOpenRef.current && onOpen) {
+      onOpen();
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen, onOpen]);
 
   const getAlignmentClasses = () => {
     switch (align) {

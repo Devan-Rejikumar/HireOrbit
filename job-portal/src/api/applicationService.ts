@@ -1,5 +1,4 @@
 import api from './axios';
-import { getAuthHeaders } from '../utils/authUtils';
 
 export interface Application {
   id: string;
@@ -41,43 +40,49 @@ export interface ApplicationResponse {
   message: string;
 }
 
-export const applicationService = {
+const CONTENT_TYPE_JSON = 'application/json';
+
+export const _applicationService = {
   applyForJob: async (applicationData: any): Promise<ApplicationResponse> => {
-    console.log('🔍 [ApplicationService] Sending application with axios');
+    console.log('[ApplicationService] Sending application with axios');
     
     const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
       headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
+        'Content-Type': CONTENT_TYPE_JSON
       }
     });
     
     return response.data;
   },
+  
   getUserApplications: async () => {
     const response = await api.get<{
       data: { applications: Application[] };
     }>('/applications/user/applications');
     return response.data;
   },
+
   getApplicationDetails: async (applicationId: string) => {
     const response = await api.get<{
       data: Application;
     }>(`/applications/${applicationId}`);
     return response.data;
   },
+  
   withdrawApplication: async (applicationId: string) => {
     const response = await api.patch<{
       data: Application;
     }>(`/applications/${applicationId}/withdraw`);
     return response.data;
   },
+  
   getCompanyApplications: async (companyId: string) => {
     const response = await api.get<{
       data: { applications: Application[] };
     }>('/applications/company/applications');
     return response.data;
   },
+  
   updateApplicationStatus: async (applicationId: string, status: string, reason?: string) => {
     const response = await api.patch<{
       data: Application;
@@ -87,6 +92,7 @@ export const applicationService = {
     });
     return response.data;
   },
+  
   addApplicationNotes: async (applicationId: string, note: string, addedBy: string) => {
     const response = await api.post<{
       data: ApplicationNotes;
@@ -96,10 +102,11 @@ export const applicationService = {
     });
     return response.data;
   },
+  
   getApplicationStatusHistory: async (applicationId: string) => {
     const response = await api.get<{
       data: ApplicationStatusHistory[];
     }>(`/applications/${applicationId}/history`);
     return response.data;
   }
-}
+};

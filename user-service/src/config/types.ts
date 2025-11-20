@@ -32,7 +32,8 @@ const TYPES = {
   CompanyApiRepository: Symbol.for('CompanyApiRepository'),
   ICompanyApiRepository: Symbol.for('ICompanyApiRepository'),
   RedisService: Symbol.for('RedisService'),
-  JWTService: Symbol.for('JWTService')
+  JWTService: Symbol.for('JWTService'),
+  CookieService: Symbol.for('CookieService'),
 };
 
 export default TYPES;

@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { Container } from 'inversify';
 import TYPES from './types';
 
-// Repository Interfaces
 import { IUserRepository } from '../repositories/interfaces/IUserRepository';
 import { IAdminRepository } from '../repositories/interfaces/IAdminRepository';
 import { IProfileRepository } from '../repositories/interfaces/IProfileRepository';
@@ -11,7 +10,6 @@ import { ICertificationRepository } from '../repositories/interfaces/ICertificat
 import { IAchievementRepository } from '../repositories/interfaces/IAchievementRepository';
 import { ICompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
 
-// Repository Implementations
 import { UserRepository } from '../repositories/implementations/UserRepository';
 import { AdminRepository } from '../repositories/implementations/AdminRepository';
 import { ProfileRepository } from '../repositories/implementations/ProfileRepository';
@@ -38,6 +36,7 @@ import { AchievementService } from '../services/implementations/AchievementServi
 import { RedisService } from '../services/implementations/RedisService';
 import { EmailService } from '../services/implementations/EmailService';
 import { JWTService } from '../services/implementations/JWTService';
+import { CookieService } from '../services/implementations/CookieService';
 
 // Controllers
 import { UserController } from '../controllers/UserController';
@@ -75,4 +74,5 @@ container.bind<CertificationController>(TYPES.CertificationController).to(Certif
 container.bind<IAchievementRepository>(TYPES.IAchievementRepository).to(AchievementRepository);
 container.bind<IAchievementService>(TYPES.IAchievementService).to(AchievementService);
 container.bind<AchievementController>(TYPES.AchievementController).to(AchievementController);
+container.bind<CookieService>(TYPES.CookieService).to(CookieService);
 export default container;

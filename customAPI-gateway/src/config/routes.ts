@@ -4,6 +4,7 @@ export const ROUTES = {
         '/api/users/register', 
         '/api/users/refresh-token',
         '/api/users/admin/login',
+        '/api/users/admin/refresh-token',
         '/api/company/login',
         '/api/company/register',
         '/api/company/refresh-token'
@@ -23,6 +24,7 @@ export const ROUTES = {
         '/api/jobs/create',
         '/api/jobs/update',
         '/api/jobs/delete',
+        '/api/jobs/company',
         '/api/applications/create',
         '/api/applications/update',
         '/api/applications/delete',
@@ -37,7 +39,6 @@ export const ROUTES = {
         '/api/jobs/search',
         '/api/jobs/details',
         '/api/jobs/suggestions',
-        '/api/jobs/company',
         '/api/company/list',
         '/api/company/details',
         '/api/users/generate-otp',

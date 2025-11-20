@@ -2,6 +2,7 @@ import { injectable, inject } from 'inversify';
 import { IInterviewService } from '../interface/IInterviewService';
 import { IInterviewRepository, InterviewWithApplication } from '../../repositories/interface/IInterviewRepository';
 import { IApplicationRepository } from '../../repositories/interface/IApplicationRepository';
+import { IEventService } from '../interface/IEventService';
 import { TYPES } from '../../config/types';
 import { InterviewResponse, InterviewWithDetailsResponse } from '../../dto/responses/interview.response';
 import { CreateInterviewInput, UpdateInterviewInput, InterviewDecisionInput } from '../../dto/schemas/interview.schema';
@@ -30,12 +31,13 @@ interface JobApiResponse {
 @injectable()
 export class InterviewService implements IInterviewService {
   constructor(
-    @inject(TYPES.IInterviewRepository) private interviewRepository: IInterviewRepository,
-    @inject(TYPES.IApplicationRepository) private applicationRepository: IApplicationRepository
+    @inject(TYPES.IInterviewRepository) private _interviewRepository: IInterviewRepository,
+    @inject(TYPES.IApplicationRepository) private _applicationRepository: IApplicationRepository,
+    @inject(TYPES.IEventService) private _eventService: IEventService
   ) {}
 
   async scheduleInterview(data: CreateInterviewInput, scheduledBy: string): Promise<InterviewResponse> {
-    const application = await this.applicationRepository.findById(data.applicationId);
+    const application = await this._applicationRepository.findById(data.applicationId);
     if (!application) {
       throw new Error('Application not found');
     }
@@ -43,7 +45,7 @@ export class InterviewService implements IInterviewService {
     if (application.status !== 'SHORTLISTED') {
       throw new Error('Can only schedule interviews for shortlisted applications');
     }
-    const interview = await this.interviewRepository.create({
+    const interview = await this._interviewRepository.create({
       applicationId: data.applicationId,
       scheduledAt: new Date(data.scheduledAt),
       duration: data.duration,
@@ -57,12 +59,12 @@ export class InterviewService implements IInterviewService {
   }
 
   async getInterviewById(id: string): Promise<InterviewWithDetailsResponse> {
-    const interview = await this.interviewRepository.findById(id);
+    const interview = await this._interviewRepository.findById(id);
     if (!interview) {
       throw new Error('Interview not found');
     }
 
-    const application = await this.applicationRepository.findById(interview.applicationId);
+    const application = await this._applicationRepository.findById(interview.applicationId);
     if (!application) {
       throw new Error('Associated application not found');
     }
@@ -82,17 +84,17 @@ export class InterviewService implements IInterviewService {
   }
 
   async getInterviewsByApplication(applicationId: string): Promise<InterviewResponse[]> {
-    const interviews = await this.interviewRepository.findByApplicationId(applicationId);
+    const interviews = await this._interviewRepository.findByApplicationId(applicationId);
     return interviews.map(interview => this.mapToResponse(interview));
   }
 
   async getCompanyInterviews(companyId: string): Promise<InterviewWithDetailsResponse[]> {
-    const interviews = await this.interviewRepository.findByCompanyId(companyId);
+    const interviews = await this._interviewRepository.findByCompanyId(companyId);
     
     const interviewsWithDetails = await Promise.all(
       interviews.map(async (interview: InterviewWithApplication) => {
         const application = interview.application || 
-          await this.applicationRepository.findById(interview.applicationId);
+          await this._applicationRepository.findById(interview.applicationId);
         
         if (!application) {
           return null;
@@ -117,16 +119,16 @@ export class InterviewService implements IInterviewService {
   }
 
   async getCandidateInterviews(userId: string): Promise<InterviewWithDetailsResponse[]> {
-    const applications = await this.applicationRepository.findByUserId(userId);
+    const applications = await this._applicationRepository.findByUserId(userId);
     const allInterviews = await Promise.all(
-      applications.map(app => this.interviewRepository.findByApplicationId(app.id))
+      applications.map(app => this._interviewRepository.findByApplicationId(app.id))
     );
     
     const interviews = allInterviews.flat();
 
     const interviewsWithDetails = await Promise.all(
       interviews.map(async (interview) => {
-        const application = await this.applicationRepository.findById(interview.applicationId);
+        const application = await this._applicationRepository.findById(interview.applicationId);
         if (!application) {
           return null;
         }
@@ -150,11 +152,12 @@ export class InterviewService implements IInterviewService {
   }
 
   async updateInterview(id: string, data: UpdateInterviewInput, updatedBy: string): Promise<InterviewResponse> {
-    const interview = await this.interviewRepository.findById(id);
+    const interview = await this._interviewRepository.findById(id);
     if (!interview) {
       throw new Error('Interview not found');
     }
 
+    const oldStatus = interview.status;
     const updateData: any = {};
     if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt);
     if (data.duration) updateData.duration = data.duration;
@@ -164,24 +167,49 @@ export class InterviewService implements IInterviewService {
     if (data.notes !== undefined) updateData.notes = data.notes;
     if (data.status) updateData.status = data.status;
 
-    const updatedInterview = await this.interviewRepository.update(id, updateData);
+    const updatedInterview = await this._interviewRepository.update(id, updateData);
+    if (data.status === 'CONFIRMED' && oldStatus !== 'CONFIRMED') {
+      try {
+        const application = await this._applicationRepository.findById(interview.applicationId);
+        if (application) {
+          const jobDetails = await this.fetchJobDetails(application.jobId);
+          
+          await this._eventService.publish('interview.confirmed', {
+            userId: application.userId,
+            interviewId: updatedInterview.id,
+            applicationId: interview.applicationId,
+            jobId: application.jobId,
+            jobTitle: jobDetails.title,
+            companyName: jobDetails.company,
+            scheduledAt: updatedInterview.scheduledAt,
+            type: updatedInterview.type,
+            location: updatedInterview.location,
+            meetingLink: updatedInterview.meetingLink,
+            confirmedBy: updatedBy,
+            confirmedAt: new Date()
+          });
+        }
+      } catch (error) {
+        console.warn('Failed to publish interview confirmed event:', error);
+      }
+    }
 
     return this.mapToResponse(updatedInterview);
   }
 
   async cancelInterview(id: string, cancelledBy: string, reason?: string): Promise<InterviewResponse> {
-    const interview = await this.interviewRepository.findById(id);
+    const interview = await this._interviewRepository.findById(id);
     if (!interview) {
       throw new Error('Interview not found');
     }
 
-    const cancelledInterview = await this.interviewRepository.updateStatus(id, 'CANCELLED');
+    const cancelledInterview = await this._interviewRepository.updateStatus(id, 'CANCELLED');
 
     return this.mapToResponse(cancelledInterview);
   }
 
   async makeInterviewDecision(id: string, data: InterviewDecisionInput, decidedBy: string): Promise<InterviewResponse> {
-    const interview = await this.interviewRepository.findById(id);
+    const interview = await this._interviewRepository.findById(id);
     if (!interview) {
       throw new Error('Interview not found');
     }
@@ -196,11 +224,11 @@ export class InterviewService implements IInterviewService {
       decidedBy: decidedBy
     };
 
-    const updatedInterview = await this.interviewRepository.update(id, updateData);
+    const updatedInterview = await this._interviewRepository.update(id, updateData);
 
     const newApplicationStatus = data.status === 'SELECTED' ? 'ACCEPTED' : 'REJECTED';
     try {
-      await this.applicationRepository.updateStatus(
+      await this._applicationRepository.updateStatus(
         interview.applicationId, 
         { 
           status: newApplicationStatus, 

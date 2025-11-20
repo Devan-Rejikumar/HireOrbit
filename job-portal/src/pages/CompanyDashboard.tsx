@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,11 @@ import EditJobModal from '@/components/EditJobModal';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import CompanyDetailsModal from '@/components/CompanyDetailsModal';
+import { MessagesSidebar } from '@/components/MessagesSidebar';
+import { ChatSidebar } from '@/components/ChatSidebar';
+import { ChatWindow } from '@/components/ChatWindow';
+import { useTotalUnreadCount, useCompanyConversations, useMarkAsRead, useMessages } from '@/hooks/useChat';
+import { ConversationResponse } from '@/api/chatService';
 
 interface Company {
   id: string;
@@ -84,43 +89,120 @@ const CompanyDashboard = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAllCompanyInfo, setShowAllCompanyInfo] = useState(false);
   const [isCompanyDetailsOpen, setIsCompanyDetailsOpen] = useState(false);
+  const [isMessagesSidebarOpen, setIsMessagesSidebarOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('overview');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<ConversationResponse | null>(null);
+  const [otherParticipantName, setOtherParticipantName] = useState<string>('');
   
   // Job Updates pagination
   const [jobUpdatesPage, setJobUpdatesPage] = useState(1);
   const jobUpdatesPageSize = 2;
 
+  // Get total unread message count
+  const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(company?.id || null);
+  
+  // Get all conversations to find ones with unread messages
+  const { data: allConversations = [] } = useCompanyConversations(company?.id || '');
+  
+  // Get messages for selected conversation
+  const { data: messages = [], isLoading: messagesLoading } = useMessages(
+    selectedConversation?.id || null
+  );
+  const markAsReadMutation = useMarkAsRead();
+
+  // Fetch participant name when conversation is selected
+  useEffect(() => {
+    const fetchOtherParticipantName = async () => {
+      if (!selectedConversation || role !== 'company') {
+        setOtherParticipantName('');
+        return;
+      }
+
+      try {
+        // For company role, fetch the user name
+        const otherParticipantId = selectedConversation.userId;
+        
+        interface UserData {
+          username?: string;
+          name?: string;
+          id: string;
+        }
+
+        interface UserApiResponse {
+          success: boolean;
+          data: {
+            user: UserData;
+          };
+        }
+
+        const response = await api.get<UserApiResponse>(`/users/${otherParticipantId}`);
+        const userName = response.data?.data?.user?.username || 
+                        response.data?.data?.user?.name || 
+                        'User';
+        setOtherParticipantName(userName);
+      } catch (error) {
+        console.error('Error fetching participant name:', error);
+        setOtherParticipantName('User');
+      }
+    };
+
+    fetchOtherParticipantName();
+  }, [selectedConversation, role]);
+
   useEffect(() => {
     fetchCompanyProfile();
     fetchJobCount();
-    fetchDashboardStats();
   }, []);
 
   useEffect(() => {
     if (company?.companyName) {
       fetchJobs();
       setSelectedCompany(company.companyName);
-      fetchDashboardStats(); // Update stats when company data changes
     }
   }, [company?.companyName]);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
       const activeJobs = jobs.filter(job => job.isActive !== false && job.status !== 'deleted');
       const totalJobs = jobs.length;
       
-      setDashboardStats({
-        newCandidates: Math.floor(totalJobs * 12) + 5, // Based on actual jobs
-        scheduleToday: Math.floor(totalJobs * 0.3) + 1, // Interviews scheduled
-        messagesReceived: Math.floor(activeJobs.length * 8) + 3,
-        jobViews: totalJobs * 180 + Math.floor(Math.random() * 200), // Total views
-        jobApplied: totalJobs * 20 + Math.floor(Math.random() * 100), // Applications
-        jobsOpened: activeJobs.length, // Active jobs
-        totalApplicants: totalJobs * 15 + Math.floor(Math.random() * 30) // Total applicants
+      setDashboardStats(prevStats => {
+        // Calculate deterministic values based on jobs (no random numbers to prevent infinite loops)
+        const newStats = {
+          newCandidates: Math.floor(totalJobs * 12) + 5, // Based on actual jobs
+          scheduleToday: Math.floor(totalJobs * 0.3) + 1, // Interviews scheduled
+          messagesReceived: Math.floor(activeJobs.length * 8) + 3,
+          jobViews: totalJobs * 180 + (totalJobs % 200), // Deterministic based on job count
+          jobApplied: totalJobs * 20 + (totalJobs % 100), // Deterministic based on job count
+          jobsOpened: activeJobs.length, // Active jobs
+          totalApplicants: totalJobs * 15 + (totalJobs % 30) // Deterministic based on job count
+        };
+        
+        // Check if stats actually changed (compare all values)
+        if (
+          prevStats.newCandidates === newStats.newCandidates &&
+          prevStats.scheduleToday === newStats.scheduleToday &&
+          prevStats.messagesReceived === newStats.messagesReceived &&
+          prevStats.jobViews === newStats.jobViews &&
+          prevStats.jobApplied === newStats.jobApplied &&
+          prevStats.jobsOpened === newStats.jobsOpened &&
+          prevStats.totalApplicants === newStats.totalApplicants
+        ) {
+          return prevStats; // Return previous state to prevent re-render
+        }
+        
+        return newStats;
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     }
-  };
+  }, [jobs]);
+
+  useEffect(() => {
+    // Update stats when jobs data changes
+    fetchDashboardStats();
+  }, [jobs, fetchDashboardStats]);
 
   const fetchCompanyProfile = async () => {
     try {
@@ -242,6 +324,41 @@ const CompanyDashboard = () => {
 
   const handleJobListingClick = () => {
     navigate('/company/jobs');
+  };
+
+  const handleMessagesClick = async () => {
+    // Simple: Mark all conversations as read when Messages is clicked
+    if (company?.id && allConversations.length > 0) {
+      // Mark all conversations as read (don't check unread count - just mark all)
+      const markAllPromises = allConversations.map(conv =>
+        markAsReadMutation.mutateAsync({
+          conversationId: conv.id,
+          userId: company.id
+        })
+      );
+      
+      // Don't wait for all to complete - just start them
+      Promise.all(markAllPromises).catch(error => {
+        console.error('Error marking messages as read:', error);
+      });
+    }
+    
+    // Set active section to messages
+    setActiveSection('messages');
+  };
+
+  const handleSelectConversation = (conversation: ConversationResponse) => {
+    setSelectedConversation(conversation);
+    if (company?.id) {
+      markAsReadMutation.mutate({
+        conversationId: conversation.id,
+        userId: company.id
+      });
+    }
+  };
+
+  const handleSendMessage = () => {
+    // This will be handled by ChatWindow component
   };
 
   // Pagination helpers
@@ -374,19 +491,38 @@ const CompanyDashboard = () => {
         </div>
       </header>
 
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
+        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 relative transition-all duration-300`}>
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
-              <button className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium w-full text-left">
+              <button 
+                onClick={() => setActiveSection('overview')}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium w-full text-left ${
+                  activeSection === 'overview'
+                    ? 'bg-purple-50 text-purple-700'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Home className="h-5 w-5" />
                 Dashboard
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={handleMessagesClick}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left relative ${
+                  activeSection === 'messages'
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <MessageSquare className="h-5 w-5" />
-                Messages
+                <span className="flex-1">Messages</span>
+                {totalUnreadMessages > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                    {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                  </span>
+                )}
               </button>
               <button onClick={handleCompanyProfileClick} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <Building2 className="h-5 w-5" />
@@ -439,8 +575,63 @@ const CompanyDashboard = () => {
           </div>
         </aside>
 
+        {/* Toggle Sidebar Button - Only show in messages section */}
+        {activeSection === 'messages' && (
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 ${
+              isSidebarCollapsed ? 'left-0' : 'left-64'
+            }`}
+            aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronRight className="h-5 w-5 text-gray-600" />
+            ) : (
+              <ChevronLeft className="h-5 w-5 text-gray-600" />
+            )}
+          </button>
+        )}
+
         {/* Main Content */}
         <main className="flex-1 p-6">
+          {activeSection === 'messages' && company?.id ? (
+            <div className="h-[calc(100vh-68px)] flex -m-6">
+              {/* Chat Sidebar */}
+              <div className="w-1/3 border-r border-gray-200 bg-white">
+                <ChatSidebar
+                  conversations={allConversations}
+                  selectedConversationId={selectedConversation?.id || null}
+                  currentUserId={company.id}
+                  onSelectConversation={handleSelectConversation}
+                  role="company"
+                />
+              </div>
+
+              {/* Chat Window */}
+              <div className="flex-1 bg-white">
+                {selectedConversation ? (
+                  <ChatWindow
+                    conversationId={selectedConversation.id}
+                    currentUserId={company.id}
+                    messages={messages}
+                    isLoading={messagesLoading}
+                    onSendMessage={handleSendMessage}
+                    otherParticipantName={otherParticipantName}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center bg-gray-50">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center">
+                        <MessageSquare className="w-8 h-8 text-white" />
+                      </div>
+                      <p className="text-gray-500 text-lg">Select a conversation to start chatting</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Dashboard Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {company?.companyName || 'Company'}.</h1>
@@ -796,7 +987,8 @@ const CompanyDashboard = () => {
               </div>
             </div>
           </div>
-
+            </>
+          )}
         </main>
       </div>
 
@@ -832,6 +1024,18 @@ const CompanyDashboard = () => {
         onClose={() => setIsCompanyDetailsOpen(false)}
         company={company}
       />
+
+      {/* Messages Sidebar */}
+      {company?.id && (
+        <MessagesSidebar
+          companyId={company.id}
+          isOpen={isMessagesSidebarOpen}
+          onClose={() => setIsMessagesSidebarOpen(false)}
+          onSelectConversation={(conversation: ConversationResponse) => {
+            navigate(`/chat?applicationId=${conversation.applicationId}`);
+          }}
+        />
+      )}
     </div>
   );
 };

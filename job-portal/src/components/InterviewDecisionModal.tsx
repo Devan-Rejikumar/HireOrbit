@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle } from 'lucide-react';
-import { InterviewDecisionData, InterviewWithDetails } from '@/api/interviewService';
+import { InterviewDecisionData, InterviewWithDetails } from '@/api/_interviewService';
 import { toast } from 'react-toastify';
 
 interface InterviewDecisionModalProps {

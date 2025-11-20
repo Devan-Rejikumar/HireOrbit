@@ -7,7 +7,7 @@ export class EmailService implements IEmailService {
   constructor(){
     console.log('SMTP_HOST:', process.env.SMTP_HOST);
   }
-  private transporter = nodemailer.createTransport({
+  private _transporter = nodemailer.createTransport({
     
     host: process.env.SMTP_HOST || 'smtp.example.com',
     port: Number(process.env.SMTP_PORT) || 587,
@@ -27,7 +27,7 @@ export class EmailService implements IEmailService {
       html: `<p>Your OTP code is: <b>${otp}</b></p>`,
     };
 
-    await this.transporter.sendMail(mailOptions);
+    await this._transporter.sendMail(mailOptions);
   }
 
   async sendApprovalEmail(email: string, companyName: string): Promise<void> {
@@ -48,7 +48,7 @@ export class EmailService implements IEmailService {
       <p>Welcome to our job portal!</p>
     `,
     };
-    await this.transporter.sendMail(mailOptions);
+    await this._transporter.sendMail(mailOptions);
   }
 
   async sendRejectionEmail(email: string, companyName: string, reason: string): Promise<void> {
@@ -66,7 +66,7 @@ export class EmailService implements IEmailService {
       <p>If you have questions, please contact our support team.</p>
     `,
     };
-    await this.transporter.sendMail(mailOptions);
+    await this._transporter.sendMail(mailOptions);
   }
 
 }

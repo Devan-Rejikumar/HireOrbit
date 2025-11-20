@@ -7,13 +7,24 @@ const CompanyProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(false);
-  }, []);
+    // Set loading to false after initial mount
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []); // Empty deps - only run once on mount
 
-  if (loading) return <div>Loading...</div>;
+  // Show loading on initial mount
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  // Check auth and redirect if needed
   if (!isAuthenticated || role !== 'company') {
     return <Navigate to="/login" replace />;
   }
+  
   return <>{children}</>;
 };
 
