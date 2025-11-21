@@ -3,12 +3,13 @@ import { PrismaClient, Application, ApplicationStatusHistory, ApplicationNotes, 
 import { IApplicationRepository } from "../interface/IApplicationRepository";
 import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from "../../dto/schemas/application.schema";
 import { TYPES } from '../../config/types';
+import { logger } from '../../utils/logger';
 
 @injectable()
 export class ApplicationRepository implements IApplicationRepository {
-  constructor(@inject(TYPES.PrismaClient) private prisma: PrismaClient) { }
+  constructor(@inject(TYPES.PrismaClient) private _prisma: PrismaClient) { }
   async create(data: CreateApplicationInput): Promise<Application> {
-    return await this.prisma.application.create({
+    return await this._prisma.application.create({
       data: {
         ...data,
         status: 'PENDING' as ApplicationStatus,
@@ -18,7 +19,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
   }
   async findById(id: string): Promise<Application | null> {
-    return await this.prisma.application.findUnique({
+    return await this._prisma.application.findUnique({
       where: { id }
     })
   }
@@ -27,97 +28,67 @@ export class ApplicationRepository implements IApplicationRepository {
     jobTitle?: string;
     companyName?: string;
   }>> {
-    const applications = await this.prisma.application.findMany({
+    const applications = await this._prisma.application.findMany({
       where: { userId },
       orderBy: { appliedAt: 'desc' }
     });
 
-    const applicationsWithJobDetails = await Promise.all(
-      applications.map(async (app) => {
-        try {
-          const jobResponse = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
-          if (jobResponse.ok) {
-            const jobData = await jobResponse.json() as {
-              data?: {
-                job?: {
-                  title?: string;
-                  company?: string;
-                };
-              };
-            };
-            console.log(`ApplicationRepository Job data received:`, jobData);
-            return {
-              ...app,
-              jobTitle: jobData.data?.job?.title || 'Job Title',
-              companyName: jobData.data?.job?.company || 'Company Name'
-            };
-          } else {
-            console.log(`ApplicationRepository Job service returned status: ${jobResponse.status}`);
-            return {
-              ...app,
-              jobTitle: 'Job Title',
-              companyName: 'Company Name'
-            };
-          }
-        } catch (error) {
-          console.error(`ApplicationRepository Error fetching job details for jobId ${app.jobId}:`, error);
-          return {
-            ...app,
-            jobTitle: 'Job Title',
-            companyName: 'Company Name'
-          };
-        }
-      })
-    );
+ 
+    return applications.map(app => ({
+      ...app,
+      jobTitle: undefined,
+      companyName: undefined
+    }));
+  }
 
-    return applicationsWithJobDetails;
+  async findByUserIdPaginated(userId: string, page: number, limit: number, status?: string): Promise<{
+    applications: Array<Application & {jobTitle?: string;companyName?: string;}>;
+    total: number;
+  }> {
+    const where: any = { userId };
+    if (status) {
+      where.status = status;
+    }
+
+    const [applications, total] = await Promise.all([
+      this._prisma.application.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { appliedAt: 'desc' }
+      }),
+      this._prisma.application.count({ where })
+    ]);
+
+    return {
+      applications: applications.map(app => ({
+        ...app,
+        jobTitle: undefined,
+        companyName: undefined
+      })),
+      total
+    };
   }
 
   async findByCompanyId(companyId: string): Promise<Application[]> {
-    let applications = await this.prisma.application.findMany({
+    let applications = await this._prisma.application.findMany({
       where: { companyId },
       orderBy: { appliedAt: 'desc' }
     });
-    if (applications.length === 0) {
-      console.log(`ApplicationRepository No applications found for companyId: ${companyId}, trying to find by company name...`);
-      try {
-        const companyResponse = await fetch(`http://localhost:3001/api/company/profile`, {
-          headers: {
-            'x-user-id': companyId,
-            'x-user-role': 'company'
-          }
-        });
 
-        if (companyResponse.ok) {
-          const companyData = await companyResponse.json() as any;
-          const companyName = companyData.data?.company?.companyName || companyData.company?.companyName;
-
-          if (companyName) {
-            console.log(`ApplicationRepository Found company name: ${companyName}, searching applications...`);
-            applications = await this.prisma.application.findMany({
-              where: { companyId: companyName },
-              orderBy: { appliedAt: 'desc' }
-            });
-          }
-        }
-      } catch (error) {
-        console.error('ApplicationRepository Error fetching company name:', error);
-      }
-    }
-
-    console.log(`ApplicationRepositoryFound ${applications.length} applications for companyId: ${companyId}`);
+    logger.info(`ApplicationRepositoryFound ${applications.length} applications for companyId: ${companyId}`);
     return applications;
   }
 
   async findByJobId(jobId: string): Promise<Application[]> {
-    return await this.prisma.application.findMany({
+    return await this._prisma.application.findMany({
       where: { jobId },
       orderBy: { appliedAt: 'desc' }
     })
   }
 
   async update(id: string, data: Partial<Application>): Promise<Application> {
-    return this.prisma.application.update({
+    return this._prisma.application.update({
       where: { id },
       data: {
         ...data,
@@ -127,14 +98,14 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.application.delete({
+    await this._prisma.application.delete({
       where: { id }
     })
   }
 
 
   async updateStatus(id: string, data: UpdateApplicationStatusInput, changedBy: string): Promise<Application> {
-    return await this.prisma.$transaction(async (tx) => {
+    return await this._prisma.$transaction(async (tx) => {
       const updatedApplication = await tx.application.update({
         where: { id },
         data: {
@@ -158,7 +129,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async getStatusHistory(applicationId: string): Promise<ApplicationStatusHistory[]> {
-    return await this.prisma.applicationStatusHistory.findMany({
+    return await this._prisma.applicationStatusHistory.findMany({
       where: { applicationId },
       orderBy: { changedAt: 'desc' },
     });
@@ -166,7 +137,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
 
   async addNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationNotes> {
-    return await this.prisma.applicationNotes.create({
+    return await this._prisma.applicationNotes.create({
       data: {
         applicationId,
         note: data.note,
@@ -177,14 +148,14 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async getNotes(applicationId: string): Promise<ApplicationNotes[]> {
-    return await this.prisma.applicationNotes.findMany({
+    return await this._prisma.applicationNotes.findMany({
       where: { applicationId },
       orderBy: { addedAt: 'desc' },
     });
   }
 
   async deleteNote(noteId: string): Promise<void> {
-    await this.prisma.applicationNotes.delete({
+    await this._prisma.applicationNotes.delete({
       where: { id: noteId },
     });
   }
@@ -194,7 +165,7 @@ export class ApplicationRepository implements IApplicationRepository {
     statusHistory: ApplicationStatusHistory[];
     notes: ApplicationNotes[];
   }) | null> {
-    return await this.prisma.application.findUnique({
+    return await this._prisma.application.findUnique({
       where: { id },
       include: {
         statusHistory: {
@@ -211,7 +182,7 @@ export class ApplicationRepository implements IApplicationRepository {
     statusHistory: ApplicationStatusHistory[];
     notes: ApplicationNotes[];
   }>> {
-    return await this.prisma.application.findMany({
+    return await this._prisma.application.findMany({
       where: { userId },
       include: {
         statusHistory: {
@@ -229,7 +200,7 @@ export class ApplicationRepository implements IApplicationRepository {
     statusHistory: ApplicationStatusHistory[];
     notes: ApplicationNotes[];
   }>> {
-    return await this.prisma.application.findMany({
+    return await this._prisma.application.findMany({
       where: { companyId },
       include: {
         statusHistory: {
@@ -244,7 +215,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async findByStatus(status: string, companyId?: string): Promise<Application[]> {
-    return await this.prisma.application.findMany({
+    return await this._prisma.application.findMany({
       where: {
         status: status as ApplicationStatus,
         ...(companyId && { companyId }),
@@ -254,7 +225,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async findByDateRange(startDate: Date, endDate: Date, companyId?: string): Promise<Application[]> {
-    return await this.prisma.application.findMany({
+    return await this._prisma.application.findMany({
       where: {
         appliedAt: {
           gte: startDate,
@@ -268,7 +239,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
 
   async getApplicationStats(companyId: string): Promise<{total: number;pending: number;reviewing: number;shortlisted: number;rejected: number;accepted: number;withdrawn: number;}> {
-    const applications = await this.prisma.application.findMany({
+    const applications = await this._prisma.application.findMany({
       where: { companyId },
       select: { status: true },
     });
@@ -322,13 +293,13 @@ export class ApplicationRepository implements IApplicationRepository {
     };
 
     const [applications, total] = await Promise.all([
-      this.prisma.application.findMany({
+      this._prisma.application.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { appliedAt: 'desc' },
       }),
-      this.prisma.application.count({ where }),
+      this._prisma.application.count({ where }),
     ]);
 
     return { applications, total };
@@ -336,7 +307,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
 
   async checkDuplicateApplication(userId: string, jobId: string): Promise<Application | null> {
-    return await this.prisma.application.findFirst({
+    return await this._prisma.application.findFirst({
       where: {
         userId,
         jobId,
@@ -349,7 +320,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
 
   async bulkUpdateStatus(applicationIds: string[], status: string, changedBy: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
+    await this._prisma.$transaction(async (tx) => {
       await tx.application.updateMany({
         where: {
           id: {

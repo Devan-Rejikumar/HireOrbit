@@ -5,7 +5,7 @@ const API_BASE_URL = '/notifications';
 export interface NotificationData {
   id: string;
   recipientId: string;
-  type: 'APPLICATION_RECEIVED' | 'STATUS_UPDATED' | 'APPLICATION_WITHDRAWN';
+  type: 'APPLICATION_RECEIVED' | 'STATUS_UPDATED' | 'APPLICATION_WITHDRAWN' | 'INTERVIEW_CONFIRMED' | 'INTERVIEW_DECISION';
   title: string;
   message: string;
   data: {

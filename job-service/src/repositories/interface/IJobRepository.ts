@@ -7,6 +7,7 @@ export interface IJobRepository {
   findAll(): Promise<Job[]>;
   findByCompany(companyId: string): Promise<Job[]>;
   search(filters: JobSearchFilters): Promise<Job[]>;
+  count(filters: JobSearchFilters): Promise<number>;
   update(id: string, data: Partial<Job>): Promise<Job>;
   delete(id: string): Promise<void>;
   countByCompany(companyId: string): Promise<number>;

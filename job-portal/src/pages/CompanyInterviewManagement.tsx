@@ -458,7 +458,7 @@ const CompanyInterviewManagement = () => {
                       </div>
 
                       {/* Action Buttons */}
-                      {isUpcoming && interview.status !== 'CANCELLED' && (
+                      {isUpcoming && interview.status !== 'CANCELLED' && interview.status !== 'SELECTED' && interview.status !== 'REJECTED' && (
                         <div className="flex flex-col gap-2 ml-4">
                           <Button
                             variant="outline"

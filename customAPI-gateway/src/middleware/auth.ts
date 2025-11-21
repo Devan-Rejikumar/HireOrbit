@@ -13,7 +13,6 @@ const USER_ROLE_HEADER = 'x-user-role';
  * Extracts JWT token from request cookies or Authorization header
  */
 const extractToken = (req: Request): string | null => {
-  // Try to get token from cookie first (requires cookie-parser middleware)
   if (req.cookies) {
     const tokenFromCookie = req.cookies.accessToken || req.cookies.adminAccessToken || req.cookies.companyAccessToken;
     if (tokenFromCookie) {
@@ -25,7 +24,7 @@ const extractToken = (req: Request): string | null => {
     console.log('[AUTH] req.cookies is undefined - cookie-parser may not be configured');
   }
 
-  // Try to get token from Authorization header
+
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     console.log('[AUTH] Token found in Authorization header');

@@ -7,6 +7,7 @@ import interviewRoutes from './routes/InterviewRoutes';
 import {TYPES} from './config/types';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { ErrorHandler } from './middleware/errorHandler';
 
 const app = express();
 
@@ -69,14 +70,8 @@ app.get('/health', (req, res) => {
 app.use('/api/applications', applicationRoutes);
 app.use('/api/interviews', interviewRoutes);
 
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error('Global error handler:', { message: err.message, stack: err.stack });
-  
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-  });
-});
+
+app.use(ErrorHandler);
 
 
 async function initializeServices(): Promise<void> {

@@ -49,6 +49,11 @@ export class JobRepository implements IJobRepository {
     });
   }
 
+  async count(filters: JobSearchFilters): Promise<number> {
+    const where = this._buildWhereClause(filters);
+    return this.prisma.job.count({ where });
+  }
+
   async update(id: string, data: Partial<Job>): Promise<Job> {
     return this.prisma.job.update({ where: { id }, data });
   }
@@ -81,10 +86,15 @@ export class JobRepository implements IJobRepository {
   }
 
   private _buildWhereClause(filters: JobSearchFilters) {
-    const where: any = { isActive: true };
+    const where: any = {};
+ 
+    if (filters.isActive !== undefined) {
+      where.isActive = filters.isActive;
+    }
     
     if (filters.title) where.title = { contains: filters.title, mode: 'insensitive' };
     if (filters.company) where.company = { contains: filters.company, mode: 'insensitive' };
+    if (filters.companyId) where.companyId = filters.companyId;
     if (filters.location) where.location = { contains: filters.location, mode: 'insensitive' };
     if (filters.jobType) where.jobType = filters.jobType;
     if (filters.experienceLevel) where.experienceLevel = filters.experienceLevel;

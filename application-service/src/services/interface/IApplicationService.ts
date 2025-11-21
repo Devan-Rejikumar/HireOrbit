@@ -3,7 +3,7 @@ import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNot
 
 export interface IApplicationService {
   applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse>;
-  getUserApplications(userId: string): Promise<UserApplicationsResponse>;
+  getUserApplications(userId: string, page?: number, limit?: number, status?: string): Promise<UserApplicationsResponse>;
   checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean }>;
   getApplicationById(id: string): Promise<ApplicationDetailsResponse>;
   withdrawApplication(applicationId: string, userId: string): Promise<ApplicationResponse>;

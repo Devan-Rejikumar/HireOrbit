@@ -69,6 +69,12 @@ const isProtectedRoute = (path: string, method: string): boolean =>{
         console.log(' Matched application resume download route:', clean);
         return true;
     }
+
+    // Check if route starts with /api/interviews (all interview routes are protected)
+    if (clean.startsWith('/api/interviews')) {
+        console.log(' Matched interview route:', clean);
+        return true;
+    }
     
     return false;
 }

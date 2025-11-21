@@ -21,6 +21,7 @@ export interface JobSearchFilters {
   query?: string; 
   title?: string;
   company?: string;
+  companyId?: string;
   location?: string;
   jobType?: string;
   experienceLevel?: string;
@@ -28,6 +29,7 @@ export interface JobSearchFilters {
   workLocation?: string;
   minSalary?: number;
   maxSalary?: number;
+  isActive?: boolean;
   page?: number;
   limit?: number;
   sortBy?: 'createdAt' | 'title' | 'salary';

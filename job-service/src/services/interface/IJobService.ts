@@ -21,7 +21,7 @@ export interface IJobService {
   createJob(jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobResponse>;
   getJobById(jobId: string): Promise<JobResponse | null>;
   getAllJobs(): Promise<JobResponse[]>;
-  searchJobs(filters: JobSearchFilters): Promise<JobResponse[]>;
+  searchJobs(filters: JobSearchFilters): Promise<{ jobs: JobResponse[]; total: number }>;
   updateJob(id: string, jobData: UpdateJobInput): Promise<JobResponse>;
   deleteJob(id: string): Promise<void>;
   getJobsByCompany(companyId: string): Promise<JobResponse[]>;
