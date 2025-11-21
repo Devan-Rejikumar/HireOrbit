@@ -5,6 +5,10 @@ export interface IApplicationRepository {
   create(data: CreateApplicationInput): Promise<Application>;
   findById(id: string): Promise<Application | null>;
   findByUserId(userId: string): Promise<Array<Application & {jobTitle?: string;companyName?: string;}>>;
+  findByUserIdPaginated(userId: string, page: number, limit: number, status?: string): Promise<{
+    applications: Array<Application & {jobTitle?: string;companyName?: string;}>;
+    total: number;
+  }>;
   findByCompanyId(companyId: string): Promise<Application[]>;
   findByJobId(jobId: string): Promise<Application[]>;
   update(id: string, data: Partial<Application>): Promise<Application>;
@@ -19,15 +23,7 @@ export interface IApplicationRepository {
   findByCompanyIdWithRelations(companyId: string): Promise<Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];}>>;
   findByStatus(status: ApplicationStatus, companyId?: string): Promise<Application[]>;
   findByDateRange(startDate: Date, endDate: Date, companyId?: string): Promise<Application[]>;
-  getApplicationStats(companyId: string): Promise<{
-    total: number;
-    pending: number;
-    reviewing: number;
-    shortlisted: number;
-    rejected: number;
-    accepted: number;
-    withdrawn: number;
-  }>;
+  getApplicationStats(companyId: string): Promise<{total: number;pending: number;reviewing: number;shortlisted: number;rejected: number;accepted: number;withdrawn: number;}>;
   findPaginated(
     page: number,
     limit: number,

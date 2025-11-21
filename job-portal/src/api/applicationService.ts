@@ -55,10 +55,24 @@ export const _applicationService = {
     return response.data;
   },
   
-  getUserApplications: async () => {
+  getUserApplications: async (page: number = 1, limit: number = 10, status?: string, search?: string) => {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    
     const response = await api.get<{
-      data: { applications: Application[] };
-    }>('/applications/user/applications');
+      data: { 
+        applications: Application[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+    }>(`/applications/user/applications?${params.toString()}`);
     return response.data;
   },
 

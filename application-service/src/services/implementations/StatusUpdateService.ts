@@ -1,5 +1,7 @@
 import { injectable } from 'inversify';
 import { ApplicationStatus } from '@prisma/client';
+import { AppError } from '../../utils/errors/AppError';
+import { HttpStatusCode } from '../../enums/StatusCodes';
 
 @injectable()
 export class StatusUpdateService {
@@ -24,9 +26,10 @@ export class StatusUpdateService {
   validateOrThrow(currentStatus: ApplicationStatus, newStatus: ApplicationStatus): void {
     if (!this.validateTransition(currentStatus, newStatus)) {
       const allowed = this.getAvailableTransitions(currentStatus);
-      throw new Error(
+      throw new AppError(
         `Invalid status transition: Cannot change from ${currentStatus} to ${newStatus}. ` +
-        `Allowed transitions: ${allowed.length > 0 ? allowed.join(', ') : 'None (final state)'}`
+        `Allowed transitions: ${allowed.length > 0 ? allowed.join(', ') : 'None (final state)'}`,
+        HttpStatusCode.BAD_REQUEST
       );
     }
   }

@@ -121,8 +121,26 @@ export const _interviewService = {
     return response.data;
   },
 
-  getCandidateInterviews: async (): Promise<InterviewListResponse> => {
-    const response = await api.get<InterviewListResponse>(`${INTERVIEWS_ENDPOINT}/candidate/all`);
+  getCandidateInterviews: async (page: number = 1, limit: number = 10, status?: string, search?: string): Promise<{
+    success: boolean;
+    data: {
+      interviews: InterviewWithDetails[];
+      pagination?: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+    message: string;
+  }> => {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    
+    const response = await api.get(`${INTERVIEWS_ENDPOINT}/candidate/all?${params.toString()}`);
     return response.data;
   },
 

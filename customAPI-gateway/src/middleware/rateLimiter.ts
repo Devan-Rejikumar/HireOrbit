@@ -5,13 +5,6 @@ import { CommonMessages } from '@/constants/CommonMessages';
 
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
 
-/**
- * Rate limiter middleware to prevent abuse
- * Uses in-memory storage to track request counts per IP address
- * @param req - Express request object
- * @param res - Express response object
- * @param next - Express next function
- */
 export const rateLimiterMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const clientId = req.ip || 'unknown';
   const now = Date.now();

@@ -37,6 +37,17 @@ export interface InterviewConfirmedInput {
   meetingLink?: string;
 }
 
+export interface InterviewDecisionInput {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  decision: string;
+  decisionReason?: string;
+  feedback?: string;
+}
+
 export class NotificationMapper {
   static toApplicationReceivedNotification(input: ApplicationReceivedInput): CreateNotificationInput {
     return {
@@ -99,6 +110,27 @@ export class NotificationMapper {
         type: input.type,
         location: input.location,
         meetingLink: input.meetingLink
+      }
+    };
+  }
+
+  static toInterviewDecisionNotification(input: InterviewDecisionInput): CreateNotificationInput {
+    const isSelected = input.decision === 'SELECTED';
+    return {
+      recipientId: input.userId,
+      type: NotificationType.INTERVIEW_DECISION,
+      title: isSelected ? 'Congratulations!' : 'Interview Result',
+      message: isSelected 
+        ? `Congratulations! You have been selected for ${input.jobTitle}`
+        : `Thank you for your interest. Unfortunately, you have not been selected for ${input.jobTitle}`,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        jobTitle: input.jobTitle,
+        interviewId: input.interviewId,
+        decision: input.decision,
+        decisionReason: input.decisionReason,
+        feedback: input.feedback
       }
     };
   }

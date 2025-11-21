@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Briefcase, 
   Calendar, 
@@ -10,7 +10,10 @@ import {
   AlertCircle,
   Eye,
   Download,
-  ExternalLink
+  ExternalLink,
+  Search,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { _applicationService, Application } from '../api/applicationService';
 import { toast } from 'react-toastify';
@@ -25,16 +28,30 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalApplications, setTotalApplications] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
+  }, [statusFilter, searchTerm]);
 
   useEffect(() => {
     fetchApplications();
-  }, [userId]);
+  }, [userId, currentPage, statusFilter]);
 
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const response = await _applicationService.getUserApplications();
-      setApplications(response.data.applications || []);
+      const status = statusFilter !== 'all' ? statusFilter : undefined;
+      const response = await _applicationService.getUserApplications(currentPage, itemsPerPage, status);
+      const apps = response.data.applications || [];
+      setApplications(apps);
+      setTotalApplications(response.data.pagination?.total || apps.length);
+      setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
@@ -89,6 +106,19 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
     });
   };
 
+  // Client-side search filtering (since jobTitle/companyName are enriched)
+  const filteredApplications = useMemo(() => {
+    if (!searchTerm) return applications;
+
+    const searchLower = searchTerm.toLowerCase();
+    return applications.filter(
+      (app) =>
+        app.jobTitle?.toLowerCase().includes(searchLower) ||
+        app.companyName?.toLowerCase().includes(searchLower) ||
+        app.status.toLowerCase().includes(searchLower)
+    );
+  }, [applications, searchTerm]);
+
   const handleViewDetails = (application: Application) => {
     setSelectedApplication(application);
     setShowDetails(true);
@@ -134,11 +164,38 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
             </div>
           </div>
           <div className="text-sm text-gray-500">
-            {applications.length} application{applications.length !== 1 ? 's' : ''}
+            {totalApplications} application{totalApplications !== 1 ? 's' : ''}
           </div>
         </div>
 
-        {applications.length === 0 ? (
+        {/* Search and Filter */}
+        <div className="mb-6 flex gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by job title, company, or status..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="REVIEWING">Reviewing</option>
+            <option value="SHORTLISTED">Shortlisted</option>
+            <option value="ACCEPTED">Accepted</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="WITHDRAWN">Withdrawn</option>
+          </select>
+        </div>
+
+        {filteredApplications.length === 0 && !loading ? (
           <div className="text-center py-12">
             <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No Applications Yet</h3>
@@ -153,7 +210,7 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {applications.map((application) => (
+            {filteredApplications.map((application) => (
               <div
                 key={application.id}
                 className="border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow"
@@ -230,6 +287,63 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && filteredApplications.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
+            <div className="text-sm text-gray-600">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalApplications)} of {totalApplications} applications
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white font-semibold'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

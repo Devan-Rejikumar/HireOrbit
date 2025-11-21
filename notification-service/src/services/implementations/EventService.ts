@@ -7,7 +7,8 @@ import {
   ApplicationReceivedInput, 
   StatusUpdatedInput, 
   ApplicationWithdrawnInput,
-  InterviewConfirmedInput
+  InterviewConfirmedInput,
+  InterviewDecisionInput
 } from '../../dto/mappers/notification.mapper';
 
 interface ApplicationCreatedEventData {
@@ -47,6 +48,19 @@ interface InterviewConfirmedEventData {
   meetingLink?: string;
   confirmedBy: string;
   confirmedAt: Date;
+}
+
+interface InterviewDecisionEventData {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  decision: string;
+  decisionReason?: string;
+  feedback?: string;
+  decidedBy: string;
+  decidedAt: Date;
 }
 
 @injectable()
@@ -173,5 +187,20 @@ export class EventService implements IEventService {
     };
     
     await this._notificationService.sendInterviewConfirmedNotification(input);
+  }
+
+  async handleInterviewDecision(data: InterviewDecisionEventData): Promise<void> {
+    const input: InterviewDecisionInput = {
+      userId: data.userId,
+      interviewId: data.interviewId,
+      applicationId: data.applicationId,
+      jobId: data.jobId,
+      jobTitle: data.jobTitle,
+      decision: data.decision,
+      decisionReason: data.decisionReason,
+      feedback: data.feedback
+    };
+    
+    await this._notificationService.sendInterviewDecisionNotification(input);
   }
 }

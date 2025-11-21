@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import CompanyList from '@/components/admin/CompanyList';
 import UserList from '@/components/admin/UserList';
+import AdminJobManagement from '@/pages/AdminJobManagement';
 import { useNavigate } from 'react-router-dom';
 import api from '@/api/axios';
-import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield } from 'react-icons/fi';
+import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase } from 'react-icons/fi';
 
 const AdminDashboard: React.FC = () => {
-  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list'>('dashboard');
+  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management'>('dashboard');
   const navigate = useNavigate();
 
   const handleLogout = async() =>{
@@ -73,6 +74,17 @@ const AdminDashboard: React.FC = () => {
               <FiUsers size={20} />
               User List
             </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+                selected === 'job-management' 
+                  ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
+                  : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+              }`}
+              onClick={() => setSelected('job-management')}
+            >
+              <FiBriefcase size={20} />
+              Job Management
+            </button>
           </nav>
         </aside>
   
@@ -126,6 +138,8 @@ const AdminDashboard: React.FC = () => {
           {selected === 'company-list' && <CompanyList />}
           
           {selected === 'users' && <UserList />}
+          
+          {selected === 'job-management' && <AdminJobManagement />}
         </main>
       </div>
     </div>

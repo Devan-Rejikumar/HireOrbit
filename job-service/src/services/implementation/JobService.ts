@@ -45,9 +45,15 @@ export class JobService implements IJobService {
     return mapJobsToResponse(jobs);
   }
 
-  async searchJobs(filters: JobSearchFilters): Promise<JobResponse[]> {
-    const jobs = await this._jobRepository.search(filters);
-    return mapJobsToResponse(jobs);
+  async searchJobs(filters: JobSearchFilters): Promise<{ jobs: JobResponse[]; total: number }> {
+    const [jobs, total] = await Promise.all([
+      this._jobRepository.search(filters),
+      this._jobRepository.count(filters)
+    ]);
+    return {
+      jobs: mapJobsToResponse(jobs),
+      total
+    };
   }
 
   async getJobSuggestions(query: string, limit?: number): Promise<string[]> {

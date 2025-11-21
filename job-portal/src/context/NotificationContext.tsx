@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useNavigate } from 'react-router-dom';
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../hooks/useNotifications';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { NotificationData } from '../api/_notificationService';
+import { NotificationData } from '../api/notificationService';
 
 interface NotificationContextType {
   notifications: NotificationData[];
@@ -39,7 +39,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   const { data: notifications = [], isLoading, isError, error } = useNotifications(recipientId);
   const { isConnected, realTimeNotifications, joinRoom, leaveRoom } = useWebSocket(recipientId);
-  // Pass WebSocket connection status to disable polling when connected
   const { data: unreadCount = 0 } = useUnreadCount(recipientId, isConnected);
  
   const markAsReadMutation = useMarkAsRead();
@@ -82,6 +81,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         return 'Application Withdrawn';
       case 'INTERVIEW_CONFIRMED':
         return 'Interview Confirmed';
+      case 'INTERVIEW_DECISION':
+        return 'Interview Result';
       default:
         return 'Notification';
     }
@@ -100,6 +101,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       case 'INTERVIEW_CONFIRMED':
         const interviewJobTitle = notification.data.jobTitle || notification.message?.split('for ')[1]?.split(' has')[0] || 'the position';
         return notification.message || `Your interview for ${interviewJobTitle} has been confirmed`;
+      case 'INTERVIEW_DECISION':
+        return notification.message || 'Interview decision has been made';
       default:
         return notification.message || 'New notification';
     }
@@ -132,9 +135,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (notification.type === 'STATUS_UPDATED') {
       // Navigate to profile page with applied jobs tab
       navigate('/profile#applied-jobs');
-    } else if (notification.type === 'INTERVIEW_CONFIRMED') {
+    } else if (
+      notification.type === 'INTERVIEW_CONFIRMED') {
       // Navigate to schedule page for interview details
       navigate('/schedule');
+    } else if (notification.type === 'INTERVIEW_DECISION') {
+      // Navigate to applied jobs page to see the decision
+      navigate('/applied-jobs');
     } else if (notification.type === 'APPLICATION_RECEIVED') {
       // For companies, navigate to company applications
       navigate('/company/applications');

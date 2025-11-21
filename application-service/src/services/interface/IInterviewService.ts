@@ -10,7 +10,10 @@ export interface IInterviewService {
   
   getCompanyInterviews(companyId: string): Promise<InterviewWithDetailsResponse[]>;
   
-  getCandidateInterviews(userId: string): Promise<InterviewWithDetailsResponse[]>;
+  getCandidateInterviews(userId: string, page?: number, limit?: number, status?: string): Promise<{
+    interviews: InterviewWithDetailsResponse[];
+    total: number;
+  }>;
   
   updateInterview(id: string, data: UpdateInterviewInput, updatedBy: string): Promise<InterviewResponse>;
   
