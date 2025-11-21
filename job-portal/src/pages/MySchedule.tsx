@@ -1,33 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Clock, MapPin, Video, Phone, ArrowLeft, Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { _interviewService, InterviewWithDetails } from '@/api/_interviewService';
+import { Calendar, Clock, MapPin, Video, Phone, Loader2, CheckCircle, XCircle, User, MessageSquare, Lock, LogOut, Home, Search, Briefcase, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
 import { toast } from 'react-toastify';
+import { NotificationBell } from '@/components/NotificationBell';
+import { MessagesDropdown } from '@/components/MessagesDropdown';
+import { useTotalUnreadCount } from '@/hooks/useChat';
 
 const MySchedule = () => {
-  const { user, role } = useAuth();
+  const { user, role, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [interviews, setInterviews] = useState<InterviewWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalInterviews, setTotalInterviews] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const itemsPerPage = 10;
+  const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(user?.id || null);
 
   useEffect(() => {
     if (role !== 'jobseeker') {
       navigate('/');
       return;
     }
-    fetchInterviews();
   }, [role, navigate]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
+  }, [statusFilter, searchTerm]);
+
+  useEffect(() => {
+    fetchInterviews();
+  }, [currentPage, statusFilter]);
 
   const fetchInterviews = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await _interviewService.getCandidateInterviews();
-      setInterviews(response.data || []);
+      const status = statusFilter !== 'all' ? statusFilter : undefined;
+      const response = await _interviewService.getCandidateInterviews(currentPage, itemsPerPage, status);
+      const interviewsList = response.data?.interviews || response.data || [];
+      setInterviews(interviewsList);
+      setTotalInterviews(response.data?.pagination?.total || interviewsList.length);
+      setTotalPages(response.data?.pagination?.totalPages || 1);
     } catch (err: any) {
       console.error('Failed to fetch interviews:', err);
       setError(err.response?.data?.message || 'Failed to load interviews');
@@ -73,13 +95,58 @@ const MySchedule = () => {
     }
   };
 
-  const upcomingInterviews = interviews.filter(interview => 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
+
+  const sidebarItems = [
+    { id: 'overview', label: 'Overview', icon: Home, path: '/user/dashboard' },
+    { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
+    { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
+    { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/user/dashboard', badge: totalUnreadMessages },
+    { id: 'password', label: 'Change Password', icon: Lock, path: null },
+  ];
+
+  const handleSidebarClick = (item: typeof sidebarItems[0]) => {
+    if (item.path) {
+      navigate(item.path);
+    }
+  };
+
+  const isActive = (itemId: string) => {
+    if (itemId === 'applied-jobs') return location.pathname === '/applied-jobs';
+    if (itemId === 'schedule') return location.pathname === '/schedule';
+    if (itemId === 'profile') return location.pathname === '/profile';
+    if (itemId === 'overview') return location.pathname === '/user/dashboard';
+    return false;
+  };
+
+  // Client-side search filtering
+  const filteredInterviews = useMemo(() => {
+    let filtered = interviews;
+    
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (interview) =>
+          interview.jobTitle?.toLowerCase().includes(searchLower) ||
+          interview.companyName?.toLowerCase().includes(searchLower) ||
+          interview.status.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
+  }, [interviews, searchTerm]);
+
+  const upcomingInterviews = filteredInterviews.filter(interview => 
     new Date(interview.scheduledAt) > new Date() && 
     interview.status !== 'CANCELLED' && 
     interview.status !== 'COMPLETED'
   );
 
-  const pastInterviews = interviews.filter(interview => 
+  const pastInterviews = filteredInterviews.filter(interview => 
     new Date(interview.scheduledAt) <= new Date() || 
     interview.status === 'CANCELLED' || 
     interview.status === 'COMPLETED'
@@ -101,23 +168,144 @@ const MySchedule = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/')} 
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to Home
-        </Button>
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Schedule</h1>
-            <p className="text-gray-600">Manage your upcoming and past interviews</p>
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-gray-900">My Schedule</h1>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/jobs')} 
+                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                title="Search Jobs"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+              
+              <NotificationBell />
+              
+              {user?.id && (
+                <MessagesDropdown userId={user.id} />
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleLogout}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
+
+      <div className="flex min-h-screen">
+        {/* Sidebar */}
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
+          <nav className="p-6">
+            <div className="space-y-1 mb-8">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.id);
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSidebarClick(item)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
+                      active
+                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge && item.badge > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="space-y-1">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Settings</h3>
+              <button 
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <Settings className="h-5 w-5" />
+                Settings
+              </button>
+            </div>
+          </nav>
+          
+          {/* User Info at Bottom */}
+          <div className="absolute bottom-6 left-6 right-6">
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-300">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                <span className="text-white font-semibold">
+                  {user?.username?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
+                <div className="text-xs text-blue-600 truncate">{user?.email || 'email@example.com'}</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">My Schedule</h1>
+                <p className="text-gray-600">Manage your upcoming and past interviews</p>
+              </div>
+              <div className="text-sm text-gray-500">
+                {totalInterviews} interview{totalInterviews !== 1 ? 's' : ''}
+              </div>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by job title, company, or status..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+                <option value="SELECTED">Selected</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+          </div>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
@@ -364,7 +552,7 @@ const MySchedule = () => {
       )}
 
       {/* Empty State */}
-      {interviews.length === 0 && !loading && (
+      {filteredInterviews.length === 0 && !loading && (
         <Card>
           <CardContent className="p-12 text-center">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -375,6 +563,65 @@ const MySchedule = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Pagination */}
+      {!loading && filteredInterviews.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
+          <div className="text-sm text-gray-600">
+            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalInterviews)} of {totalInterviews} interviews
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-2 rounded-lg transition-colors ${
+                      currentPage === pageNum
+                        ? 'bg-blue-600 text-white font-semibold'
+                        : 'border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+        </main>
+      </div>
     </div>
   );
 };

@@ -35,7 +35,7 @@ export class JobController {
     }
     
     const jobData = validationResult.data;
-    const companyId = req.user?.userId || req.headers['x-user-id'] as string;
+    const companyId = req.user?.userId ;
     
     if (!companyId) {
       throw new AppError(
@@ -99,10 +99,10 @@ export class JobController {
       );
     }
     
-    const jobs = await this._jobService.searchJobs(searchValidation.data);
+    const { jobs, total } = await this._jobService.searchJobs(searchValidation.data);
     
     res.status(JobStatusCode.JOBS_SEARCHED).json(
-      buildSuccessResponse({ jobs }, Messages.JOB.SEARCHED_SUCCESS)
+      buildSuccessResponse({ jobs, total, page: searchValidation.data.page || 1, limit: searchValidation.data.limit || 10 }, Messages.JOB.SEARCHED_SUCCESS)
     );
   }
 

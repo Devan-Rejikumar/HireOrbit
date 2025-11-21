@@ -9,7 +9,8 @@ import {
   ApplicationReceivedInput, 
   StatusUpdatedInput, 
   ApplicationWithdrawnInput,
-  InterviewConfirmedInput
+  InterviewConfirmedInput,
+  InterviewDecisionInput
 } from '../../dto/mappers/notification.mapper';
 import { io } from '../../server';
 
@@ -152,5 +153,28 @@ async sendInterviewConfirmedNotification(input: InterviewConfirmedInput): Promis
   });
   
   console.log('Interview confirmed notification created and sent via WebSocket:', notification.id);
+}
+
+async sendInterviewDecisionNotification(input: InterviewDecisionInput): Promise<void> {
+  const notificationData = NotificationMapper.toInterviewDecisionNotification(input);
+  const notification = await this.createNotification(notificationData);
+  
+  io.to(input.userId).emit('notification', {
+    type: 'INTERVIEW_DECISION',
+    id: notification._id.toString(),
+    recipientId: input.userId,
+    data: {
+      applicationId: input.applicationId,
+      jobId: input.jobId,
+      jobTitle: input.jobTitle,
+      interviewId: input.interviewId,
+      decision: input.decision,
+      decisionReason: input.decisionReason,
+      feedback: input.feedback
+    },
+    timestamp: new Date().toISOString()
+  });
+  
+  console.log('Interview decision notification created and sent via WebSocket:', notification.id);
 }
 }

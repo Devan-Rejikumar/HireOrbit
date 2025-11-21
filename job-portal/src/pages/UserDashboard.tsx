@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,151 +11,22 @@ import {
   Home,
   Search,
   Briefcase,
-  Settings,
-  ChevronLeft,
-  ChevronRight
+  Settings
 } from 'lucide-react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import AppliedJobs from '@/components/AppliedJobs';
-import { ChatSidebar } from '@/components/ChatSidebar';
-import { ChatWindow } from '@/components/ChatWindow';
-import { useTotalUnreadCount, useUserConversations, useMessages, useMarkAsRead } from '@/hooks/useChat';
-import { ConversationResponse } from '@/api/_chatService';
-import api from '@/api/axios';
+import { useTotalUnreadCount } from '@/hooks/useChat';
 
 const UserDashboard = () => {
-  const { user, logout, role } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('overview');
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<ConversationResponse | null>(null);
-  const [otherParticipantName, setOtherParticipantName] = useState<string>('');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(user?.id || null);
-  
-  // Get conversations for jobseekers
-  const currentUserId = role === 'jobseeker' ? user?.id || '' : '';
-  const { data: conversations = [] } = useUserConversations(currentUserId);
-  
-  // Get messages for selected conversation
-  const { data: messages = [], isLoading: messagesLoading } = useMessages(
-    selectedConversation?.id || null
-  );
-  
-  const markAsReadMutation = useMarkAsRead();
-
-  // Fetch participant name when conversation is selected
-  useEffect(() => {
-    const fetchOtherParticipantName = async () => {
-      if (!selectedConversation || role !== 'jobseeker') {
-        setOtherParticipantName('');
-        return;
-      }
-
-      try {
-        let companyName: string | null = null;
-        
-        try {
-          interface ApplicationData {
-            companyName?: string;
-            jobId?: string;
-            job?: {
-              companyName?: string;
-              company?: string | {
-                companyName?: string;
-                name?: string;
-              };
-            };
-          }
-          
-          interface ApplicationResponse {
-            success?: boolean;
-            data?: ApplicationData;
-          }
-          
-          const appResponse = await api.get<ApplicationResponse>(`/applications/${selectedConversation.applicationId}`);
-          const responseData = appResponse.data;
-          const applicationData: ApplicationData | undefined = responseData?.data || (responseData as unknown as ApplicationData);
-          
-          companyName = applicationData?.companyName ||
-                      applicationData?.job?.companyName ||
-                      (typeof applicationData?.job?.company === 'object' 
-                        ? applicationData.job.company.companyName || applicationData.job.company.name 
-                        : typeof applicationData?.job?.company === 'string' 
-                          ? applicationData.job.company 
-                          : null) ||
-                      null;
-          
-          if ((!companyName || companyName === 'Company Name' || companyName === 'Unknown Company') && applicationData?.jobId) {
-            try {
-              interface JobResponse {
-                data?: {
-                  job?: {
-                    company?: string;
-                    companyName?: string;
-                  };
-                  company?: string;
-                  companyName?: string;
-                };
-                job?: {
-                  company?: string;
-                  companyName?: string;
-                };
-                company?: string;
-                companyName?: string;
-              }
-              
-              const jobResponse = await api.get<JobResponse>(`/jobs/${applicationData.jobId}`);
-              const jobResponseData = jobResponse.data;
-              const jobData = jobResponseData?.data?.job || jobResponseData?.job || jobResponseData?.data || jobResponseData;
-              
-              if (jobData && typeof jobData === 'object') {
-                companyName = (jobData as any)?.company?.companyName ||
-                            (jobData as any)?.companyName ||
-                            (jobData as any)?.company?.name ||
-                            (typeof (jobData as any)?.company === 'string' ? (jobData as any)?.company : null) ||
-                            null;
-              }
-            } catch (jobError: any) {
-              // Silent fail
-            }
-          }
-          
-          if (companyName && companyName !== 'Company Name' && companyName !== 'Unknown Company') {
-            setOtherParticipantName(companyName);
-            return;
-          }
-        } catch (appError: any) {
-          // Silent fail
-        }
-        
-        setOtherParticipantName('Company');
-      } catch (error) {
-        console.error('Error fetching participant name:', error);
-        setOtherParticipantName('Company');
-      }
-    };
-
-    fetchOtherParticipantName();
-  }, [selectedConversation, role]);
-
-  const handleSelectConversation = (conversation: ConversationResponse) => {
-    setSelectedConversation(conversation);
-    if (currentUserId) {
-      markAsReadMutation.mutate({
-        conversationId: conversation.id,
-        userId: currentUserId
-      });
-    }
-  };
-
-  const handleSendMessage = () => {
-    // This will be handled by ChatWindow component
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -165,9 +36,9 @@ const UserDashboard = () => {
   const sidebarItems = [
     { id: 'overview', label: 'Overview', icon: Home, path: null },
     { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
-    { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: null },
+    { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
     { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
-    { id: 'messages', label: 'Messages', icon: MessageSquare, path: null, badge: totalUnreadMessages },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
     { id: 'password', label: 'Change Password', icon: Lock, path: null },
   ];
 
@@ -176,14 +47,8 @@ const UserDashboard = () => {
       navigate(item.path);
     } else if (item.id === 'password') {
       setIsChangePasswordModalOpen(true);
-    } else if (item.id === 'messages') {
-      setActiveSection('messages');
     } else {
       setActiveSection(item.id);
-      // Reset sidebar collapse when leaving messages section
-      if (isSidebarCollapsed) {
-        setIsSidebarCollapsed(false);
-      }
     }
   };
 
@@ -194,7 +59,9 @@ const UserDashboard = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {activeSection === 'applied-jobs' ? 'Applied Jobs' : 'Dashboard'}
+              </h1>
             </div>
             
             <div className="flex items-center gap-3">
@@ -232,7 +99,7 @@ const UserDashboard = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 relative transition-all duration-300`}>
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -288,23 +155,6 @@ const UserDashboard = () => {
             </div>
           </div>
         </aside>
-
-        {/* Toggle Sidebar Button - Only show in messages section */}
-        {activeSection === 'messages' && (
-          <button
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 ${
-              isSidebarCollapsed ? 'left-0' : 'left-64'
-            }`}
-            aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-          >
-            {isSidebarCollapsed ? (
-              <ChevronRight className="h-5 w-5 text-gray-600" />
-            ) : (
-              <ChevronLeft className="h-5 w-5 text-gray-600" />
-            )}
-          </button>
-        )}
 
         {/* Main Content */}
         <main className="flex-1 p-6">
@@ -406,44 +256,6 @@ const UserDashboard = () => {
 
           {activeSection === 'applied-jobs' && user?.id && (
             <AppliedJobs userId={user.id} />
-          )}
-
-          {activeSection === 'messages' && role === 'jobseeker' && (
-            <div className="h-[calc(100vh-68px)] flex -m-6">
-              {/* Chat Sidebar */}
-              <div className="w-1/3 border-r border-gray-200 bg-white">
-                <ChatSidebar
-                  conversations={conversations}
-                  selectedConversationId={selectedConversation?.id || null}
-                  currentUserId={currentUserId}
-                  onSelectConversation={handleSelectConversation}
-                  role={role}
-                />
-              </div>
-
-              {/* Chat Window */}
-              <div className="flex-1 bg-white">
-                {selectedConversation ? (
-                  <ChatWindow
-                    conversationId={selectedConversation.id}
-                    currentUserId={currentUserId}
-                    messages={messages}
-                    isLoading={messagesLoading}
-                    onSendMessage={handleSendMessage}
-                    otherParticipantName={otherParticipantName}
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-50">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
-                        <MessageSquare className="w-8 h-8 text-white" />
-                      </div>
-                      <p className="text-gray-500 text-lg">Select a conversation to start chatting</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           )}
         </main>
       </div>
