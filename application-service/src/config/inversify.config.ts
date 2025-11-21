@@ -13,6 +13,10 @@ import { InterviewRepository } from '../repositories/implementations/InterviewRe
 import { IInterviewService } from '../services/interface/IInterviewService';
 import { InterviewService } from '../services/implementations/InterviewService';
 import { InterviewController } from '../controllers/InterviewController';
+import { IUserServiceClient } from '../services/interface/IUserServiceClient';
+import { UserServiceClient } from '../services/implementations/UserServiceClient';
+import { IJobServiceClient } from '../services/interface/IJobServiceClient';
+import { JobServiceClient } from '../services/implementations/JobServiceClient';
 import {TYPES} from './types';
 
 const container = new Container();
@@ -28,6 +32,8 @@ container.bind<ApplicationController>(TYPES.ApplicationController).to(Applicatio
 container.bind<IInterviewRepository>(TYPES.IInterviewRepository).to(InterviewRepository);
 container.bind<IInterviewService>(TYPES.IInterviewService).to(InterviewService);
 container.bind<InterviewController>(TYPES.InterviewController).to(InterviewController);
+container.bind<IUserServiceClient>(TYPES.IUserServiceClient).to(UserServiceClient);
+container.bind<IJobServiceClient>(TYPES.IJobServiceClient).to(JobServiceClient);
 
 
 export { container };

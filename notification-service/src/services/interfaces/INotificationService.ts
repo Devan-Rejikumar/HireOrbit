@@ -4,7 +4,8 @@ import {
   ApplicationReceivedInput, 
   StatusUpdatedInput, 
   ApplicationWithdrawnInput,
-  InterviewConfirmedInput
+  InterviewConfirmedInput,
+  InterviewDecisionInput
 } from '../../dto/mappers/notification.mapper';
 
 export interface INotificationService {
@@ -20,4 +21,5 @@ export interface INotificationService {
   sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void>;
   sendApplicationWithdrawnNotification(input: ApplicationWithdrawnInput): Promise<void>;
   sendInterviewConfirmedNotification(input: InterviewConfirmedInput): Promise<void>;
+  sendInterviewDecisionNotification(input: InterviewDecisionInput): Promise<void>;
 }

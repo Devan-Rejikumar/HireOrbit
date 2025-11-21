@@ -5,13 +5,13 @@ import { IInterviewRepository, InterviewWithApplication } from "../interface/IIn
 
 @injectable()
 export class InterviewRepository implements IInterviewRepository {
-    private prisma: PrismaClient;
+    private _prisma: PrismaClient;
     constructor() {
-        this.prisma = new PrismaClient();
+        this._prisma = new PrismaClient();
     }
 
     async create(data: { applicationId: string; scheduledAt: Date; duration: number; type: string; location?: string; meetingLink?: string; notes?: string; }): Promise<Interview> {
-        return await this.prisma.interview.create({
+        return await this._prisma.interview.create({
             data: {
                 ...data,
                 status: 'PENDING'
@@ -20,38 +20,38 @@ export class InterviewRepository implements IInterviewRepository {
     }
 
     async findById(id: string): Promise<Interview | null> {
-        return await this.prisma.interview.findUnique({
+        return await this._prisma.interview.findUnique({
             where:{id}
         });
     }
 
     async findByApplicationId(applicationId: string): Promise<Interview[]> {
-        return await this.prisma.interview.findMany({
+        return await this._prisma.interview.findMany({
             where:{applicationId},
             orderBy:{scheduledAt:'asc'}
         });
     }
 
     async findByCompanyId(companyId: string): Promise<InterviewWithApplication[]> {
-        return await this.prisma.interview.findMany({
+        return await this._prisma.interview.findMany({
             where:{application:{companyId}},include:{application:true},orderBy:{scheduledAt:'asc'}
         })
     }
 
     async update(id: string, data: Partial<Interview>): Promise<Interview> {
-        return await this.prisma.interview.update({
+        return await this._prisma.interview.update({
             where:{id},
             data
         });
     }
 
     async updateStatus(id: string, status: string): Promise<Interview> {
-        return await this.prisma.interview.update({
+        return await this._prisma.interview.update({
             where:{id},
             data:{status}
         })
     }
     async delete(id: string): Promise<void> {
-        await this.prisma.interview.delete({where:{id}})
+        await this._prisma.interview.delete({where:{id}})
     }
 }

@@ -34,6 +34,8 @@ const CompanyJobListing = lazy(() => import('./pages/CompanyJobListing'));
 const CompanySettings = lazy(() => import('./pages/CompanySettings'));
 const CompanyInterviewManagement = lazy(() => import('./pages/CompanyInterviewManagement'));
 const MySchedule = lazy(() => import('./pages/MySchedule'));
+const AppliedJobsPage = lazy(() => import('./pages/AppliedJobsPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const BlockedUser = lazy(() => import('./pages/BlockedUser'));
 const Chat = lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
 const NotificationTest = lazy(() => import('./pages/NotificationTest'));
@@ -132,6 +134,16 @@ const AppContent = () => {
           }
         />
         <Route
+          path="/applied-jobs"
+          element={
+            <ProtectedRoute requireAuth allowedRoles={['jobseeker']}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AppliedJobsPage />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/company/profile-setup"
           element={
             <Suspense fallback={<LoadingFallback />}>
@@ -158,6 +170,16 @@ const AppContent = () => {
         <Route path="/company/applications" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyApplications /></Suspense></CompanyProtectedRoute>} />
         <Route path="/company/interviews" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyInterviewManagement /></Suspense></CompanyProtectedRoute>} />
         <Route path="/schedule" element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><MySchedule /></Suspense></ProtectedRoute>} />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute requireAuth allowedRoles={['jobseeker']}>
+              <Suspense fallback={<LoadingFallback />}>
+                <MessagesPage />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
         <Route path="/chat" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><Chat /></Suspense></ProtectedRoute>} />
         <Route path="/blocked" element={<Suspense fallback={<LoadingFallback />}><BlockedUser /></Suspense>} />
         

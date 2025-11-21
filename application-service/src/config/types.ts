@@ -7,5 +7,7 @@ export const TYPES = {
     StatusUpdateService: Symbol.for('StatusUpdateService'),
     IInterviewService: Symbol.for('IInterviewService'),
     IInterviewRepository: Symbol.for('IInterviewRepository'),
-    InterviewController: Symbol.for('InterviewController')
+    InterviewController: Symbol.for('InterviewController'),
+    IUserServiceClient: Symbol.for('IUserServiceClient'),
+    IJobServiceClient: Symbol.for('IJobServiceClient')
 };

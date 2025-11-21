@@ -61,7 +61,6 @@ app.get('/health', (req, res) => {
 
 app.use('/api/jobs', jobRoutes);
 
-// Global error handler (must be last)
 app.use(ErrorHandler);
 
 export default app;

@@ -17,7 +17,7 @@ export const logger = createLogger({
       format: combine(colorize(), timestamp(), consoleFormat),
     }),
     new LokiTransport({
-      host: 'http://localhost:3100', 
+      host: process.env.LOKI_URL || 'http://localhost:3100', 
       labels: { service: serviceName },
       json: true,
     }),

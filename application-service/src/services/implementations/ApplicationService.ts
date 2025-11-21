@@ -24,43 +24,13 @@ import {
   calculateApplicationStats
 } from '../../dto/mappers/application.mapper';
 import {TYPES} from '../../config/types';
-
-interface UserApiResponse {
-  data?: {
-    user?: {
-      id?: string;
-      name?: string;
-      username?: string; 
-      email?: string;
-      role?: string;
-      phone?: string;
-      profile?: unknown;
-    };
-  };
-}
-
-interface JobApiResponse {
-  success?: boolean;
-  data?: {
-    job?: {
-      id?: string;
-      title?: string;
-      company?: string; 
-      companyId?: string;
-      description?: string;
-      location?: string;
-      [key: string]: any; 
-    };
-
-    title?: string;
-    company?: string;
-  };
-  job?: {
-    title?: string;
-    company?: string;
-    [key: string]: any;
-  };
-}
+import { logger } from '../../utils/logger';
+import { AppError } from '../../utils/errors/AppError';
+import { Messages } from '../../constants/Messages';
+import { HttpStatusCode } from '../../enums/StatusCodes';
+import { IUserServiceClient } from '../interface/IUserServiceClient';
+import { IJobServiceClient } from '../interface/IJobServiceClient';
+import { UserApiResponse, JobApiResponse } from '../../types/external-api.types';
 
 
 
@@ -69,14 +39,16 @@ export class ApplicationService implements IApplicationService {
   constructor(
     @inject(TYPES.IApplicationRepository) private _applicationRepository: IApplicationRepository,
     @inject(TYPES.IEventService) private _eventService: IEventService,
-    @inject(TYPES.StatusUpdateService) private _statusUpdateService: StatusUpdateService
+    @inject(TYPES.StatusUpdateService) private _statusUpdateService: StatusUpdateService,
+    @inject(TYPES.IUserServiceClient) private _userServiceClient: IUserServiceClient,
+    @inject(TYPES.IJobServiceClient) private _jobServiceClient: IJobServiceClient
   ) {}
 
   async applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse> {
   
     const eligibility = await this.validateApplicationEligibility(data.userId, data.jobId);
     if (!eligibility.eligible) {
-      throw new Error(eligibility.reason || 'Not eligible to apply for this job');
+      throw new AppError(eligibility.reason || Messages.APPLICATION.NOT_ELIGIBLE, HttpStatusCode.BAD_REQUEST);
     }
     const application = await this._applicationRepository.create(data);
     
@@ -88,25 +60,46 @@ export class ApplicationService implements IApplicationService {
     companyId: application.companyId,
   });
 } catch (error) {
-  console.warn('Kafka not available, continuing...', error);
+  logger.warn('Kafka not available, continuing...', error);
 }
 
     return mapApplicationToResponse(application);
   }
 
-  async getUserApplications(userId: string): Promise<UserApplicationsResponse> {
-    const applications = await this._applicationRepository.findByUserId(userId);
-    const total = applications.length;
+  async getUserApplications(userId: string, page: number = 1, limit: number = 10, status?: string): Promise<UserApplicationsResponse> {
+    const { applications, total } = page && limit 
+      ? await this._applicationRepository.findByUserIdPaginated(userId, page, limit, status)
+      : { applications: await this._applicationRepository.findByUserId(userId), total: 0 };
+    const enrichedApplications = await Promise.all(
+      applications.map(async (app) => {
+        try {
+          const jobData = await this._jobServiceClient.getJobById(app.jobId);
+          return {
+            ...app,
+            jobTitle: jobData.data?.job?.title || jobData.job?.title || 'Job Title',
+            companyName: jobData.data?.job?.company || jobData.job?.company || 'Company Name'
+          };
+        } catch (error) {
+          logger.error(`Error enriching application ${app.id} with job details:`, error);
+          return {
+            ...app,
+            jobTitle: 'Job Title',
+            companyName: 'Company Name'
+          };
+        }
+      })
+    );
+    const finalTotal = total || enrichedApplications.length;
 
-    console.log('ApplicationService] getUserApplications - applications from repository:', 
-      applications.map(app => ({ 
+    logger.info('ApplicationService] getUserApplications - applications from repository:', 
+      enrichedApplications.map(app => ({ 
         id: app.id, 
         jobTitle: app.jobTitle, 
         companyName: app.companyName 
       }))
     );
 
-    return mapUserApplicationsResponse(applications, total);
+    return mapUserApplicationsResponse(enrichedApplications, finalTotal);
   }
 
 async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean; status?: string }> {
@@ -117,53 +110,18 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       status: application?.status
     };
   } catch (error) {
-    console.error('Error checking application status:', error);
-    throw new Error('Failed to check application status');
+    logger.error('Error checking application status:', error);
+    throw new AppError('Failed to check application status', HttpStatusCode.INTERNAL_SERVER_ERROR);
   }
 }
 
   async getApplicationById(id: string): Promise<ApplicationDetailsResponse> {
     const application = await this._applicationRepository.findWithRelations(id);
     if (!application) {
-      throw new Error('Application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     
-    let externalData = {
-      jobTitle: 'Job Title',
-      companyName: 'Company Name', 
-      userName: 'User Name',
-      userEmail: 'user@example.com' 
-    };
-    
-    try {
-      const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-      const userRes = await fetch(`${apiGatewayUrl}/api/users/${application.userId}`);
-      if (userRes.ok) {
-        const userData = await userRes.json() as UserApiResponse;
-        externalData.userName = userData.data?.user?.username || userData.data?.user?.name || 'User Name';
-        externalData.userEmail = userData.data?.user?.email || 'user@example.com';
-      }
-    } catch (error) {
-      console.error(`Error fetching user details for ${application.userId}:`, error);
-    }
-    
-    try {
-      const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-      const jobRes = await fetch(`${apiGatewayUrl}/api/jobs/${application.jobId}`);
-      if (jobRes.ok) {
-        const jobData = await jobRes.json() as JobApiResponse;
-        externalData.jobTitle = jobData.data?.job?.title || 
-                               jobData.data?.title || 
-                               jobData.job?.title || 
-                               'Job Title';
-        externalData.companyName = jobData.data?.job?.company || 
-                                   jobData.data?.company ||
-                                   jobData.job?.company ||
-                                   'Company Name';
-      }
-    } catch (error) {
-      console.error(`Error fetching job details for ${application.jobId}:`, error);
-    }
+    const externalData = await this.fetchExternalData(application.userId, application.jobId);
 
     return mapApplicationToDetailsResponse(application, externalData);
   }
@@ -171,13 +129,13 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   async withdrawApplication(applicationId: string, userId: string): Promise<ApplicationResponse> {
     const application = await this._applicationRepository.findById(applicationId);
     if (!application) {
-      throw new Error('Application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     if (application.userId !== userId) {
-      throw new Error('Unauthorized to withdraw this application');
+      throw new AppError(Messages.VALIDATION.UNAUTHORIZED_ACCESS, HttpStatusCode.FORBIDDEN);
     }
     if (application.status === 'WITHDRAWN') {
-      throw new Error('Application already withdrawn');
+      throw new AppError('Application already withdrawn', HttpStatusCode.BAD_REQUEST);
     }
 
     const updatedApplication = await this._applicationRepository.updateStatus(
@@ -195,7 +153,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
         withdrawnAt: new Date()
       });
     } catch (error) {
-      console.warn('Kafka not available, continuing...', error);
+      logger.warn('Kafka not available, continuing...', error);
     }
 
     return mapApplicationToResponse(updatedApplication);
@@ -204,42 +162,34 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   async getCompanyApplications(companyId: string): Promise<CompanyApplicationsResponse> {
     try {
       const allApplications = await this._applicationRepository.findByCompanyIdWithRelations(companyId);
-      console.log(`Total applications for company ${companyId}:`, allApplications.length);
+      logger.info(`Total applications for company ${companyId}:`, allApplications.length);
       const applications = allApplications.filter(app => app.status !== 'WITHDRAWN');
-      console.log(`Active applications (excluding WITHDRAWN):`, applications.length);
+      logger.info(`Active applications (excluding WITHDRAWN):`, applications.length);
       const stats = calculateApplicationStats(applications);
-      console.log(`Stats calculated:`, stats);
+      logger.info(`Stats calculated:`, stats);
     
       const externalDataMap = new Map();
       await Promise.all(
         applications.map(async (app) => {
           try {
-            const userRes = await fetch(`http://localhost:3000/api/users/${app.userId}`);
-            console.log(` [ApplicationService] - User API response status: ${userRes.status}`);
-            
-            const userData = (userRes.ok ? await userRes.json() : {}) as UserApiResponse;
-            console.log(` [ApplicationService] - User API response data:`, JSON.stringify(userData, null, 2));
-            const jobRes = await fetch(`http://localhost:3002/api/jobs/${app.jobId}`);
-            const jobData = (jobRes.ok ? await jobRes.json() : {}) as JobApiResponse;
-            
-            console.log(`Fetched data for ${app.id}:`, {
-              userName: userData.data?.user?.name,
-              jobTitle: jobData.data?.job?.title
+            const externalData = await this.fetchExternalData(app.userId, app.jobId);
+            logger.info(`Fetched data for ${app.id}:`, {
+              userName: externalData.userName,
+              jobTitle: externalData.jobTitle
             });
             externalDataMap.set(app.id, {
-              userName: userData.data?.user?.username || userData.data?.user?.name || 'Unknown User', 
-              userEmail: userData.data?.user?.email || 'Unknown Email',
+              userName: externalData.userName,
+              userEmail: externalData.userEmail,
               userPhone: null,
               userProfile: null,
-              jobTitle: jobData.data?.job?.title || 'Unknown Job',
-              companyName: jobData.data?.job?.company || 'Unknown Company'
+              jobTitle: externalData.jobTitle,
+              companyName: externalData.companyName
             });
-            
           } catch (error) {
-            console.error(` Error for application ${app.id}:`, error);
+            logger.error(` Error for application ${app.id}:`, error);
             externalDataMap.set(app.id, {
-              userName: `User Name`,
-              userEmail: `User Email`,
+              userName: 'User Name',
+              userEmail: 'User Email',
               userPhone: null,
               userProfile: null,
               jobTitle: 'Unknown Job',
@@ -256,7 +206,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
         rejected: stats.rejected
       });
     } catch (error) {
-      console.error('ApplicationService Error in getCompanyApplications:', error);
+      logger.error('ApplicationService Error in getCompanyApplications:', error);
       throw error;
     }
   }
@@ -265,7 +215,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
 
     const existingApplication = await this._applicationRepository.findById(applicationId);
     if (!existingApplication) {
-      throw new Error('Application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     this._statusUpdateService.validateOrThrow(
       existingApplication.status as ApplicationStatus, 
@@ -274,7 +224,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     const updatedApplication = await this._applicationRepository.updateStatus(applicationId, data, changedBy);
     const applicationWithRelations = await this._applicationRepository.findWithRelations(applicationId);
     if (!applicationWithRelations) {
-      throw new Error('Application not found after update');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     try {
       await this._eventService.publish('application.status_updated', {
@@ -288,15 +238,13 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
         updatedAt: updatedApplication.updatedAt
       });
     } catch (error) {
-      console.warn('Kafka event publish failed, continuing...', error);
+      logger.warn('Kafka event publish failed, continuing...', error);
     }
 
-    const externalData = {
-      jobTitle: 'Job Title',
-      companyName: 'Company Name',
-      userName: 'User Name',
-      userEmail: 'user@example.com'
-    };
+    const externalData = await this.fetchExternalData(
+      existingApplication.userId,
+      existingApplication.jobId
+    );
 
     return mapApplicationToDetailsResponse(applicationWithRelations, externalData);
   }
@@ -304,25 +252,20 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   async addApplicationNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationDetailsResponse> {
     const application = await this._applicationRepository.findById(applicationId);
     if (!application) {
-      throw new Error('Application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    
     await this._applicationRepository.addNote(applicationId, data);
 
-    
     const updatedApplication = await this._applicationRepository.findWithRelations(applicationId);
     if (!updatedApplication) {
-      throw new Error('Application not found after adding note');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    
-    const externalData = {
-      jobTitle: 'Job Title',
-      companyName: 'Company Name',
-      userName: 'User Name',
-      userEmail: 'user@example.com'
-    };
+    const externalData = await this.fetchExternalData(
+      updatedApplication.userId,
+      updatedApplication.jobId
+    );
 
     return mapApplicationToDetailsResponse(updatedApplication, externalData);
   }
@@ -330,17 +273,13 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   async getApplicationDetails(applicationId: string, companyId: string): Promise<ApplicationDetailsResponse> {
     const application = await this._applicationRepository.findWithRelations(applicationId);
     if (!application) {
-      throw new Error('Application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     if (application.companyId !== companyId) {
-      throw new Error('Unauthorized to view this application');
+      throw new AppError(Messages.VALIDATION.UNAUTHORIZED_ACCESS, HttpStatusCode.FORBIDDEN);
     }
-    const externalData = {
-      jobTitle: 'Job Title',
-      companyName: 'Company Name',
-      userName: 'User Name',
-      userEmail: 'user@example.com'
-    };
+    
+    const externalData = await this.fetchExternalData(application.userId, application.jobId);
 
     return mapApplicationToDetailsResponse(application, externalData);
   }
@@ -403,10 +342,10 @@ async searchApplications(filters: {
     for (const applicationId of applicationIds) {
       const application = await this._applicationRepository.findById(applicationId);
       if (!application) {
-        throw new Error(`Application ${applicationId} not found`);
+        throw new AppError(`Application ${applicationId} not found`, HttpStatusCode.NOT_FOUND);
       }
       if (application.companyId !== companyId) {
-        throw new Error(`Unauthorized to update application ${applicationId}`);
+        throw new AppError(`Unauthorized to update application ${applicationId}`, HttpStatusCode.FORBIDDEN);
       }
     }
     await this._applicationRepository.bulkUpdateStatus(
@@ -436,27 +375,64 @@ async searchApplications(filters: {
       };
     }
     try {
-      const jobRes = await fetch(`http://localhost:3002/api/jobs/${jobId}`);
-      if (jobRes.ok) {
-        const jobData = await jobRes.json() as { data?: { job?: { applicationDeadline?: string | Date } } };
-        const deadline = jobData.data?.job?.applicationDeadline;
+      const deadline = await this._jobServiceClient.getJobDeadline(jobId);
+      
+      if (deadline) {
+        const now = new Date();
         
-        if (deadline) {
-          const deadlineDate = new Date(deadline);
-          const now = new Date();
-          
-          if (deadlineDate < now) {
-            return {
-              eligible: false,
-              reason: 'Application deadline has passed'
-            };
-          }
+        if (deadline < now) {
+          return {
+            eligible: false,
+            reason: 'Application deadline has passed'
+          };
         }
       }
     } catch (error) {
-      console.error('Error checking job deadline:', error);
+      logger.error('Error checking job deadline:', error);
     }
 
     return { eligible: true };
+  }
+
+  private async fetchExternalData(userId: string, jobId: string): Promise<{
+    jobTitle: string;
+    companyName: string;
+    userName: string;
+    userEmail: string;
+  }> {
+    const externalData = {
+      jobTitle: 'Job Title',
+      companyName: 'Company Name',
+      userName: 'User Name',
+      userEmail: 'user@example.com'
+    };
+
+    try {
+      const userData = await this._userServiceClient.getUserById(userId);
+      if (userData.data?.user) {
+        externalData.userName = userData.data.user.username || userData.data.user.name || 'User Name';
+        externalData.userEmail = userData.data.user.email || 'user@example.com';
+      }
+    } catch (error) {
+      logger.error(`Error fetching user details for ${userId}:`, error);
+    }
+
+    try {
+      const jobData = await this._jobServiceClient.getJobById(jobId);
+      if (jobData.data?.job || jobData.job) {
+        externalData.jobTitle = jobData.data?.job?.title || 
+                               jobData.data?.title || 
+                               jobData.job?.title || 
+                               'Job Title';
+        externalData.companyName = jobData.data?.job?.company || 
+                                   jobData.data?.company ||
+                                   jobData.job?.company ||
+                                   'Company Name';
+      }
+    } catch (error) {
+      logger.error(`Error fetching job details for ${jobId}:`, error);
+    }
+
+    return externalData;
   }
 }

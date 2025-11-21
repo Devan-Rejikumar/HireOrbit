@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import path from 'path';
 import dotenv from 'dotenv';
+import { logger } from '../utils/logger';
 
 
 dotenv.config({ path: '.env' });
@@ -11,10 +12,7 @@ process.env.CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dgbbdh
 process.env.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || '372466265213178';
 process.env.CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || 'RsbEo43EGP0e-lKgzEKqF2ktw-4';
 
-console.log('Cloudinary] Environment variables:');
-console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
-console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY);
-console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET);
+logger.info('Cloudinary] Environment variables configured');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -63,7 +61,7 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
     
     return result.secure_url;
   } catch (error) {
-    console.error('Error uploading to Cloudinary:', error);
+    logger.error('Error uploading to Cloudinary:', error);
     throw error;
   }
 };
@@ -74,7 +72,7 @@ export const deleteResume = async (publicId: string): Promise<void> => {
       resource_type: 'raw'
     });
   } catch (error) {
-    console.error('Error deleting resume from Cloudinary:', error);
+    logger.error('Error deleting resume from Cloudinary:', error);
     throw error;
   }
 };

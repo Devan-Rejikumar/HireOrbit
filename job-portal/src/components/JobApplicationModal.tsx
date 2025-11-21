@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { FormField } from './ui/FormField';
 import { FileUpload } from './ui/FileUpload';
 import { ExperienceSelector } from './ui/ExperienceSelector';
 import { _applicationService, ApplicationResponse } from '../api/applicationService';
+import { userService } from '../api/userService';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -52,6 +53,42 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [savedResume, setSavedResume] = useState<string | null>(null);
+  const [useSavedResume, setUseSavedResume] = useState(false);
+  const [loadingResume, setLoadingResume] = useState(false);
+
+  // Fetch saved resume when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchSavedResume();
+    } else {
+      // Reset state when modal closes
+      setSavedResume(null);
+      setUseSavedResume(false);
+      setFormData({
+        coverLetter: '',
+        resume: null,
+        expectedSalary: '',
+        availability: '',
+        experience: '',
+      });
+    }
+  }, [isOpen]);
+
+  const fetchSavedResume = async () => {
+    try {
+      setLoadingResume(true);
+      const response = await userService.getResume();
+      if (response.data?.resume) {
+        setSavedResume(response.data.resume);
+      }
+    } catch (error) {
+      // User might not have a saved resume, that's okay
+      setSavedResume(null);
+    } finally {
+      setLoadingResume(false);
+    }
+  };
 
   const handleInputChange = (field: keyof ApplicationData, value: string | File | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -67,8 +104,15 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       newErrors.coverLetter = 'Cover letter is required';
     }
 
-    if (!formData.resume) {
-      newErrors.resume = 'Resume is required';
+    // Resume validation: either use saved resume OR upload new one
+    if (useSavedResume) {
+      if (!savedResume) {
+        newErrors.resume = 'No saved resume found. Please upload a new resume.';
+      }
+    } else {
+      if (!formData.resume) {
+        newErrors.resume = 'Resume is required';
+      }
     }
 
     if (!formData.expectedSalary.trim()) {
@@ -97,18 +141,23 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     try {
       setSubmitting(true);
 
-      const resumeBase64 = await fileToBase64(formData.resume!);
-
-      const applicationData = {
+      const applicationData: any = {
         jobId,
         companyId: companyId || companyName, // Use companyId if available, fallback to companyName
-        resumeBase64,
-        resumeFileName: formData.resume!.name,
         coverLetter: formData.coverLetter,
         expectedSalary: formData.expectedSalary,
         availability: formData.availability,
         experience: formData.experience,
       };
+
+      // If using saved resume, send resumeUrl; otherwise upload new file
+      if (useSavedResume && savedResume) {
+        applicationData.resumeUrl = savedResume;
+      } else if (formData.resume) {
+        const resumeBase64 = await fileToBase64(formData.resume);
+        applicationData.resumeBase64 = resumeBase64;
+        applicationData.resumeFileName = formData.resume.name;
+      }
 
       // Use the application service
       const result: ApplicationResponse = await _applicationService.applyForJob(applicationData);
@@ -121,7 +170,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
         expectedSalary: formData.expectedSalary,
         availability: formData.availability,
         experience: formData.experience,
-        resumeUrl: result.data.resumeUrl,
+        resumeUrl: result.data.resumeUrl || savedResume || undefined,
       });
       
       toast.success('Application submitted successfully! 🎉');
@@ -203,13 +252,71 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
             />
           </FormField>
 
-          {/* Resume Upload */}
+          {/* Resume Selection */}
           <FormField label="Resume" required error={errors.resume}>
-            <FileUpload
-              onFileSelect={(file) => handleInputChange('resume', file)}
-              error={errors.resume}
-              accept=".pdf,.doc,.docx"
-            />
+            {savedResume && (
+              <div className="mb-4 space-y-3">
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="resumeOption"
+                      checked={useSavedResume}
+                      onChange={() => {
+                        setUseSavedResume(true);
+                        handleInputChange('resume', null);
+                        if (errors.resume) {
+                          setErrors(prev => ({ ...prev, resume: undefined }));
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Use saved resume from profile
+                    </span>
+                  </label>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="resumeOption"
+                      checked={!useSavedResume}
+                      onChange={() => {
+                        setUseSavedResume(false);
+                        if (errors.resume) {
+                          setErrors(prev => ({ ...prev, resume: undefined }));
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Upload new resume
+                    </span>
+                  </label>
+                </div>
+                {useSavedResume && savedResume && (
+                  <div className="ml-6 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-800">
+                      ✓ Using saved resume from your profile
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            {loadingResume && (
+              <div className="text-sm text-gray-500 mb-2">Checking for saved resume...</div>
+            )}
+            {!useSavedResume && (
+              <FileUpload
+                onFileSelect={(file) => {
+                  handleInputChange('resume', file);
+                  setUseSavedResume(false);
+                }}
+                error={errors.resume}
+                accept=".pdf,.doc,.docx"
+              />
+            )}
           </FormField>
 
           {/* Expected Salary */}

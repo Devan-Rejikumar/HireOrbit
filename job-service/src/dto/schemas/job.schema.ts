@@ -35,7 +35,8 @@ export const UpdateJobSchema = z.object({
 export const JobSearchSchema = z.object({
   query: z.string().optional(),
   title: z.string().optional(), 
-  company: z.string().optional(), 
+  company: z.string().optional(),
+  companyId: z.string().optional(),
   location: z.string().optional(),
   jobType: z.string().optional(),
   experienceLevel: z.string().optional(),
@@ -43,8 +44,9 @@ export const JobSearchSchema = z.object({
   workLocation: z.string().optional(),
   minSalary: z.number().optional(),
   maxSalary: z.number().optional(),
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(10),
+  isActive: z.coerce.boolean().optional(),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
   sortBy: z.enum(['createdAt', 'title', 'salary']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

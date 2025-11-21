@@ -47,6 +47,19 @@ interface InterviewConfirmedEventData {
   confirmedAt: Date;
 }
 
+interface InterviewDecisionEventData {
+  userId: string;
+  interviewId: string;
+  applicationId: string;
+  jobId: string;
+  jobTitle: string;
+  decision: string;
+  decisionReason?: string;
+  feedback?: string;
+  decidedBy: string;
+  decidedAt: Date;
+}
+
 interface ApplicationWithdrawnEventData {
   companyId: string;
   applicationId: string;
@@ -154,6 +167,12 @@ async function initializeServices(): Promise<void> {
       logger.info('Interview confirmed event received:', data);
       const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
       await eventServiceInstance.handleInterviewConfirmed(data as InterviewConfirmedEventData);
+    });
+
+    await _eventService.subscribe('interview.decision_made', async (data) => {
+      logger.info('Interview decision made event received:', data);
+      const eventServiceInstance = container.get<EventService>(TYPES.IEventService) as EventService;
+      await eventServiceInstance.handleInterviewDecision(data as InterviewDecisionEventData);
     });
 
     const eventServiceInstance = _eventService as EventService;

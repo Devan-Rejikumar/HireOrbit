@@ -3,47 +3,34 @@ import { IInterviewService } from '../interface/IInterviewService';
 import { IInterviewRepository, InterviewWithApplication } from '../../repositories/interface/IInterviewRepository';
 import { IApplicationRepository } from '../../repositories/interface/IApplicationRepository';
 import { IEventService } from '../interface/IEventService';
+import { IUserServiceClient } from '../interface/IUserServiceClient';
+import { IJobServiceClient } from '../interface/IJobServiceClient';
 import { TYPES } from '../../config/types';
 import { InterviewResponse, InterviewWithDetailsResponse } from '../../dto/responses/interview.response';
 import { CreateInterviewInput, UpdateInterviewInput, InterviewDecisionInput } from '../../dto/schemas/interview.schema';
-import axios from 'axios';
-
-interface UserApiResponse {
-  data?: {
-    user?: {
-      id?: string;
-      name?: string;
-      username?: string;
-      email?: string;
-    };
-  };
-}
-
-interface JobApiResponse {
-  data?: {
-    job?: {
-      title?: string;
-      company?: string;
-    };
-  };
-}
+import { AppError } from '../../utils/errors/AppError';
+import { Messages } from '../../constants/Messages';
+import { HttpStatusCode } from '../../enums/StatusCodes';
+import { logger } from '../../utils/logger';
 
 @injectable()
 export class InterviewService implements IInterviewService {
   constructor(
     @inject(TYPES.IInterviewRepository) private _interviewRepository: IInterviewRepository,
     @inject(TYPES.IApplicationRepository) private _applicationRepository: IApplicationRepository,
-    @inject(TYPES.IEventService) private _eventService: IEventService
+    @inject(TYPES.IEventService) private _eventService: IEventService,
+    @inject(TYPES.IUserServiceClient) private _userServiceClient: IUserServiceClient,
+    @inject(TYPES.IJobServiceClient) private _jobServiceClient: IJobServiceClient
   ) {}
 
   async scheduleInterview(data: CreateInterviewInput, scheduledBy: string): Promise<InterviewResponse> {
     const application = await this._applicationRepository.findById(data.applicationId);
     if (!application) {
-      throw new Error('Application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
     if (application.status !== 'SHORTLISTED') {
-      throw new Error('Can only schedule interviews for shortlisted applications');
+      throw new AppError('Can only schedule interviews for shortlisted applications', HttpStatusCode.BAD_REQUEST);
     }
     const interview = await this._interviewRepository.create({
       applicationId: data.applicationId,
@@ -61,12 +48,12 @@ export class InterviewService implements IInterviewService {
   async getInterviewById(id: string): Promise<InterviewWithDetailsResponse> {
     const interview = await this._interviewRepository.findById(id);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new AppError(Messages.INTERVIEW.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
     const application = await this._applicationRepository.findById(interview.applicationId);
     if (!application) {
-      throw new Error('Associated application not found');
+      throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
     const [userDetails, jobDetails] = await Promise.all([
@@ -118,16 +105,26 @@ export class InterviewService implements IInterviewService {
     return interviewsWithDetails.filter(i => i !== null) as InterviewWithDetailsResponse[];
   }
 
-  async getCandidateInterviews(userId: string): Promise<InterviewWithDetailsResponse[]> {
+  async getCandidateInterviews(userId: string, page: number = 1, limit: number = 10, status?: string): Promise<{
+    interviews: InterviewWithDetailsResponse[];
+    total: number;
+  }> {
     const applications = await this._applicationRepository.findByUserId(userId);
     const allInterviews = await Promise.all(
       applications.map(app => this._interviewRepository.findByApplicationId(app.id))
     );
     
-    const interviews = allInterviews.flat();
+    let interviews = allInterviews.flat();
+    if (status) {
+      interviews = interviews.filter(i => i.status === status);
+    }
+
+    const total = interviews.length;
+    const skip = (page - 1) * limit;
+    const paginatedInterviews = interviews.slice(skip, skip + limit);
 
     const interviewsWithDetails = await Promise.all(
-      interviews.map(async (interview) => {
+      paginatedInterviews.map(async (interview) => {
         const application = await this._applicationRepository.findById(interview.applicationId);
         if (!application) {
           return null;
@@ -148,13 +145,16 @@ export class InterviewService implements IInterviewService {
       })
     );
 
-    return interviewsWithDetails.filter(i => i !== null) as InterviewWithDetailsResponse[];
+    return {
+      interviews: interviewsWithDetails.filter(i => i !== null) as InterviewWithDetailsResponse[],
+      total
+    };
   }
 
   async updateInterview(id: string, data: UpdateInterviewInput, updatedBy: string): Promise<InterviewResponse> {
     const interview = await this._interviewRepository.findById(id);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new AppError(Messages.INTERVIEW.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
     const oldStatus = interview.status;
@@ -190,7 +190,7 @@ export class InterviewService implements IInterviewService {
           });
         }
       } catch (error) {
-        console.warn('Failed to publish interview confirmed event:', error);
+        logger.warn('Failed to publish interview confirmed event:', error);
       }
     }
 
@@ -200,7 +200,7 @@ export class InterviewService implements IInterviewService {
   async cancelInterview(id: string, cancelledBy: string, reason?: string): Promise<InterviewResponse> {
     const interview = await this._interviewRepository.findById(id);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new AppError(Messages.INTERVIEW.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
     const cancelledInterview = await this._interviewRepository.updateStatus(id, 'CANCELLED');
@@ -211,10 +211,10 @@ export class InterviewService implements IInterviewService {
   async makeInterviewDecision(id: string, data: InterviewDecisionInput, decidedBy: string): Promise<InterviewResponse> {
     const interview = await this._interviewRepository.findById(id);
     if (!interview) {
-      throw new Error('Interview not found');
+      throw new AppError(Messages.INTERVIEW.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     if (interview.status !== 'COMPLETED') {
-      throw new Error('Can only make decision on completed interviews');
+      throw new AppError('Can only make decision on completed interviews', HttpStatusCode.BAD_REQUEST);
     }
     const updateData = {
       status: data.status,
@@ -237,7 +237,29 @@ export class InterviewService implements IInterviewService {
         decidedBy
       );
     } catch (error) {
-      console.error('Failed to update application status:', error);
+      logger.error('Failed to update application status:', error);
+    }
+
+    try {
+      const application = await this._applicationRepository.findById(interview.applicationId);
+      if (application) {
+        const jobDetails = await this.fetchJobDetails(application.jobId);
+        
+        await this._eventService.publish('interview.decision_made', {
+          userId: application.userId,
+          interviewId: updatedInterview.id,
+          applicationId: interview.applicationId,
+          jobId: application.jobId,
+          jobTitle: jobDetails.title,
+          decision: data.status,
+          decisionReason: data.decisionReason,
+          feedback: data.feedback,
+          decidedBy: decidedBy,
+          decidedAt: new Date()
+        });
+      }
+    } catch (error) {
+      logger.warn('Failed to publish interview decision event:', error);
     }
 
     return this.mapToResponse(updatedInterview);
@@ -261,26 +283,26 @@ export class InterviewService implements IInterviewService {
 
   private async fetchUserDetails(userId: string): Promise<{ name: string; email: string }> {
     try {
-      const response = await axios.get<UserApiResponse>(`http://localhost:3001/api/users/${userId}`);
+      const userData = await this._userServiceClient.getUserById(userId);
       return {
-        name: response.data?.data?.user?.name || response.data?.data?.user?.username || 'Unknown',
-        email: response.data?.data?.user?.email || 'Unknown'
+        name: userData.data?.user?.name || userData.data?.user?.username || 'Unknown',
+        email: userData.data?.user?.email || 'Unknown'
       };
     } catch (error) {
-      console.error('Failed to fetch user details:', error);
+      logger.error('Failed to fetch user details:', error);
       return { name: 'Unknown', email: 'Unknown' };
     }
   }
 
   private async fetchJobDetails(jobId: string): Promise<{ title: string; company: string }> {
     try {
-      const response = await axios.get<JobApiResponse>(`http://localhost:3002/api/jobs/${jobId}`);
+      const jobData = await this._jobServiceClient.getJobById(jobId);
       return {
-        title: response.data?.data?.job?.title || 'Unknown',
-        company: response.data?.data?.job?.company || 'Unknown'
+        title: jobData.data?.job?.title || jobData.job?.title || 'Unknown',
+        company: jobData.data?.job?.company || jobData.job?.company || 'Unknown'
       };
     } catch (error) {
-      console.error('Failed to fetch job details:', error);
+      logger.error('Failed to fetch job details:', error);
       return { title: 'Unknown', company: 'Unknown' };
     }
   }

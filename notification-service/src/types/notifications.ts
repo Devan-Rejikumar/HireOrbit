@@ -14,7 +14,8 @@ export enum NotificationType {
     APPLICATION_RECEIVED = 'APPLICATION_RECEIVED',
     STATUS_UPDATED = 'STATUS_UPDATED',
     APPLICATION_WITHDRAWN = 'APPLICATION_WITHDRAWN',
-    INTERVIEW_CONFIRMED = 'INTERVIEW_CONFIRMED'
+    INTERVIEW_CONFIRMED = 'INTERVIEW_CONFIRMED',
+    INTERVIEW_DECISION = 'INTERVIEW_DECISION'
 }
 
 export interface NotificationData {
@@ -30,6 +31,9 @@ export interface NotificationData {
     type?: string;
     location?: string;
     meetingLink?: string;
+    decision?: string;
+    decisionReason?: string;
+    feedback?: string;
 }
 
 export interface CreateNotificationInput {
