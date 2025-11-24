@@ -5,56 +5,45 @@ import { jobServiceProxy } from './jobService';
 import { applicationServiceProxy, applicationServiceMultipartProxy } from './applicationService';
 import { notificationServiceProxy } from './notificationService';
 import { chatServiceProxy } from './chatService';
+import { SERVICE_ROUTES } from '@/config/routes';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
   const path = req.originalUrl;
 
-  if (path.startsWith('/api/users')) {
+  if (path.startsWith(SERVICE_ROUTES.USERS)) {
     console.log('Routing to User Service');
     
     const contentType = req.headers['content-type'];
     if (contentType && contentType.includes('multipart/form-data')) {
-      console.log(' Using multipart proxy for file uploads');
       userServiceMultipartProxy(req, res, next);
     } else {
-      console.log(' Using regular proxy for JSON requests');
       userServiceProxy(req, res, next);
     }
     
-  } else if (path.startsWith('/api/company')) {
-    console.log('Routing to Company Service');
+  } else if (path.startsWith(SERVICE_ROUTES.COMPANY)) {
     companyServiceProxy(req, res, next);
     
-  } else if (path.startsWith('/api/jobs')) {
-    console.log('Routing to Job Service');
+  } else if (path.startsWith(SERVICE_ROUTES.JOBS)) {
     jobServiceProxy(req, res, next);
     
-  } else if (path.startsWith('/api/applications')) {
-    console.log('Routing to Application Service');
-    
+  } else if (path.startsWith(SERVICE_ROUTES.APPLICATIONS)) {
     const contentType = req.headers['content-type'];
     if (contentType && contentType.includes('multipart/form-data')) {
-      console.log(' Using multipart proxy for file uploads (resume)');
       applicationServiceMultipartProxy(req, res, next);
     } else {
-      console.log(' Using regular proxy for JSON requests');
       applicationServiceProxy(req, res, next);
     }
     
-  } else if (path.startsWith('/api/interviews')) {
-    console.log('Routing to Application Service (Interviews)');
+  } else if (path.startsWith(SERVICE_ROUTES.INTERVIEWS)) {
     applicationServiceProxy(req, res, next);
     
-  } else if (path.startsWith('/api/notifications')) {
-    console.log('Routing to Notification Service');
+  } else if (path.startsWith(SERVICE_ROUTES.NOTIFICATIONS)) {
     notificationServiceProxy(req, res, next);
     
-  } else if (path.startsWith('/api/chat')) {
-    console.log('Routing to Chat Service');
+  } else if (path.startsWith(SERVICE_ROUTES.CHAT)) {
     chatServiceProxy(req, res, next);
     
   } else {
-    console.log('Default routing to User Service');
     userServiceProxy(req, res, next);
   }
 };

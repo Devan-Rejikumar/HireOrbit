@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ROUTES } from "@/config/routes";
-import { Authenticate } from "./auth";
+import { Authenticate } from "./auth-middleware";
 import { createProxy } from "@/proxy/loadBalancer"; 
 
 interface AuthRequest extends Request {
@@ -199,3 +199,4 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
     console.log('[ROUTE HANDLER] Route handler function completed');
 
 }
+

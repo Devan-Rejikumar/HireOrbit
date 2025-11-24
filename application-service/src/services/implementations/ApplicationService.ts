@@ -45,7 +45,6 @@ export class ApplicationService implements IApplicationService {
   ) {}
 
   async applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse> {
-  
     const eligibility = await this.validateApplicationEligibility(data.userId, data.jobId);
     if (!eligibility.eligible) {
       throw new AppError(eligibility.reason || Messages.APPLICATION.NOT_ELIGIBLE, HttpStatusCode.BAD_REQUEST);
@@ -137,6 +136,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     if (application.status === 'WITHDRAWN') {
       throw new AppError('Application already withdrawn', HttpStatusCode.BAD_REQUEST);
     }
+
 
     const updatedApplication = await this._applicationRepository.updateStatus(
       applicationId,
