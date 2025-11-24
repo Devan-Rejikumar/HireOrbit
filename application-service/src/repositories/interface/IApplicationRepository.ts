@@ -39,4 +39,5 @@ export interface IApplicationRepository {
   }>;
   checkDuplicateApplication(userId: string, jobId: string): Promise<Application | null>;
   bulkUpdateStatus(applicationIds: string[], status: ApplicationStatus, changedBy: string): Promise<void>;
+  
 }

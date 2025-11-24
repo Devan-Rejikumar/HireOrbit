@@ -50,7 +50,6 @@ const createUnauthorizedResponse = (message: string) => ({
  * This is the primary authentication middleware used by the API Gateway
  */
 export const Authenticate = (req: Request, res: Response, next: NextFunction): void => {
-  console.log('[AUTH] Authenticate middleware called for:', req.method, req.path);
   const token = extractToken(req);
 
   if (!token) {
@@ -61,11 +60,8 @@ export const Authenticate = (req: Request, res: Response, next: NextFunction): v
     return;
   }
 
-  console.log('[AUTH] Token found, verifying with JWT_SECRET...');
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string; email: string; role: string };
-    console.log('[AUTH] Token verified successfully:', { userId: decoded.userId, email: decoded.email, role: decoded.role });
-    
     const authReq = req as RequestWithUser;
     authReq.user = {
       userId: decoded.userId,
@@ -187,3 +183,4 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
   next();
 };
+

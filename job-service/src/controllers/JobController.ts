@@ -35,7 +35,7 @@ export class JobController {
     }
     
     const jobData = validationResult.data;
-    const companyId = req.user?.userId ;
+    const companyId = req.user?.userId;
     
     if (!companyId) {
       throw new AppError(
