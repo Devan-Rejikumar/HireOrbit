@@ -4,6 +4,8 @@ const TYPES = {
   JobRepository: Symbol.for('JobRepository'),
   IJobRepository: Symbol.for('IJobRepository'),
   JobController: Symbol.for('JobController'),
+  CloudinaryService: Symbol.for('CloudinaryService'),
+  ICloudinaryService: Symbol.for('ICloudinaryService'),
 };
 
 export default TYPES;
