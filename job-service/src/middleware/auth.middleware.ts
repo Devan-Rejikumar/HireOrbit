@@ -59,3 +59,4 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   logger.info('User context set from API Gateway headers', { userId, email, role });
   next();
 };
+

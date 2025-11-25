@@ -6,6 +6,7 @@ import { CompanyProfileController } from '../controllers/CompanyProfileControlle
 import { CompanyAdminController } from '../controllers/CompanyAdminController';
 import { authenticateCompany } from '../middleware/auth.middleware';
 import { asyncHandler } from '../utils/asyncHandler';
+import { COMPANY_ROUTES } from '../constants/routes';
 
 const router = Router();
 const companyAuthController = container.get<CompanyAuthController>(TYPES.CompanyAuthController);
@@ -13,36 +14,36 @@ const companyProfileController = container.get<CompanyProfileController>(TYPES.C
 const companyAdminController = container.get<CompanyAdminController>(TYPES.CompanyAdminController);
 
 // Auth routes
-router.post('/register', asyncHandler((req, res) => companyAuthController.register(req, res)));
-router.post('/login', asyncHandler((req, res) => companyAuthController.login(req, res)));
-router.post('/refresh-token', asyncHandler((req, res) => companyAuthController.refreshToken(req, res)));
-router.post('/generate-otp', asyncHandler((req, res) => companyAuthController.generateOTP(req, res)));
-router.post('/verify-otp', asyncHandler((req, res) => companyAuthController.verifyOTP(req, res)));
-router.post('/resend-otp', asyncHandler((req, res) => companyAuthController.resendOTP(req, res)));
-router.post('/logout', authenticateCompany, asyncHandler((req, res) => companyAuthController.logout(req, res)));
+router.post(COMPANY_ROUTES.REGISTER, asyncHandler((req, res) => companyAuthController.register(req, res)));
+router.post(COMPANY_ROUTES.LOGIN, asyncHandler((req, res) => companyAuthController.login(req, res)));
+router.post(COMPANY_ROUTES.REFRESH_TOKEN, asyncHandler((req, res) => companyAuthController.refreshToken(req, res)));
+router.post(COMPANY_ROUTES.GENERATE_OTP, asyncHandler((req, res) => companyAuthController.generateOTP(req, res)));
+router.post(COMPANY_ROUTES.VERIFY_OTP, asyncHandler((req, res) => companyAuthController.verifyOTP(req, res)));
+router.post(COMPANY_ROUTES.RESEND_OTP, asyncHandler((req, res) => companyAuthController.resendOTP(req, res)));
+router.post(COMPANY_ROUTES.LOGOUT, authenticateCompany, asyncHandler((req, res) => companyAuthController.logout(req, res)));
 
 // Profile routes (protected)
-router.get('/me', authenticateCompany, asyncHandler((req, res) => companyProfileController.getMe(req, res)));
-router.get('/profile', authenticateCompany, asyncHandler((req, res) => companyProfileController.getCompanyProfile(req, res)));
-router.put('/profile', authenticateCompany, asyncHandler((req, res) => companyProfileController.updateCompanyProfile(req, res)));
-router.get('/profile/step', authenticateCompany, asyncHandler((req, res) => companyProfileController.getProfileStep(req, res)));
-router.post('/profile/step2', authenticateCompany, asyncHandler((req, res) => companyProfileController.completeStep2(req, res)));
-router.post('/profile/step3', authenticateCompany, asyncHandler((req, res) => companyProfileController.completeStep3(req, res)));
-router.get('/job-count', authenticateCompany, asyncHandler((req, res) => companyProfileController.getCompanyJobCount(req, res)));
-router.post('/reapply', authenticateCompany, asyncHandler((req, res) => companyProfileController.reapplyCompany(req, res)));
-router.get('/reapply-status', authenticateCompany, asyncHandler((req, res) => companyProfileController.getReapplyStatus(req, res)));
+router.get(COMPANY_ROUTES.GET_ME, authenticateCompany, asyncHandler((req, res) => companyProfileController.getMe(req, res)));
+router.get(COMPANY_ROUTES.GET_PROFILE, authenticateCompany, asyncHandler((req, res) => companyProfileController.getCompanyProfile(req, res)));
+router.put(COMPANY_ROUTES.UPDATE_PROFILE, authenticateCompany, asyncHandler((req, res) => companyProfileController.updateCompanyProfile(req, res)));
+router.get(COMPANY_ROUTES.GET_PROFILE_STEP, authenticateCompany, asyncHandler((req, res) => companyProfileController.getProfileStep(req, res)));
+router.post(COMPANY_ROUTES.COMPLETE_STEP_2, authenticateCompany, asyncHandler((req, res) => companyProfileController.completeStep2(req, res)));
+router.post(COMPANY_ROUTES.COMPLETE_STEP_3, authenticateCompany, asyncHandler((req, res) => companyProfileController.completeStep3(req, res)));
+router.get(COMPANY_ROUTES.GET_JOB_COUNT, authenticateCompany, asyncHandler((req, res) => companyProfileController.getCompanyJobCount(req, res)));
+router.post(COMPANY_ROUTES.REAPPLY, authenticateCompany, asyncHandler((req, res) => companyProfileController.reapplyCompany(req, res)));
+router.get(COMPANY_ROUTES.GET_REAPPLY_STATUS, authenticateCompany, asyncHandler((req, res) => companyProfileController.getReapplyStatus(req, res)));
 
 // Admin routes (protected)
-router.get('/companies', authenticateCompany, asyncHandler((req, res) => companyAdminController.getAllCompanies(req, res)));
-router.patch('/companies/:id/block', authenticateCompany, asyncHandler((req, res) => companyAdminController.blockCompany(req, res)));
-router.patch('/companies/:id/unblock', authenticateCompany, asyncHandler((req, res) => companyAdminController.unblockCompany(req, res)));
-router.get('/admin/pending', authenticateCompany, asyncHandler((req, res) => companyAdminController.getPendingCompanies(req, res)));
-router.get('/admin/all', authenticateCompany, asyncHandler((req, res) => companyAdminController.getAllCompaniesForAdmin(req, res)));
-router.get('/admin/:id', authenticateCompany, asyncHandler((req, res) => companyAdminController.getCompanyDetailsForAdmin(req, res)));
-router.post('/admin/:id/approve', authenticateCompany, asyncHandler((req, res) => companyAdminController.approveCompany(req, res)));
-router.post('/admin/:id/reject', authenticateCompany, asyncHandler((req, res) => companyAdminController.rejectCompany(req, res)));
+router.get(COMPANY_ROUTES.GET_ALL_COMPANIES, authenticateCompany, asyncHandler((req, res) => companyAdminController.getAllCompanies(req, res)));
+router.patch(COMPANY_ROUTES.BLOCK_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.blockCompany(req, res)));
+router.patch(COMPANY_ROUTES.UNBLOCK_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.unblockCompany(req, res)));
+router.get(COMPANY_ROUTES.GET_PENDING_COMPANIES, authenticateCompany, asyncHandler((req, res) => companyAdminController.getPendingCompanies(req, res)));
+router.get(COMPANY_ROUTES.GET_ALL_COMPANIES_FOR_ADMIN, authenticateCompany, asyncHandler((req, res) => companyAdminController.getAllCompaniesForAdmin(req, res)));
+router.get(COMPANY_ROUTES.GET_COMPANY_DETAILS_FOR_ADMIN, authenticateCompany, asyncHandler((req, res) => companyAdminController.getCompanyDetailsForAdmin(req, res)));
+router.post(COMPANY_ROUTES.APPROVE_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.approveCompany(req, res)));
+router.post(COMPANY_ROUTES.REJECT_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.rejectCompany(req, res)));
 
 // Public routes
-router.get('/search', asyncHandler((req, res) => companyAdminController.searchCompanyByName(req, res)));
+router.get(COMPANY_ROUTES.SEARCH_COMPANY, asyncHandler((req, res) => companyAdminController.searchCompanyByName(req, res)));
 
 export default router;

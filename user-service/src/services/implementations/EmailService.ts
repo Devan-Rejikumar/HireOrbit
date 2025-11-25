@@ -1,15 +1,16 @@
 import { injectable } from 'inversify';
 import nodemailer from 'nodemailer';
+import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class EmailService {
   private transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.example.com',
-    port: Number(process.env.SMTP_PORT) || 587,
+    host: AppConfig.SMTP_HOST,
+    port: AppConfig.SMTP_PORT,
     secure: false,
     auth: {
-      user: process.env.SMTP_USER || 'devanrejikumar007@gmail.com',
-      pass: process.env.SMTP_PASS || 'jfsl xyfh qhif rjry',
+      user: process.env.SMTP_USER!,
+      pass: process.env.SMTP_PASS!,
     },
   });
 
@@ -21,7 +22,7 @@ export class EmailService {
       console.log(` OTP Code for ${email}: ${otp}`);
 
       const mailOptions = {
-        from: process.env.SMTP_FROM || '"Job Portal" <no-reply@jobportal.com>',
+        from: AppConfig.SMTP_FROM,
         to: email,
         subject: 'Your OTP Code',
         text: `Your OTP code is: ${otp}`,
@@ -41,7 +42,7 @@ export class EmailService {
   
     try {
       const mailOptions = {
-        from: process.env.SMTP_FROM || '"Job Portal" <no-reply@jobportal.com>',
+        from: AppConfig.SMTP_FROM,
         to: email,
         subject: 'Password Reset OTP',
         text: `Your password reset OTP code is: ${otp}. This OTP will expire in 15 minutes.`,

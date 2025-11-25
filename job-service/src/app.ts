@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import jobRoutes from './routes/JobRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
-import { ErrorHandler } from './middleware/errorHandler';
+import { ErrorHandler } from './middleware/error-handler.middleware';
 
 dotenv.config();
 
