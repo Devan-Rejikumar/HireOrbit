@@ -1,5 +1,7 @@
 import { injectable } from 'inversify';
 import Redis from 'ioredis';
+import { AppConfig } from '../../config/app.config';
+import { OTP_EXPIRY_SECONDS } from '../../constants/TimeConstants';
 
 @injectable()
 export class RedisService {
@@ -7,11 +9,11 @@ export class RedisService {
 
   constructor() {
     this._redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
+      host: AppConfig.REDIS_HOST,
+      port: AppConfig.REDIS_PORT,
       password: process.env.REDIS_PASSWORD,
       lazyConnect: true,
-      keepAlive: 30000,
+      keepAlive: AppConfig.REDIS_KEEP_ALIVE_MS,
       maxRetriesPerRequest: 3,   
     });
 
@@ -24,7 +26,7 @@ export class RedisService {
     });
   }
 
-  async storeOTP(email: string, otp: string, expiresIn: number = 300): Promise<void> {
+  async storeOTP(email: string, otp: string, expiresIn: number = OTP_EXPIRY_SECONDS): Promise<void> {
     const key = `company_otp:${email}`;
     await this._redis.setex(key, expiresIn, otp);
     console.log(`[Redis] Stored company OTP for ${email}, expires in ${expiresIn}s`);
