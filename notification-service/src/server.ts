@@ -14,59 +14,13 @@ import notificationRoutes from './routes/NotificationRoutes';
 import { EventService } from './services/implementations/EventService';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
-
-
-interface ApplicationCreatedEventData {
-  companyId: string;
-  applicationId: string;
-  jobId: string;
-  applicantName?: string;
-  jobTitle?: string;
-}
-
-interface StatusUpdatedEventData {
-  userId: string;
-  applicationId: string;
-  jobId: string;
-  oldStatus: string;
-  newStatus: string;
-}
-
-interface InterviewConfirmedEventData {
-  userId: string;
-  interviewId: string;
-  applicationId: string;
-  jobId: string;
-  jobTitle: string;
-  companyName: string;
-  scheduledAt: Date | string;
-  type?: string;
-  location?: string;
-  meetingLink?: string;
-  confirmedBy: string;
-  confirmedAt: Date;
-}
-
-interface InterviewDecisionEventData {
-  userId: string;
-  interviewId: string;
-  applicationId: string;
-  jobId: string;
-  jobTitle: string;
-  decision: string;
-  decisionReason?: string;
-  feedback?: string;
-  decidedBy: string;
-  decidedAt: Date;
-}
-
-interface ApplicationWithdrawnEventData {
-  companyId: string;
-  applicationId: string;
-  jobId: string;
-  applicantName?: string;
-  jobTitle?: string;
-}
+import {
+  ApplicationCreatedEventData,
+  StatusUpdatedEventData,
+  InterviewConfirmedEventData,
+  InterviewDecisionEventData,
+  ApplicationWithdrawnEventData
+} from './types/events';
 
 dotenv.config();
 

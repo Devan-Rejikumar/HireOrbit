@@ -2,13 +2,13 @@ import { injectable } from 'inversify';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { AccessTokenPayload, RefreshTokenPayload, TokenPair } from '../../types/auth';
+import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from '../../constants/TimeConstants';
+import { logger } from '../../utils/logger';
 
 @injectable()
 export class JWTService {
-  private readonly ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'supersecret';
-  private readonly REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'refresh_secret';
-  private readonly ACCESS_TOKEN_EXPIRY = '15m'; 
-  private readonly REFRESH_TOKEN_EXPIRY = '7d'; 
+  private readonly ACCESS_TOKEN_SECRET = process.env.JWT_SECRET!;
+  private readonly REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!; 
 
   generateTokenPair(payload: Omit<AccessTokenPayload, 'userId'> & { userId: string }): TokenPair {
     const tokenId = uuidv4();
@@ -29,11 +29,11 @@ export class JWTService {
     };
 
     const accessToken = jwt.sign(accessTokenPayload, this.ACCESS_TOKEN_SECRET, {
-      expiresIn: this.ACCESS_TOKEN_EXPIRY
+      expiresIn: ACCESS_TOKEN_EXPIRY
     });
 
     const refreshToken = jwt.sign(refreshTokenPayload, this.REFRESH_TOKEN_SECRET, {
-      expiresIn: this.REFRESH_TOKEN_EXPIRY
+      expiresIn: REFRESH_TOKEN_EXPIRY
     });
 
     return {
@@ -47,10 +47,10 @@ export class JWTService {
   }
 
   verifyRefreshToken(token: string): RefreshTokenPayload {
-  console.log('JWTService - Verifying refresh token');
+  logger.debug('JWTService - Verifying refresh token');
   try {
     const decoded = jwt.verify(token, this.REFRESH_TOKEN_SECRET) as RefreshTokenPayload;
-    console.log('JWTService - Token verified:', {
+    logger.debug('JWTService - Token verified:', {
       userId: decoded.userId,
       email: decoded.email,
       role: decoded.role,
@@ -58,13 +58,13 @@ export class JWTService {
     });
     return decoded;
   } catch (error) {
-    console.error('JWTService - Token verification failed:', error);
+    logger.error('JWTService - Token verification failed:', error);
     throw error;
   }
 }
 
   generateNewAccessToken(refreshTokenPayload: RefreshTokenPayload): string {
-  console.log('JWTService - Generating new access token:', {
+  logger.debug('JWTService - Generating new access token:', {
     userId: refreshTokenPayload.userId,
     role: refreshTokenPayload.role
   });
@@ -77,10 +77,10 @@ export class JWTService {
   };
 
   const token = jwt.sign(accessTokenPayload, this.ACCESS_TOKEN_SECRET, {
-    expiresIn: this.ACCESS_TOKEN_EXPIRY
-  });
+      expiresIn: ACCESS_TOKEN_EXPIRY
+    });
   
-  console.log('JWTService - New access token generated');
+  logger.debug('JWTService - New access token generated');
   return token;
   }
 }

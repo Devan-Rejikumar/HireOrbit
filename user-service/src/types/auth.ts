@@ -15,3 +15,12 @@ export interface AccessTokenPayload {
     role: string;
     userType: string;
 }
+
+export interface AdminTokenPayload {
+  userId: string;
+  email: string;
+  role: string;
+  userType: string;
+  iat?: number;
+  exp?: number;
+}

@@ -1,3 +1,14 @@
+// Service route path constants
+export const SERVICE_ROUTES = {
+    USERS: '/api/users',
+    COMPANY: '/api/company',
+    JOBS: '/api/jobs',
+    APPLICATIONS: '/api/applications',
+    INTERVIEWS: '/api/interviews',
+    NOTIFICATIONS: '/api/notifications',
+    CHAT: '/api/chat'
+} as const;
+
 export const ROUTES = {
     authentication: [
         '/api/users/login',

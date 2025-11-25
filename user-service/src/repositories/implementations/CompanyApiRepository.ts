@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { Company, CompanyApprovalResponse, PendingCompaniesResponse } from '../../types/company';
+import { AppConfig } from '../../config/app.config';
 
 export interface ICompanyApiRepository {
   getPendingCompanies(): Promise<Company[]>;
@@ -9,10 +10,10 @@ export interface ICompanyApiRepository {
 
 @injectable()
 export class CompanyApiRepository implements ICompanyApiRepository {
-  private readonly baseUrl = 'http://localhost:3001/api/company';
+  private readonly baseUrl = AppConfig.COMPANY_SERVICE_URL;
 
   async getPendingCompanies(): Promise<Company[]> {
-    const response = await fetch(`${this.baseUrl}/admin/pending`);
+    const response = await fetch(`${this.baseUrl}/api/company/admin/pending`);
     if (!response.ok) {
       throw new Error('Failed to fetch pending companies');
     }
@@ -21,7 +22,7 @@ export class CompanyApiRepository implements ICompanyApiRepository {
   }
 
   async approveCompany(companyId: string, adminId: string): Promise<CompanyApprovalResponse> {
-    const response = await fetch(`${this.baseUrl}/admin/${companyId}/approve`, {
+    const response = await fetch(`${this.baseUrl}/api/company/admin/${companyId}/approve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -37,7 +38,7 @@ export class CompanyApiRepository implements ICompanyApiRepository {
   }
 
   async rejectCompany(companyId: string, reason: string, adminId: string): Promise<CompanyApprovalResponse> {
-    const response = await fetch(`${this.baseUrl}/admin/${companyId}/reject`, {
+    const response = await fetch(`${this.baseUrl}/api/company/admin/${companyId}/reject`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

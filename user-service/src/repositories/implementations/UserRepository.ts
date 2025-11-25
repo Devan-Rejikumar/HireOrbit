@@ -4,11 +4,12 @@ import { User } from '@prisma/client';
 import { IUserRepository } from '../interfaces/IUserRepository';
 import { BaseRepository } from './BaseRepository';
 import { PaginationResult } from '../../interfaces/IBaseRepository';
+import { UserRole } from '../../enums/UserRole';
 
 @injectable()
 export class UserRepository extends BaseRepository<User> implements IUserRepository {
   protected getModel() {
-    return prisma.user;
+    return prisma.user as unknown as ReturnType<BaseRepository<User>['getModel']>;
   }
 
   
@@ -26,7 +27,7 @@ export class UserRepository extends BaseRepository<User> implements IUserReposit
       email: data.email,
       password: data.password,
       name: data.name,
-      role: 'jobseeker',
+      role: UserRole.JOBSEEKER,
       isVerified: data.isGoogleUser || false,
     });
   }
@@ -36,7 +37,7 @@ export class UserRepository extends BaseRepository<User> implements IUserReposit
   }
 
   async getAllUsers(page: number = 1, limit: number = 10): Promise<PaginationResult<User>> {
-    return this.findWithPagination(page, limit, { role: 'jobseeker' });
+    return this.findWithPagination(page, limit, { role: UserRole.JOBSEEKER });
   }
 
   async blockUser(id: string): Promise<User> {

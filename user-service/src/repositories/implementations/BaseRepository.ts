@@ -2,10 +2,7 @@ import { injectable } from 'inversify';
 import { prisma } from '../../prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { IBaseRepository, PaginationResult } from '../../interfaces/IBaseRepository';
-
-interface BaseEntity {
-    id: string;
-}
+import { BaseEntity } from '../../types/base';
 
 @injectable()
 export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepository<T>{
@@ -13,7 +10,15 @@ export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepos
   constructor(){
     this._prisma = prisma;
   }
-    protected abstract getModel(): any;
+    protected abstract getModel(): {
+      findUnique: (args: { where: { id: string } }) => Promise<T | null>;
+      findMany: (args?: { where?: Record<string, unknown>; skip?: number; take?: number; orderBy?: Record<string, unknown> }) => Promise<T[]>;
+      create: (args: { data: Partial<T> }) => Promise<T>;
+      update: (args: { where: { id: string }; data: Partial<T> }) => Promise<T>;
+      delete: (args: { where: { id: string } }) => Promise<T>;
+      findFirst: (args: { where: Record<string, unknown> }) => Promise<T | null>;
+      count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
+    };
     async findById(id: string): Promise<T | null>{
       const model = this.getModel();
       return model.findUnique({where:{id}});
@@ -37,24 +42,23 @@ export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepos
       const model = this.getModel();
       return model.delete({where:{id}});
     }
-    async findOne(where: object): Promise<T | null> {
+    async findOne(where: Record<string, unknown>): Promise<T | null> {
       const model = this.getModel();
       return model.findFirst({where});
     }
-    async findMany(where?: object): Promise<T[]> {
+    async findMany(where?: Record<string, unknown>): Promise<T[]> {
       const model = this.getModel();
       return model.findMany({where});
-        
     }
-    async count(where?:object): Promise<number> {
+    async count(where?: Record<string, unknown>): Promise<number> {
       const model = this.getModel();
       return model.count({where});
     }
     async findWithPagination(
       page: number = 1,
       limit: number = 10,
-      where?: object,
-      orderBy?: object
+      where?: Record<string, unknown>,
+      orderBy?: Record<string, unknown>
     ): Promise<PaginationResult<T>> {
       const skip = (page - 1) * limit;
       const model = this.getModel();

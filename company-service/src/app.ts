@@ -6,24 +6,24 @@ import cookieParser from 'cookie-parser';
 import companyRoutes from './routes/CompanyRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
-import { ErrorHandler } from './middleware/errorHandler';
+import { ErrorHandler } from './middleware/error-handler.middleware';
+import { AppConfig } from './config/app.config';
 
 dotenv.config();
 
 const app = express();
 
 app.use((req, res, next) => {
-  console.log(`[${req.method}] ${req.url}`);
-  console.log(`App Body parsing middleware - Content-Type: ${req.headers['content-type']}`);
+  logger.info({ method: req.method, url: req.url, contentType: req.headers['content-type'] });
   next();
 });
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+  origin: AppConfig.FRONTEND_URL, 
   credentials: true,
 }));
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: `${AppConfig.JSON_BODY_SIZE_LIMIT_MB}mb` }));
+app.use(express.urlencoded({ extended: true, limit: `${AppConfig.URL_ENCODED_BODY_SIZE_LIMIT_MB}mb` }));
 app.use(cookieParser());
 
 // Metrics and logging middleware

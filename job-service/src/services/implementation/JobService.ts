@@ -26,6 +26,7 @@ export class JobService implements IJobService {
       throw new AppError(Messages.JOB.DUPLICATE_TITLE, HttpStatusCode.CONFLICT);
     }
 
+
     const job = await this._jobRepository.create(jobData);
     return mapJobToResponse(job);
   }

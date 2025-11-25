@@ -7,7 +7,7 @@ import interviewRoutes from './routes/InterviewRoutes';
 import {TYPES} from './config/types';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
-import { ErrorHandler } from './middleware/errorHandler';
+import { ErrorHandler } from './middleware/error-handler.middleware';
 
 const app = express();
 

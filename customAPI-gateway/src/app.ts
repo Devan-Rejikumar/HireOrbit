@@ -1,12 +1,12 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { Authenticate, RequireUser, RequireCompany, RequireAdmin } from '@/middleware/auth';
-import { corsMiddleware } from '@/middleware/cors';
-import { rateLimiterMiddleware } from '@/middleware/rateLimiter';
-import { errorHandler } from '@/middleware/errorHandler';
+import { Authenticate, RequireUser, RequireCompany, RequireAdmin } from '@/middleware/auth-middleware';
+import { corsMiddleware } from '@/middleware/cors-middleware';
+import { rateLimiterMiddleware } from '@/middleware/rate-limiter-middleware';
+import { errorHandler } from '@/middleware/error-handler-middleware';
 import { createProxy } from '@/proxy/loadBalancer';
 import { healthCheck } from '@/monitoring/healthCheck';
-import { routeHandler } from './middleware/routeHandler';
+import { routeHandler } from './middleware/route-handler-middleware';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { HttpStatusCode } from './enums/HttpStatusCode';

@@ -17,3 +17,4 @@ export const errorHandler = (error: Error, req: Request, res: Response, next: Ne
     timestamp: new Date().toISOString()
   });
 };
+
