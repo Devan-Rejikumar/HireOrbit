@@ -2,16 +2,17 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import './types/express';
+import { AppConfig } from './config/app.config';
 import userRoutes from './routes/UserRoutes';
 import adminRoutes from './routes/AdminRoutes';
 import profileRoutes from './routes/ProfileRoutes';
-import { authenticateToken } from './middleware/auth';
+import { authenticateToken } from './middleware/auth.middleware';
 import {logger} from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { HttpStatusCode } from './enums/StatusCodes';
 import { Request, Response, NextFunction } from 'express';
 import { Messages } from './constants/Messages';
-import { ErrorHandler } from './middleware/errorHandler';
+import { ErrorHandler } from './middleware/error-handler.middleware';
 
 const app = express();
 
@@ -30,7 +31,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ 
-  limit: '20mb',
+  limit: `${AppConfig.JSON_BODY_SIZE_LIMIT_MB}mb`,
   verify: (req, res, buf, encoding) => {
     try {
       JSON.parse(buf.toString());
@@ -41,7 +42,7 @@ app.use(express.json({
   }
 }));
 
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: `${AppConfig.URL_ENCODED_BODY_SIZE_LIMIT_MB}mb` }));
 app.use(cookieParser());
 
 
@@ -59,7 +60,7 @@ app.use((req, res, next) => {
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: AppConfig.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -114,7 +115,6 @@ logger.info('Profile routes: /api/profile');
 logger.info('========================');
 
 
-// Global error handler (must be last)
 app.use(ErrorHandler);
 
 export default app;

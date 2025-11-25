@@ -1,12 +1,13 @@
 import { injectable } from 'inversify';
 import Redis from 'ioredis';
-
-/**
- * Interface for user session data stored in Redis
- */
-export interface UserSessionData {
-  [key: string]: unknown;
-}
+import { UserSessionData } from '../../types/session';
+import {
+  OTP_EXPIRY_SECONDS,
+  PASSWORD_RESET_OTP_EXPIRY_SECONDS,
+  REFRESH_TOKEN_EXPIRY_SECONDS,
+  SESSION_EXPIRY_SECONDS
+} from '../../constants/TimeConstants';
+import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class RedisService {
@@ -14,11 +15,11 @@ export class RedisService {
 
   constructor() {
     this._redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
+      host: AppConfig.REDIS_HOST,
+      port: AppConfig.REDIS_PORT,
       password: process.env.REDIS_PASSWORD,
       lazyConnect: true,
-      keepAlive: 30000,
+      keepAlive: AppConfig.REDIS_KEEP_ALIVE_MS,
       maxRetriesPerRequest: 3,
     });
 
@@ -34,7 +35,7 @@ export class RedisService {
   async storeOTP(
     email: string,
     otp: string,
-    expiresIn: number = 300
+    expiresIn: number = OTP_EXPIRY_SECONDS
   ): Promise<void> {
     const key = `otp:${email}`;
     await this._redis.setex(key, expiresIn, otp);
@@ -71,7 +72,7 @@ export class RedisService {
     email: string,
     role: string,
     otp: string,
-    expiresIn: number = 900
+    expiresIn: number = PASSWORD_RESET_OTP_EXPIRY_SECONDS
   ): Promise<void> {
     const key = `password_reset:${email}:${role}`;
     await this._redis.setex(key, expiresIn, otp);
@@ -102,7 +103,7 @@ export class RedisService {
 
   async incrementLoginAttempts(
     email: string,
-    expiresIn: number = 900
+    expiresIn: number = PASSWORD_RESET_OTP_EXPIRY_SECONDS
   ): Promise<number> {
     const key = `login_attempts:${email}`;
     const attempts = await this._redis.incr(key);
@@ -128,7 +129,7 @@ export class RedisService {
   async storeUserSession(
     userId: string,
     sessionData: UserSessionData,
-    expiresIn: number = 86400
+    expiresIn: number = SESSION_EXPIRY_SECONDS
   ): Promise<void> {
     const key = `session:${userId}`;
     await this._redis.setex(key, expiresIn, JSON.stringify(sessionData));
@@ -145,7 +146,7 @@ export class RedisService {
     await this._redis.del(key);
   }
 
-  async storeRefreshToken(userId: string, tokenId: string, refreshToken: string, expiresIn: number = 604800): Promise<void> {
+  async storeRefreshToken(userId: string, tokenId: string, refreshToken: string, expiresIn: number = REFRESH_TOKEN_EXPIRY_SECONDS): Promise<void> {
     const key = `refresh_token:${userId}:${tokenId}`;
     console.log(' RedisService - Storing refresh token:', { userId, tokenId, key });
     

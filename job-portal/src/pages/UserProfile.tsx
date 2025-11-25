@@ -483,44 +483,129 @@ const UserProfile = () => {
                   </div>
                 </div>
 
-                {/* Profile Completion Card */}
+                {/* Profile Completion Card - Circular Gauge */}
                 <div className="ml-auto mt-16">
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-200 shadow-lg">
+                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
                     <div className="text-center">
-                      <div className="flex items-center justify-center mb-3">
-                        <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                          <span className="text-white font-bold text-xl">{completionPercentage}%</span>
-                        </div>
-                        <div className="text-left">
-                          <div className="text-lg font-bold text-gray-800">
-                            Profile Complete
+                      {/* Circular Gauge */}
+                      <div className="relative w-56 h-36 mx-auto mb-4">
+                        <svg className="w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
+                          <defs>
+                            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+                              <stop offset="50%" stopColor="#9333ea" stopOpacity="1" />
+                              <stop offset="100%" stopColor="#c084fc" stopOpacity="1" />
+                            </linearGradient>
+                          </defs>
+                          
+                          {/* Background Arc */}
+                          <path
+                            d="M 20 100 A 80 80 0 0 1 180 100"
+                            fill="none"
+                            stroke="#e5e7eb"
+                            strokeWidth="14"
+                            strokeLinecap="round"
+                          />
+                          
+                          {/* Progress Arc with Gradient */}
+                          <path
+                            d="M 20 100 A 80 80 0 0 1 180 100"
+                            fill="none"
+                            stroke="url(#progressGradient)"
+                            strokeWidth="14"
+                            strokeLinecap="round"
+                            strokeDasharray="251.2"
+                            strokeDashoffset={251.2 - (completionPercentage / 100) * 251.2}
+                            style={{
+                              transition: 'stroke-dashoffset 0.7s ease-out',
+                              filter: 'drop-shadow(0 0 2px rgba(168, 85, 247, 0.3))'
+                            }}
+                          />
+                          
+                          {/* White dots scattered on progress arc */}
+                          {Array.from({ length: Math.floor(completionPercentage / 3) }).map((_, i) => {
+                            const progress = (i * 3 / 100);
+                            if (progress > completionPercentage / 100) return null;
+                            const angle = progress * Math.PI;
+                            const x = 100 + 80 * Math.cos(Math.PI - angle);
+                            const y = 100 - 80 * Math.sin(Math.PI - angle);
+                            const randomOffset = (Math.random() - 0.5) * 4;
+                            return (
+                              <circle
+                                key={i}
+                                cx={x + randomOffset}
+                                cy={y + randomOffset}
+                                r="1.5"
+                                fill="white"
+                                opacity={0.7 + Math.random() * 0.3}
+                              />
+                            );
+                          })}
+                          
+                          {/* Tick Marks */}
+                          {Array.from({ length: 11 }).map((_, i) => {
+                            const angle = (i / 10) * Math.PI;
+                            const x1 = 100 + 72 * Math.cos(Math.PI - angle);
+                            const y1 = 100 - 72 * Math.sin(Math.PI - angle);
+                            const x2 = 100 + 88 * Math.cos(Math.PI - angle);
+                            const y2 = 100 - 88 * Math.sin(Math.PI - angle);
+                            return (
+                              <line
+                                key={i}
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                stroke="#d1d5db"
+                                strokeWidth="1.5"
+                              />
+                            );
+                          })}
+                          
+                          {/* Needle */}
+                          <g>
+                            <line
+                              x1="100"
+                              y1="100"
+                              x2="100"
+                              y2="25"
+                              stroke="#1f2937"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              transform={`rotate(${-90 + (completionPercentage / 100) * 180} 100 100)`}
+                              style={{
+                                transition: 'transform 0.7s ease-out'
+                              }}
+                            />
+                            <circle
+                              cx="100"
+                              cy="100"
+                              r="5"
+                              fill="#1f2937"
+                            />
+                          </g>
+                        </svg>
+                        
+                        {/* Center Text */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
+                          <div className="text-5xl font-bold text-gray-900 mb-1">
+                            {completionPercentage}
                           </div>
-                          <div className="text-sm text-gray-600">
-                            {completionPercentage === 100 ? '🎉 Perfect!' : 'Keep going!'}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="w-full bg-gray-200 rounded-full h-4 mb-3 shadow-inner">
-                        <div
-                          className={`h-4 rounded-full transition-all duration-700 ease-out shadow-sm ${
-                            completionPercentage === 100 
-                              ? 'bg-gradient-to-r from-emerald-500 to-teal-500' 
+                          <div className="text-lg font-semibold text-gray-800 mb-1">
+                            {completionPercentage === 100 
+                              ? 'Complete' 
                               : completionPercentage >= 70 
-                              ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                              ? 'Stable state'
                               : completionPercentage >= 40
-                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500'
-                              : 'bg-gradient-to-r from-red-500 to-pink-500'
-                          }`}
-                          style={{ width: `${completionPercentage}%` }}
-                        ></div>
-                      </div>
-                      
-                      <div className="text-sm font-medium text-gray-600">
-                        {completionPercentage === 100 
-                          ? '🎉 Your profile is complete!' 
-                          : `${100 - completionPercentage}% remaining to complete`
-                        }
+                              ? 'In progress'
+                              : 'Getting started'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {completionPercentage === 100 
+                              ? '🎉 Perfect profile!' 
+                              : 'Keep going — you\'re on track'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

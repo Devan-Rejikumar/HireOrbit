@@ -3,6 +3,7 @@ import { RequestWithUser } from '../types/express/RequestWithUser';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
 import { buildErrorResponse } from 'shared-dto';
+import { UserRole } from '../enums/UserRole';
 
 /**
  * Extracts and validates userId from request
@@ -30,7 +31,7 @@ export const getAdminIdFromRequest = (req: Request, res: Response): string | nul
   const userId = (req as RequestWithUser).user?.userId;
   const role = (req as RequestWithUser).user?.role;
 
-  if (!userId || role !== 'admin') {
+  if (!userId || role !== UserRole.ADMIN) {
     res.status(HttpStatusCode.UNAUTHORIZED).json(
       buildErrorResponse(Messages.AUTH.ADMIN_AUTH_REQUIRED, Messages.ERROR.UNAUTHORIZED)
     );

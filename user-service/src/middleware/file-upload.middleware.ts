@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { HttpStatusCode } from '../enums/StatusCodes';
+import { AppConfig } from '../config/app.config';
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: AppConfig.MAX_FILE_SIZE_BYTES,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/') ||
@@ -43,3 +44,4 @@ export const handleProfilePictureUpload = (req: Request, res: Response, next: Ne
     next();
   }
 };
+
