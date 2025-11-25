@@ -4,6 +4,7 @@ import { buildErrorResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { logger } from '../utils/logger';
 import { Messages } from '../constants/Messages';
+import { AppConfig } from '../config/app.config';
 
 declare global {
   namespace Express {
@@ -58,7 +59,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'supersecret';
+    const jwtSecret = AppConfig.JWT_SECRET;
     logger.debug('Token found, verifying...');
     const decoded = jwt.verify(token, jwtSecret) as CompanyTokenPayload;
     
