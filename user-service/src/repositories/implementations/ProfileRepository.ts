@@ -9,7 +9,7 @@ import { BaseRepository } from './BaseRepository';
 export class ProfileRepository extends BaseRepository<UserProfile> implements IProfileRepository {
   
   protected getModel() {
-    return prisma.userProfile;
+    return prisma.userProfile as unknown as ReturnType<BaseRepository<UserProfile>['getModel']>;
   }
   
   async createProfile(

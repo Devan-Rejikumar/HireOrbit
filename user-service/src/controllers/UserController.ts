@@ -9,12 +9,16 @@ import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { UserRole } from '../enums/UserRole';
+import { GOOGLE_AUTH_TOKEN_EXPIRY } from '../constants/TimeConstants';
 import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, RefreshTokenSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
 import { buildSuccessResponse, buildErrorResponse } from 'shared-dto';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { AppError } from '../utils/errors/AppError';
+import { AppConfig } from '../config/app.config';
+import { logger } from '../utils/logger';
 
 if (!admin.apps.length) {
   const serviceAccountPath = path.join(
@@ -24,7 +28,7 @@ if (!admin.apps.length) {
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccountPath),
-    projectId: 'hireorbit-d4744',
+    projectId: process.env.FIREBASE_PROJECT_ID!,
   });
 }
 
@@ -39,7 +43,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: AppConfig.MAX_FILE_SIZE_BYTES,
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -71,28 +75,28 @@ export class UserController {
   }
 
   async login(req: Request, res: Response): Promise<void> {  
-    console.log('USER CONTROLLER About to validate request body...');
+    logger.debug('USER CONTROLLER About to validate request body...');
     const validationResult = UserLoginSchema.safeParse(req.body);
     if(!validationResult.success){
-      console.log('USER CONTROLLER Validation failed:', validationResult.error.message);
+      logger.warn('USER CONTROLLER Validation failed:', validationResult.error.message);
       throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
     }
-    console.log('USER CONTROLLER Validation successful');
+    logger.debug('USER CONTROLLER Validation successful');
 
     const { email, password } = validationResult.data; 
-    console.log('USER CONTROLLER Login attempt for email:', email);
+    logger.info('USER CONTROLLER Login attempt for email:', email);
     const result = await this._userService.login(email, password);
-    console.log('USER CONTROLLER Login successful for user:', result.user.email);
+    logger.info('USER CONTROLLER Login successful for user:', result.user.email);
 
-    console.log('USER CONTROLLER About to set cookies...');
+    logger.debug('USER CONTROLLER About to set cookies...');
     this._cookieService.setAccessToken(res, result.tokens.accessToken);
     this._cookieService.setRefreshToken(res, result.tokens.refreshToken);
-    console.log('USER CONTROLLER Cookies set');
+    logger.debug('USER CONTROLLER Cookies set');
     
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(result.user, Messages.AUTH.LOGIN_SUCCESS)
     );
-    console.log('USER CONTROLLER Response sent successfully');
+    logger.debug('USER CONTROLLER Response sent successfully');
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
@@ -162,14 +166,14 @@ export class UserController {
     const userId = getUserIdFromRequest(req, res);
     if (!userId) return;
 
-    console.log('USER-CONTROLLER User context:', { userId });
+    logger.debug('USER-CONTROLLER User context:', { userId });
 
     const user = await this._userService.findById(userId);
     if (!user) {
       throw new AppError(Messages.USER.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    console.log('USER-CONTROLLER User found:', user);
+    logger.debug('USER-CONTROLLER User found:', user);
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse({user}, Messages.USER.PROFILE_RETRIEVED_SUCCESS)
     );
@@ -256,7 +260,7 @@ export class UserController {
     }
     const { name } = validationResult.data;
   
-    console.log('USER-CONTROLLER Updating name for user:', userId);
+    logger.info('USER-CONTROLLER Updating name for user:', userId);
     const updatedUser = await this._userService.updateUserName(userId, name);
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse({ user: updatedUser }, Messages.NAME.UPDATE_SUCCESS)
@@ -289,9 +293,9 @@ export class UserController {
     }
   
     const token = jwt.sign(
-      { userId: user.id, email: user.email, role: 'jobseeker' },
-      process.env.JWT_SECRET || 'supersecret',
-      { expiresIn: '24h' }
+      { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
+      process.env.JWT_SECRET!,
+      { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
     );
   
     this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);

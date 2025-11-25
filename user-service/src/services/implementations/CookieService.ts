@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { injectable } from 'inversify';
 import { CookieConfig, CookieNames } from '../../constants/CookieConfig';
+import { AppConfig } from '../../config/app.config';
 
 /**
  * Service for handling cookie operations
@@ -16,7 +17,7 @@ export class CookieService {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: 'localhost',
+      domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
       maxAge: CookieConfig.ACCESS_TOKEN_MAX_AGE,
     });
@@ -30,7 +31,7 @@ export class CookieService {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: 'localhost',
+      domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
       maxAge: CookieConfig.REFRESH_TOKEN_MAX_AGE,
     });

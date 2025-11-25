@@ -9,15 +9,7 @@ import { IChatService } from './services/interfaces/IChatService';
 import { TYPES } from './config/types';
 import { sendMessageSchema, markAsReadSchema, typingIndicatorSchema } from './dto/schemas/chat.schema';
 import app from './app';
-
-interface StatusUpdatedEventData {
-  applicationId: string;
-  oldStatus: string;
-  newStatus: string;
-  changedBy: string;
-  reason?: string;
-  updatedAt: Date;
-}
+import { StatusUpdatedEventData } from './types/events';
 
 const server = createServer(app);
 const io = new Server(server, {

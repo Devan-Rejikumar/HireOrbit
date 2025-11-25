@@ -9,6 +9,8 @@ import { RedisService } from './RedisService';
 import { PaginationResult } from '../../repositories/interface/IBaseRepository';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
 import { mapCompaniesToResponse, mapCompanyToAuthResponse, mapCompanyToResponse } from '../../dto/mappers/company.mapper';
+import { AppConfig } from '../../config/app.config';
+import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, OTP_MIN_VALUE, OTP_MAX_VALUE, OTP_EXPIRY_SECONDS } from '../../constants/TimeConstants';
 
 interface CompanyTokenPayload extends JwtPayload {
   userId: string;
@@ -17,9 +19,6 @@ interface CompanyTokenPayload extends JwtPayload {
   role: string;
   userType: string;
 }
-
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'refresh_secret';
 
 @injectable()
 export class CompanyService implements ICompanyService {
@@ -57,14 +56,14 @@ export class CompanyService implements ICompanyService {
       role: 'company',
       userType: 'company'
     };
-    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
-    const refreshToken = jwt.sign(tokenPayload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+    const accessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
+    const refreshToken = jwt.sign(tokenPayload, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: REFRESH_TOKEN_EXPIRY });
     return mapCompanyToAuthResponse(company, { accessToken, refreshToken })
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
-      const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as CompanyTokenPayload;
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as CompanyTokenPayload;
 
       const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
         userId: decoded.companyId,
@@ -74,7 +73,7 @@ export class CompanyService implements ICompanyService {
         userType: 'company',
       };
 
-      const newAccessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
+      const newAccessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
       return { accessToken: newAccessToken };
     } catch (error) {
       throw new Error('Invalid refresh token');
@@ -87,8 +86,8 @@ export class CompanyService implements ICompanyService {
       if (existingCompany) {
         throw new Error('Company already existing');
       }
-      const otp = Math.floor(100000 + Math.random() * 900000);
-      await this._redisService.storeOTP(email, otp.toString(), 300);
+      const otp = Math.floor(OTP_MIN_VALUE + Math.random() * (OTP_MAX_VALUE - OTP_MIN_VALUE));
+      await this._redisService.storeOTP(email, otp.toString(), OTP_EXPIRY_SECONDS);
       await this._emailService.sendOTP(email, otp);
       return { message: 'OTP send succesfully' };
     } catch (error) {
@@ -276,7 +275,7 @@ export class CompanyService implements ICompanyService {
 
   async logoutWithToken(refreshToken: string): Promise<void> {
     try {
-      const decoded = jwt.verify(refreshToken, JWT_SECRET) as CompanyTokenPayload;
+      const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as CompanyTokenPayload;
       console.log(`Company ${decoded.email} logged out successfully`);
     } catch (error) {
       console.log('Invalid company refresh token during logout');
@@ -285,7 +284,7 @@ export class CompanyService implements ICompanyService {
 
   async getCompanyJobCount(companyId: string): Promise<number> {
     try {
-      const response = await fetch(`http://localhost:3002/api/jobs/company/${companyId}/count`);
+      const response = await fetch(`${AppConfig.JOB_SERVICE_URL}/api/jobs/company/${companyId}/count`);
       if (!response.ok) return 0;
 
       const data = await response.json() as { data: { count: number } };

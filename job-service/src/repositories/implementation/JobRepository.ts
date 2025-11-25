@@ -85,6 +85,8 @@ export class JobRepository implements IJobRepository {
     return jobs.map(job => job.title);
   }
 
+
+
   private _buildWhereClause(filters: JobSearchFilters) {
     const where: any = {};
  
@@ -115,4 +117,6 @@ export class JobRepository implements IJobRepository {
     orderBy[filters.sortBy || 'createdAt'] = filters.sortOrder || 'desc';
     return orderBy;
   }
+
+
 }

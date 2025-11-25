@@ -1,7 +1,9 @@
 import app from './app';
+import { AppConfig } from './config/app.config';
+import { logger } from './utils/logger';
 
-const PORT = process.env.PORT || 3001;
+const PORT = AppConfig.PORT;
 
 app.listen(PORT, () => {
-  console.log(`Company Service running on port ${PORT}`);
+  logger.info(`Company Service running on port ${PORT}`);
 }); 
