@@ -4,6 +4,9 @@
  */
 
 export const APPLICATION_ROUTES = {
+  // Base API path
+  API_BASE_PATH: '/api/applications',
+  
   // Application CRUD routes
   APPLY_FOR_JOB: '/apply',
   GET_APPLICATION_BY_ID: '/:id',
@@ -30,6 +33,9 @@ export const APPLICATION_ROUTES = {
 } as const;
 
 export const INTERVIEW_ROUTES = {
+  // Base API path
+  API_BASE_PATH: '/api/interviews',
+  
   // Interview CRUD routes
   SCHEDULE_INTERVIEW: '/',
   GET_INTERVIEW_BY_ID: '/:id',

@@ -1,4 +1,4 @@
-import { IEventService } from '../interface/IEventService';
+import { IEventService } from '../interfaces/IEventService';
 import { producer, consumer } from '../../config/kafka.config';
 
 export class KafkaEventService implements IEventService {

@@ -1,6 +1,6 @@
 import { inject, injectable } from "inversify";
 import { PrismaClient, Application, ApplicationStatusHistory, ApplicationNotes, ApplicationStatus } from "@prisma/client";
-import { IApplicationRepository } from "../interface/IApplicationRepository";
+import { IApplicationRepository } from "../interfaces/IApplicationRepository";
 import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from "../../dto/schemas/application.schema";
 import { TYPES } from '../../config/types';
 import { logger } from '../../utils/logger';
