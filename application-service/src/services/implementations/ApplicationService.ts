@@ -1,8 +1,9 @@
 import { injectable, inject } from 'inversify';
-import { ApplicationStatus } from '@prisma/client';
-import { IApplicationService } from '../interface/IApplicationService';
-import { IApplicationRepository } from '../../repositories/interface/IApplicationRepository';
-import { IEventService } from '../interface/IEventService';
+import { ApplicationStatus as PrismaApplicationStatus } from '@prisma/client';
+import { ApplicationStatus } from '../../enums/ApplicationStatus';
+import { IApplicationService } from '../interfaces/IApplicationService';
+import { IApplicationRepository } from '../../repositories/interfaces/IApplicationRepository';
+import { IEventService } from '../interfaces/IEventService';
 import { StatusUpdateService } from './StatusUpdateService';
 import { 
   ApplicationResponse, 
@@ -28,8 +29,8 @@ import { logger } from '../../utils/logger';
 import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
 import { HttpStatusCode } from '../../enums/StatusCodes';
-import { IUserServiceClient } from '../interface/IUserServiceClient';
-import { IJobServiceClient } from '../interface/IJobServiceClient';
+import { IUserServiceClient } from '../interfaces/IUserServiceClient';
+import { IJobServiceClient } from '../interfaces/IJobServiceClient';
 import { UserApiResponse, JobApiResponse } from '../../types/external-api.types';
 
 
@@ -105,7 +106,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
   try {
     const application = await this._applicationRepository.checkDuplicateApplication(userId, jobId);
     return {
-      hasApplied: !!application && application.status !== 'WITHDRAWN',
+      hasApplied: !!application && application.status !== ApplicationStatus.WITHDRAWN,
       status: application?.status
     };
   } catch (error) {
@@ -133,14 +134,14 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     if (application.userId !== userId) {
       throw new AppError(Messages.VALIDATION.UNAUTHORIZED_ACCESS, HttpStatusCode.FORBIDDEN);
     }
-    if (application.status === 'WITHDRAWN') {
+    if (application.status === ApplicationStatus.WITHDRAWN) {
       throw new AppError('Application already withdrawn', HttpStatusCode.BAD_REQUEST);
     }
 
 
     const updatedApplication = await this._applicationRepository.updateStatus(
       applicationId,
-      { status: 'WITHDRAWN' },
+      { status: ApplicationStatus.WITHDRAWN },
       userId
     );
 
@@ -163,7 +164,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     try {
       const allApplications = await this._applicationRepository.findByCompanyIdWithRelations(companyId);
       logger.info(`Total applications for company ${companyId}:`, allApplications.length);
-      const applications = allApplications.filter(app => app.status !== 'WITHDRAWN');
+      const applications = allApplications.filter(app => app.status !== ApplicationStatus.WITHDRAWN);
       logger.info(`Active applications (excluding WITHDRAWN):`, applications.length);
       const stats = calculateApplicationStats(applications);
       logger.info(`Stats calculated:`, stats);
@@ -368,7 +369,7 @@ async searchApplications(filters: {
     reason?: string;
   }> {
     const existingApplication = await this._applicationRepository.checkDuplicateApplication(userId, jobId);
-    if (existingApplication && existingApplication.status !== 'WITHDRAWN') {
+    if (existingApplication && existingApplication.status !== ApplicationStatus.WITHDRAWN) {
       return {
         eligible: false,
         reason: 'You have already applied for this job'

@@ -1,16 +1,17 @@
 import { injectable, inject } from 'inversify';
-import { IInterviewService } from '../interface/IInterviewService';
-import { IInterviewRepository, InterviewWithApplication } from '../../repositories/interface/IInterviewRepository';
-import { IApplicationRepository } from '../../repositories/interface/IApplicationRepository';
-import { IEventService } from '../interface/IEventService';
-import { IUserServiceClient } from '../interface/IUserServiceClient';
-import { IJobServiceClient } from '../interface/IJobServiceClient';
+import { IInterviewService } from '../interfaces/IInterviewService';
+import { IInterviewRepository, InterviewWithApplication } from '../../repositories/interfaces/IInterviewRepository';
+import { IApplicationRepository } from '../../repositories/interfaces/IApplicationRepository';
+import { IEventService } from '../interfaces/IEventService';
+import { IUserServiceClient } from '../interfaces/IUserServiceClient';
+import { IJobServiceClient } from '../interfaces/IJobServiceClient';
 import { TYPES } from '../../config/types';
 import { InterviewResponse, InterviewWithDetailsResponse } from '../../dto/responses/interview.response';
 import { CreateInterviewInput, UpdateInterviewInput, InterviewDecisionInput } from '../../dto/schemas/interview.schema';
 import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
 import { HttpStatusCode } from '../../enums/StatusCodes';
+import { ApplicationStatus } from '../../enums/ApplicationStatus';
 import { logger } from '../../utils/logger';
 
 @injectable()
@@ -29,7 +30,7 @@ export class InterviewService implements IInterviewService {
       throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    if (application.status !== 'SHORTLISTED') {
+    if (application.status !== ApplicationStatus.SHORTLISTED) {
       throw new AppError('Can only schedule interviews for shortlisted applications', HttpStatusCode.BAD_REQUEST);
     }
     const interview = await this._interviewRepository.create({
@@ -226,7 +227,7 @@ export class InterviewService implements IInterviewService {
 
     const updatedInterview = await this._interviewRepository.update(id, updateData);
 
-    const newApplicationStatus = data.status === 'SELECTED' ? 'ACCEPTED' : 'REJECTED';
+    const newApplicationStatus = data.status === 'SELECTED' ? ApplicationStatus.ACCEPTED : ApplicationStatus.REJECTED;
     try {
       await this._applicationRepository.updateStatus(
         interview.applicationId, 

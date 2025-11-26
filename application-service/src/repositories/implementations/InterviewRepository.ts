@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { PrismaClient, Interview } from "@prisma/client";
-import { IInterviewRepository, InterviewWithApplication } from "../interface/IInterviewRepository";
+import { IInterviewRepository, InterviewWithApplication } from "../interfaces/IInterviewRepository";
 
 
 @injectable()

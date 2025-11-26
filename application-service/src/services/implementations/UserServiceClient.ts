@@ -1,19 +1,20 @@
 import { injectable } from 'inversify';
-import { IUserServiceClient } from '../interface/IUserServiceClient';
+import { IUserServiceClient } from '../interfaces/IUserServiceClient';
 import { UserApiResponse } from '../../types/external-api.types';
 import { logger } from '../../utils/logger';
+import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class UserServiceClient implements IUserServiceClient {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.USER_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3000';
+    this.baseUrl = AppConfig.USER_SERVICE_URL;
   }
 
   async getUserById(userId: string): Promise<UserApiResponse> {
     try {
-      const timeout = 5000; 
+      const timeout = AppConfig.HTTP_CLIENT_TIMEOUT; 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 

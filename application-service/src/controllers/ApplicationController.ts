@@ -1,9 +1,9 @@
 
 import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
-import { IApplicationService } from "../services/interface/IApplicationService";
+import { IApplicationService } from "../services/interfaces/IApplicationService";
 import { CreateApplicationSchema, UpdateApplicationStatusSchema,  AddApplicationNoteSchema,GetApplicationsQuerySchema } from "../dto/schemas/application.schema";
-import { buildSuccessResponse } from "../../../shared-dto/src";
+import { buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode, ValidationStatusCode } from "../enums/StatusCodes";
 import { TYPES } from '../config/types';
 import { uploadToCloudinary } from '../config/cloudinary';

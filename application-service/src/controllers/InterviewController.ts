@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
-import { IInterviewService } from '../services/interface/IInterviewService';
+import { IInterviewService } from '../services/interfaces/IInterviewService';
 import { CreateInterviewSchema, UpdateInterviewSchema, InterviewDecisionSchema } from '../dto/schemas/interview.schema';
-import { buildSuccessResponse } from '../../../shared-dto/src';
+import { buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { TYPES } from '../config/types';
 import { AppError } from '../utils/errors/AppError';

@@ -1,19 +1,20 @@
 import { injectable } from 'inversify';
-import { IJobServiceClient } from '../interface/IJobServiceClient';
+import { IJobServiceClient } from '../interfaces/IJobServiceClient';
 import { JobApiResponse } from '../../types/external-api.types';
 import { logger } from '../../utils/logger';
+import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class JobServiceClient implements IJobServiceClient {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.JOB_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3002';
+    this.baseUrl = AppConfig.JOB_SERVICE_URL;
   }
 
   async getJobById(jobId: string): Promise<JobApiResponse> {
     try {
-      const timeout = 5000; 
+      const timeout = AppConfig.HTTP_CLIENT_TIMEOUT; 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 

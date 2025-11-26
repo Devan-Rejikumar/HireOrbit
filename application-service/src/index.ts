@@ -1,9 +1,11 @@
 import dotenv from 'dotenv';
 import { app, initializeServices } from './app';
 import { logger } from './utils/logger';
+import { AppConfig } from './config/app.config';
+import { APPLICATION_ROUTES } from './constants/routes';
 dotenv.config({ path: '.env' });
 
-const PORT = process.env.PORT || 3004;
+const PORT = parseInt(AppConfig.PORT, 10);
 
 async function startServer(): Promise<void> {
   try {
@@ -12,7 +14,7 @@ async function startServer(): Promise<void> {
     app.listen(PORT, () => {
       logger.info(`Application Service running on port ${PORT}`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
-      logger.info(`API Base URL: http://localhost:${PORT}/api/applications`);
+      logger.info(`API Base URL: http://localhost:${PORT}${APPLICATION_ROUTES.API_BASE_PATH}`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
