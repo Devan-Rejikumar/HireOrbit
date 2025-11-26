@@ -35,3 +35,18 @@ export interface JobSearchFilters {
   sortBy?: 'createdAt' | 'title' | 'salary';
   sortOrder?: 'asc' | 'desc';
 }
+
+export interface UpdateJobInput {
+  title?: string;
+  description?: string;
+  company?: string;
+  location?: string;
+  salary?: number | null;
+  jobType?: string;
+  requirements?: string[];
+  benefits?: string[];
+  experienceLevel?: string;
+  education?: string;
+  applicationDeadline?: Date;
+  workLocation?: string;
+}

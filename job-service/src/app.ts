@@ -6,13 +6,15 @@ import jobRoutes from './routes/JobRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { ErrorHandler } from './middleware/error-handler.middleware';
+import { JOB_ROUTES } from './constants/routes';
+import { AppConfig } from './config/app.config';
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+  origin: AppConfig.FRONTEND_URL, 
   credentials: true,
 }));
 app.use(express.json());
@@ -59,7 +61,7 @@ app.get('/health', (req, res) => {
   res.json({ message: 'Job Service is running!' });
 });
 
-app.use('/api/jobs', jobRoutes);
+app.use(JOB_ROUTES.API_BASE_PATH, jobRoutes);
 
 app.use(ErrorHandler);
 

@@ -1,7 +1,8 @@
 import { injectable, inject } from 'inversify';
 import { Job } from '@prisma/client';
-import { IJobService, UpdateJobInput } from '../interface/IJobService';
-import { IJobRepository } from '../../repositories/interface/IJobRepository';
+import { IJobService } from '../interfaces/IJobService';
+import { UpdateJobInput } from '../../types/job';
+import { IJobRepository } from '../../repositories/interfaces/IJobRepository';
 import { JobSearchFilters } from '../../types/job';
 import TYPES from '../../config/types';
 import { mapJobToResponse, mapJobsToResponse } from '../../dto/mappers/job.mapper';
@@ -9,6 +10,7 @@ import { JobResponse } from '../../dto/responses/job.response';
 import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
 import { HttpStatusCode } from '../../enums/StatusCodes';
+import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class JobService implements IJobService {
@@ -58,7 +60,10 @@ export class JobService implements IJobService {
   }
 
   async getJobSuggestions(query: string, limit?: number): Promise<string[]> {
-    const processedLimit = Math.min(limit || 10, 50);
+    const processedLimit = Math.min(
+      limit || AppConfig.JOB_SUGGESTION_MIN_LIMIT, 
+      AppConfig.JOB_SUGGESTION_MAX_LIMIT
+    );
     return this._jobRepository.getSuggestions(query.trim(), processedLimit);
   }
 

@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { Job, PrismaClient } from '@prisma/client';
-import { IJobRepository } from '../interface/IJobRepository';
+import { IJobRepository } from '../interfaces/IJobRepository';
 import { JobSearchFilters } from '../../types/job';
 
 @injectable()
