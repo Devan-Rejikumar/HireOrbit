@@ -1,20 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { logger } from '../utils/logger';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: string;
-        userType: string;
-      };
-    }
-  }
-}
-
+import '../types/express'; // Import Express type extensions
 const USER_ID_HEADER = 'x-user-id';
 const USER_EMAIL_HEADER = 'x-user-email';
 const USER_ROLE_HEADER = 'x-user-role';

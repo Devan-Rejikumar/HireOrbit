@@ -1,25 +1,13 @@
 import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
-import { IJobService } from '../services/interface/IJobService';
+import { IJobService } from '../services/interfaces/IJobService';
 import { JobStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { CreateJobSchema, JobSearchSchema, JobSuggestionsSchema, UpdateJobSchema } from '../dto/schemas/job.schema';
 import { buildSuccessResponse } from 'shared-dto';
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: string;
-        userType: string;
-      };
-    }
-  }
-}
+import '../types/express'; 
 
 @injectable()
 export class JobController {
