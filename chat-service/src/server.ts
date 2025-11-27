@@ -7,6 +7,7 @@ import { connectMongoDB } from './config/mongodb.config';
 import { consumer } from './config/kafka.config';
 import { IChatService } from './services/interfaces/IChatService';
 import { TYPES } from './config/types';
+import { AppConfig } from './config/app.config';
 import { sendMessageSchema, markAsReadSchema, typingIndicatorSchema } from './dto/schemas/chat.schema';
 import app from './app';
 import { StatusUpdatedEventData } from './types/events';
@@ -14,7 +15,7 @@ import { StatusUpdatedEventData } from './types/events';
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: AppConfig.FRONTEND_URL,
     methods: ['GET', 'POST']
   }
 });
@@ -29,7 +30,7 @@ io.on('connection', (socket) => {
     socket.leave(conversationId);
     console.log(`User ${socket.id} left conversation: ${conversationId}`);
   });
-  socket.on('send-message', async (data: unknown) => {
+      socket.on('send-message', async (data: unknown) => {
     try {
       const validationResult = sendMessageSchema.safeParse(data);
       if (!validationResult.success) {
@@ -50,7 +51,7 @@ io.on('connection', (socket) => {
       );
       
       io.to(validationResult.data.conversationId).emit('new-message', message);
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
       socket.emit('message-error', { error: errorMessage });
     }
@@ -83,8 +84,9 @@ io.on('connection', (socket) => {
         conversationId: validationResult.data.conversationId,
         userId: validationResult.data.userId
       });
-    } catch (error) {
-      console.error('Error marking as read:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error marking as read:', errorMessage);
     }
   });
 
@@ -106,8 +108,7 @@ async function initializeKafkaConsumer(): Promise<void> {
             
             const _chatService = container.get<IChatService>(TYPES.IChatService);
             
-            const applicationServiceUrl = process.env.APPLICATION_SERVICE_URL || 'http://localhost:3004';
-            const response = await axios.get(`${applicationServiceUrl}/api/applications/${eventData.applicationId}`);
+            const response = await axios.get(`${AppConfig.APPLICATION_SERVICE_URL}/api/applications/${eventData.applicationId}`);
             
             const { userId, companyId } = response.data.data || response.data;
 
@@ -119,15 +120,17 @@ async function initializeKafkaConsumer(): Promise<void> {
             
             console.log(`Conversation created for application: ${eventData.applicationId}`);
           }
-        } catch (error) {
-          console.error('Error processing Kafka event:', error);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.error('Error processing Kafka event:', errorMessage);
         }
       }
     });
 
     console.log('Kafka consumer initialized for chat-service');
-  } catch (error) {
-    console.error('Failed to initialize Kafka consumer:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to initialize Kafka consumer:', errorMessage);
   }
 }
 
@@ -137,8 +140,9 @@ async function initializeServices(): Promise<void> {
     console.log('MongoDB connected successfully');
     
     await initializeKafkaConsumer();
-  } catch (error) {
-    console.error('Failed to initialize services:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Failed to initialize services:', errorMessage);
     process.exit(1);
   }
 }
@@ -148,8 +152,9 @@ process.on('SIGTERM', async () => {
   try {
     await consumer.disconnect();
     console.log('Kafka consumer disconnected');
-  } catch (error) {
-    console.error('Error disconnecting Kafka consumer:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error disconnecting Kafka consumer:', errorMessage);
   }
   process.exit(0);
 });

@@ -1,5 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 import LokiTransport from 'winston-loki';
+import { AppConfig } from '../config/app.config';
 
 const { combine, timestamp, printf, colorize, json } = format;
 const serviceName = 'chat-service'; 
@@ -17,7 +18,7 @@ export const logger = createLogger({
       format: combine(colorize(), timestamp(), consoleFormat),
     }),
     new LokiTransport({
-      host: 'http://localhost:3100', 
+      host: AppConfig.LOKI_HOST, 
       labels: { service: serviceName },
       json: true,
     }),

@@ -1,8 +1,9 @@
 import { injectable, inject } from 'inversify';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { IChatService } from '../interfaces/IChatService';
 import { IChatRepository } from '../../repositories/interfaces/IChatRepository';
 import { TYPES } from '../../config/types';
+import { AppConfig } from '../../config/app.config';
 import { ChatResponseMapper, ConversationResponse, MessageResponse } from '../../dto/responses/chat.response';
 
 @injectable()
@@ -10,16 +11,8 @@ export class ChatService implements IChatService {
   constructor(
     @inject(TYPES.IChatRepository) private _chatRepository: IChatRepository
   ) {}
-  async getApplicationDetails(
-    applicationId: string,
-    authHeaders?: Record<string, string>
-  ): Promise<{ userId: string; companyId: string; status: string }> {
-    try {
-      const apiGatewayUrl = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-      
-      console.log('ChatService] Fetching application details for:', applicationId);
-      console.log('ChatService] Using API Gateway URL:', `${apiGatewayUrl}/api/applications/${applicationId}`);
-      
+  async getApplicationDetails(applicationId: string, authHeaders?: Record<string, string>): Promise<{ userId: string; companyId: string; status: string }> {
+    try {      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...authHeaders
@@ -30,13 +23,14 @@ export class ChatService implements IChatService {
       } else {
         console.warn('ChatService] No Authorization header found in authHeaders');
       }
-      const axiosConfig: any = { headers };
-      if (headers.Cookie) {
-        axiosConfig.withCredentials = true;
-      }
+      
+      const axiosConfig: AxiosRequestConfig = { 
+        headers,
+        ...(headers.Cookie && { withCredentials: true })
+      };
       
       const response = await axios.get(
-        `${apiGatewayUrl}/api/applications/${applicationId}`,
+        `${AppConfig.API_GATEWAY_URL}/api/applications/${applicationId}`,
         axiosConfig
       );
       const applicationData = response.data?.data || response.data;
@@ -50,7 +44,7 @@ export class ChatService implements IChatService {
         companyId: applicationData.companyId,
         status: applicationData.status || 'PENDING'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to fetch application details: ${errorMessage}`);
     }
