@@ -4,6 +4,7 @@ import { INotificationRepository } from '../../repositories/interfaces/INotifica
 import { INotificationDocument } from '../../models/NotificationModel';
 import { CreateNotificationInput } from '../../types/notifications';
 import { TYPES } from '../../config/types';
+import { AppConfig } from '../../config/app.config';
 import { 
   NotificationMapper, 
   ApplicationReceivedInput, 
@@ -75,8 +76,7 @@ async sendApplicationReceivedNotification(input: ApplicationReceivedInput): Prom
 async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
   let jobTitle = 'Job';
   try {
-    const jobServiceUrl = process.env.JOB_SERVICE_URL || 'http://localhost:3002';
-    const jobResponse = await fetch(`${jobServiceUrl}/api/jobs/${input.jobId}`);
+    const jobResponse = await fetch(`${AppConfig.JOB_SERVICE_URL}/api/jobs/${input.jobId}`);
     if (jobResponse.ok) {
       const jobData = await jobResponse.json() as {
         data?: {

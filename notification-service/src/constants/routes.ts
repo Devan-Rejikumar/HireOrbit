@@ -4,6 +4,9 @@
  */
 
 export const NOTIFICATION_ROUTES = {
+  // Base API path
+  API_BASE_PATH: '/api/notifications',
+  
   // Notification query routes
   GET_NOTIFICATIONS: '/:recipientId',
   GET_NOTIFICATIONS_PAGINATED: '/:recipientId/paginated',

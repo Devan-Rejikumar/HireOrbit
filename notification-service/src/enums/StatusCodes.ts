@@ -8,6 +8,9 @@ export enum StatusCodes {
   INTERNAL_SERVER_ERROR = 500
 }
 
+// Alias for consistency with other services
+export const HttpStatusCode = StatusCodes;
+
 export enum ErrorMessages {
   NOTIFICATION_RETRIEVAL_FAILED = 'Failed to retrieve notifications',
   UNREAD_COUNT_RETRIEVAL_FAILED = 'Failed to retrieve unread count',
