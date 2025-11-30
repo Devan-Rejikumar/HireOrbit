@@ -21,6 +21,8 @@ export const Messages = {
     COUNT_RETRIEVED_SUCCESS: 'Job count retrieved successfully',
     COUNT_RETRIEVE_FAILED: 'Failed to get job count',
     DUPLICATE_TITLE: 'Job with this title already exists for this company',
+    ALREADY_REPORTED: 'You have already reported this job',
+    JOB_NOT_FOUND: 'Job not found',
   },
 
   VALIDATION: {

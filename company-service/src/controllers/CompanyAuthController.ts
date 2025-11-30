@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import TYPES from '../config/types';
-import { ICompanyService } from '../services/interface/ICompanyService';
+import { ICompanyService } from '../services/interfaces/ICompanyService';
 import { HttpStatusCode, AuthStatusCode, OTPStatusCode } from '../enums/StatusCodes';
 import { CompanyGenerateOTPSchema, CompanyLoginSchema, CompanyRegisterSchema, CompanyVerifyOTPSchema } from '../dto/schemas/company.schema';
 import { buildSuccessResponse } from 'shared-dto';
 import { AppError } from '../utils/errors/AppError';
-import { CookieService } from '../services/implementation/CookieService';
+import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
 
 @injectable()

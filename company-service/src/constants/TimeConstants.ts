@@ -12,4 +12,3 @@ export const REFRESH_TOKEN_EXPIRY_SECONDS = 604800;
 export const SESSION_EXPIRY_SECONDS = 86400;
 export const OTP_MIN_VALUE = AppConfig.OTP_MIN_VALUE;
 export const OTP_MAX_VALUE = AppConfig.OTP_MAX_VALUE;
-

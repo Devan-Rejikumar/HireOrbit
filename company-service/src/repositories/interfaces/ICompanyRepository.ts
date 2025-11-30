@@ -1,6 +1,6 @@
 import { Company, Otp, CompanyProfileStep } from '@prisma/client';
 import { CompanyProfileData, CompanyProfileStepData } from '../../types/company';
-import { IBaseRepository, PaginationResult } from '../interface/IBaseRepository';
+import { IBaseRepository, PaginationResult } from './IBaseRepository';
 export interface ICompanyRepository extends IBaseRepository<Company> {
   findByEmail(email: string): Promise<Company | null>;
   createCompany(data: {email: string;password: string;companyName: string;}): Promise<Company>;

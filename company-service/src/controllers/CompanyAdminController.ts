@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import TYPES from '../config/types';
-import { ICompanyService } from '../services/interface/ICompanyService';
+import { ICompanyService } from '../services/interfaces/ICompanyService';
 import { HttpStatusCode, CompanyStatusCode } from '../enums/StatusCodes';
 import { RejectCompanySchema } from '../dto/schemas/company.schema';
 import { buildSuccessResponse } from 'shared-dto';

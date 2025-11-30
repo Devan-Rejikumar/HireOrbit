@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import CompanyList from '@/components/admin/CompanyList';
 import UserList from '@/components/admin/UserList';
 import AdminJobManagement from '@/pages/AdminJobManagement';
+import AdminSkills from '@/components/admin/AdminSkills';
+import AdminIndustryCategories from '@/components/admin/AdminIndustryCategories';
 import { useNavigate } from 'react-router-dom';
 import api from '@/api/axios';
-import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase } from 'react-icons/fi';
+import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase, FiLayers } from 'react-icons/fi';
 
 const AdminDashboard: React.FC = () => {
-  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management'>('dashboard');
+  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management' | 'skills' | 'industries'>('dashboard');
   const navigate = useNavigate();
 
   const handleLogout = async() =>{
@@ -85,6 +87,28 @@ const AdminDashboard: React.FC = () => {
               <FiBriefcase size={20} />
               Job Management
             </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+                selected === 'skills' 
+                  ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
+                  : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+              }`}
+              onClick={() => setSelected('skills')}
+            >
+              <FiHome size={20} />
+              Skill Management
+            </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+                selected === 'industries' 
+                  ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
+                  : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+              }`}
+              onClick={() => setSelected('industries')}
+            >
+              <FiLayers size={20} />
+              Industry Management
+            </button>
           </nav>
         </aside>
   
@@ -140,6 +164,8 @@ const AdminDashboard: React.FC = () => {
           {selected === 'users' && <UserList />}
           
           {selected === 'job-management' && <AdminJobManagement />}
+          {selected === 'skills' && <AdminSkills />}
+          {selected === 'industries' && <AdminIndustryCategories />}
         </main>
       </div>
     </div>

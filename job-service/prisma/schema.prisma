@@ -25,6 +25,18 @@ model Job {
   education           String
   applicationDeadline DateTime
   workLocation        String
+  reports             JobReport[]
+}
+
+model JobReport {
+  id          String   @id @default(uuid())
+  jobId       String
+  userId      String
+  reason      String
+  createdAt   DateTime @default(now())
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
   
+  @@index([jobId])
+  @@index([userId])
 }
 

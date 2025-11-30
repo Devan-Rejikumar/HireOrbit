@@ -31,5 +31,13 @@ export const COMPANY_ROUTES = {
   APPROVE_COMPANY: '/admin/:id/approve',
   REJECT_COMPANY: '/admin/:id/reject',
   SEARCH_COMPANY: '/search',
+  
+  // Industry Category management (admin)
+  INDUSTRIES_BASE: '/admin/industries',
+  INDUSTRIES_DETAIL: '/admin/industries/:id',
+} as const;
+
+export const PUBLIC_ROUTES = {
+  INDUSTRIES: '/industries',
 } as const;
 

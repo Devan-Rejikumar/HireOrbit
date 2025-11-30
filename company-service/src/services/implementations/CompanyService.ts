@@ -1,12 +1,13 @@
 import { injectable, inject } from 'inversify';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+import type { JwtPayload } from 'jsonwebtoken';
 import TYPES from '../../config/types';
-import { ICompanyRepository } from '../../repositories/interface/ICompanyRepository';
-import { ICompanyService } from '../interface/ICompanyService';
-import { IEmailService } from '../interface/IEmailService';
+import { ICompanyRepository } from '../../repositories/interfaces/ICompanyRepository';
+import { ICompanyService } from '../interfaces/ICompanyService';
+import { IEmailService } from '../interfaces/IEmailService';
 import { CompanyProfileData, CompanyRegistrationStep2, CompanyRegistrationStep3, CompanyProfileStep, CompanyProfileStepData } from '../../types/company';
 import { RedisService } from './RedisService';
-import { PaginationResult } from '../../repositories/interface/IBaseRepository';
+import { PaginationResult } from '../../repositories/interfaces/IBaseRepository';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
 import { mapCompaniesToResponse, mapCompanyToAuthResponse, mapCompanyToResponse } from '../../dto/mappers/company.mapper';
 import { AppConfig } from '../../config/app.config';
