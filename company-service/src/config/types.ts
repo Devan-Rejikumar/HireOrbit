@@ -9,6 +9,11 @@ const TYPES = {
   CompanyProfileController: Symbol.for('CompanyProfileController'),
   CompanyAdminController: Symbol.for('CompanyAdminController'),
   CookieService: Symbol.for('CookieService'),
+  IndustryCategoryRepository: Symbol.for('IndustryCategoryRepository'),
+  IIndustryCategoryRepository: Symbol.for('IIndustryCategoryRepository'),
+  IndustryCategoryService: Symbol.for('IndustryCategoryService'),
+  IIndustryCategoryService: Symbol.for('IIndustryCategoryService'),
+  IndustryCategoryController: Symbol.for('IndustryCategoryController'),
 };
 
 export default TYPES;

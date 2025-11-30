@@ -1,9 +1,9 @@
 import { injectable } from 'inversify';
 import { prisma } from '../../prisma/client';
 import { Company, CompanyProfileStep, Otp } from '@prisma/client'; 
-import { ICompanyRepository } from '../interface/ICompanyRepository';
-import { BaseRepository } from '../implementation/BaseRepository';
-import { PaginationResult } from '../interface/IBaseRepository';
+import { ICompanyRepository } from '../interfaces/ICompanyRepository';
+import { BaseRepository } from './BaseRepository';
+import { PaginationResult } from '../interfaces/IBaseRepository';
 import { CompanyProfileData, CompanyProfileStepData } from '../../types/company';
 
 @injectable()

@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Users,
   Calendar,
+  Flag,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
@@ -18,6 +19,7 @@ import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import JobApplicationModal from '@/components/JobApplicationModal';
 import CompanyProfileModal from '../components/CompanyProfileModal';
+import ReportJobModal from '@/components/ReportJobModal';
 import { FiRefreshCw } from 'react-icons/fi';
 
 interface Job {
@@ -73,6 +75,7 @@ const JobDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -473,6 +476,17 @@ const JobDetails = () => {
                     )}
                   </div>
                 )}
+
+                {/* Report Job Button */}
+                {isAuthenticated && (
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="w-full mt-3 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Flag className="h-4 w-4" />
+                    Report Job
+                  </button>
+                )}
               </div>
             </div>
 
@@ -541,6 +555,14 @@ const JobDetails = () => {
         onClose={() => setShowCompanyModal(false)}
         companyName={job.company}
       />
+      {job && (
+        <ReportJobModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          jobId={job.id}
+          jobTitle={job.title}
+        />
+      )}
     </div>
   );
 };

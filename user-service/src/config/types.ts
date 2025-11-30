@@ -34,6 +34,11 @@ const TYPES = {
   RedisService: Symbol.for('RedisService'),
   JWTService: Symbol.for('JWTService'),
   CookieService: Symbol.for('CookieService'),
+  SkillRepository: Symbol.for('SkillRepository'),
+  ISkillRepository: Symbol.for('ISkillRepository'),
+  SkillService: Symbol.for('SkillService'),
+  ISkillService: Symbol.for('ISkillService'),
+  SkillController: Symbol.for('SkillController'),
 };
 
 export default TYPES;

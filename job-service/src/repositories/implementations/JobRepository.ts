@@ -59,10 +59,9 @@ export class JobRepository implements IJobRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.job.update({ 
-      where: { id }, 
-      data: { isActive: false } 
-    });
+    await this.prisma.job.delete({
+      where:{id}
+    })
   }
 
   async countByCompany(companyId: string): Promise<number> {

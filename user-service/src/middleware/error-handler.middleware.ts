@@ -12,7 +12,7 @@ export const ErrorHandler = (
 ): void => {
   if (err instanceof AppError) {
     logger.warn(`AppError: ${err.message}`);
-    res.status(err.statusCode).json({ success: false, message: err.message });
+    res.status(err.statusCode).json({ success: false, error: err.message, message: err.message });
     return;
   }
 

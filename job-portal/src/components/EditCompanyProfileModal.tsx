@@ -56,8 +56,29 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
     contactPersonEmail: '',
     contactPersonPhone: '',
   });
+  const [industryCategories, setIndustryCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  // Fetch industry categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await api.get<{ data: { categories: Array<{ id: string; name: string }> } }>('/industries');
+        setIndustryCategories(response.data?.data?.categories || []);
+      } catch (err) {
+        console.error('Failed to load industry categories', err);
+        setIndustryCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
 
   // Populate form when company data changes
   useEffect(() => {
@@ -169,14 +190,15 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
                 name="industry"
                 value={formData.industry}
                 onChange={handleInputChange}
+                disabled={loadingCategories}
                 className="mt-1 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Select Industry</option>
-                <option value="Technology">Technology</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Finance">Finance</option>
-                <option value="Education">Education</option>
-                <option value="Manufacturing">Manufacturing</option>
+                <option value="">{loadingCategories ? 'Loading categories...' : 'Select Industry'}</option>
+                {industryCategories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
                 <option value="Retail">Retail</option>
                 <option value="Consulting">Consulting</option>
                 <option value="Media">Media</option>

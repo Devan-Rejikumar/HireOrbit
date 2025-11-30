@@ -36,12 +36,15 @@ export const ROUTES = {
         '/api/jobs/update',
         '/api/jobs/delete',
         '/api/jobs/company',
+        '/api/jobs/admin/reported', 
+        '/api/jobs/:jobId/report',
         '/api/applications/create',
         '/api/applications/update',
         '/api/applications/delete',
         '/api/applications/company/applications',
         '/api/applications/company/statistics',
-        '/api/interviews'
+        '/api/interviews',
+        '/api/company/admin/industries'
     ],
     
     public: [
@@ -62,6 +65,7 @@ export const ROUTES = {
         '/api/company/generate-otp',
         '/api/company/verify-otp',
         '/api/company/forgot-password',
-        '/api/company/reset-password'
+        '/api/company/reset-password',
+        '/api/industries'
     ]
 };

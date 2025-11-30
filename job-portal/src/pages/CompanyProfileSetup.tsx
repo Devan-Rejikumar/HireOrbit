@@ -82,6 +82,26 @@ const CompanyProfileSetup = () => {
     contactPersonEmail: '',
     contactPersonPhone: '',
   });
+  const [industryCategories, setIndustryCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  useEffect(() => {
+    // Fetch industry categories
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await api.get<{ data: { categories: Array<{ id: string; name: string }> } }>('/industries');
+        setIndustryCategories(response.data?.data?.categories || []);
+      } catch (err) {
+        console.error('Failed to load industry categories', err);
+        // Fallback to empty array if API fails
+        setIndustryCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -262,17 +282,20 @@ const CompanyProfileSetup = () => {
           
           <Select
             value={formData.industry}
-            onChange={(e) => handleInputChange('industry', e.target.value)}
+            onValueChange={(value) => handleInputChange('industry', value)}
+            disabled={loadingCategories}
           >
-            <option value="">Select industry</option>
-            <option value="technology">Technology</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="finance">Finance</option>
-            <option value="education">Education</option>
-            <option value="retail">Retail</option>
-            <option value="manufacturing">Manufacturing</option>
-            <option value="consulting">Consulting</option>
-            <option value="other">Other</option>
+            <SelectTrigger>
+              <SelectValue placeholder={loadingCategories ? 'Loading categories...' : 'Select industry'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Select industry</SelectItem>
+              {industryCategories.map((category) => (
+                <SelectItem key={category.id} value={category.name}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
         </div>
 

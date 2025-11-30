@@ -14,5 +14,7 @@ export const JOB_ROUTES = {
   GET_JOB_SUGGESTIONS: '/suggestions',
   GET_JOBS_BY_COMPANY: '/company/:companyId',
   GET_JOB_COUNT_BY_COMPANY: '/company/:companyId/count',
+  REPORT_JOB: '/:jobId/report',
+  GET_REPORTED_JOBS: '/admin/reported',
 } as const;
 
