@@ -46,7 +46,15 @@ export const services = {
     healthCheck: `${env.CHAT_SERVICE_URL}/health`,
     timeout: 5000,
     retries: 3
+  } as ServiceConfig,
+
+  subscription: {
+    url: env.SUBSCRIPTION_SERVICE_URL,
+    healthCheck: `${env.SUBSCRIPTION_SERVICE_URL}/health`,
+    timeout: 5000,
+    retries: 3
   } as ServiceConfig
+
 };
 
 export function getServiceUrl(serviceName: keyof typeof services): string {
@@ -71,7 +79,8 @@ export const SERVICE_NAMES = {
   JOB: 'job',
   APPLICATION: 'application',
   NOTIFICATION: 'notification',
-  CHAT: 'chat'
+  CHAT: 'chat',
+  SUBSCRIPTION: 'subscription'
 } as const;
 
 export default services;

@@ -6,7 +6,8 @@ export const SERVICE_ROUTES = {
     APPLICATIONS: '/api/applications',
     INTERVIEWS: '/api/interviews',
     NOTIFICATIONS: '/api/notifications',
-    CHAT: '/api/chat'
+    CHAT: '/api/chat',
+    SUBSCRIPTIONS: '/api/subscriptions'
 } as const;
 
 export const ROUTES = {
@@ -44,7 +45,13 @@ export const ROUTES = {
         '/api/applications/company/applications',
         '/api/applications/company/statistics',
         '/api/interviews',
-        '/api/company/admin/industries'
+        '/api/company/admin/industries',
+        '/api/subscriptions', 
+        '/api/subscriptions/status', 
+        '/api/subscriptions/:subscriptionId/cancel', 
+        '/api/subscriptions/:subscriptionId/upgrade', 
+        '/api/subscriptions/limits/job-posting', 
+        '/api/subscriptions/features/:featureName'
     ],
     
     public: [
@@ -66,6 +73,7 @@ export const ROUTES = {
         '/api/company/verify-otp',
         '/api/company/forgot-password',
         '/api/company/reset-password',
-        '/api/industries'
+        '/api/industries',
+        '/api/subscriptions/plans',
     ]
 };
