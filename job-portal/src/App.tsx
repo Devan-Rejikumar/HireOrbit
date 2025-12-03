@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 import { NotificationProvider } from './context/NotificationContext';
 import { GlobalChatProvider } from './context/GlobalChatContext';
 import { useAuth } from './context/AuthContext';
@@ -39,6 +38,11 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const BlockedUser = lazy(() => import('./pages/BlockedUser'));
 const Chat = lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
 const NotificationTest = lazy(() => import('./pages/NotificationTest'));
+const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage').then(module => ({ default: module.SubscriptionPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
+const SubscriptionStatus = lazy(() => import('./components/subscription/SubscriptionStatus').then(module => ({ default: module.SubscriptionStatus })));
+const ManageSubscription = lazy(() => import('./components/subscription/ManageSubscription').then(module => ({ default: module.ManageSubscription })));
+const ATSCheckerPage = lazy(() => import('./pages/ATSCheckerPage').then(module => ({ default: module.ATSCheckerPage })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -183,6 +187,15 @@ const AppContent = () => {
         <Route path="/chat" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><Chat /></Suspense></ProtectedRoute>} />
         <Route path="/blocked" element={<Suspense fallback={<LoadingFallback />}><BlockedUser /></Suspense>} />
         
+        {/* Subscription routes */}
+        <Route path="/subscriptions" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SubscriptionPage /></Suspense></ProtectedRoute>} />
+        <Route path="/subscriptions/checkout" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><CheckoutPage /></Suspense></ProtectedRoute>} />
+        <Route path="/subscriptions/status" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SubscriptionStatus /></Suspense></ProtectedRoute>} />
+        <Route path="/subscriptions/manage" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><ManageSubscription /></Suspense></ProtectedRoute>} />
+        
+        {/* Premium features */}
+        <Route path="/ats-checker" element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><ATSCheckerPage /></Suspense></ProtectedRoute>} />
+        
         {/* Test route for notifications */}
         <Route path="/notification-test" element={<Suspense fallback={<LoadingFallback />}><NotificationTest /></Suspense>} />
         
@@ -196,7 +209,30 @@ function App() {
   return (
     <Router>
       <AppWithNotifications />
-      <ToastContainer />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </Router>
   );
 }

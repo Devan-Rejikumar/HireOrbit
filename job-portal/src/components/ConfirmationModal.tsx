@@ -9,6 +9,7 @@ interface ConfirmationModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  loadingText?: string;
   type?: 'danger' | 'warning' | 'info';
   loading?: boolean;
 }
@@ -21,6 +22,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
+  loadingText = 'Processing...',
   type = 'danger',
   loading = false,
 }) => {
@@ -99,7 +101,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Deleting...
+                {loadingText}
               </>
             ) : (
               confirmText

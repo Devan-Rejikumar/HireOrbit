@@ -5,6 +5,7 @@ import { jobServiceProxy } from './jobService';
 import { applicationServiceProxy, applicationServiceMultipartProxy } from './applicationService';
 import { notificationServiceProxy } from './notificationService';
 import { chatServiceProxy } from './chatService';
+import { subscriptionServiceProxy } from './subscriptionService';
 import { SERVICE_ROUTES } from '@/config/routes';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
@@ -43,6 +44,9 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
   } else if (path.startsWith(SERVICE_ROUTES.CHAT)) {
     chatServiceProxy(req, res, next);
     
+  } else if (path.startsWith(SERVICE_ROUTES.SUBSCRIPTIONS)) {
+    console.log('Routing to Subscription Service');
+    subscriptionServiceProxy(req, res, next);
   } else {
     userServiceProxy(req, res, next);
   }
