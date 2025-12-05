@@ -13,7 +13,7 @@ import {
   Calendar,
   Flag,
 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '../api/axios';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
@@ -160,7 +160,7 @@ const JobDetails = () => {
     console.log('Application submitted successfully via modal:', applicationData);
     setApplied(true);
     setShowApplicationModal(false);
-    toast.success('Application submitted successfully! 🎉');
+    // Toast message is handled in JobApplicationModal component
 
     // Re-check application status to ensure consistency
     if (id) {

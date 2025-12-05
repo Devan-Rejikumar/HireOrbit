@@ -9,6 +9,7 @@ import {
 } from '../interfaces/ISkillService';
 import { AppError } from '../../utils/errors/AppError';
 import { HttpStatusCode } from '../../enums/StatusCodes';
+import { PaginatedResult } from '../../repositories/interfaces/ISkillRepository';
 
 @injectable()
 export class SkillService implements ISkillService {
@@ -22,14 +23,13 @@ export class SkillService implements ISkillService {
     const existing = await this._skillRepository.findByName(name);
 
     if (existing) {
-      // If skill exists but is inactive, just reactivate & update it
       if (!existing.isActive) {
         return this._skillRepository.update(existing.id, {
           isActive: true,
           category: data.category,
         });
       }
-      // If it's already active, show clear error message
+     
       throw new AppError('This skill already exists', HttpStatusCode.BAD_REQUEST);
     }
 
@@ -38,6 +38,10 @@ export class SkillService implements ISkillService {
 
   async getAllSkills(includeInactive: boolean = false): Promise<Skill[]> {
     return this._skillRepository.findAll(includeInactive);
+  }
+
+  async getSkillsPaginated(includeInactive: boolean, page: number, limit: number): Promise<PaginatedResult<Skill>> {
+    return this._skillRepository.findPaginated(includeInactive, page, limit);
   }
 
   async getActiveSkills(): Promise<Skill[]> {

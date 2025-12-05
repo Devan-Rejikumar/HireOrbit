@@ -62,7 +62,6 @@ enum ApplicationStatus {
   ACCEPTED
   WITHDRAWN
 }
-
 model Interview {
   id              String      @id @default(cuid())
   applicationId   String

@@ -37,23 +37,24 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
   const [isGeneratingOTP, setIsGeneratingOTP] = useState(false);
 
   
-  useEffect(() => {
-    if (isAuthenticated && userRole) {
-      switch (userRole) {
-      case 'jobseeker':
-        navigate('/', { replace: true });
-        break;
-      case 'company':
-        navigate('/company/dashboard', { replace: true });
-        break;
-      case 'admin':
-        navigate('/admin/dashboard', { replace: true });
-        break;
-      default:
-        navigate('/', { replace: true });
-      }
-    }
-  }, [isAuthenticated, userRole, navigate]);
+  // Disabled auto-navigation to allow error visibility during Google signup debugging
+  // useEffect(() => {
+  //   if (isAuthenticated && userRole) {
+  //     switch (userRole) {
+  //     case 'jobseeker':
+  //       navigate('/', { replace: true });
+  //       break;
+  //     case 'company':
+  //       navigate('/company/dashboard', { replace: true });
+  //       break;
+  //     case 'admin':
+  //       navigate('/admin/dashboard', { replace: true });
+  //       break;
+  //     default:
+  //       navigate('/', { replace: true });
+  //     }
+  //   }
+  // }, [isAuthenticated, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,7 +92,14 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
     try {
       setError('');
       setSuccess('');
+      console.log('[RegisterForm] Starting Google sign-up...');
+      
       const userData = await signInWithGoogle();
+      console.log('[RegisterForm] Google sign-up successful:', { 
+        isNewUser: userData.isNewUser, 
+        hasToken: !!userData.token,
+        userEmail: userData.user?.email 
+      });
     
       if (userData.isNewUser) {
         setSuccess('Account created successfully with Google!');
@@ -99,14 +107,37 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
         setSuccess('Welcome back! Logging you in...');
       }
     
-    
-      await login('jobseeker'); 
-    
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
+      // Wait a bit for the cookie to be set by the backend
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Call login which will fetch user data
+      try {
+        console.log('[RegisterForm] Calling login function...');
+        await login('jobseeker'); 
+        console.log('[RegisterForm] Login successful!');
+        setSuccess('Successfully signed up and logged in! You can now navigate to the home page.');
+        // Don't auto-navigate - let user see the success message
+      } catch (loginError: any) {
+        console.error('[RegisterForm] Login after Google signup failed:', loginError);
+        console.error('[RegisterForm] Error details:', {
+          status: loginError?.response?.status,
+          data: loginError?.response?.data,
+          message: loginError?.message
+        });
+        setError(`Account created, but failed to fetch user data: ${loginError?.response?.data?.error || loginError?.message || 'Unknown error'}. Please try logging in manually.`);
+        // Don't auto-navigate - let user see the error
+      }
     } catch (error: any) {
-      setError('Google sign-up failed. Please try again.');
+      console.error('[RegisterForm] Google sign-up error:', error);
+      console.error('[RegisterForm] Error details:', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+        code: error?.code
+      });
+      const errorMessage = error?.response?.data?.error || error?.message || 'Google sign-up failed. Please try again.';
+      setError(errorMessage);
+      // Don't auto-navigate - let user see the error
     }
   };
 

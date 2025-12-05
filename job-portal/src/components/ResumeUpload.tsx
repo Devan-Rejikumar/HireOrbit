@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, FileText, X, CheckCircle, Eye, X as CloseIcon } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface ResumeUploadProps {
   onUpload: (file: File) => Promise<void>;

@@ -70,9 +70,12 @@ const isProtectedRoute = (path: string, method: string): boolean =>{
         return true;
     }
 
-    // Check if route starts with /api/interviews (all interview routes are protected)
     if (clean.startsWith('/api/interviews')) {
         console.log(' Matched interview route:', clean);
+        return true;
+    }
+    if (clean.startsWith('/api/admin/subscriptions')) {
+        console.log(' Matched admin subscription route:', clean);
         return true;
     }
     

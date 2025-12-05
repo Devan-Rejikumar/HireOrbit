@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '@/api/axios';
 import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import type { AxiosResponse } from 'axios';
 
 interface IndustryCategory {

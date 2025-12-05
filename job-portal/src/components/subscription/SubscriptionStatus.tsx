@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { subscriptionService, SubscriptionStatusResponse } from '../../api/subscriptionService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +14,9 @@ export const SubscriptionStatus = () => {
   const [isNewSubscription, setIsNewSubscription] = useState(false);
   const navigate = useNavigate();
   const { role } = useAuth();
+
+  // Move dashboardPath here, before it's used
+  const dashboardPath = role === 'company' ? '/company/dashboard' : '/user/dashboard';
 
   useEffect(() => {
     loadStatus();
@@ -38,7 +41,7 @@ export const SubscriptionStatus = () => {
         setIsNewSubscription(true);
         // Redirect to dashboard after 3 seconds to show success message
         setTimeout(() => {
-          navigate(dashboardPath);
+          navigate(dashboardPath); // Now dashboardPath is accessible
         }, 3000);
       }
     } catch (error: any) {
@@ -76,7 +79,6 @@ export const SubscriptionStatus = () => {
 
   const subscription = status.subscription;
   const isActive = status.isActive;
-  const dashboardPath = role === 'company' ? '/company/dashboard' : '/user/dashboard';
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

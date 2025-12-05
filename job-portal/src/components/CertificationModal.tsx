@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Calendar, Building, Award, FileText, Link, Trash2 } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '../api/axios';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -78,6 +78,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     };
 
     await onSave(cleanedData);
+    // Success toast is handled in UserProfile.tsx, but we can add one here too for immediate feedback
+    if (isEditing) {
+      toast.success('Certification updated successfully!');
+    } else {
+      toast.success('Certification added successfully!');
+    }
     onClose();
   } catch (error) {
     toast.error('Failed to save certification');

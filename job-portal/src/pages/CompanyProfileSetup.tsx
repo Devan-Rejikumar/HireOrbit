@@ -13,13 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 import api from '@/api/axios';
 
 interface CompanyData {
@@ -279,24 +273,20 @@ const CompanyProfileSetup = () => {
         {/* Industry */}
         <div className="space-y-2">
           <Label htmlFor="industry">Industry *</Label>
-          
-          <Select
+          <select
+            id="industry"
             value={formData.industry}
-            onValueChange={(value) => handleInputChange('industry', value)}
+            onChange={(e) => handleInputChange('industry', e.target.value)}
             disabled={loadingCategories}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <SelectTrigger>
-              <SelectValue placeholder={loadingCategories ? 'Loading categories...' : 'Select industry'} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Select industry</SelectItem>
-              {industryCategories.map((category) => (
-                <SelectItem key={category.id} value={category.name}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">{loadingCategories ? 'Loading categories...' : 'Select industry'}</option>
+            {industryCategories.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Company Size */}

@@ -354,4 +354,16 @@ export class CompanyService implements ICompanyService {
     const company = await this._companyRepository.searchCompanyByName(companyName);
     return company ? mapCompanyToResponse(company) : null;
   }
+
+  async getTotalCompanyCount(): Promise<number> {
+    return this._companyRepository.getTotalCompanyCount();
+  }
+
+  async getCompanyStatisticsByTimePeriod(
+    startDate: Date, 
+    endDate: Date, 
+    groupBy: 'day' | 'week' | 'month' | 'year'
+  ): Promise<Array<{ date: string; count: number }>> {
+    return this._companyRepository.getCompanyStatisticsByTimePeriod(startDate, endDate, groupBy);
+  }
 }

@@ -1,4 +1,5 @@
 import { Skill } from '@prisma/client';
+import { PaginatedResult } from '../../repositories/interfaces/ISkillRepository';
 
 export interface SkillInput {
   name: string;
@@ -14,6 +15,7 @@ export interface SkillUpdateInput {
 export interface ISkillService {
   createSkill(data: SkillInput): Promise<Skill>;
   getAllSkills(includeInactive?: boolean): Promise<Skill[]>;
+  getSkillsPaginated(includeInactive: boolean, page: number, limit: number): Promise<PaginatedResult<Skill>>;
   getActiveSkills(): Promise<Skill[]>;
   getSkillById(id: string): Promise<Skill | null>;
   updateSkill(id: string, data: SkillUpdateInput): Promise<Skill>;

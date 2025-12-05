@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Clock, MapPin, Video, Phone, Loader2, CheckCircle, XCircle, User, MessageSquare, Lock, LogOut, Home, Search, Briefcase, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount } from '@/hooks/useChat';

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, MapPin, Video, ChevronLeft, ChevronRight, Phone } from 'lucide-react';
 import { _interviewService, CreateInterviewData } from '@/api/interviewService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface ScheduleInterviewModalProps {
   isOpen: boolean;

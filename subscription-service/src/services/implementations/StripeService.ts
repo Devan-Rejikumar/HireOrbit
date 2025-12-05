@@ -142,5 +142,111 @@ export class StripeService implements IStripeService {
       throw error;
     }
   }
+
+  async createProduct(name: string, description?: string, metadata?: Record<string, string>): Promise<Stripe.Product> {
+    try {
+      const product = await stripe.products.create({
+        name,
+        description,
+        metadata,
+      });
+      console.log('Stripe product created', { productId: product.id, name });
+      return product;
+    } catch (error) {
+      console.error('Failed to create Stripe product', { error, name });
+      throw error;
+    }
+  }
+
+  async createPrice(
+    productId: string,
+    amount: number,
+    currency: string = 'usd',
+    interval: 'month' | 'year' = 'month',
+    metadata?: Record<string, string>
+  ): Promise<Stripe.Price> {
+    try {
+      const price = await stripe.prices.create({
+        product: productId,
+        unit_amount: Math.round(amount * 100), // Convert to cents
+        currency,
+        recurring: {
+          interval,
+        },
+        metadata,
+      });
+      console.log('Stripe price created', { priceId: price.id, productId, amount, interval });
+      return price;
+    } catch (error) {
+      console.error('Failed to create Stripe price', { error, productId, amount, interval });
+      throw error;
+    }
+  }
+
+  async updatePrice(priceId: string, metadata?: Record<string, string>, active?: boolean): Promise<Stripe.Price> {
+    try {
+      const updateData: any = {};
+      if (metadata !== undefined) updateData.metadata = metadata;
+      if (active !== undefined) updateData.active = active;
+      
+      const price = await stripe.prices.update(priceId, updateData);
+      console.log('Stripe price updated', { priceId });
+      return price;
+    } catch (error) {
+      console.error('Failed to update Stripe price', { error, priceId });
+      throw error;
+    }
+  }
+
+  async getPrice(priceId: string): Promise<Stripe.Price> {
+    try {
+      const price = await stripe.prices.retrieve(priceId);
+      console.log('Stripe price retrieved', { priceId, productId: price.product });
+      return price;
+    } catch (error) {
+      console.error('Failed to retrieve Stripe price', { error, priceId });
+      throw error;
+    }
+  }
+
+  async archiveProduct(productId: string): Promise<Stripe.Product> {
+    try {
+      const product = await stripe.products.update(productId, { active: false });
+      console.log('Stripe product archived', { productId });
+      return product;
+    } catch (error) {
+      console.error('Failed to archive Stripe product', { error, productId });
+      throw error;
+    }
+  }
+
+  async listInvoices(limit: number = 100, startingAfter?: string): Promise<Stripe.ApiList<Stripe.Invoice>> {
+    try {
+      const params: Stripe.InvoiceListParams = {
+        limit,
+        expand: ['data.subscription', 'data.payment_intent', 'data.lines.data.price'],
+      };
+      if (startingAfter) {
+        params.starting_after = startingAfter;
+      }
+      const invoices = await stripe.invoices.list(params);
+      return invoices;
+    } catch (error) {
+      console.error('Failed to list Stripe invoices', { error });
+      throw error;
+    }
+  }
+
+  async getInvoice(invoiceId: string): Promise<Stripe.Invoice> {
+    try {
+      const invoice = await stripe.invoices.retrieve(invoiceId, {
+        expand: ['subscription', 'payment_intent', 'lines.data.price'],
+      });
+      return invoice;
+    } catch (error) {
+      console.error('Failed to retrieve Stripe invoice', { error, invoiceId });
+      throw error;
+    }
+  }
 }
 

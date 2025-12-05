@@ -9,6 +9,8 @@ import { IResumeRepository } from '../repositories/interfaces/IResumeRepository'
 import { ICertificationRepository } from '../repositories/interfaces/ICertificationRepository';
 import { IAchievementRepository } from '../repositories/interfaces/IAchievementRepository';
 import { ICompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
+import { IJobApiRepository } from '../repositories/implementations/JobApiRepository';
+import { IApplicationApiRepository } from '../repositories/implementations/ApplicationApiRepository';
 import { ISkillRepository } from '../repositories/interfaces/ISkillRepository';
 
 import { UserRepository } from '../repositories/implementations/UserRepository';
@@ -18,9 +20,10 @@ import { ResumeRepository } from '../repositories/implementations/ResumeReposito
 import { CertificationRepository } from '../repositories/implementations/CertificationRepository';
 import { AchievementRepository } from '../repositories/implementations/AchievementRepository';
 import { CompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
+import { JobApiRepository } from '../repositories/implementations/JobApiRepository';
+import { ApplicationApiRepository } from '../repositories/implementations/ApplicationApiRepository';
 import { SkillRepository } from '../repositories/implementations/SkillRepository';
 
-// Service Interfaces
 import { IUserService } from '../services/interfaces/IUserService';
 import { IAdminService } from '../services/interfaces/IAdminService';
 import { IProfileService } from '../services/interfaces/IProfileService';
@@ -28,8 +31,6 @@ import { IResumeService } from '../services/interfaces/IResumeService';
 import { ICertificationService } from '../services/interfaces/ICertificationService';
 import { IAchievementService } from '../services/interfaces/IAchievementService';
 import { ISkillService } from '../services/interfaces/ISkillService';
-
-// Service Implementations
 import { UserService } from '../services/implementations/UserService';
 import { AdminService } from '../services/implementations/AdminService';
 import { ProfileService } from '../services/implementations/ProfileService';
@@ -42,7 +43,7 @@ import { EmailService } from '../services/implementations/EmailService';
 import { JWTService } from '../services/implementations/JWTService';
 import { CookieService } from '../services/implementations/CookieService';
 
-// Controllers
+
 import { UserController } from '../controllers/UserController';
 import { AdminController } from '../controllers/AdminController';
 import { ProfileController } from '../controllers/ProfileController';
@@ -69,6 +70,8 @@ container.bind<IProfileRepository>(TYPES.IProfileRepository).to(ProfileRepositor
 container.bind<IProfileService>(TYPES.IProfileService).to(ProfileService);
 container.bind<ProfileController>(TYPES.ProfileController).to(ProfileController);
 container.bind<ICompanyApiRepository>(TYPES.ICompanyApiRepository).to(CompanyApiRepository);
+container.bind<IJobApiRepository>(TYPES.IJobApiRepository).to(JobApiRepository);
+container.bind<IApplicationApiRepository>(TYPES.IApplicationApiRepository).to(ApplicationApiRepository);
 container.bind<JWTService>(TYPES.JWTService).to(JWTService);
 container.bind<IResumeRepository>(TYPES.IResumeRepository).to(ResumeRepository);
 container.bind<IResumeService>(TYPES.IResumeService).to(ResumeService);

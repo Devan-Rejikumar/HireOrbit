@@ -17,7 +17,14 @@ const getAccessToken = (): string | null => {
     cookieName = 'companyAccessToken';
   }
   
-  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
+  // First try the role-specific cookie
+  let tokenCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
+  
+  // If not found and role is jobseeker, also check for 'token' cookie (used by Google auth)
+  if (!tokenCookie && role === 'jobseeker') {
+    tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+  }
+  
   return tokenCookie ? tokenCookie.split('=')[1] : null;
 };
 
@@ -27,6 +34,9 @@ api.interceptors.request.use(
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[axios] Token found, Authorization header set for:', config.url);
+    } else {
+      console.warn('[axios] No token found for request:', config.url);
     }
     
     return config;

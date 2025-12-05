@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
 import { IJobService } from '../services/interfaces/IJobService';
-import { JobStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { JobStatusCode, ValidationStatusCode, HttpStatusCode } from '../enums/StatusCodes';
 import { CreateJobSchema, JobSearchSchema, JobSuggestionsSchema, UpdateJobSchema } from '../dto/schemas/job.schema';
 import { buildSuccessResponse } from 'shared-dto';
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
+import { AppConfig } from '../config/app.config';
 import '../types/express'; 
 
 @injectable()
@@ -31,6 +32,56 @@ export class JobController {
         ValidationStatusCode.MISSING_REQUIRED_FIELDS
       );
     }
+    try {
+      const subscriptionServiceUrl = AppConfig.SUBSCRIPTION_SERVICE_URL;
+      const limitResponse = await fetch(
+        `${subscriptionServiceUrl}/api/subscriptions/limits/job-posting`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': req.headers.authorization || '',
+            'x-company-id': companyId,
+            'x-user-id': companyId,
+            'x-user-role': 'company',
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!limitResponse.ok) {
+        const errorData = await limitResponse.json().catch(() => ({})) as { message?: string };
+        throw new AppError(
+          errorData.message || 'Failed to check job posting limit',
+          HttpStatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+
+      const limitData = await limitResponse.json() as { 
+        data?: { 
+          canPost?: boolean; 
+          remaining?: number; 
+          limit?: number; 
+        } 
+      };
+      
+      if (!limitData.data?.canPost) {
+        const remaining = limitData.data?.remaining || 0;
+        const limit = limitData.data?.limit || 0;
+        throw new AppError(
+          `Job posting limit reached. You have posted ${limit} jobs. ${remaining === 0 ? 'Please upgrade your plan to post more jobs.' : `${remaining} jobs remaining.`}`,
+          HttpStatusCode.FORBIDDEN
+        );
+      }
+    } catch (error: any) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      console.error('Error checking job posting limit:', error);
+      throw new AppError(
+        'Failed to verify job posting limit',
+        HttpStatusCode.INTERNAL_SERVER_ERROR
+      );
+    }
     
     const completeJobData = {
       ...jobData,
@@ -39,6 +90,26 @@ export class JobController {
     };
     
     const job = await this._jobService.createJob(completeJobData);
+
+    try {
+      const subscriptionServiceUrl = AppConfig.SUBSCRIPTION_SERVICE_URL;
+      await fetch(
+        `${subscriptionServiceUrl}/api/subscriptions/increment-job-count`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': req.headers.authorization || '',
+            'x-company-id': companyId,
+            'x-user-id': companyId,
+            'x-user-role': 'company',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ companyId }),
+        }
+      );
+    } catch (error) {
+      console.error('Failed to increment job posting count:', error);
+    }
     
     res.status(JobStatusCode.JOB_CREATED).json(
       buildSuccessResponse({ job }, Messages.JOB.CREATED_SUCCESS)
@@ -118,6 +189,46 @@ export class JobController {
     
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
       buildSuccessResponse({ count }, Messages.JOB.COUNT_RETRIEVED_SUCCESS)
+    );
+  }
+
+  async getTotalJobCount(req: Request, res: Response): Promise<void> {
+    const total = await this._jobService.getTotalJobCount();
+    res.status(JobStatusCode.JOBS_RETRIEVED).json(
+      buildSuccessResponse({ total }, 'Total job count retrieved successfully')
+    );
+  }
+
+  async getJobStatisticsByTimePeriod(req: Request, res: Response): Promise<void> {
+    const { startDate, endDate, groupBy } = req.query;
+    
+    if (!startDate || !endDate || !groupBy) {
+      throw new AppError('startDate, endDate, and groupBy are required', ValidationStatusCode.VALIDATION_ERROR);
+    }
+
+    if (!['day', 'week', 'month'].includes(groupBy as string)) {
+      throw new AppError('groupBy must be day, week, or month', ValidationStatusCode.VALIDATION_ERROR);
+    }
+
+    const start = new Date(startDate as string);
+    const end = new Date(endDate as string);
+    const statistics = await this._jobService.getJobStatisticsByTimePeriod(
+      start, 
+      end, 
+      groupBy as 'day' | 'week' | 'month'
+    );
+
+    res.status(JobStatusCode.JOBS_RETRIEVED).json(
+      buildSuccessResponse({ statistics }, 'Job statistics retrieved successfully')
+    );
+  }
+
+  async getTopCompaniesByJobCount(req: Request, res: Response): Promise<void> {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const companies = await this._jobService.getTopCompaniesByJobCount(limit);
+    
+    res.status(JobStatusCode.JOBS_RETRIEVED).json(
+      buildSuccessResponse({ companies }, 'Top companies retrieved successfully')
     );
   }
 

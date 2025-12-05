@@ -268,40 +268,80 @@ export class UserController {
   }
 
   async googleAuth(req: Request, res: Response): Promise<void> {
-    const validationResult = GoogleAuthSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
-    }
-    const { idToken, email, name, photoURL } = validationResult.data;
-  
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-  
-    if (decodedToken.email !== email) {
-      throw new AppError(Messages.AUTH.INVALID_TOKEN, HttpStatusCode.BAD_REQUEST);
-    }
-  
-    let user = await this._userService.findByEmail(email);
-    let isNewUser = false;
-  
-    if (!user) {
-      user = await this._userService.createGoogleUser({
-        email,
-        fullName: name || email.split('@')[0],
-        profilePicture: photoURL,
+    try {
+      console.log('[UserController] Google auth request received');
+      const validationResult = GoogleAuthSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        console.error('[UserController] Validation failed:', validationResult.error.message);
+        throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
+      }
+      const { idToken, email, name, photoURL } = validationResult.data;
+      console.log('[UserController] Validated data:', { email, hasName: !!name, hasPhoto: !!photoURL });
+
+      console.log('[UserController] Verifying Firebase token...');
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      console.log('[UserController] Token verified successfully:', { email: decodedToken.email });
+
+      if (decodedToken.email !== email) {
+        console.error('[UserController] Email mismatch:', { tokenEmail: decodedToken.email, providedEmail: email });
+        throw new AppError(Messages.AUTH.INVALID_TOKEN, HttpStatusCode.BAD_REQUEST);
+      }
+
+      console.log('[UserController] Checking if user exists...');
+      let user = await this._userService.findByEmail(email);
+      let isNewUser = false;
+
+      if (!user) {
+        console.log('[UserController] User not found, creating new Google user:', { email, name });
+        user = await this._userService.createGoogleUser({
+          email,
+          fullName: name || email.split('@')[0],
+          profilePicture: photoURL,
+        });
+        isNewUser = true;
+        console.log('[UserController] Google user created successfully:', { userId: user.id });
+      } else {
+        console.log('[UserController] Existing user found:', { userId: user.id, email: user.email });
+      }
+
+      console.log('[UserController] Generating JWT token...');
+      const token = jwt.sign(
+        { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
+        process.env.JWT_SECRET!,
+        { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
+      );
+      console.log('[UserController] Token generated successfully');
+
+      console.log('[UserController] Setting token in cookie...');
+      this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);
+      console.log('[UserController] Token set in cookie, sending response');
+
+      res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
+        .json(buildSuccessResponse({ user, token, isNewUser }, 
+          isNewUser ? Messages.AUTH.GOOGLE_REGISTRATION_SUCCESS : Messages.AUTH.GOOGLE_LOGIN_SUCCESS));
+    } catch (error: any) {
+      console.error('[UserController] Google auth error:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        response: error.response?.data,
+        name: error.name
       });
-      isNewUser = true;
+      
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // Check if it's a Firebase Admin error
+      if (error.code === 'auth/invalid-argument' || error.code === 'auth/id-token-expired') {
+        throw new AppError('Invalid or expired Google token', HttpStatusCode.UNAUTHORIZED);
+      }
+      
+      throw new AppError(
+        error.message || Messages.AUTH.GOOGLE_AUTH_FAILED,
+        HttpStatusCode.INTERNAL_SERVER_ERROR
+      );
     }
-  
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
-      process.env.JWT_SECRET!,
-      { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
-    );
-  
-    this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);
-    res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
-      .json(buildSuccessResponse({ user, token, isNewUser }, 
-        isNewUser ? Messages.AUTH.GOOGLE_REGISTRATION_SUCCESS : Messages.AUTH.GOOGLE_LOGIN_SUCCESS));
   }
 
   async changePassword(req: Request, res: Response): Promise<void> {

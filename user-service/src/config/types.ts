@@ -39,6 +39,10 @@ const TYPES = {
   SkillService: Symbol.for('SkillService'),
   ISkillService: Symbol.for('ISkillService'),
   SkillController: Symbol.for('SkillController'),
+  JobApiRepository: Symbol.for('JobApiRepository'),
+  IJobApiRepository: Symbol.for('IJobApiRepository'),
+  ApplicationApiRepository: Symbol.for('ApplicationApiRepository'),
+  IApplicationApiRepository: Symbol.for('IApplicationApiRepository'),
 };
 
 export default TYPES;

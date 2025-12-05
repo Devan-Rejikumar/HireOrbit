@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check, Search, Filter, Download, RefreshCw, Building2, Users, TrendingUp, AlertCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '@/api/axios';
 
 type Company = {

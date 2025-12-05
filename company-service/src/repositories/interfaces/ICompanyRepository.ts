@@ -22,5 +22,7 @@ export interface ICompanyRepository extends IBaseRepository<Company> {
   approveCompany(companyId: string, adminId: string): Promise<Company>;
   rejectCompany(companyId: string,reason: string,adminId: string): Promise<Company>;
   searchCompanyByName(companyName:string):Promise<Company | null>;
+  getTotalCompanyCount(): Promise<number>;
+  getCompanyStatisticsByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month' | 'year'): Promise<Array<{ date: string; count: number }>>;
 
 }

@@ -151,8 +151,33 @@ export class SubscriptionService implements ISubscriptionService {
         ? plan.stripePriceIdMonthly
         : plan.stripePriceIdYearly;
 
+      const expectedPrice = input.billingPeriod === 'monthly'
+        ? plan.priceMonthly
+        : plan.priceYearly;
+
       if (!stripePriceId) {
         throw new AppError('Stripe price ID not configured for this plan', HttpStatusCode.BAD_REQUEST);
+      }
+
+      // Verify Stripe price matches database price
+      try {
+        const stripePrice = await this._stripeService.getPrice(stripePriceId);
+        const stripePriceAmount = (stripePrice.unit_amount || 0) / 100; // Convert from paise to rupees
+        
+        if (expectedPrice && Math.abs(stripePriceAmount - expectedPrice) > 0.01) {
+          console.error('⚠️ PRICE MISMATCH DETECTED', {
+            planId: plan.id,
+            planName: plan.name,
+            billingPeriod: input.billingPeriod,
+            databasePrice: expectedPrice,
+            stripePrice: stripePriceAmount,
+            stripePriceId,
+          });
+          // Don't throw - just log the warning, as the user might have already paid
+        }
+      } catch (error: any) {
+        console.error('Failed to verify Stripe price', { error: error.message, stripePriceId });
+        // Continue anyway - price might still work
       }
 
       // Create or get Stripe customer

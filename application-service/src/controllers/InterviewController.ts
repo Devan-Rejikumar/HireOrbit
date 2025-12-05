@@ -8,24 +8,7 @@ import { TYPES } from '../config/types';
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
 import { logger } from '../utils/logger';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: string;
-        username?: string;
-        firstName?: string;
-        lastName?: string;
-        isActive?: boolean;
-        createdAt?: string;
-        updatedAt?: string;
-      };
-    }
-  }
-}
+import '../types/express';
 
 @injectable()
 export class InterviewController {
@@ -219,7 +202,7 @@ export class InterviewController {
     const validation = InterviewDecisionSchema.safeParse(decisionData);
     if (!validation.success) {
       throw new AppError(
-        `${Messages.VALIDATION.VALIDATION_FAILED}: ${validation.error.issues.map((err: any) => `${err.path.join('.')}: ${err.message}`).join(', ')}`,
+        `${Messages.VALIDATION.VALIDATION_FAILED}: ${validation.error.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ')}`,
         ValidationStatusCode.VALIDATION_ERROR
       );
     }

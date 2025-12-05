@@ -51,13 +51,9 @@ export class SubscriptionController {
     if (!userId && !companyId) {
       throw new AppError(Messages.VALIDATION.USER_OR_COMPANY_AUTH_REQUIRED, HttpStatusCode.UNAUTHORIZED);
     }
-
-    // Check if plan is free
     const plans = await this._subscriptionService.getAllPlans(userId ? 'user' : 'company');
     const plan = plans.find(p => p.id === planId);
     const isFreePlan = plan && (plan.priceMonthly === null || plan.priceMonthly === 0);
-
-    // For free plans, create subscription directly
     if (isFreePlan) {
       const subscription = await this._subscriptionService.createSubscription({
         userId,
@@ -73,8 +69,6 @@ export class SubscriptionController {
       );
       return;
     }
-
-    // For paid plans, create Stripe Checkout Session
     const checkoutSession = await this._subscriptionService.createCheckoutSession({
       userId,
       companyId,
@@ -163,6 +157,20 @@ export class SubscriptionController {
 
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse({ hasAccess, featureName }, Messages.FEATURE.FEATURE_ACCESS_CHECKED)
+    );
+  });
+
+  incrementJobPostingCount = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const companyId = req.user?.companyId || req.body?.companyId;
+
+    if (!companyId) {
+      throw new AppError(Messages.VALIDATION.COMPANY_AUTH_REQUIRED, HttpStatusCode.UNAUTHORIZED);
+    }
+
+    await this._featureService.incrementJobPostingCount(companyId);
+
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({}, 'Job posting count incremented successfully')
     );
   });
 }

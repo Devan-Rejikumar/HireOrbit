@@ -68,8 +68,9 @@ export const ADMIN_ROUTES = {
   GET_ALL_USERS: '/users',
   BLOCK_USER: '/users/:id/block',
   UNBLOCK_USER: '/users/:id/unblock',
+  GET_DASHBOARD_STATISTICS: '/dashboard/statistics',
 
-  // Skill management (admin)
+
   SKILLS_BASE: '/skills',
   SKILLS_DETAIL: '/skills/:id',
 } as const;

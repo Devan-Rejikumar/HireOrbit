@@ -26,5 +26,6 @@ export interface IApplicationService {
 
   bulkUpdateApplicationStatus(applicationIds: string[], status: string, changedBy: string,companyId: string): Promise<void>;
   validateApplicationEligibility(userId: string, jobId: string): Promise<{eligible: boolean;reason?: string;}>;
-  
+  getTopApplicantsByApplicationCount(limit: number): Promise<Array<{ userId: string; userName: string; userEmail: string; applicationCount: number }>>;
+  getTopJobsByApplicationCount(limit: number): Promise<Array<{ jobId: string; jobTitle: string; companyName: string; applicationCount: number }>>;
 }

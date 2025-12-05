@@ -57,5 +57,22 @@ export class SubscriptionPlanRepository implements ISubscriptionPlanRepository {
       include: { features: true },
     });
   }
+
+  async delete(id: string): Promise<void> {
+    await prisma.subscriptionPlan.delete({
+      where: { id },
+    });
+  }
+
+  async countActiveSubscriptions(planId: string): Promise<number> {
+    return prisma.subscription.count({
+      where: {
+        planId,
+        status: {
+          in: ['active', 'trialing', 'past_due'],
+        },
+      },
+    });
+  }
 }
 

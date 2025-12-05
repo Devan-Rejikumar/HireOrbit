@@ -10,5 +10,6 @@ export const AppConfig = {
   LOKI_HOST: process.env.LOKI_HOST || 'http://localhost:3100',
   JOB_SUGGESTION_MIN_LIMIT: parseInt(process.env.JOB_SUGGESTION_MIN_LIMIT || '10', 10),
   JOB_SUGGESTION_MAX_LIMIT: parseInt(process.env.JOB_SUGGESTION_MAX_LIMIT || '50', 10),
+  SUBSCRIPTION_SERVICE_URL: process.env.SUBSCRIPTION_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:4000',
 } as const;
 

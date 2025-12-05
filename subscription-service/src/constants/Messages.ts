@@ -38,5 +38,16 @@ export const Messages = {
     VALIDATION_ERROR: 'Validation error',
     UNAUTHORIZED: 'Unauthorized access',
   },
+  ADMIN: {
+    PLAN_CREATED_SUCCESS: 'Subscription plan created successfully',
+    PLAN_UPDATED_SUCCESS: 'Subscription plan updated successfully',
+    PLAN_DELETED_SUCCESS: 'Subscription plan deleted successfully',
+    PLAN_NOT_FOUND: 'Subscription plan not found',
+    PLAN_ALREADY_EXISTS: 'Plan with this name already exists for this user type',
+    CANNOT_DELETE_PLAN: 'Cannot delete plan with active subscriptions',
+    INVALID_USER_TYPE: 'Invalid userType. Must be "user" or "company"',
+    PRICE_REQUIRED: 'At least one price (monthly or yearly) must be provided',
+    NAME_AND_USER_TYPE_REQUIRED: 'Name and userType are required',
+  },
 } as const;
 

@@ -17,9 +17,14 @@ export const ErrorHandler = (
   }
 
   const error = err as Error;
-  logger.error(`🔥 Unhandled Error: ${error.message}`);
+  logger.error(` Unhandled Error: ${error.message}`);
+  logger.error(` Error stack: ${error.stack}`);
   res
     .status(HttpStatusCode.INTERNAL_SERVER_ERROR)
-    .json({ success: false, message: Messages.ERROR.SOMETHING_WENT_WRONG });
+    .json({ 
+      success: false, 
+      message: Messages.ERROR.SOMETHING_WENT_WRONG,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
 };
 

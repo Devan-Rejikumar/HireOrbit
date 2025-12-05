@@ -21,7 +21,7 @@ export class FeatureService implements IFeatureService {
       
       if (!subscriptionStatus.subscription || !subscriptionStatus.isActive) {
         // Default to Free plan limits if no active subscription
-        const limit = 3;
+        const limit = 2;
         const limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
         const currentCount = limitRecord?.currentCount || 0;
         
@@ -52,7 +52,7 @@ export class FeatureService implements IFeatureService {
       let limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
       
       // Determine limit based on plan name
-      let limit = 3; // Default Free plan
+      let limit = 2; // Default Free plan
       if (plan.name === 'Basic') {
         limit = 10;
       } else if (plan.name === 'Premium') {
@@ -136,7 +136,7 @@ export class FeatureService implements IFeatureService {
         await this._jobPostingLimitRepository.create({
           companyId,
           currentCount: 1,
-          limit: 3, // Default
+          limit: 2, // Default Free plan
           resetDate: nextMonth,
         });
       }

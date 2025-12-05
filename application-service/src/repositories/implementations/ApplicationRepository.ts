@@ -76,7 +76,7 @@ export class ApplicationRepository implements IApplicationRepository {
       orderBy: { appliedAt: 'desc' }
     });
 
-    logger.info(`ApplicationRepositoryFound ${applications.length} applications for companyId: ${companyId}`);
+    
     return applications;
   }
 
@@ -344,6 +344,46 @@ export class ApplicationRepository implements IApplicationRepository {
         data: statusHistoryData,
       });
     });
+  }
+
+  async getTopApplicantsByApplicationCount(limit: number): Promise<Array<{ userId: string; applicationCount: number }>> {
+    const applications = await this._prisma.application.groupBy({
+      by: ['userId'],
+      _count: {
+        id: true
+      },
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      },
+      take: limit
+    });
+
+    return applications.map(app => ({
+      userId: app.userId,
+      applicationCount: app._count.id
+    }));
+  }
+
+  async getTopJobsByApplicationCount(limit: number): Promise<Array<{ jobId: string; applicationCount: number }>> {
+    const applications = await this._prisma.application.groupBy({
+      by: ['jobId'],
+      _count: {
+        id: true
+      },
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      },
+      take: limit
+    });
+
+    return applications.map(app => ({
+      jobId: app.jobId,
+      applicationCount: app._count.id
+    }));
   }
 
 }

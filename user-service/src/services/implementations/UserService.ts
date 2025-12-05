@@ -76,7 +76,7 @@ export class UserService implements IUserService {
       const refreshTokenPayload = this._jwtService.verifyRefreshToken(refreshToken);
       logger.info('UserService - Refresh token verified:', refreshTokenPayload);
       
-      // Check if user is blocked before generating new token
+   
       const user = await this._userRepository.findById(refreshTokenPayload.userId);
       if (user?.isBlocked) {
         throw new AppError('Account blocked', HttpStatusCode.FORBIDDEN);
@@ -100,7 +100,7 @@ export class UserService implements IUserService {
       return { accessToken: newAccessToken };
     } catch (error) {
       logger.error('UserService - Refresh token error:', error);
-      // Preserve "Account blocked" error message
+     
       if (error instanceof AppError && error.message === 'Account blocked') {
         throw error;
       }
@@ -252,8 +252,9 @@ export class UserService implements IUserService {
   }): Promise<UserResponse> {
     const user = await this._userRepository.createUser({
       email: userData.email,
-      password: '',
+      password: '', // Google users don't need a password
       name: userData.fullName,
+      isGoogleUser: true, // Mark as Google user
     });
     return mapUserToResponse(user);
   }

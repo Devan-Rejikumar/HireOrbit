@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import { Skill } from '@prisma/client';
 import { prisma } from '../../prisma/client';
-import { ISkillRepository } from '../interfaces/ISkillRepository';
+import { ISkillRepository, PaginatedResult } from '../interfaces/ISkillRepository';
 
 @injectable()
 export class SkillRepository implements ISkillRepository {
@@ -19,6 +19,29 @@ export class SkillRepository implements ISkillRepository {
       where: includeInactive ? {} : { isActive: true },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async findPaginated(includeInactive: boolean, page: number, limit: number): Promise<PaginatedResult<Skill>> {
+    const skip = (page - 1) * limit;
+    const where = includeInactive ? {} : { isActive: true };
+
+    const [data, total] = await Promise.all([
+      prisma.skill.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.skill.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findById(id: string): Promise<Skill | null> {

@@ -11,6 +11,7 @@ export interface IInterviewRepository {
         type: string;
         location?: string;
         meetingLink?: string;
+        roomId?: string;
         notes?: string;
     }): Promise<Interview>;
     findById(id: string): Promise<Interview | null>;

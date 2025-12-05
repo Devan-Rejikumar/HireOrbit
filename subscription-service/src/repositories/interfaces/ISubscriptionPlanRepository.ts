@@ -14,5 +14,7 @@ export interface ISubscriptionPlanRepository {
     stripePriceIdYearly?: string;
   }): Promise<SubscriptionPlan>;
   update(id: string, data: Partial<SubscriptionPlan>): Promise<SubscriptionPlan>;
+  delete(id: string): Promise<void>;
+  countActiveSubscriptions(planId: string): Promise<number>;
 }
 

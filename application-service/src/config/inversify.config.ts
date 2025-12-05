@@ -36,4 +36,5 @@ container.bind<IUserServiceClient>(TYPES.IUserServiceClient).to(UserServiceClien
 container.bind<IJobServiceClient>(TYPES.IJobServiceClient).to(JobServiceClient);
 
 
+
 export { container };

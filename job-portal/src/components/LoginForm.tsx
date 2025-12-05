@@ -33,23 +33,24 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
   const [resetLoading, setResetLoading] = useState(false);
 
 
-  useEffect(() => {
-    if (isAuthenticated && userRole) {
-      switch (userRole) {
-      case 'jobseeker':
-        navigate('/', { replace: true });
-        break;
-      case 'company':
-        navigate('/company/dashboard', { replace: true });
-        break;
-      case 'admin':
-        navigate('/admin/dashboard', { replace: true });
-        break;
-      default:
-        navigate('/', { replace: true });
-      }
-    }
-  }, [isAuthenticated, userRole, navigate]);
+  // Disabled auto-navigation to allow error visibility during Google signin debugging
+  // useEffect(() => {
+  //   if (isAuthenticated && userRole) {
+  //     switch (userRole) {
+  //     case 'jobseeker':
+  //       navigate('/', { replace: true });
+  //       break;
+  //     case 'company':
+  //       navigate('/company/dashboard', { replace: true });
+  //       break;
+  //     case 'admin':
+  //       navigate('/admin/dashboard', { replace: true });
+  //       break;
+  //     default:
+  //       navigate('/', { replace: true });
+  //     }
+  //   }
+  // }, [isAuthenticated, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,17 +98,48 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
   const handleGoogleSignIn = async () => {
     try {
       setError('');
+      setSuccess('');
+      console.log('[LoginForm] Starting Google sign-in...');
+      
       const userData = await signInWithGoogle();
+      console.log('[LoginForm] Google sign-in successful:', { 
+        isNewUser: userData.isNewUser, 
+        hasToken: !!userData.token,
+        userEmail: userData.user?.email 
+      });
       
-      // Store token in cookie (same as backend does)
-      document.cookie = `token=${userData.token}; path=/; max-age=${24 * 60 * 60}`;
+      // Wait a bit for the cookie to be set by the backend
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Navigate to dashboard
-      navigate('/dashboard');
-      window.location.reload(); // Force refresh to update auth state
+      // Call login which will fetch user data
+      try {
+        console.log('[LoginForm] Calling login function...');
+        await login('jobseeker');
+        console.log('[LoginForm] Login successful!');
+        setSuccess('Successfully signed in! You can now navigate to the home page.');
+        // Don't auto-navigate - let user see the success message
+      } catch (loginError: any) {
+        console.error('[LoginForm] Login after Google signin failed:', loginError);
+        console.error('[LoginForm] Error details:', {
+          status: loginError?.response?.status,
+          data: loginError?.response?.data,
+          message: loginError?.message
+        });
+        setError(`Failed to fetch user data: ${loginError?.response?.data?.error || loginError?.message || 'Unknown error'}`);
+        // Don't auto-navigate - let user see the error
+      }
       
     } catch (error: any) {
-      setError('Google sign-in failed. Please try again.');
+      console.error('[LoginForm] Google sign-in error:', error);
+      console.error('[LoginForm] Error details:', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message,
+        code: error?.code
+      });
+      const errorMessage = error?.response?.data?.error || error?.message || 'Google sign-in failed. Please try again.';
+      setError(errorMessage);
+      // Don't auto-navigate - let user see the error
     }
   };
 

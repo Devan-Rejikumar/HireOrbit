@@ -1,7 +1,3 @@
-/**
- * Centralized message constants for Application Service
- * All success and error messages used across controllers
- */
 export const Messages = {
   APPLICATION: {
     CREATED_SUCCESS: 'Application submitted successfully',
@@ -62,6 +58,17 @@ export const Messages = {
     NOT_FOUND: 'Resume not found',
     UPLOAD_SUCCESS: 'Resume uploaded successfully',
     UPLOAD_FAILED: 'Failed to upload resume',
+  },
+  CLOUDINARY: {
+    CONFIG_MISSING: 'Cloudinary configuration is missing. Please check your .env file.',
+    CONFIG_VALIDATION_FAILED: 'Cloudinary configuration is missing. Please check environment variables.',
+    UPLOAD_SUCCESS: 'Resume uploaded successfully to Cloudinary',
+    UPLOAD_FAILED: 'Failed to upload resume to Cloudinary',
+    UPLOAD_INVALID_RESPONSE: 'Cloudinary upload failed: Invalid response',
+    AUTH_FAILED: 'Cloudinary authentication failed. Please check your API credentials.',
+    UPLOAD_ERROR: 'Cloudinary upload failed',
+    DELETE_ERROR: 'Error deleting resume from Cloudinary',
+    FILE_TYPE_ERROR: 'Only PDF, DOC, DOCX, and TXT files are allowed for resumes',
   },
   ERROR: {
     SOMETHING_WENT_WRONG: 'Something went wrong',

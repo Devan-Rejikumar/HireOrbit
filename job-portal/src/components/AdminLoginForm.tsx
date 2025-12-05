@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import 'react-toastify/dist/ReactToastify.css';
 
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
@@ -98,7 +97,6 @@ const LoginForm: React.FC = () => {
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
-      <ToastContainer />
     </>
   );
 };

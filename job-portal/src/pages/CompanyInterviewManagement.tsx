@@ -27,7 +27,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { _interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/interviewService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import EditInterviewModal from '@/components/EditInterviewModal';
 import InterviewDecisionModal from '@/components/InterviewDecisionModal';
 import api from '@/api/axios';
@@ -280,8 +280,8 @@ const CompanyInterviewManagement = () => {
               </button>
               <button 
                 type="button"
+                onClick={() => navigate('/subscriptions')}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-                disabled
               >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing

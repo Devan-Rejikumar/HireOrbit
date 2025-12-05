@@ -18,6 +18,8 @@ export const AppConfig = {
   URL_ENCODED_BODY_SIZE_LIMIT_MB: parseInt(process.env.URL_ENCODED_BODY_SIZE_LIMIT_MB || '20'),
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   COMPANY_SERVICE_URL: process.env.COMPANY_SERVICE_URL || 'http://localhost:3001',
+  JOB_SERVICE_URL: process.env.JOB_SERVICE_URL || 'http://localhost:3002',
+  APPLICATION_SERVICE_URL: process.env.APPLICATION_SERVICE_URL || 'http://localhost:3004',
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
   SMTP_PORT: parseInt(process.env.SMTP_PORT || '587'),
   SMTP_FROM: process.env.SMTP_FROM || '"Job Portal" <no-reply@jobportal.com>',

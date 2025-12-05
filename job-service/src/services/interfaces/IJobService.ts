@@ -12,4 +12,7 @@ export interface IJobService {
   getJobsByCompany(companyId: string): Promise<JobResponse[]>;
   getJobCountByCompany(companyId: string): Promise<number>;
   getJobSuggestions(query: string, limit?: number): Promise<string[]>;
+  getTotalJobCount(): Promise<number>;
+  getJobStatisticsByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month'): Promise<Array<{ date: string; count: number }>>;
+  getTopCompaniesByJobCount(limit: number): Promise<Array<{ companyId: string; companyName: string; jobCount: number }>>;
 }
