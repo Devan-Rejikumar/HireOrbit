@@ -4,12 +4,15 @@ import UserList from '@/components/admin/UserList';
 import AdminJobManagement from '@/pages/AdminJobManagement';
 import AdminSkills from '@/components/admin/AdminSkills';
 import AdminIndustryCategories from '@/components/admin/AdminIndustryCategories';
+import AdminStatistics from '@/components/admin/AdminStatistics';
+import AdminSubscriptionPlans from '@/components/admin/AdminSubscriptionPlans';
+import AdminRevenue from '@/components/admin/AdminRevenue';
 import { useNavigate } from 'react-router-dom';
 import api from '@/api/axios';
-import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase, FiLayers } from 'react-icons/fi';
+import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase, FiLayers, FiCreditCard } from 'react-icons/fi';
 
 const AdminDashboard: React.FC = () => {
-  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management' | 'skills' | 'industries'>('dashboard');
+  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management' | 'skills' | 'industries' | 'subscriptions' | 'revenue'>('dashboard');
   const navigate = useNavigate();
 
   const handleLogout = async() =>{
@@ -41,10 +44,10 @@ const AdminDashboard: React.FC = () => {
   
       {/* Main content area with sidebar and main */}
       <div className="flex flex-1">
-        <aside className="w-64 bg-gray-800 shadow-xl flex flex-col border-r border-purple-500/20">
+        <aside className="w-64 flex-shrink-0 bg-gray-800 shadow-xl flex flex-col border-r border-purple-500/20">
           <nav className="flex-1 p-4 space-y-2">
             <button
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
                 selected === 'dashboard' 
                   ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
                   : 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -55,7 +58,7 @@ const AdminDashboard: React.FC = () => {
               Dashboard
             </button>
             <button
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
                 selected === 'company-list' 
                   ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
                   : 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -66,7 +69,7 @@ const AdminDashboard: React.FC = () => {
               Company List
             </button>
             <button
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
                 selected === 'users' 
                   ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
                   : 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -77,7 +80,7 @@ const AdminDashboard: React.FC = () => {
               User List
             </button>
             <button
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
                 selected === 'job-management' 
                   ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
                   : 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -88,7 +91,7 @@ const AdminDashboard: React.FC = () => {
               Job Management
             </button>
             <button
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
                 selected === 'skills' 
                   ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
                   : 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -99,7 +102,7 @@ const AdminDashboard: React.FC = () => {
               Skill Management
             </button>
             <button
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 ${
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
                 selected === 'industries' 
                   ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
                   : 'hover:bg-gray-700 text-gray-300 hover:text-white'
@@ -109,55 +112,33 @@ const AdminDashboard: React.FC = () => {
               <FiLayers size={20} />
               Industry Management
             </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
+                selected === 'subscriptions' 
+                  ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
+                  : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+              }`}
+              onClick={() => setSelected('subscriptions')}
+            >
+              <FiCreditCard size={20} />
+              Subscription Plans
+            </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
+                selected === 'revenue' 
+                  ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
+                  : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+              }`}
+              onClick={() => setSelected('revenue')}
+            >
+              <span className="text-lg font-bold">₹</span>
+              Revenue
+            </button>
           </nav>
         </aside>
   
-        <main className="flex-1 p-8 bg-gray-900">
-          {selected === 'dashboard' && (
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="text-center">
-                <div className="mb-6">
-                  <FiShield className="h-16 w-16 text-purple-400 mx-auto mb-4" />
-                  <h1 className="text-4xl font-bold text-white mb-2">Welcome Admin!</h1>
-                  <p className="text-xl text-gray-300">
-                    Manage your job portal from this dashboard
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                  <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-purple-500 hover:bg-gray-750 transition-all duration-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-400">Total Users</p>
-                        <p className="text-2xl font-bold text-white">1,234</p>
-                      </div>
-                      <FiUsers className="h-8 w-8 text-purple-400" />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-purple-500 hover:bg-gray-750 transition-all duration-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-400">Total Companies</p>
-                        <p className="text-2xl font-bold text-white">89</p>
-                      </div>
-                      <FiHome className="h-8 w-8 text-purple-400" />
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-purple-500 hover:bg-gray-750 transition-all duration-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-400">Active Jobs</p>
-                        <p className="text-2xl font-bold text-white">456</p>
-                      </div>
-                      <FiBarChart2 className="h-8 w-8 text-purple-400" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+        <main className="flex-1 p-8 bg-gray-900 overflow-hidden flex flex-col">
+          {selected === 'dashboard' && <AdminStatistics />}
           
           {selected === 'company-list' && <CompanyList />}
           
@@ -166,6 +147,8 @@ const AdminDashboard: React.FC = () => {
           {selected === 'job-management' && <AdminJobManagement />}
           {selected === 'skills' && <AdminSkills />}
           {selected === 'industries' && <AdminIndustryCategories />}
+          {selected === 'subscriptions' && <AdminSubscriptionPlans />}
+          {selected === 'revenue' && <AdminRevenue />}
         </main>
       </div>
     </div>

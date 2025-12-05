@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import api from '../api/axios';
+import toast from 'react-hot-toast';
 
 interface SkillsModalProps {
   isOpen: boolean;
@@ -75,10 +76,13 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
 
     try {
       await api.put('/profile', { skills });
+      toast.success('Skills updated successfully!');
       onSave();
       onClose();
     } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to update skills');
+      const errorMessage = error.response?.data?.error || 'Failed to update skills';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

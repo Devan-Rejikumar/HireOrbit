@@ -16,7 +16,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { _applicationService, Application } from '../api/applicationService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { ChatButton } from './ChatButton';
 
 interface AppliedJobsProps {

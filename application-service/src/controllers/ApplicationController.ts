@@ -1,4 +1,3 @@
-
 import { Request, Response } from "express";
 import { injectable, inject } from "inversify";
 import { IApplicationService } from "../services/interfaces/IApplicationService";
@@ -11,24 +10,7 @@ import { mapApplicationToResponse,mapUserApplicationsResponse} from '../dto/mapp
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
 import { logger } from '../utils/logger';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: string;
-        username?: string;
-        firstName?: string;
-        lastName?: string;
-        isActive?: boolean;
-        createdAt?: string;
-        updatedAt?: string;
-      };
-    }
-  }
-}
+import '../types/express';
 @injectable()
 export class ApplicationController {
   constructor(
@@ -63,10 +45,8 @@ export class ApplicationController {
     let resumeUrl: string | undefined;
     if (resumeUrlFromBody) {
       resumeUrl = resumeUrlFromBody;
-      logger.info('ApplicationController Using saved resume URL from profile:', resumeUrl);
     } else if (resumeBase64 && resumeFileName) {
       try {
-        logger.info('ApplicationController Starting Cloudinary upload from base64...');
         const fileBuffer = Buffer.from(resumeBase64, 'base64');
         const uploadPromise = uploadToCloudinary(fileBuffer, resumeFileName, userId);
         const timeoutPromise = new Promise((_, reject) => 
@@ -74,23 +54,22 @@ export class ApplicationController {
         );
         
         resumeUrl = await Promise.race([uploadPromise, timeoutPromise]) as string;
-        logger.info('ApplicationController Resume uploaded to Cloudinary:', resumeUrl);
       } catch (uploadError) {
-        logger.error('ApplicationController Cloudinary upload failed:', uploadError);
+        
         throw new AppError(Messages.RESUME.UPLOAD_FAILED, HttpStatusCode.BAD_REQUEST);
       }
     } else if (resumeFile) {
       try {
-        logger.info('ApplicationController Starting Cloudinary upload from multipart...');
+        
         const uploadPromise = uploadToCloudinary(resumeFile.buffer, resumeFile.originalname, userId);
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Upload timeout')), 10000)
         );
         
         resumeUrl = await Promise.race([uploadPromise, timeoutPromise]) as string;
-        logger.info('ApplicationController Resume uploaded to Cloudinary:', resumeUrl);
+        
       } catch (uploadError) {
-        logger.error('ApplicationController Cloudinary upload failed:', uploadError);
+        
         throw new AppError(Messages.RESUME.UPLOAD_FAILED, HttpStatusCode.BAD_REQUEST);
       }
     }
@@ -108,14 +87,6 @@ export class ApplicationController {
 
     const result = await this._applicationService.applyForJob(applicationData);
     
-    logger.info('ApplicationController Application created:', {
-      id: result.id,
-      userId: result.userId,
-      companyId: result.companyId,
-      jobId: result.jobId,
-      status: result.status
-    });
-
     const responseData = mapApplicationToResponse(result);
     
     res.status(HttpStatusCode.CREATED).json(
@@ -124,8 +95,8 @@ export class ApplicationController {
   }
 
   async getUserApplications(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId || req.headers['x-user-id'] as string;
-    const userRole = req.user?.role || req.headers['x-user-role'] as string;
+    const userId = req.user?.userId ;
+    const userRole = req.user?.role ;
 
     if (!userId || userRole !== 'jobseeker') {
       throw new AppError(
@@ -262,7 +233,6 @@ export class ApplicationController {
     }
     
     const validatedData = validationResult.data;
-    logger.info('ApplicationController Validation passed, data:', validatedData);
     const result = await this._applicationService.updateApplicationStatus(id, validatedData, userId);
     const responseData = mapApplicationToResponse(result);
 
@@ -351,7 +321,7 @@ export class ApplicationController {
       limit: validatedQuery.limit || 10
     };
 
-    logger.info(`ApplicationController] Searching applications with filters:`, filters);
+   
 
     const result = await this._applicationService.searchApplications(filters);
 
@@ -474,6 +444,22 @@ export class ApplicationController {
     
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(null, Messages.APPLICATION.BULK_STATUS_UPDATED_SUCCESS)
+    );
+  }
+
+  async getTopApplicants(req: Request, res: Response): Promise<void> {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const applicants = await this._applicationService.getTopApplicantsByApplicationCount(limit);
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ applicants }, 'Top applicants retrieved successfully')
+    );
+  }
+
+  async getTopJobs(req: Request, res: Response): Promise<void> {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const jobs = await this._applicationService.getTopJobsByApplicationCount(limit);
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ jobs }, 'Top jobs retrieved successfully')
     );
   }
 }

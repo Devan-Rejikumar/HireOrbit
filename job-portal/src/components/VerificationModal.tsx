@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { userService } from '../api/userService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface VerificationModalProps {
   isOpen: boolean;

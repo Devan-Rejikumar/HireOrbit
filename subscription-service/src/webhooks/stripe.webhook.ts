@@ -5,10 +5,10 @@ import { IStripeService } from '../services/interfaces/IStripeService';
 import { ISubscriptionService } from '../services/interfaces/ISubscriptionService';
 import { ISubscriptionRepository } from '../repositories/interfaces/ISubscriptionRepository';
 import { ISubscriptionPlanRepository } from '../repositories/interfaces/ISubscriptionPlanRepository';
+import { ITransactionRepository } from '../repositories/interfaces/ITransactionRepository';
 import { asyncHandler } from '../utils/asyncHandler';
 import { buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
-// Logger removed - using console.log instead
 import Stripe from 'stripe';
 import { SubscriptionStatus } from '../enums/StatusCodes';
 
@@ -23,6 +23,8 @@ export class StripeWebhookHandler {
     private readonly _subscriptionRepository: ISubscriptionRepository,
     @inject(TYPES.ISubscriptionPlanRepository)
     private readonly _subscriptionPlanRepository: ISubscriptionPlanRepository,
+    @inject(TYPES.ITransactionRepository)
+    private readonly _transactionRepository: ITransactionRepository,
   ) {}
 
   handleWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
@@ -68,6 +70,7 @@ export class StripeWebhookHandler {
           break;
 
         case 'invoice.payment_succeeded':
+        case 'invoice_payment.paid':  
           await this.handlePaymentSucceeded(event.data.object as Stripe.Invoice);
           break;
 
@@ -92,12 +95,9 @@ export class StripeWebhookHandler {
 
   private async handleSubscriptionCreated(subscription: Stripe.Subscription): Promise<void> {
     console.log('Subscription created in Stripe', { subscriptionId: subscription.id });
-    
-    // Check if subscription already exists in our database
     const existingSubscription = await this._subscriptionService.getSubscriptionByStripeId(subscription.id);
     
     if (existingSubscription) {
-      // Update existing subscription
       const updateData: {
         status: string;
         currentPeriodStart?: Date;
@@ -118,8 +118,7 @@ export class StripeWebhookHandler {
 
       await this._subscriptionService.updateSubscriptionFromWebhook(subscription.id, updateData);
     } else {
-      // Create new subscription record from Stripe subscription (for Checkout Session flow)
-      // If metadata is missing, retrieve the subscription with expanded data
+
       let subscriptionToUse = subscription;
       if (!subscription.metadata || !subscription.metadata.planId) {
         console.log('Metadata missing from subscription, retrieving from Stripe', {
@@ -140,17 +139,17 @@ export class StripeWebhookHandler {
 
   private async createSubscriptionFromStripe(stripeSubscription: Stripe.Subscription): Promise<void> {
     try {
-      // Extract metadata from subscription
+
       let metadata = stripeSubscription.metadata || {};
       
-      // If metadata is missing, try to get it from customer
+  
       if ((!metadata.planId || (!metadata.userId && !metadata.companyId)) && stripeSubscription.customer) {
         const customerId = typeof stripeSubscription.customer === 'string' 
           ? stripeSubscription.customer 
           : stripeSubscription.customer.id;
         
         try {
-          // Retrieve customer to get metadata
+   
           const customer = await this._stripeService.getCustomer(customerId);
           if (customer && customer.metadata) {
             metadata = {
@@ -182,14 +181,14 @@ export class StripeWebhookHandler {
         planId,
       });
 
-      // If planId is still missing, try to find it by Stripe price ID
+      
       if (!planId) {
         const subscriptionItem = stripeSubscription.items.data[0];
         const priceId = subscriptionItem?.price?.id;
         
         if (priceId) {
           console.log('Plan ID missing, attempting to find by Stripe price ID', { priceId });
-          // Find all plans and match by price ID
+       
           const allPlans = await this._subscriptionPlanRepository.findAll();
           const matchingPlan = allPlans.find(
             plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId
@@ -221,24 +220,19 @@ export class StripeWebhookHandler {
         return;
       }
 
-      // Verify plan exists
+      
       const plan = await this._subscriptionPlanRepository.findById(planId);
       if (!plan) {
         console.error('Plan not found', { planId, subscriptionId: stripeSubscription.id });
         return;
       }
 
-      // Determine billing period from subscription interval
       const subscriptionItem = stripeSubscription.items.data[0];
       const price = subscriptionItem?.price;
       const billingPeriod = price?.recurring?.interval === 'year' ? 'yearly' : 'monthly';
-
-      // Get customer ID
       const customerId = typeof stripeSubscription.customer === 'string' 
         ? stripeSubscription.customer 
         : stripeSubscription.customer.id;
-
-      // Get period dates
       const subData = stripeSubscription as unknown as {
         current_period_start?: number;
         current_period_end?: number;
@@ -249,7 +243,7 @@ export class StripeWebhookHandler {
         : new Date();
       const currentPeriodEnd = subData.current_period_end 
         ? new Date(subData.current_period_end * 1000)
-        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Default to 30 days
+        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); 
 
       console.log('Attempting to create subscription record', {
         subscriptionId: stripeSubscription.id,
@@ -260,8 +254,6 @@ export class StripeWebhookHandler {
         billingPeriod,
         status: this.mapStripeStatus(stripeSubscription.status),
       });
-
-      // Create subscription record
       const subscription = await this._subscriptionRepository.create({
         userId,
         companyId,
@@ -288,7 +280,6 @@ export class StripeWebhookHandler {
         subscriptionId: stripeSubscription.id,
         metadata: JSON.stringify(stripeSubscription.metadata || {}),
       });
-      // Re-throw to allow caller to handle if needed
       throw error;
     }
   }
@@ -333,7 +324,10 @@ export class StripeWebhookHandler {
   }
 
   private async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
-    console.log('Payment succeeded', { invoiceId: invoice.id });
+    console.log('=== PAYMENT SUCCEEDED WEBHOOK ===');
+    console.log('Invoice ID:', invoice.id);
+    console.log('Invoice amount:', invoice.amount_paid);
+    console.log('Invoice currency:', invoice.currency);
     
     const invoiceData = invoice as unknown as { subscription?: string | Stripe.Subscription | null };
     const subscription = invoiceData.subscription;
@@ -343,10 +337,15 @@ export class StripeWebhookHandler {
         ? subscription 
         : subscription.id;
       
+      console.log('Updating subscription status to ACTIVE', { subscriptionId });
       await this._subscriptionService.updateSubscriptionFromWebhook(subscriptionId, {
         status: SubscriptionStatus.ACTIVE,
       });
     }
+
+    console.log('Creating transaction from invoice...');
+    await this.createTransactionFromInvoice(invoice, 'succeeded');
+    console.log('=== PAYMENT SUCCEEDED WEBHOOK COMPLETED ===');
   }
 
   private async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
@@ -364,6 +363,7 @@ export class StripeWebhookHandler {
         status: SubscriptionStatus.PAST_DUE,
       });
     }
+    await this.createTransactionFromInvoice(invoice, 'failed');
   }
 
   private async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
@@ -371,22 +371,18 @@ export class StripeWebhookHandler {
       sessionId: session.id,
       sessionMetadata: JSON.stringify(session.metadata || {}),
     });
-    
-    // The subscription should already be created by Stripe
-    // We just need to ensure our database is in sync
+ 
     if (session.subscription) {
       const subscriptionId = typeof session.subscription === 'string' 
         ? session.subscription 
         : session.subscription.id;
-      
-      // Verify subscription exists and is active
+
       const subscription = await this._subscriptionService.getSubscriptionByStripeId(subscriptionId);
       if (subscription) {
         await this._subscriptionService.updateSubscriptionFromWebhook(subscriptionId, {
           status: SubscriptionStatus.ACTIVE,
         });
       } else {
-        // If subscription doesn't exist, retrieve it from Stripe and create it
         console.log('Subscription not found in database, retrieving from Stripe', { 
           stripeSubscriptionId: subscriptionId,
           sessionId: session.id,
@@ -394,16 +390,13 @@ export class StripeWebhookHandler {
         });
         
         try {
-          // Retrieve subscription with expanded data to get metadata
           const stripeSubscription = await this._stripeService.getSubscription(subscriptionId);
-          
-          // If subscription metadata is missing, try to use session metadata as fallback
           if ((!stripeSubscription.metadata || !stripeSubscription.metadata.planId) && session.metadata) {
             console.log('Using session metadata as fallback', {
               subscriptionId,
               sessionMetadata: JSON.stringify(session.metadata),
             });
-            // Merge session metadata into subscription metadata
+
             stripeSubscription.metadata = {
               ...(stripeSubscription.metadata || {}),
               ...session.metadata,
@@ -419,6 +412,156 @@ export class StripeWebhookHandler {
           });
         }
       }
+    }
+  }
+
+  private async createTransactionFromInvoice(invoice: Stripe.Invoice, status: 'succeeded' | 'failed'): Promise<void> {
+
+    const invoiceData = invoice as unknown as { 
+      subscription?: string | Stripe.Subscription | null;
+      payment_intent?: string | Stripe.PaymentIntent | null;
+      amount_paid?: number;
+      currency?: string;
+      lines?: {
+        data?: Array<{
+          price?: {
+            id?: string;
+            recurring?: {
+              interval?: string;
+            };
+          };
+        }>;
+      };
+    };
+
+    const subscriptionId = invoiceData.subscription
+      ? (typeof invoiceData.subscription === 'string' ? invoiceData.subscription : invoiceData.subscription.id)
+      : null;
+
+    let planId: string | undefined;
+
+    try {
+      console.log('=== CREATING TRANSACTION FROM INVOICE ===');
+      console.log('Invoice ID:', invoice.id);
+      console.log('Status:', status);
+ 
+      if (invoice.id) {
+        const existingTransaction = await this._transactionRepository.findByStripeInvoiceId(invoice.id);
+        if (existingTransaction) {
+          console.log('Transaction already exists for invoice', { 
+            invoiceId: invoice.id,
+            transactionId: existingTransaction.id 
+          });
+          return;
+        }
+      }
+
+      let subscription = null;
+      let userId: string | undefined;
+      let companyId: string | undefined;
+      let billingPeriod: string = 'monthly';
+
+      if (subscriptionId) {
+        subscription = await this._subscriptionRepository.findByStripeSubscriptionId(subscriptionId);
+        if (subscription) {
+          userId = subscription.userId || undefined;
+          companyId = subscription.companyId || undefined;
+         
+          billingPeriod = subscription.billingPeriod;
+        }
+      }
+      if (invoiceData.lines?.data?.[0]?.price?.id) {
+        const priceId = invoiceData.lines.data[0].price.id;
+        const allPlans = await this._subscriptionPlanRepository.findAll();
+        const matchingPlan = allPlans.find(
+          plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId
+        );
+        if (matchingPlan) {
+          planId = matchingPlan.id;
+          billingPeriod = matchingPlan.stripePriceIdMonthly === priceId ? 'monthly' : 'yearly';
+        }
+      }
+
+      if (!planId && subscription) {
+        planId = subscription.planId;
+      }
+
+      if (!planId) {
+        console.error(' Cannot create transaction: plan not found', { 
+          invoiceId: invoice.id,
+          subscriptionId,
+          priceId: invoiceData.lines?.data?.[0]?.price?.id,
+          amount: invoiceData.amount_paid ? invoiceData.amount_paid / 100 : 0,
+          hasSubscription: !!subscription
+        });
+        return;
+      }
+
+      const amountPaid = invoiceData.amount_paid || 0;
+      const amount = invoiceData.currency?.toLowerCase() === 'inr' 
+        ? amountPaid / 100  
+        : amountPaid / 100; 
+
+      const paymentIntentId = invoiceData.payment_intent
+        ? (typeof invoiceData.payment_intent === 'string' ? invoiceData.payment_intent : invoiceData.payment_intent.id)
+        : undefined;
+
+      const invoiceObj = invoice as unknown as { created?: number; status_transitions?: { paid_at?: number } };
+      const paymentDate = invoiceObj.status_transitions?.paid_at
+        ? new Date(invoiceObj.status_transitions.paid_at * 1000)
+        : (invoiceObj.created ? new Date(invoiceObj.created * 1000) : new Date());
+
+      console.log('Transaction data prepared:', {
+        subscriptionId: subscription?.id,
+        userId,
+        companyId,
+        planId,
+        amount,
+        currency: invoiceData.currency?.toLowerCase() || 'inr',
+        status,
+        stripeInvoiceId: invoice.id,
+        billingPeriod,
+        paymentDate,
+      });
+
+      const transaction = await this._transactionRepository.create({
+        subscriptionId: subscription?.id,
+        userId,
+        companyId,
+        planId,
+        amount,
+        currency: invoiceData.currency?.toLowerCase() || 'inr',
+        status,
+        stripeInvoiceId: invoice.id,
+        stripePaymentIntentId: paymentIntentId,
+        billingPeriod,
+        paymentDate,
+      });
+
+      console.log(' Transaction created successfully from invoice', {
+        transactionId: transaction.id,
+        invoiceId: invoice.id,
+        amount,
+        status,
+        planId,
+        userId,
+        companyId,
+        paymentDate: transaction.paymentDate,
+      });
+      console.log('=== TRANSACTION CREATION COMPLETED ===');
+    } catch (error: any) {
+  
+      const errorAmount = invoiceData.amount_paid ? invoiceData.amount_paid / 100 : 0;
+      
+      console.error(' Failed to create transaction from invoice', {
+        error: error?.message || error,
+        stack: error?.stack,
+        invoiceId: invoice.id,
+        amount: errorAmount,
+        subscriptionId: subscriptionId || 'unknown',
+        planId: planId || 'unknown',
+      });
+     
     }
   }
 

@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/seperator';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 import api from '@/api/axios';
 
 interface RegisterFormProps {
@@ -32,13 +31,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
       });
       setIsLoading(false);
       toast.success('Your admin account has been created successfully!', {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        theme: 'light',
+        duration: 3000,
       });
       onSwitchToLogin();
     } catch (error: any) {
@@ -141,7 +134,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
           Already have an account? Sign in
         </Button>
       </form>
-      <ToastContainer />
     </>
   );
 };

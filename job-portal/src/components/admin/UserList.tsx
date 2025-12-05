@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/table';
 import { CheckCircle, XCircle, User, Shield, ShieldOff, ChevronLeft, ChevronRight, Search, Filter, RefreshCw, Users, TrendingUp, AlertCircle, Clock, Eye, Mail, MapPin } from 'lucide-react';
 import api from '@/api/axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 
 type User = {
   id: string;

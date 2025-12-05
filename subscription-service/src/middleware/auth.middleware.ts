@@ -62,3 +62,25 @@ export const requireAuth = (
   next();
 };
 
+/**
+ * Middleware to require admin authentication
+ * 
+ * Use this for admin-only routes
+ */
+export const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const authReq = req as AuthenticatedRequest;
+  
+  if (!authReq.user || authReq.user.role !== 'admin') {
+    res.status(HttpStatusCode.FORBIDDEN).json(
+      buildErrorResponse('Admin access required', 'Admin privileges are required to access this resource')
+    );
+    return;
+  }
+  
+  next();
+};
+

@@ -145,5 +145,51 @@ export class CompanyAdminController {
       buildSuccessResponse({ company: publicProfile }, Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS)
     );
   }
+
+  async getTotalCompanyCount(req: Request, res: Response): Promise<void> {
+    const total = await this._companyService.getTotalCompanyCount();
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ total }, 'Total company count retrieved successfully')
+    );
+  }
+
+  async getCompanyStatisticsByTimePeriod(req: Request, res: Response): Promise<void> {
+    const { startDate, endDate, groupBy } = req.query;
+    
+    if (!startDate || !endDate || !groupBy) {
+      throw new AppError('startDate, endDate, and groupBy are required', HttpStatusCode.BAD_REQUEST);
+    }
+
+    if (!['day', 'week', 'month', 'year'].includes(groupBy as string)) {
+      throw new AppError('groupBy must be day, week, month, or year', HttpStatusCode.BAD_REQUEST);
+    }
+    const start = new Date(startDate as string);
+    const end = new Date(endDate as string);
+    
+    console.log('[CompanyAdminController] Received date range:', {
+      startDate: startDate,
+      endDate: endDate,
+      startParsed: start.toISOString(),
+      endParsed: end.toISOString(),
+      startLocal: start.toLocaleString(),
+      endLocal: end.toLocaleString(),
+      groupBy
+    });
+    
+    const statistics = await this._companyService.getCompanyStatisticsByTimePeriod(
+      start, 
+      end, 
+      groupBy as 'day' | 'week' | 'month' | 'year'
+    );
+    
+    console.log('[CompanyAdminController] Returning statistics:', {
+      count: statistics.length,
+      statistics: statistics.slice(0, 5) 
+    });
+
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ statistics }, 'Company statistics retrieved successfully')
+    );
+  }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, User, Camera, Upload } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -104,6 +104,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       };
 
       await onSave(submitData);
+      toast.success('Profile updated successfully!');
       
       // Close modal; let cleanup happen in handleClose
       onClose();

@@ -338,8 +338,8 @@ const CompanyApplications = () => {
               </button>
               <button 
                 type="button"
+                onClick={() => navigate('/subscriptions')}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-                disabled
               >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing

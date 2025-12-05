@@ -39,5 +39,6 @@ export interface IApplicationRepository {
   }>;
   checkDuplicateApplication(userId: string, jobId: string): Promise<Application | null>;
   bulkUpdateStatus(applicationIds: string[], status: ApplicationStatus, changedBy: string): Promise<void>;
-  
+  getTopApplicantsByApplicationCount(limit: number): Promise<Array<{ userId: string; applicationCount: number }>>;
+  getTopJobsByApplicationCount(limit: number): Promise<Array<{ jobId: string; applicationCount: number }>>;
 }

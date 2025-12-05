@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Lock, Eye, EyeOff } from 'lucide-react';
 import { userService } from '../api/userService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;

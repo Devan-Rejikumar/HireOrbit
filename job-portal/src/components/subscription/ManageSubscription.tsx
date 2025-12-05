@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { subscriptionService, SubscriptionStatusResponse, SubscriptionPlan } from '../../api/subscriptionService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import ConfirmationModal from '../ConfirmationModal';
 

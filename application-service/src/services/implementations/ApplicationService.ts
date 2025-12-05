@@ -28,6 +28,7 @@ import {TYPES} from '../../config/types';
 import { logger } from '../../utils/logger';
 import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
+import { Events } from '../../constants/Events';
 import { HttpStatusCode } from '../../enums/StatusCodes';
 import { IUserServiceClient } from '../interfaces/IUserServiceClient';
 import { IJobServiceClient } from '../interfaces/IJobServiceClient';
@@ -53,7 +54,7 @@ export class ApplicationService implements IApplicationService {
     const application = await this._applicationRepository.create(data);
     
  try {
-  await this._eventService.publish('application.created', {
+  await this._eventService.publish(Events.APPLICATION.CREATED, {
     applicationId: application.id,
     userId: application.userId,
     jobId: application.jobId,
@@ -110,7 +111,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       status: application?.status
     };
   } catch (error) {
-    logger.error('Error checking application status:', error);
+    
     throw new AppError('Failed to check application status', HttpStatusCode.INTERNAL_SERVER_ERROR);
   }
 }
@@ -146,7 +147,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     );
 
     try {
-      await this._eventService.publish('application.withdrawn', {
+      await this._eventService.publish(Events.APPLICATION.WITHDRAWN, {
         applicationId: updatedApplication.id,
         userId: updatedApplication.userId,
         jobId: updatedApplication.jobId,
@@ -228,7 +229,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
     try {
-      await this._eventService.publish('application.status_updated', {
+      await this._eventService.publish(Events.APPLICATION.STATUS_UPDATED, {
         userId: existingApplication.userId,
         applicationId: updatedApplication.id,
         jobId: existingApplication.jobId,
@@ -355,7 +356,7 @@ async searchApplications(filters: {
       changedBy
     );
 
-    await this._eventService.publish('application.bulk_status_updated', {
+    await this._eventService.publish(Events.APPLICATION.BULK_STATUS_UPDATED, {
       applicationIds,
       newStatus: status,
       changedBy,
@@ -435,5 +436,63 @@ async searchApplications(filters: {
     }
 
     return externalData;
+  }
+
+  async getTopApplicantsByApplicationCount(limit: number): Promise<Array<{ userId: string; userName: string; userEmail: string; applicationCount: number }>> {
+    const topApplicants = await this._applicationRepository.getTopApplicantsByApplicationCount(limit);
+    
+    
+    const applicantsWithDetails = await Promise.all(
+      topApplicants.map(async (applicant) => {
+        try {
+          const userData = await this._userServiceClient.getUserById(applicant.userId);
+          return {
+            userId: applicant.userId,
+            userName: userData.data?.user?.name || userData.data?.user?.username || 'Unknown User',
+            userEmail: userData.data?.user?.email || 'unknown@example.com',
+            applicationCount: applicant.applicationCount
+          };
+        } catch (error) {
+          logger.error(`Error fetching user details for ${applicant.userId}:`, error);
+          return {
+            userId: applicant.userId,
+            userName: 'Unknown User',
+            userEmail: 'unknown@example.com',
+            applicationCount: applicant.applicationCount
+          };
+        }
+      })
+    );
+
+    return applicantsWithDetails;
+  }
+
+  async getTopJobsByApplicationCount(limit: number): Promise<Array<{ jobId: string; jobTitle: string; companyName: string; applicationCount: number }>> {
+    const topJobs = await this._applicationRepository.getTopJobsByApplicationCount(limit);
+    
+    // Fetch job details for each job
+    const jobsWithDetails = await Promise.all(
+      topJobs.map(async (job) => {
+        try {
+          const jobData = await this._jobServiceClient.getJobById(job.jobId);
+          return {
+            jobId: job.jobId,
+            jobTitle: jobData.data?.job?.title || 'Unknown Job',
+            companyName: jobData.data?.job?.company || 'Unknown Company',
+            applicationCount: job.applicationCount
+          };
+        } catch (error) {
+          logger.error(`Error fetching job details for ${job.jobId}:`, error);
+          return {
+            jobId: job.jobId,
+            jobTitle: 'Unknown Job',
+            companyName: 'Unknown Company',
+            applicationCount: job.applicationCount
+          };
+        }
+      })
+    );
+
+    return jobsWithDetails;
   }
 }

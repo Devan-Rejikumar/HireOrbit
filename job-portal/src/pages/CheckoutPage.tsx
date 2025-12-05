@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { subscriptionService, SubscriptionPlan } from '../api/subscriptionService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { 
   Home, 

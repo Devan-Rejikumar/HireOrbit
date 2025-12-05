@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
@@ -127,7 +126,6 @@ const RegisterForm = ({ onSwitchToLogin }: RegisterFormProps) => {
           Already have an account? Sign in
         </Button>
       </form>
-      <ToastContainer />
     </>
   );
 };

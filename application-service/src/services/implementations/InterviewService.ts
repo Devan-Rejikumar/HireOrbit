@@ -1,4 +1,5 @@
 import { injectable, inject } from 'inversify';
+import { Interview } from '@prisma/client';
 import { IInterviewService } from '../interfaces/IInterviewService';
 import { IInterviewRepository, InterviewWithApplication } from '../../repositories/interfaces/IInterviewRepository';
 import { IApplicationRepository } from '../../repositories/interfaces/IApplicationRepository';
@@ -10,6 +11,7 @@ import { InterviewResponse, InterviewWithDetailsResponse } from '../../dto/respo
 import { CreateInterviewInput, UpdateInterviewInput, InterviewDecisionInput } from '../../dto/schemas/interview.schema';
 import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
+import { Events } from '../../constants/Events';
 import { HttpStatusCode } from '../../enums/StatusCodes';
 import { ApplicationStatus } from '../../enums/ApplicationStatus';
 import { logger } from '../../utils/logger';
@@ -159,7 +161,7 @@ export class InterviewService implements IInterviewService {
     }
 
     const oldStatus = interview.status;
-    const updateData: any = {};
+    const updateData: Partial<Interview> = {};
     if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt);
     if (data.duration) updateData.duration = data.duration;
     if (data.type) updateData.type = data.type;
@@ -175,7 +177,7 @@ export class InterviewService implements IInterviewService {
         if (application) {
           const jobDetails = await this.fetchJobDetails(application.jobId);
           
-          await this._eventService.publish('interview.confirmed', {
+          await this._eventService.publish(Events.INTERVIEW.CONFIRMED, {
             userId: application.userId,
             interviewId: updatedInterview.id,
             applicationId: interview.applicationId,
@@ -246,7 +248,7 @@ export class InterviewService implements IInterviewService {
       if (application) {
         const jobDetails = await this.fetchJobDetails(application.jobId);
         
-        await this._eventService.publish('interview.decision_made', {
+        await this._eventService.publish(Events.INTERVIEW.DECISION_MADE, {
           userId: application.userId,
           interviewId: updatedInterview.id,
           applicationId: interview.applicationId,
@@ -266,7 +268,7 @@ export class InterviewService implements IInterviewService {
     return this.mapToResponse(updatedInterview);
   }
 
-  private mapToResponse(interview: any): InterviewResponse {
+  private mapToResponse(interview: Interview): InterviewResponse {
     return {
       id: interview.id,
       applicationId: interview.applicationId,

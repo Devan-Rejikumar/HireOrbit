@@ -1,7 +1,7 @@
 import { Company, CompanyProfileStep } from '@prisma/client';
 import { CompanyProfileData, CompanyProfileStepData,CompanyRegistrationStep2,CompanyRegistrationStep3,} from '../../types/company';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
-import { PaginationResult } from '../../repositories/interface/IBaseRepository';
+import { PaginationResult } from '../../repositories/interfaces/IBaseRepository';
 
 export interface ICompanyService{
     register(email:string,password:string,companyName:string):Promise<CompanyResponse>;
@@ -32,4 +32,6 @@ export interface ICompanyService{
     reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; message: string }>;
     getReapplyStatus(companyId: string): Promise<{ canReapply: boolean; rejectionReason?: string; lastReviewedAt?: Date }>;
     searchCompanyByName(companyName: string): Promise<CompanyResponse | null>;
+    getTotalCompanyCount(): Promise<number>;
+    getCompanyStatisticsByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month' | 'year'): Promise<Array<{ date: string; count: number }>>;
 }

@@ -84,4 +84,20 @@ export class JobService implements IJobService {
   async deleteJob(id: string): Promise<void> {
     await this._jobRepository.delete(id);
   }
+
+  async getTotalJobCount(): Promise<number> {
+    return this._jobRepository.getTotalJobCount();
+  }
+
+  async getJobStatisticsByTimePeriod(
+    startDate: Date, 
+    endDate: Date, 
+    groupBy: 'day' | 'week' | 'month'
+  ): Promise<Array<{ date: string; count: number }>> {
+    return this._jobRepository.getJobStatisticsByTimePeriod(startDate, endDate, groupBy);
+  }
+
+  async getTopCompaniesByJobCount(limit: number): Promise<Array<{ companyId: string; companyName: string; jobCount: number }>> {
+    return this._jobRepository.getTopCompaniesByJobCount(limit);
+  }
 }

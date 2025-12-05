@@ -1,4 +1,4 @@
-// Service route path constants
+
 export const SERVICE_ROUTES = {
     USERS: '/api/users',
     COMPANY: '/api/company',
@@ -29,6 +29,7 @@ export const ROUTES = {
         '/api/users/logout',
         '/api/users/change-password',
         '/api/users/update-name',
+        '/api/users/admin/dashboard/statistics',
         '/api/profile/full',
         '/api/profile',
         '/api/company/profile', 
@@ -51,7 +52,16 @@ export const ROUTES = {
         '/api/subscriptions/:subscriptionId/cancel', 
         '/api/subscriptions/:subscriptionId/upgrade', 
         '/api/subscriptions/limits/job-posting', 
-        '/api/subscriptions/features/:featureName'
+        '/api/subscriptions/features/:featureName',
+        '/api/admin/subscriptions/plans',
+        '/api/admin/subscriptions/plans/:id',
+        '/api/admin/subscriptions/plans/:id/price',
+        '/api/admin/subscriptions/discounts',
+        '/api/admin/subscriptions/discounts/:id',
+        '/api/admin/subscriptions/discounts/plan/:planId',
+        '/api/admin/subscriptions/revenue',
+        '/api/admin/subscriptions/transactions',
+        '/api/admin/subscriptions/transactions/sync'
     ],
     
     public: [

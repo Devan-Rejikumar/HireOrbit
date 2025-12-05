@@ -224,7 +224,10 @@ const CompanySettings = () => {
                 <CalendarIcon className="h-5 w-5" />
                 Interview Management
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate('/subscriptions')}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing
               </button>

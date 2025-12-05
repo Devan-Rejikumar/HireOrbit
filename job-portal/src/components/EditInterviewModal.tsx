@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Video } from 'lucide-react';
 import { _interviewService, UpdateInterviewData, InterviewWithDetails } from '@/api/_interviewService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface EditInterviewModalProps {
   isOpen: boolean;

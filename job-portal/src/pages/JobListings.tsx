@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, MapPin, Briefcase, Filter, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useLocation, Link } from 'react-router-dom';
 import AutocompleteInput from '../components/AutocompleteInput';
@@ -220,8 +220,8 @@ const JobListings = () => {
         )
       );
     }
-
-    toast.success('Job applied successfully! All the best! 🎉');
+    setShowApplicationModal(false);
+    // Toast message is handled in JobApplicationModal component
   }, [selectedJob]);
 
   return (

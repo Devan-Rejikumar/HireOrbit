@@ -31,8 +31,8 @@ export const COMPANY_ROUTES = {
   APPROVE_COMPANY: '/admin/:id/approve',
   REJECT_COMPANY: '/admin/:id/reject',
   SEARCH_COMPANY: '/search',
-  
-  // Industry Category management (admin)
+  GET_TOTAL_COMPANY_COUNT: '/admin/statistics/total',
+  GET_COMPANY_STATISTICS_TIME_SERIES: '/admin/statistics/time-series',
   INDUSTRIES_BASE: '/admin/industries',
   INDUSTRIES_DETAIL: '/admin/industries/:id',
 } as const;

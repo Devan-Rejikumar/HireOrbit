@@ -16,5 +16,8 @@ export const JOB_ROUTES = {
   GET_JOB_COUNT_BY_COMPANY: '/company/:companyId/count',
   REPORT_JOB: '/:jobId/report',
   GET_REPORTED_JOBS: '/admin/reported',
+  GET_TOTAL_JOB_COUNT: '/admin/statistics/total',
+  GET_JOB_STATISTICS_TIME_SERIES: '/admin/statistics/time-series',
+  GET_TOP_COMPANIES: '/admin/top-companies',
 } as const;
 

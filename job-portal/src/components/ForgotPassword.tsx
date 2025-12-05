@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/seperator';
 import { Mail, CheckCircle, AlertCircle, ArrowLeft, Lock } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/api/axios';
@@ -51,15 +50,13 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
         setStage(2);
         setCountdown(60); 
         toast.success('OTP sent to your email!', {
-          position: 'top-right',
-          autoClose: 3000,
+          duration: 3000,
         });
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
       toast.error(err.response?.data?.error || 'Failed to send OTP', {
-        position: 'top-right',
-        autoClose: 3000,
+        duration: 3000,
       });
     } finally {
       setIsLoading(false);
@@ -78,15 +75,13 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
         setSuccess('OTP verified successfully!');
         setStage(3);
         toast.success('OTP verified successfully!', {
-          position: 'top-right',
-          autoClose: 3000,
+          duration: 3000,
         });
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'OTP verification failed. Please try again.');
       toast.error(err.response?.data?.error || 'OTP verification failed', {
-        position: 'top-right',
-        autoClose: 3000,
+        duration: 3000,
       });
     } finally {
       setIsLoading(false);
@@ -103,15 +98,13 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
         setSuccess('New OTP sent successfully!');
         setCountdown(60); // 60 seconds cooldown
         toast.success('New OTP sent successfully!', {
-          position: 'top-right',
-          autoClose: 3000,
+          duration: 3000,
         });
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to resend OTP. Please try again.');
       toast.error(err.response?.data?.error || 'Failed to resend OTP', {
-        position: 'top-right',
-        autoClose: 3000,
+        duration: 3000,
       });
     } finally {
       setIsResending(false);
@@ -140,8 +133,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
       if (response.status === 200) {
         setSuccess('Password reset successful!');
         toast.success('Password reset successful! Please login with your new password.', {
-          position: 'top-right',
-          autoClose: 3000,
+          duration: 3000,
         });
         
         // Redirect to login after 2 seconds
@@ -156,8 +148,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
     } catch (err: any) {
       setError(err.response?.data?.error || 'Password reset failed. Please try again.');
       toast.error(err.response?.data?.error || 'Password reset failed', {
-        position: 'top-right',
-        autoClose: 3000,
+        duration: 3000,
       });
     } finally {
       setIsLoading(false);

@@ -14,7 +14,7 @@ export class SkillController {
     private readonly _skillService: ISkillService,
   ) {}
 
-  // Public endpoint: list active skills for users (autocomplete)
+
   async getActiveSkills(req: Request, res: Response): Promise<void> {
     const skills = await this._skillService.getActiveSkills();
     res.status(HttpStatusCode.OK).json(
@@ -22,7 +22,7 @@ export class SkillController {
     );
   }
 
-  // Admin endpoints
+
   async createSkill(req: Request, res: Response): Promise<void> {
     const validationResult = CreateSkillSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -37,9 +37,24 @@ export class SkillController {
 
   async getAllSkills(req: Request, res: Response): Promise<void> {
     const includeInactive = req.query.includeInactive === 'true';
-    const skills = await this._skillService.getAllSkills(includeInactive);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    
+    const result = await this._skillService.getSkillsPaginated(includeInactive, page, limit);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ skills }, 'Skills retrieved successfully'),
+      buildSuccessResponse(
+        {
+          skills: result.data,
+          pagination: {
+            total: result.total,
+            page: result.page,
+            limit: result.limit,
+            totalPages: result.totalPages,
+          },
+        },
+        'Skills retrieved successfully',
+      ),
     );
   }
 

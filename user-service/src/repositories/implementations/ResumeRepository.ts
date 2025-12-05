@@ -5,9 +5,14 @@ import { prisma } from '../../prisma/client';
 @injectable()
 export class ResumeRepository implements IResumeRepository {
   async saveResume(userId: string, resumeUrl: string): Promise<void> {
-    await prisma.userProfile.update({
+    await prisma.userProfile.upsert({
       where: { userId },
-      data: { resume: resumeUrl }  
+      update: { resume: resumeUrl },
+      create: {
+        userId,
+        resume: resumeUrl,
+        skills: [] // Required field in schema
+      }
     });
   }
 

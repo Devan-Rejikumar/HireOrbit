@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Clock, CheckCircle, XCircle, Building2, Mail, Phone, MapPin } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '@/api/axios';
 
 interface CompanyProfile {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, CheckCircle } from 'lucide-react';
 import { InterviewDecisionData, InterviewWithDetails } from '@/api/_interviewService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface InterviewDecisionModalProps {
   isOpen: boolean;

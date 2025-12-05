@@ -21,8 +21,7 @@ import ExperienceModal from '../components/ExperienceModal';
 import EducationModal from '../components/EducationModal';
 import ResumeUpload from '../components/ResumeUpload';
 import { userService } from '../api/userService';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 import CertificationModal from '@/components/CertificationModal';
 import AchievementModal from '@/components/AchievementModal';
 import VerificationModal from '@/components/VerificationModal';
@@ -1188,7 +1187,6 @@ const UserProfile = () => {
         }}
       />
       
-      <ToastContainer />
     </>
   );
 };

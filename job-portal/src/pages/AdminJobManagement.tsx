@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '@/api/axios';
 import { FiBriefcase, FiSearch, FiFilter, FiTrash2, FiEye, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import JobReportsModal, { ReportedJobData } from '@/components/admin/JobReportsModal';
 
 interface Job {
@@ -227,26 +227,26 @@ const AdminJobManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white">Job Management</h1>
-          <p className="text-gray-400 mt-1">Manage and monitor all job listings</p>
+          <h1 className="text-2xl font-bold text-white">Job Management</h1>
+          <p className="text-gray-400 text-sm">Manage and monitor all job listings</p>
         </div>
         <div className="flex items-center gap-2 text-gray-400">
-          <FiBriefcase className="h-6 w-6" />
-          <span className="text-lg font-semibold">
+          <FiBriefcase className="h-5 w-5" />
+          <span className="text-base font-semibold">
             {viewMode === 'all' ? filteredJobs.length : filteredReportedJobs.length} {viewMode === 'all' ? 'Jobs' : 'Reported Jobs'}
           </span>
         </div>
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-2 border-b border-gray-700">
+      <div className="flex gap-2 border-b border-gray-700 flex-shrink-0">
         <button
           onClick={() => setViewMode('all')}
-          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
             viewMode === 'all'
               ? 'text-purple-400 border-purple-400'
               : 'text-gray-400 border-transparent hover:text-gray-300'
@@ -256,7 +256,7 @@ const AdminJobManagement: React.FC = () => {
         </button>
         <button
           onClick={() => setViewMode('reported')}
-          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+          className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
             viewMode === 'reported'
               ? 'text-purple-400 border-purple-400'
               : 'text-gray-400 border-transparent hover:text-gray-300'
@@ -268,29 +268,29 @@ const AdminJobManagement: React.FC = () => {
 
       {/* Filters - Only show for All Jobs view */}
       {viewMode === 'all' && (
-        <div className="bg-gray-800 rounded-lg p-4 space-y-4">
-          <div className="flex items-center gap-4 flex-wrap">
+        <div className="bg-gray-800 rounded-lg p-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-wrap">
           {/* Search */}
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
                 placeholder="Search jobs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
           </div>
 
           {/* Company Filter */}
           <div className="flex items-center gap-2">
-            <FiFilter className="text-gray-400 h-5 w-5" />
+            <FiFilter className="text-gray-400 h-4 w-4" />
             <select
               value={filterCompany}
               onChange={(e) => setFilterCompany(e.target.value)}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Companies</option>
               {companies.map((company) => (
@@ -306,7 +306,7 @@ const AdminJobManagement: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -321,42 +321,38 @@ const AdminJobManagement: React.FC = () => {
       {viewMode === 'all' && (
         <>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-12 flex-1">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
             </div>
           ) : filteredJobs.length === 0 ? (
-            <div className="bg-gray-800 rounded-lg p-12 text-center">
-              <FiBriefcase className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No jobs found</p>
+            <div className="bg-gray-800 rounded-lg p-12 text-center flex-1 flex items-center justify-center">
+              <div>
+                <FiBriefcase className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-lg">No jobs found</p>
+              </div>
             </div>
           ) : (
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-gray-800 rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
+          <div className="overflow-auto flex-1">
             <table className="w-full">
-              <thead className="bg-gray-700">
+              <thead className="bg-gray-700 sticky top-0">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Job Title
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Company
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Salary
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -364,28 +360,25 @@ const AdminJobManagement: React.FC = () => {
               <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {filteredJobs.map((job) => (
                   <tr key={job.id} className="hover:bg-gray-750 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3">
                       <div className="text-sm font-medium text-white">{job.title}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3">
                       <div className="text-sm text-gray-300">{job.company}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3">
                       <div className="text-sm text-gray-300">{job.location}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3">
                       <span className="px-2 py-1 text-xs font-medium bg-purple-900 text-purple-200 rounded">
                         {job.jobType}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">{formatSalary(job.salary)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3">
                       <button
                         onClick={() => handleToggleActive(job)}
                         disabled={togglingJobId === job.id}
-                        className={`flex items-center gap-2 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
                           job.isActive
                             ? 'bg-green-900 text-green-200 hover:bg-green-800'
                             : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
@@ -393,28 +386,25 @@ const AdminJobManagement: React.FC = () => {
                       >
                         {job.isActive ? (
                           <>
-                            <FiToggleRight className="h-4 w-4" />
+                            <FiToggleRight className="h-3.5 w-3.5" />
                             Active
                           </>
                         ) : (
                           <>
-                            <FiToggleLeft className="h-4 w-4" />
+                            <FiToggleLeft className="h-3.5 w-3.5" />
                             Inactive
                           </>
                         )}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-400">{formatDate(job.createdAt)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-4 py-3 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => window.open(`/jobs/${job.id}`, '_blank')}
                           className="text-purple-400 hover:text-purple-300 transition-colors"
                           title="View Job"
                         >
-                          <FiEye className="h-5 w-5" />
+                          <FiEye className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteJob(job.id, job.title)}
@@ -423,9 +413,9 @@ const AdminJobManagement: React.FC = () => {
                           title="Delete Job"
                         >
                           {deletingJobId === job.id ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-400"></div>
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-400"></div>
                           ) : (
-                            <FiTrash2 className="h-5 w-5" />
+                            <FiTrash2 className="h-4 w-4" />
                           )}
                         </button>
                       </div>
@@ -440,18 +430,18 @@ const AdminJobManagement: React.FC = () => {
 
       {/* Pagination - All Jobs */}
       {viewMode === 'all' && !loading && filteredJobs.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
-          <div className="text-sm text-gray-400">
+        <div className="flex items-center justify-between bg-gray-800 rounded-lg p-3 flex-shrink-0">
+          <div className="text-xs text-gray-400">
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalJobs)} of {totalJobs} jobs
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
-              <FiChevronLeft className="h-4 w-4" />
-              Previous
+              <FiChevronLeft className="h-3.5 w-3.5" />
+              Prev
             </button>
             
             <div className="flex items-center gap-1">
@@ -471,7 +461,7 @@ const AdminJobManagement: React.FC = () => {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-2 rounded-lg transition-colors ${
+                    className={`px-2.5 py-1.5 text-sm rounded-lg transition-colors ${
                       currentPage === pageNum
                         ? 'bg-purple-600 text-white font-semibold'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -486,10 +476,10 @@ const AdminJobManagement: React.FC = () => {
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               Next
-              <FiChevronRight className="h-4 w-4" />
+              <FiChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -501,17 +491,17 @@ const AdminJobManagement: React.FC = () => {
       {viewMode === 'reported' && (
         <>
           {/* Search for Reported Jobs */}
-          <div className="bg-gray-800 rounded-lg p-4">
+          <div className="bg-gray-800 rounded-lg p-3 flex-shrink-0">
             <div className="flex items-center gap-4">
               <div className="flex-1 min-w-[200px]">
                 <div className="relative">
-                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <input
                     type="text"
-                    placeholder="Search reported jobs by title, company, location, or reason..."
+                    placeholder="Search reported jobs..."
                     value={searchTermReported}
                     onChange={(e) => setSearchTermReported(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
               </div>
@@ -519,41 +509,40 @@ const AdminJobManagement: React.FC = () => {
           </div>
 
           {loadingReported ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-12 flex-1">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
             </div>
           ) : filteredReportedJobs.length === 0 ? (
-            <div className="bg-gray-800 rounded-lg p-12 text-center">
-              <FiBriefcase className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">
-                {searchTermReported ? 'No reported jobs match your search' : 'No reported jobs found'}
-              </p>
+            <div className="bg-gray-800 rounded-lg p-12 text-center flex-1 flex items-center justify-center">
+              <div>
+                <FiBriefcase className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400 text-lg">
+                  {searchTermReported ? 'No reported jobs match your search' : 'No reported jobs found'}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
+            <div className="bg-gray-800 rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
+              <div className="overflow-auto flex-1">
                 <table className="w-full">
-                  <thead className="bg-gray-700">
+                  <thead className="bg-gray-700 sticky top-0">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Job Title
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Company
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Location
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Report Reason
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Report Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Reports
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -563,16 +552,16 @@ const AdminJobManagement: React.FC = () => {
                       const latestReport = reportedJob.reports[0];
                       return (
                         <tr key={reportedJob.job.id} className="hover:bg-gray-750 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             <div className="text-sm font-medium text-white">{reportedJob.job.title}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             <div className="text-sm text-gray-300">{reportedJob.job.company}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             <div className="text-sm text-gray-300">{reportedJob.job.location}</div>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-4 py-3">
                             <div className="text-sm text-gray-300 max-w-xs truncate" title={latestReport?.reason}>
                               {latestReport?.reason || '-'}
                             </div>
@@ -582,12 +571,7 @@ const AdminJobManagement: React.FC = () => {
                               </div>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-400">
-                              {latestReport?.createdAt ? formatDate(latestReport.createdAt) : '-'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-4 py-3">
                             <button
                               onClick={() => {
                                 setSelectedJobReports({
@@ -608,14 +592,14 @@ const AdminJobManagement: React.FC = () => {
                               {reportedJob.reportCount} {reportedJob.reportCount === 1 ? 'Report' : 'Reports'}
                             </button>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <td className="px-4 py-3 text-right text-sm font-medium">
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => window.open(`/jobs/${reportedJob.job.id}`, '_blank')}
                                 className="text-purple-400 hover:text-purple-300 transition-colors"
                                 title="View Job"
                               >
-                                <FiEye className="h-5 w-5" />
+                                <FiEye className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteJob(reportedJob.job.id, reportedJob.job.title)}
@@ -624,9 +608,9 @@ const AdminJobManagement: React.FC = () => {
                                 title="Delete Job"
                               >
                                 {deletingJobId === reportedJob.job.id ? (
-                                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-red-400"></div>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-400"></div>
                                 ) : (
-                                  <FiTrash2 className="h-5 w-5" />
+                                  <FiTrash2 className="h-4 w-4" />
                                 )}
                               </button>
                             </div>
@@ -642,8 +626,8 @@ const AdminJobManagement: React.FC = () => {
 
           {/* Pagination - Reported Jobs */}
           {!loadingReported && filteredReportedJobs.length > 0 && totalPagesReported > 1 && (
-            <div className="flex items-center justify-between bg-gray-800 rounded-lg p-4">
-              <div className="text-sm text-gray-400">
+            <div className="flex items-center justify-between bg-gray-800 rounded-lg p-3 flex-shrink-0">
+              <div className="text-xs text-gray-400">
                 Showing {(currentPageReported - 1) * itemsPerPageReported + 1} to{' '}
                 {Math.min(currentPageReported * itemsPerPageReported, filteredReportedJobs.length)} of{' '}
                 {filteredReportedJobs.length} reported jobs
@@ -652,10 +636,10 @@ const AdminJobManagement: React.FC = () => {
                 <button
                   onClick={() => setCurrentPageReported((prev) => Math.max(1, prev - 1))}
                   disabled={currentPageReported === 1}
-                  className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
-                  <FiChevronLeft className="h-4 w-4" />
-                  Previous
+                  <FiChevronLeft className="h-3.5 w-3.5" />
+                  Prev
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -675,7 +659,7 @@ const AdminJobManagement: React.FC = () => {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPageReported(pageNum)}
-                        className={`px-3 py-2 rounded-lg transition-colors ${
+                        className={`px-2.5 py-1.5 text-sm rounded-lg transition-colors ${
                           currentPageReported === pageNum
                             ? 'bg-purple-600 text-white font-semibold'
                             : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -690,10 +674,10 @@ const AdminJobManagement: React.FC = () => {
                 <button
                   onClick={() => setCurrentPageReported((prev) => Math.min(totalPagesReported, prev + 1))}
                   disabled={currentPageReported === totalPagesReported}
-                  className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
                   Next
-                  <FiChevronRight className="h-4 w-4" />
+                  <FiChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>

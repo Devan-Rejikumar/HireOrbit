@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
 import { FileCheck, Upload, Sparkles, ArrowLeft, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import axios from 'axios';
 
 export const ATSCheckerPage = () => {

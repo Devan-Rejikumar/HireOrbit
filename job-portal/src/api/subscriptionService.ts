@@ -1,12 +1,18 @@
 import api from './axios';
 
+export interface SubscriptionFeature {
+  id: string;
+  name: string;
+  planId: string;
+}
+
 export interface SubscriptionPlan {
   id: string;
   name: string;
   userType: 'user' | 'company';
   priceMonthly: number | null;
   priceYearly: number | null;
-  features: string[];
+  features: SubscriptionFeature[] | string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -107,5 +113,263 @@ export const subscriptionService = {
       `/subscriptions/features/${featureName}`
     );
     return response.data;
+  },
+
+  // Admin methods
+  admin: {
+    // Get all plans
+    getAllPlans: async (): Promise<{ data: SubscriptionPlan[]; message: string }> => {
+      const response = await api.get<{ success: boolean; data: { plans: SubscriptionPlan[] }; message: string }>(
+        '/admin/subscriptions/plans'
+      );
+      return {
+        data: response.data.data?.plans || [],
+        message: response.data.message || ''
+      };
+    },
+
+    // Get plan by ID
+    getPlanById: async (id: string): Promise<{ data: SubscriptionPlan; message: string }> => {
+      const response = await api.get<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
+        `/admin/subscriptions/plans/${id}`
+      );
+      return {
+        data: response.data.data?.plan,
+        message: response.data.message || ''
+      };
+    },
+
+    // Create plan
+    createPlan: async (planData: {
+      name: string;
+      userType: 'user' | 'company';
+      priceMonthly?: number;
+      priceYearly?: number;
+      features?: string[];
+      description?: string;
+    }): Promise<{ data: SubscriptionPlan; message: string }> => {
+      const response = await api.post<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
+        '/admin/subscriptions/plans',
+        planData
+      );
+      return {
+        data: response.data.data?.plan,
+        message: response.data.message || ''
+      };
+    },
+
+    // Update plan
+    updatePlan: async (id: string, planData: {
+      name?: string;
+      priceMonthly?: number;
+      priceYearly?: number;
+      features?: string[];
+      description?: string;
+    }): Promise<{ data: SubscriptionPlan; message: string }> => {
+      const response = await api.put<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
+        `/admin/subscriptions/plans/${id}`,
+        planData
+      );
+      return {
+        data: response.data.data?.plan,
+        message: response.data.message || ''
+      };
+    },
+
+    // Update plan price only
+    updatePlanPrice: async (id: string, prices: {
+      priceMonthly?: number;
+      priceYearly?: number;
+    }): Promise<{ data: SubscriptionPlan; message: string }> => {
+      const response = await api.patch<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
+        `/admin/subscriptions/plans/${id}/price`,
+        prices
+      );
+      return {
+        data: response.data.data?.plan,
+        message: response.data.message || ''
+      };
+    },
+
+    // Delete plan
+    deletePlan: async (id: string): Promise<{ message: string }> => {
+      const response = await api.delete<{ success: boolean; message: string }>(
+        `/admin/subscriptions/plans/${id}`
+      );
+      return {
+        message: response.data.message || ''
+      };
+    },
+
+    // Get revenue statistics
+    getRevenueStatistics: async (startDate?: string, endDate?: string, userType?: 'user' | 'company'): Promise<{
+      data: {
+        statistics: {
+          totalRevenue: number;
+          revenueByUserType: {
+            user: number;
+            company: number;
+          };
+          revenueByPlan: Array<{
+            planId: string;
+            planName: string;
+            userType: string;
+            revenue: number;
+          }>;
+          revenueByTimePeriod: Array<{
+            period: string;
+            revenue: number;
+          }>;
+        };
+      };
+      message: string;
+    }> => {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      if (userType) params.append('userType', userType);
+      
+      const queryString = params.toString();
+      const url = `/admin/subscriptions/revenue${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await api.get<{
+        success: boolean;
+        data: {
+          statistics: {
+            totalRevenue: number;
+            revenueByUserType: {
+              user: number;
+              company: number;
+            };
+            revenueByPlan: Array<{
+              planId: string;
+              planName: string;
+              userType: string;
+              revenue: number;
+            }>;
+            revenueByTimePeriod: Array<{
+              period: string;
+              revenue: number;
+            }>;
+          };
+        };
+        message: string;
+      }>(url);
+      
+      return {
+        data: response.data.data,
+        message: response.data.message || ''
+      };
+    },
+
+    // Get transaction history
+    getTransactionHistory: async (filters?: {
+      userId?: string;
+      companyId?: string;
+      planId?: string;
+      status?: string;
+      userType?: 'user' | 'company';
+      startDate?: string;
+      endDate?: string;
+      page?: number;
+      limit?: number;
+    }): Promise<{
+      data: {
+        transactions: Array<{
+          id: string;
+          subscriptionId?: string;
+          userId?: string;
+          companyId?: string;
+          planId: string;
+          planName: string;
+          userType: string;
+          amount: number;
+          currency: string;
+          status: string;
+          billingPeriod: string;
+          paymentDate: string;
+          stripeInvoiceId?: string;
+        }>;
+        total: number;
+        page: number;
+        limit: number;
+      };
+      message: string;
+    }> => {
+      const params = new URLSearchParams();
+      if (filters?.userId) params.append('userId', filters.userId);
+      if (filters?.companyId) params.append('companyId', filters.companyId);
+      if (filters?.planId) params.append('planId', filters.planId);
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.userType) params.append('userType', filters.userType);
+      if (filters?.startDate) params.append('startDate', filters.startDate);
+      if (filters?.endDate) params.append('endDate', filters.endDate);
+      if (filters?.page) params.append('page', filters.page.toString());
+      if (filters?.limit) params.append('limit', filters.limit.toString());
+      
+      const queryString = params.toString();
+      const url = `/admin/subscriptions/transactions${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await api.get<{
+        success: boolean;
+        data: {
+          transactions: Array<{
+            id: string;
+            subscriptionId?: string;
+            userId?: string;
+            companyId?: string;
+            planId: string;
+            planName: string;
+            userType: string;
+            amount: number;
+            currency: string;
+            status: string;
+            billingPeriod: string;
+            paymentDate: string;
+            stripeInvoiceId?: string;
+          }>;
+          total: number;
+          page: number;
+          limit: number;
+        };
+        message: string;
+      }>(url);
+      
+      return {
+        data: response.data.data,
+        message: response.data.message || ''
+      };
+    },
+
+    // Sync transactions from Stripe
+    syncTransactions: async (limit?: number): Promise<{
+      data: {
+        synced: number;
+        skipped: number;
+        errors: number;
+      };
+      message: string;
+    }> => {
+      const params = new URLSearchParams();
+      if (limit) params.append('limit', limit.toString());
+      
+      const queryString = params.toString();
+      const url = `/admin/subscriptions/transactions/sync${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await api.post<{
+        success: boolean;
+        data: {
+          synced: number;
+          skipped: number;
+          errors: number;
+        };
+        message: string;
+      }>(url);
+      
+      return {
+        data: response.data.data,
+        message: response.data.message || ''
+      };
+    }
   }
 };

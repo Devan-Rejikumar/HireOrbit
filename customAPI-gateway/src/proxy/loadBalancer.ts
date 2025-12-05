@@ -44,9 +44,12 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
   } else if (path.startsWith(SERVICE_ROUTES.CHAT)) {
     chatServiceProxy(req, res, next);
     
-  } else if (path.startsWith(SERVICE_ROUTES.SUBSCRIPTIONS)) {
+  } else if (path.startsWith(SERVICE_ROUTES.SUBSCRIPTIONS) || path.startsWith('/api/admin/subscriptions')) {
     console.log('Routing to Subscription Service');
     subscriptionServiceProxy(req, res, next);
+  } else if (path.startsWith('/api/industries')) {
+    console.log('Routing to Company Service for industries');
+    companyServiceProxy(req, res, next);
   } else {
     userServiceProxy(req, res, next);
   }
