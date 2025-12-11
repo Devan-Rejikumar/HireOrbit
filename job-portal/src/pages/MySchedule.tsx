@@ -369,7 +369,32 @@ const MySchedule = () => {
                             <span>{interview.location}</span>
                           </div>
                         )}
-                        {interview.meetingLink && (
+                        {/* Show both WebRTC Join Call and External Meeting Link (if provided) */}
+                        {interview.type === 'ONLINE' && interview.status === 'CONFIRMED' && (
+                          <div className="mt-3 flex items-center gap-3">
+                            <Button
+                              size="sm"
+                              onClick={() => navigate(`/interview/${interview.id}/video`)}
+                              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                            >
+                              <Video className="w-4 h-4" />
+                              Join Call
+                            </Button>
+                            {interview.meetingLink && (
+                              <a
+                                href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm underline"
+                                title="Use external meeting link as fallback"
+                              >
+                                <Video className="w-4 h-4" />
+                                Join External Meeting
+                              </a>
+                            )}
+                          </div>
+                        )}
+                        {interview.meetingLink && interview.type !== 'ONLINE' && (
                           <div className="mt-2">
                             <a
                               href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}

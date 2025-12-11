@@ -20,5 +20,6 @@ router.post(INTERVIEW_ROUTES.MAKE_INTERVIEW_DECISION, asyncHandler((req: Request
 router.get(INTERVIEW_ROUTES.GET_INTERVIEWS_BY_APPLICATION, asyncHandler((req: Request, res) => interviewController.getInterviewsByApplication(req, res)));
 router.get(INTERVIEW_ROUTES.GET_COMPANY_INTERVIEWS, asyncHandler((req: Request, res) => interviewController.getCompanyInterviews(req, res)));
 router.get(INTERVIEW_ROUTES.GET_CANDIDATE_INTERVIEWS, asyncHandler((req: Request, res) => interviewController.getCandidateInterviews(req, res)));
+router.get(INTERVIEW_ROUTES.GET_WEBRTC_CONFIG, asyncHandler((req: Request, res) => interviewController.getWebRTCConfig(req, res)));
 
 export default router;

@@ -23,7 +23,6 @@ import {
   GraduationCap,
   Clock,
   CreditCard,
-  HelpCircle,
   Bell,
   Settings,
   LogOut,
@@ -381,14 +380,6 @@ const CompanyJobListing = () => {
               >
                 <Settings className="h-5 w-5" />
                 Settings
-              </button>
-              <button 
-                type="button"
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-                disabled
-              >
-                <HelpCircle className="h-5 w-5" />
-                Help Center
               </button>
             </div>
           </nav>

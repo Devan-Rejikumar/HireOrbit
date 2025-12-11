@@ -51,6 +51,7 @@ export class ApplicationService implements IApplicationService {
     if (!eligibility.eligible) {
       throw new AppError(eligibility.reason || Messages.APPLICATION.NOT_ELIGIBLE, HttpStatusCode.BAD_REQUEST);
     }
+
     const application = await this._applicationRepository.create(data);
     
  try {
@@ -469,8 +470,7 @@ async searchApplications(filters: {
 
   async getTopJobsByApplicationCount(limit: number): Promise<Array<{ jobId: string; jobTitle: string; companyName: string; applicationCount: number }>> {
     const topJobs = await this._applicationRepository.getTopJobsByApplicationCount(limit);
-    
-    // Fetch job details for each job
+
     const jobsWithDetails = await Promise.all(
       topJobs.map(async (job) => {
         try {

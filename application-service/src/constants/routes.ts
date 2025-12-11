@@ -33,5 +33,6 @@ export const INTERVIEW_ROUTES = {
   GET_INTERVIEWS_BY_APPLICATION: '/application/:applicationId',
   GET_COMPANY_INTERVIEWS: '/company/all',
   GET_CANDIDATE_INTERVIEWS: '/candidate/all',
+  GET_WEBRTC_CONFIG: '/:id/webrtc-config',
 } as const;
 

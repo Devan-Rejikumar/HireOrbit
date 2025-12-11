@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Users, Briefcase, Plus, LogOut, UserCheck, MapPin, Edit, Trash2, ChevronLeft, ChevronRight, TrendingUp, Calendar, CheckCircle, AlertCircle, Settings, BarChart3, Eye, FileText, Star, Mail, Home, MessageSquare, User, GraduationCap, Clock, CreditCard, HelpCircle, Bell, ChevronDown, ArrowRight, Calendar as CalendarIcon, RefreshCw, XCircle, Search, Lock } from 'lucide-react';
+import { Building2, Users, Briefcase, Plus, LogOut, UserCheck, MapPin, Edit, Trash2, ChevronLeft, ChevronRight, TrendingUp, Calendar, CheckCircle, AlertCircle, Settings, BarChart3, Eye, FileText, Star, Mail, Home, MessageSquare, User, GraduationCap, Clock, CreditCard, Bell, ChevronDown, ArrowRight, Calendar as CalendarIcon, RefreshCw, XCircle, Search, Lock } from 'lucide-react';
 import api from '@/api/axios';
 import EditJobModal from '@/components/EditJobModal';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
@@ -814,7 +814,7 @@ const CompanyDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             {/* Hire Orbit Logo */}
@@ -916,7 +916,7 @@ const CompanyDashboard = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 relative transition-all duration-300`}>
+        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto transition-all duration-300 z-10`}>
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -981,10 +981,6 @@ const CompanyDashboard = () => {
                 <Settings className="h-5 w-5" />
                 Settings
               </button>
-              <a href="#" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                <HelpCircle className="h-5 w-5" />
-                Help Center
-              </a>
             </div>
           </nav>
           
@@ -1019,7 +1015,7 @@ const CompanyDashboard = () => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className={`flex-1 p-6 pt-[84px] ${isSidebarCollapsed ? 'ml-0' : 'ml-64'}`}>
           {activeSection === 'messages' && company?.id ? (
             <div className="h-[calc(100vh-68px)] flex -m-6">
               {/* Chat Sidebar */}

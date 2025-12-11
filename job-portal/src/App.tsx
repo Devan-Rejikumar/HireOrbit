@@ -43,6 +43,7 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({
 const SubscriptionStatus = lazy(() => import('./components/subscription/SubscriptionStatus').then(module => ({ default: module.SubscriptionStatus })));
 const ManageSubscription = lazy(() => import('./components/subscription/ManageSubscription').then(module => ({ default: module.ManageSubscription })));
 const ATSCheckerPage = lazy(() => import('./pages/ATSCheckerPage').then(module => ({ default: module.ATSCheckerPage })));
+const InterviewVideoCall = lazy(() => import('./pages/InterviewVideoCall').then(module => ({ default: module.InterviewVideoCall })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -173,6 +174,7 @@ const AppContent = () => {
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/company/applications" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyApplications /></Suspense></CompanyProtectedRoute>} />
         <Route path="/company/interviews" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyInterviewManagement /></Suspense></CompanyProtectedRoute>} />
+        <Route path="/interview/:interviewId/video" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><InterviewVideoCall /></Suspense></ProtectedRoute>} />
         <Route path="/schedule" element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><MySchedule /></Suspense></ProtectedRoute>} />
         <Route
           path="/messages"

@@ -1,4 +1,5 @@
 import api from './axios';
+import { WebRTCConfigResponse } from '@/types/webrtc.types';
 
 export interface Interview {
   id: string;
@@ -150,6 +151,11 @@ export const _interviewService = {
         'Content-Type': CONTENT_TYPE_JSON
       }
     });
+    return response.data;
+  },
+
+  getWebRTCConfig: async (interviewId: string): Promise<WebRTCConfigResponse> => {
+    const response = await api.get<WebRTCConfigResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}/webrtc-config`);
     return response.data;
   }
 };

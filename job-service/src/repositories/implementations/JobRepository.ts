@@ -144,7 +144,7 @@ export class JobRepository implements IJobRepository {
       }
     });
 
-  
+    // Group by time period
     const grouped = new Map<string, number>();
     
     jobs.forEach(job => {
@@ -152,20 +152,20 @@ export class JobRepository implements IJobRepository {
       let key: string;
       
       if (groupBy === 'day') {
-        key = date.toISOString().split('T')[0]; 
+        key = date.toISOString().split('T')[0]; // YYYY-MM-DD
       } else if (groupBy === 'week') {
         const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay()); 
+        weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
         weekStart.setHours(0, 0, 0, 0);
         key = weekStart.toISOString().split('T')[0];
-      } else { 
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; 
+      } else { // month
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
       }
       
       grouped.set(key, (grouped.get(key) || 0) + 1);
     });
 
-
+    // Generate all periods in the range to ensure continuity
     const allPeriods = new Map<string, number>();
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
@@ -184,7 +184,7 @@ export class JobRepository implements IJobRepository {
         weekStart.setHours(0, 0, 0, 0);
         key = weekStart.toISOString().split('T')[0];
         current.setDate(current.getDate() + 7);
-      } else { 
+      } else { // month
         key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
         current.setMonth(current.getMonth() + 1);
       }
@@ -192,7 +192,7 @@ export class JobRepository implements IJobRepository {
       allPeriods.set(key, grouped.get(key) || 0);
     }
 
-
+    // Convert to array and sort
     const result = Array.from(allPeriods.entries())
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -201,58 +201,39 @@ export class JobRepository implements IJobRepository {
   }
 
   async getTopCompaniesByJobCount(limit: number): Promise<Array<{ companyId: string; companyName: string; jobCount: number }>> {
-    try {
-      const jobs = await this.prisma.job.findMany({
-        where: {
-          isActive: true,
-          companyId: { 
-            not: null
-          }
-        },
-        select: {
-          companyId: true,
-          company: true
-        }
-      });
-
-      if (jobs.length === 0) {
-        console.log('[JobRepository] No jobs found with companyId');
-        return [];
+    const jobs = await this.prisma.job.findMany({
+      where: {
+        isActive: true,
+        companyId: { not: null }
+      },
+      select: {
+        companyId: true,
+        company: true
       }
+    });
 
+    // Group by company
+    const companyMap = new Map<string, { companyId: string; companyName: string; jobCount: number }>();
     
-      const companyMap = new Map<string, { companyId: string; companyName: string; jobCount: number }>();
+    jobs.forEach(job => {
+      const companyId = job.companyId || '';
+      const companyName = job.company || 'Unknown Company';
       
-      jobs.forEach(job => {
-        if (!job.companyId || job.companyId.trim() === '') {
-          return;
-        }
-        
-        const companyId = job.companyId.trim();
-        const companyName = (job.company && job.company.trim()) || 'Unknown Company';
-        
-        if (companyMap.has(companyId)) {
-          companyMap.get(companyId)!.jobCount++;
-        } else {
-          companyMap.set(companyId, {
-            companyId,
-            companyName,
-            jobCount: 1
-          });
-        }
-      });
+      if (companyMap.has(companyId)) {
+        companyMap.get(companyId)!.jobCount++;
+      } else {
+        companyMap.set(companyId, {
+          companyId,
+          companyName,
+          jobCount: 1
+        });
+      }
+    });
 
-    
-      const result = Array.from(companyMap.values())
-        .sort((a, b) => b.jobCount - a.jobCount)
-        .slice(0, limit);
-
-      console.log(`[JobRepository] Found ${result.length} top companies out of ${companyMap.size} unique companies`);
-      return result;
-    } catch (error: any) {
-      console.error('[JobRepository] Error in getTopCompaniesByJobCount:', error);
-      return [];
-    }
+    // Sort by job count and return top N
+    return Array.from(companyMap.values())
+      .sort((a, b) => b.jobCount - a.jobCount)
+      .slice(0, limit);
   }
 
 }

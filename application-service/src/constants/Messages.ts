@@ -38,6 +38,7 @@ export const Messages = {
     NOT_FOUND: 'Interview not found',
     DECISION_MADE_SUCCESS: 'Interview decision made successfully',
     DECISION_FAILED: 'Failed to make interview decision',
+    WEBRTC_CONFIG_RETRIEVED_SUCCESS: 'WebRTC configuration retrieved successfully',
   },
   VALIDATION: {
     VALIDATION_FAILED: 'Validation failed',

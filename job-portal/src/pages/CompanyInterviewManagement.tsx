@@ -9,7 +9,6 @@ import {
   Video, 
   Phone, 
   ArrowLeft, 
-  Loader2, 
   Edit, 
   Trash2, 
   User,
@@ -21,7 +20,6 @@ import {
   Briefcase,
   Calendar as CalendarIcon,
   CreditCard,
-  HelpCircle,
   Settings,
   ChevronLeft,
   ChevronRight
@@ -201,8 +199,9 @@ const CompanyInterviewManagement = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading interviews...</p>
+          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-lg font-semibold text-gray-700">Loading interviews...</h3>
+          <p className="text-gray-500">Please wait while we fetch your data</p>
         </div>
       </div>
     );
@@ -297,14 +296,6 @@ const CompanyInterviewManagement = () => {
               >
                 <Settings className="h-5 w-5" />
                 Settings
-              </button>
-              <button 
-                type="button"
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-                disabled
-              >
-                <HelpCircle className="h-5 w-5" />
-                Help Center
               </button>
             </div>
           </nav>
@@ -434,7 +425,32 @@ const CompanyInterviewManagement = () => {
                           </div>
                         )}
 
-                        {interview.meetingLink && (
+                        {/* Show both WebRTC Join Call and External Meeting Link (if provided) */}
+                        {interview.type === 'ONLINE' && interview.status === 'CONFIRMED' && (
+                          <div className="mt-3 flex items-center gap-3">
+                            <Button
+                              size="sm"
+                              onClick={() => navigate(`/interview/${interview.id}/video`)}
+                              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                            >
+                              <Video className="w-4 h-4" />
+                              Join Call
+                            </Button>
+                            {interview.meetingLink && (
+                              <a
+                                href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm underline"
+                                title="Use external meeting link as fallback"
+                              >
+                                <Video className="w-4 h-4" />
+                                Join External Meeting
+                              </a>
+                            )}
+                          </div>
+                        )}
+                        {interview.meetingLink && interview.type !== 'ONLINE' && (
                           <div className="mt-3">
                             <a
                               href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
