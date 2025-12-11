@@ -12,5 +12,10 @@ export const AppConfig = {
   USER_SERVICE_URL: process.env.USER_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3000',
   API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://localhost:4001',
   HTTP_CLIENT_TIMEOUT: parseInt(process.env.HTTP_CLIENT_TIMEOUT || '5000', 10),
+  CHAT_SERVICE_URL: process.env.CHAT_SERVICE_URL || 'http://localhost:4007',
+  STUN_SERVER_URL: process.env.STUN_SERVER_URL || 'stun:stun.l.google.com:19302',
+  TURN_SERVER_URL: process.env.TURN_SERVER_URL || '',
+  TURN_USERNAME: process.env.TURN_USERNAME || '',
+  TURN_CREDENTIAL: process.env.TURN_CREDENTIAL || '',
 } as const;
 

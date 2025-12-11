@@ -35,13 +35,16 @@ export class InterviewService implements IInterviewService {
     if (application.status !== ApplicationStatus.SHORTLISTED) {
       throw new AppError('Can only schedule interviews for shortlisted applications', HttpStatusCode.BAD_REQUEST);
     }
+    
+    // Meeting link is optional - can be provided as fallback (e.g., Zoom, Google Meet)
+    // If not provided, we'll use WebRTC video call instead
     const interview = await this._interviewRepository.create({
       applicationId: data.applicationId,
       scheduledAt: new Date(data.scheduledAt),
       duration: data.duration,
       type: data.type,
       location: data.location,
-      meetingLink: data.meetingLink,
+      meetingLink: data.meetingLink, // Optional - external meeting link as fallback
       notes: data.notes
     });
 

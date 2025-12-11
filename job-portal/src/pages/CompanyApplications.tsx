@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, HelpCircle, Settings, ChevronLeft, ChevronRight, User, Bell, LogOut, Plus } from 'lucide-react';
+import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, Settings, ChevronLeft, ChevronRight, User, Bell, LogOut, Plus, X } from 'lucide-react';
 import api from '@/api/axios';
 import ScheduleInterviewModal from '@/components/ScheduleInterviewModal';
 import { _interviewService } from '@/api/interviewService';
@@ -38,6 +38,8 @@ const CompanyApplications = () => {
   const [applicationsWithInterviews, setApplicationsWithInterviews] = useState<Set<string>>(new Set());
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [company, setCompany] = useState<{ companyName?: string; email?: string; profileCompleted?: boolean; isVerified?: boolean } | null>(null);
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [selectedAppForActions, setSelectedAppForActions] = useState<Application | null>(null);
 
   useEffect(() => {
       fetchApplications();
@@ -117,6 +119,17 @@ const CompanyApplications = () => {
   const handleScheduleInterview = useCallback((app: Application) => {
     setSchedulingApp(app);
     setShowScheduleModal(true);
+    setShowActionsModal(false); // Close actions modal when opening schedule modal
+  }, []);
+
+  const handleOpenActionsModal = useCallback((app: Application) => {
+    setSelectedAppForActions(app);
+    setShowActionsModal(true);
+  }, []);
+
+  const handleCloseActionsModal = useCallback(() => {
+    setShowActionsModal(false);
+    setSelectedAppForActions(null);
   }, []);
 
   const handleInterviewScheduled = useCallback(() => {
@@ -356,14 +369,6 @@ const CompanyApplications = () => {
                 <Settings className="h-5 w-5" />
                 Settings
               </button>
-              <button 
-                type="button"
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-                disabled
-              >
-                <HelpCircle className="h-5 w-5" />
-                Help Center
-              </button>
             </div>
           </nav>
           
@@ -559,22 +564,15 @@ const CompanyApplications = () => {
                           >
                             See Application
                           </Button>
-                          {app.status === 'SHORTLISTED' && !applicationsWithInterviews.has(app.id) && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleScheduleInterview(app)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Schedule
-                            </Button>
-                          )}
                           {app.status === 'SHORTLISTED' && (
-                            <ChatButton applicationId={app.id} size="sm" />
+                            <button
+                              onClick={() => handleOpenActionsModal(app)}
+                              className="text-gray-600 hover:text-gray-900 text-xl p-1 rounded hover:bg-gray-100 transition-colors"
+                              title="More actions"
+                            >
+                              ⚙️
+                            </button>
                           )}
-                          <button className="text-gray-400 hover:text-gray-600">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -729,6 +727,41 @@ const CompanyApplications = () => {
           jobTitle={schedulingApp.jobTitle}
           onSuccess={handleInterviewScheduled}
         />
+      )}
+
+      {/* Actions Modal */}
+      {showActionsModal && selectedAppForActions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseActionsModal}>
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Actions</h3>
+                <button
+                  onClick={handleCloseActionsModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                {!applicationsWithInterviews.has(selectedAppForActions.id) && (
+                  <Button
+                    onClick={() => handleScheduleInterview(selectedAppForActions)}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Schedule Interview
+                  </Button>
+                )}
+                
+                <div className="flex justify-center">
+                  <ChatButton applicationId={selectedAppForActions.id} size="default" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

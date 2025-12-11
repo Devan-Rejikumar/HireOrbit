@@ -154,10 +154,8 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
       return false;
     }
 
-    if (formData.type === 'ONLINE' && !formData.meetingLink.trim()) {
-      setError('Meeting link is required for online interviews');
-      return false;
-    }
+    // Meeting link is optional - WebRTC video call will be used by default
+    // Meeting link can be provided as fallback (e.g., Zoom, Google Meet)
 
     return true;
   };
@@ -177,7 +175,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
         duration: formData.duration,
         type: formData.type,
         location: formData.type === 'OFFLINE' ? formData.location : undefined,
-        meetingLink: formData.type === 'ONLINE' ? formData.meetingLink : undefined,
+        meetingLink: formData.type === 'ONLINE' && formData.meetingLink.trim() ? formData.meetingLink : undefined,
         notes: formData.notes || undefined
       };
 
@@ -467,19 +465,22 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
               </div>
             )}
 
-            {/* Meeting Link (for online interviews) */}
+            {/* Meeting Link (for online interviews - optional fallback) */}
             {formData.type === 'ONLINE' && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Meeting Link *
+                  External Meeting Link <span className="text-gray-500 font-normal">(Optional - Fallback)</span>
                 </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  We'll use our built-in video call by default. Add an external link (Zoom, Google Meet, etc.) as a backup option.
+                </p>
                 <div className="relative">
                   <Video className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
                     type="url"
                     value={formData.meetingLink}
                     onChange={(e) => handleInputChange('meetingLink', e.target.value)}
-                    placeholder="https://meet.google.com/abc-defg-hij"
+                    placeholder="https://meet.google.com/abc-defg-hij (optional)"
                     className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   />
                 </div>

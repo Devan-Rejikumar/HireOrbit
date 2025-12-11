@@ -9,6 +9,8 @@ import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
 import { logger } from '../utils/logger';
 import '../types/express';
+import { AppConfig } from '../config/app.config';
+import { RTCIceServer } from '../types/webrtc.types';
 
 @injectable()
 export class InterviewController {
@@ -212,5 +214,45 @@ export class InterviewController {
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(result, Messages.INTERVIEW.DECISION_MADE_SUCCESS)
     );
+  }
+
+
+  async getWebRTCConfig(req: Request, res: Response): Promise<void>{
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if(!userId || !userRole){
+      throw new AppError(Messages.VALIDATION.UNAUTHORIZED_ACCESS,HttpStatusCode.UNAUTHORIZED);
+    }
+
+    const {id: interviewId} = req.params;
+
+    const interview = await this._interviewService.getInterviewById(interviewId);
+
+    const iceServers: RTCIceServer[] = [
+      {
+        urls: AppConfig.STUN_SERVER_URL
+      }
+    ];
+
+    if (AppConfig.TURN_SERVER_URL) {
+      iceServers.push({
+        urls: AppConfig.TURN_SERVER_URL,
+        username: AppConfig.TURN_USERNAME,
+        credential: AppConfig.TURN_CREDENTIAL
+      });
+    }
+
+      const webrtcConfig = {
+      interviewId: interviewId, 
+      roomId: interviewId, 
+      signalingServerUrl: AppConfig.CHAT_SERVICE_URL,
+      iceServers
+    };
+
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse(webrtcConfig, Messages.INTERVIEW.WEBRTC_CONFIG_RETRIEVED_SUCCESS)
+    );
+    
   }
 }
