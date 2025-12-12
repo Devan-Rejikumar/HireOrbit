@@ -141,7 +141,18 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     try {
       setSubmitting(true);
 
-      const applicationData: any = {
+      interface ApplicationData {
+        jobId: string;
+        companyId?: string;
+        coverLetter: string;
+        expectedSalary?: string;
+        availability?: string;
+        experience?: string;
+        resumeUrl?: string;
+        resumeBase64?: string;
+        resumeFileName?: string;
+      }
+      const applicationData: ApplicationData = {
         jobId,
         companyId: companyId || companyName, // Use companyId if available, fallback to companyName
         coverLetter: formData.coverLetter,
@@ -175,7 +186,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       
       toast.success('Application submitted successfully! 🎉');
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Application submission error:', error);
       toast.error(error.message || 'Failed to submit application. Please try again.');
     } finally {

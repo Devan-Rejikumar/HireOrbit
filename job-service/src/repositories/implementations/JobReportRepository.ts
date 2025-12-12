@@ -59,10 +59,10 @@ export class JobReportRepository implements IJobReportRepository {
 
   async findByJobIdAndUserId(jobId: string, userId: string): Promise<JobReport | null> {
     return await this.prisma.jobReport.findFirst({
-        where:{
-            jobId,
-            userId
-        }
-    })
-}
+      where:{
+        jobId,
+        userId,
+      },
+    });
+  }
 }

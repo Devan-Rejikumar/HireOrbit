@@ -12,7 +12,7 @@ export interface InterviewResponse {
     updatedAt: Date;
   }
   
-  export interface InterviewWithDetailsResponse extends InterviewResponse {
+export interface InterviewWithDetailsResponse extends InterviewResponse {
     candidateName: string;
     candidateEmail: string;
     jobTitle: string;

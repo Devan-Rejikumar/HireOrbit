@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -80,8 +81,10 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
           setSuccess('OTP sent to your email!');
         }
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'OTP verification failed. Please try again.');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'OTP verification failed. Please try again.');
     } finally {
       setIsLoading(false);
       setIsGeneratingOTP(false);
@@ -117,25 +120,29 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
         console.log('[RegisterForm] Login successful!');
         setSuccess('Successfully signed up and logged in! You can now navigate to the home page.');
         // Don't auto-navigate - let user see the success message
-      } catch (loginError: any) {
+      } catch (loginError: unknown) {
         console.error('[RegisterForm] Login after Google signup failed:', loginError);
+        const isAxiosError = loginError && typeof loginError === 'object' && 'response' in loginError;
+        const axiosLoginError = isAxiosError ? (loginError as { response?: { status?: number; data?: { error?: string } }; message?: string }) : null;
         console.error('[RegisterForm] Error details:', {
-          status: loginError?.response?.status,
-          data: loginError?.response?.data,
-          message: loginError?.message
+          status: axiosLoginError?.response?.status,
+          data: axiosLoginError?.response?.data,
+          message: axiosLoginError?.message
         });
-        setError(`Account created, but failed to fetch user data: ${loginError?.response?.data?.error || loginError?.message || 'Unknown error'}. Please try logging in manually.`);
+        setError(`Account created, but failed to fetch user data: ${axiosLoginError?.response?.data?.error || axiosLoginError?.message || 'Unknown error'}. Please try logging in manually.`);
         // Don't auto-navigate - let user see the error
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[RegisterForm] Google sign-up error:', error);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } }; message?: string; code?: string }) : null;
       console.error('[RegisterForm] Error details:', {
-        status: error?.response?.status,
-        data: error?.response?.data,
-        message: error?.message,
-        code: error?.code
+        status: axiosError?.response?.status,
+        data: axiosError?.response?.data,
+        message: axiosError?.message,
+        code: axiosError?.code
       });
-      const errorMessage = error?.response?.data?.error || error?.message || 'Google sign-up failed. Please try again.';
+      const errorMessage = axiosError?.response?.data?.error || axiosError?.message || 'Google sign-up failed. Please try again.';
       setError(errorMessage);
       // Don't auto-navigate - let user see the error
     }
@@ -154,7 +161,7 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
           resetForm();
           setShowOTPVerification(false);
           setTimeout(() => {
-            navigate('/login');
+            navigate(ROUTES.LOGIN);
           }, 1500); 
         }
       } else {
@@ -167,12 +174,14 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
           resetForm();
           setShowOTPVerification(false);
           setTimeout(() => {
-            navigate('/login?type=company');
+            navigate(`${ROUTES.LOGIN}?type=company`);
           }, 1500);
         }
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Registration failed. Please try again.');
     }
   };
 
@@ -343,7 +352,7 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <a
-              href="/login"
+              href={ROUTES.LOGIN}
               className="font-semibold text-purple-500 hover:text-purple-600 transition-colors duration-300 hover:underline"
             >
               Sign in

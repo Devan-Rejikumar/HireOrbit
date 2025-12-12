@@ -10,13 +10,13 @@ import {
   getNotificationsPaginatedSchema, 
   markAsReadSchema, 
   markAsUnreadSchema, 
-  deleteNotificationSchema 
+  deleteNotificationSchema, 
 } from '../dto/schemas/notification.schema';
 
 @injectable()
 export class NotificationController {
   constructor(
-    @inject(TYPES.INotificationService) private _notificationService: INotificationService
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
   ) {}
 
   async getNotifications(req: Request, res: Response): Promise<void> {
@@ -24,7 +24,7 @@ export class NotificationController {
     const notifications = await this._notificationService.getNotificationsByRecipient(recipientId);
     
     res.status(StatusCodes.OK).json(
-      buildSuccessResponse(notifications, Messages.NOTIFICATION.RETRIEVED_SUCCESS)
+      buildSuccessResponse(notifications, Messages.NOTIFICATION.RETRIEVED_SUCCESS),
     );
   }
 
@@ -41,11 +41,11 @@ export class NotificationController {
           pagination: {
             page,
             limit,
-            total: notifications.length
-          }
+            total: notifications.length,
+          },
         },
-        Messages.NOTIFICATION.RETRIEVED_SUCCESS
-      )
+        Messages.NOTIFICATION.RETRIEVED_SUCCESS,
+      ),
     );
   }
 
@@ -54,7 +54,7 @@ export class NotificationController {
     const count = await this._notificationService.getUnreadCount(recipientId);
     
     res.status(StatusCodes.OK).json(
-      buildSuccessResponse({ count }, Messages.NOTIFICATION.UNREAD_COUNT_RETRIEVED)
+      buildSuccessResponse({ count }, Messages.NOTIFICATION.UNREAD_COUNT_RETRIEVED),
     );
   }
   async markAsRead(req: Request, res: Response): Promise<void> {
@@ -62,7 +62,7 @@ export class NotificationController {
     await this._notificationService.markAsRead(notificationId);
     
     res.status(StatusCodes.OK).json(
-      buildSuccessResponse(null, Messages.NOTIFICATION.MARKED_AS_READ)
+      buildSuccessResponse(null, Messages.NOTIFICATION.MARKED_AS_READ),
     );
   }
 
@@ -71,7 +71,7 @@ export class NotificationController {
     await this._notificationService.markAsUnread(notificationId);
     
     res.status(StatusCodes.OK).json(
-      buildSuccessResponse(null, Messages.NOTIFICATION.MARKED_AS_UNREAD)
+      buildSuccessResponse(null, Messages.NOTIFICATION.MARKED_AS_UNREAD),
     );
   }
 
@@ -80,7 +80,7 @@ export class NotificationController {
     await this._notificationService.markAllAsRead(recipientId);
     
     res.status(StatusCodes.OK).json(
-      buildSuccessResponse(null, Messages.NOTIFICATION.ALL_MARKED_AS_READ)
+      buildSuccessResponse(null, Messages.NOTIFICATION.ALL_MARKED_AS_READ),
     );
   }
 
@@ -89,7 +89,7 @@ export class NotificationController {
     await this._notificationService.deleteNotification(notificationId);
     
     res.status(StatusCodes.OK).json(
-      buildSuccessResponse(null, Messages.NOTIFICATION.DELETED_SUCCESS)
+      buildSuccessResponse(null, Messages.NOTIFICATION.DELETED_SUCCESS),
     );
   }
 }

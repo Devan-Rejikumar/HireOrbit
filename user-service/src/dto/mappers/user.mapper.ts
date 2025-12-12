@@ -1,4 +1,4 @@
-import { UserResponse, ProfileResponse, ExperienceResponse, EducationResponse } from '../responses/user.response';
+import { UserResponse, ProfileResponse } from '../responses/user.response';
 import { User } from '@prisma/client';
 
 export function mapUserToResponse(user: User): UserResponse {

@@ -2,14 +2,12 @@ import { Router } from 'express';
 import container from '../config/inversify.config';
 import TYPES from '../config/types';
 import { SubscriptionController } from '../controllers/SubscriptionController';
-import { asyncHandler } from '../utils/asyncHandler';
 import { extractUserFromHeaders, requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 const subscriptionController = container.get<SubscriptionController>(TYPES.SubscriptionController);
 
 router.use(extractUserFromHeaders);
-
 
 router.get('/plans', subscriptionController.getPlans);
 router.get('/status', requireAuth, subscriptionController.getSubscriptionStatus);

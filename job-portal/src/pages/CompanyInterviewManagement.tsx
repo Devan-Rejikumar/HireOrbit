@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -79,9 +80,11 @@ const CompanyInterviewManagement = () => {
       setError('');
       const response = await _interviewService.getCompanyInterviews();
       setInterviews(response.data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch interviews:', err);
-      setError(err.response?.data?.message || 'Failed to load interviews');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      setError(axiosError?.response?.data?.message || 'Failed to load interviews');
       toast.error('Failed to load interviews');
     } finally {
       setLoading(false);
@@ -141,9 +144,11 @@ const CompanyInterviewManagement = () => {
       setShowEditModal(false);
       setEditingInterview(null);
       fetchInterviews();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update interview:', err);
-      toast.error(err.response?.data?.message || 'Failed to update interview');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to update interview');
     }
   };
 
@@ -156,18 +161,22 @@ const CompanyInterviewManagement = () => {
       await _interviewService.cancelInterview(interviewId, 'Cancelled by company');
       toast.success('Interview cancelled successfully!');
       fetchInterviews();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to cancel interview:', err);
-      toast.error(err.response?.data?.message || 'Failed to cancel interview');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to cancel interview');
     }
   };
 
   const handleStatusUpdate = async (interviewId: string, newStatus: string) => {
     try {
-      await _interviewService.updateInterview(interviewId, { status: newStatus as any });
+      await _interviewService.updateInterview(interviewId, { 
+        status: newStatus as UpdateInterviewData['status'] 
+      });
       toast.success(`Interview status updated to ${newStatus}`);
       fetchInterviews();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update interview status:', err);
       toast.error('Failed to update interview status');
     }
@@ -183,9 +192,11 @@ const CompanyInterviewManagement = () => {
       setDecisionInterview(null);
       setSelectedDecision(null);
       fetchInterviews();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to make interview decision:', err);
-      toast.error(err.response?.data?.message || 'Failed to make interview decision');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to make interview decision');
     }
   };
 
@@ -231,7 +242,7 @@ const CompanyInterviewManagement = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
                 type="button"
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Home className="h-5 w-5" />
@@ -239,7 +250,7 @@ const CompanyInterviewManagement = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/chat')}
+                onClick={() => navigate(ROUTES.CHAT)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <MessageSquare className="h-5 w-5" />
@@ -247,7 +258,7 @@ const CompanyInterviewManagement = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Building2 className="h-5 w-5" />
@@ -255,7 +266,7 @@ const CompanyInterviewManagement = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/applications')}
+                onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <User className="h-5 w-5" />
@@ -263,7 +274,7 @@ const CompanyInterviewManagement = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/jobs')}
+                onClick={() => navigate(ROUTES.COMPANY_JOBS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Briefcase className="h-5 w-5" />
@@ -279,7 +290,7 @@ const CompanyInterviewManagement = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/subscriptions')}
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CreditCard className="h-5 w-5" />
@@ -291,7 +302,7 @@ const CompanyInterviewManagement = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
               <button 
                 type="button"
-                onClick={() => navigate('/company/settings')} 
+                onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Settings className="h-5 w-5" />

@@ -26,6 +26,34 @@ import CertificationModal from '@/components/CertificationModal';
 import AchievementModal from '@/components/AchievementModal';
 import VerificationModal from '@/components/VerificationModal';
 
+// Helper function to extract error message from unknown error
+const extractErrorMessage = (error: unknown, defaultMessage: string): string => {
+  const isAxiosError = error && typeof error === 'object' && 'response' in error;
+  const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string; message?: string } }; message?: string }) : null;
+  
+  if (axiosError?.response?.data?.error) {
+    try {
+      // Try to parse Zod validation errors
+      const errorData = JSON.parse(axiosError.response.data.error);
+      if (Array.isArray(errorData) && errorData.length > 0) {
+        // Extract the first validation error message
+        return errorData[0].message || 'Validation error';
+      } else {
+        return axiosError.response.data.error;
+      }
+    } catch {
+      // If parsing fails, use the raw error
+      return axiosError.response.data.error;
+    }
+  } else if (axiosError?.response?.data?.message) {
+    return axiosError.response.data.message;
+  } else if (axiosError?.message) {
+    return axiosError.message;
+  }
+  
+  return defaultMessage;
+};
+
 interface Experience {
   id: string;
   title: string;
@@ -106,9 +134,9 @@ const UserProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
   const [isExperienceModalOpen, setIsExperienceModalOpen] = useState(false);
-  const [editingExperience, setEditingExperience] = useState<any>(null);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
   const [isEducationModalOpen, setIsEducationModalOpen] = useState(false);
-  const [editingEducation, setEditingEducation] = useState<any>(null);
+  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
   const [isCertificationModalOpen, setIsCertificationModalOpen] = useState(false);
   const [editingCertification, setEditingCertification] = useState<Certification | null>(null);
   const [isAchievementModalOpen, setIsAchievementModalOpen] = useState(false);
@@ -209,7 +237,16 @@ const UserProfile = () => {
     fetchProfile();
   };
 
-  const handleSaveProfile = async (profileData: Record<string, any>) => {
+  interface ProfileUpdateData {
+    headline?: string;
+    about?: string;
+    location?: string;
+    phone?: string;
+    profilePicture?: string;
+    [key: string]: unknown;
+  }
+
+  const handleSaveProfile = async (profileData: ProfileUpdateData) => {
     try {
       // Always send as JSON now - no more multipart/form-data
       const response = await api.put('/profile/', profileData, {
@@ -234,9 +271,9 @@ const UserProfile = () => {
         await fetchProfile();
         toast.success('Profile updated successfully!');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Profile update error:', error);
-      throw new Error(error.response?.data?.error || 'Failed to update profile');
+      throw new Error(extractErrorMessage(error, 'Failed to update profile'));
     }
   };
 
@@ -247,34 +284,12 @@ const UserProfile = () => {
         toast.success('Certification added successfully!');
         await fetchProfile();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding certification:', error);
-      console.error('Error response data:', error.response?.data);
-      
-      // Extract and parse error message
-      let errorMessage = 'Failed to add certification';
-      
-      if (error.response?.data?.error) {
-        try {
-          // Try to parse Zod validation errors
-          const errorData = JSON.parse(error.response.data.error);
-          if (Array.isArray(errorData) && errorData.length > 0) {
-            // Extract the first validation error message
-            errorMessage = errorData[0].message || 'Validation error';
-          } else {
-            errorMessage = error.response.data.error;
-          }
-        } catch {
-          // If parsing fails, use the raw error
-          errorMessage = error.response.data.error;
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
+      console.error('Error response data:', axiosError?.response?.data);
+      toast.error(extractErrorMessage(error, 'Failed to add certification'));
     }
   };
 
@@ -285,22 +300,12 @@ const UserProfile = () => {
         toast.success('Certification deleted successfully!');
         await fetchProfile();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting certification:', error);
-      console.error('Error response data:', error.response?.data);
-      
-      // Extract error message from different possible locations
-      let errorMessage = 'Failed to delete certification';
-      
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
+      console.error('Error response data:', axiosError?.response?.data);
+      toast.error(extractErrorMessage(error, 'Failed to delete certification'));
     }
   };
 
@@ -314,34 +319,12 @@ const UserProfile = () => {
         toast.success('Certification updated successfully!');
         await fetchProfile();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating certification:', error);
-      console.error('Error response data:', error.response?.data);
-      
-      // Extract and parse error message
-      let errorMessage = 'Failed to update certification';
-      
-      if (error.response?.data?.error) {
-        try {
-          // Try to parse Zod validation errors
-          const errorData = JSON.parse(error.response.data.error);
-          if (Array.isArray(errorData) && errorData.length > 0) {
-            // Extract the first validation error message
-            errorMessage = errorData[0].message || 'Validation error';
-          } else {
-            errorMessage = error.response.data.error;
-          }
-        } catch {
-          // If parsing fails, use the raw error
-          errorMessage = error.response.data.error;
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
+      console.error('Error response data:', axiosError?.response?.data);
+      toast.error(extractErrorMessage(error, 'Failed to update certification'));
     }
   };
 
@@ -352,34 +335,12 @@ const UserProfile = () => {
         toast.success('Achievement added successfully!');
         await fetchProfile();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding achievement:', error);
-      console.error('Error response data:', error.response?.data);
-      
-      // Extract and parse error message
-      let errorMessage = 'Failed to add achievement';
-      
-      if (error.response?.data?.error) {
-        try {
-          // Try to parse Zod validation errors
-          const errorData = JSON.parse(error.response.data.error);
-          if (Array.isArray(errorData) && errorData.length > 0) {
-            // Extract the first validation error message
-            errorMessage = errorData[0].message || 'Validation error';
-          } else {
-            errorMessage = error.response.data.error;
-          }
-        } catch {
-          // If parsing fails, use the raw error
-          errorMessage = error.response.data.error;
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
+      console.error('Error response data:', axiosError?.response?.data);
+      toast.error(extractErrorMessage(error, 'Failed to add achievement'));
     }
   };
 
@@ -390,22 +351,12 @@ const UserProfile = () => {
         toast.success('Achievement deleted successfully!');
         await fetchProfile();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting achievement:', error);
-      console.error('Error response data:', error.response?.data);
-      
-      // Extract error message from different possible locations
-      let errorMessage = 'Failed to delete achievement';
-      
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
+      console.error('Error response data:', axiosError?.response?.data);
+      toast.error(extractErrorMessage(error, 'Failed to delete achievement'));
     }
   };
 
@@ -419,34 +370,12 @@ const UserProfile = () => {
         toast.success('Achievement updated successfully!');
         await fetchProfile();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating achievement:', error);
-      console.error('Error response data:', error.response?.data);
-      
-      // Extract and parse error message
-      let errorMessage = 'Failed to update achievement';
-      
-      if (error.response?.data?.error) {
-        try {
-          // Try to parse Zod validation errors
-          const errorData = JSON.parse(error.response.data.error);
-          if (Array.isArray(errorData) && errorData.length > 0) {
-            // Extract the first validation error message
-            errorMessage = errorData[0].message || 'Validation error';
-          } else {
-            errorMessage = error.response.data.error;
-          }
-        } catch {
-          // If parsing fails, use the raw error
-          errorMessage = error.response.data.error;
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
+      console.error('Error response data:', axiosError?.response?.data);
+      toast.error(extractErrorMessage(error, 'Failed to update achievement'));
     }
   };
 

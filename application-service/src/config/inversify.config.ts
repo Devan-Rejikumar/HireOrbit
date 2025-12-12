@@ -17,11 +17,11 @@ import { IUserServiceClient } from '../services/interfaces/IUserServiceClient';
 import { UserServiceClient } from '../services/implementations/UserServiceClient';
 import { IJobServiceClient } from '../services/interfaces/IJobServiceClient';
 import { JobServiceClient } from '../services/implementations/JobServiceClient';
-import {TYPES} from './types';
+import { TYPES } from './types';
 
 const container = new Container();
 
-process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:devan@localhost:5432/application_service_db";
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:devan@localhost:5432/application_service_db';
 
 container.bind<PrismaClient>(TYPES.PrismaClient).toConstantValue(new PrismaClient());
 container.bind<IApplicationRepository>(TYPES.IApplicationRepository).to(ApplicationRepository);
@@ -34,7 +34,5 @@ container.bind<IInterviewService>(TYPES.IInterviewService).to(InterviewService);
 container.bind<InterviewController>(TYPES.InterviewController).to(InterviewController);
 container.bind<IUserServiceClient>(TYPES.IUserServiceClient).to(UserServiceClient);
 container.bind<IJobServiceClient>(TYPES.IJobServiceClient).to(JobServiceClient);
-
-
 
 export { container };

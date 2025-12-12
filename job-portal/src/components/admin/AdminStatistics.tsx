@@ -107,19 +107,21 @@ const AdminStatistics: React.FC = () => {
           if (revenueResponse?.data?.statistics) {
             setTotalRevenue(revenueResponse.data.statistics.totalRevenue);
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error fetching statistics:', error);
+          const isAxiosError = error && typeof error === 'object' && 'response' in error;
+          const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
           
           // Handle specific error types
-          if (error.response?.status === 503) {
+          if (axiosError?.response?.status === 503) {
             toast.error('Some services are temporarily unavailable. Please try again in a moment.', {
               duration: 5000
             });
-          } else if (error.response?.status === 429) {
+          } else if (axiosError?.response?.status === 429) {
             toast.error('Too many requests. Please wait a moment before trying again.', {
               duration: 5000
             });
-          } else if (error.response?.status >= 500) {
+          } else if (axiosError?.response?.status && axiosError.response.status >= 500) {
             toast.error('Server error. Please try again later.', {
               duration: 5000
             });

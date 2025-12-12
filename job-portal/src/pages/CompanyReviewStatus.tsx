@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -79,19 +80,21 @@ const CompanyReviewStatus = () => {
         console.error('❌ CompanyReviewStatus: Actual structure:', response.data);
         setError('Invalid response format from server');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ CompanyReviewStatus: Error fetching company profile');
       console.error('❌ CompanyReviewStatus: Error details:', error);
-      console.error('❌ CompanyReviewStatus: Error response:', error.response);
-      console.error('❌ CompanyReviewStatus: Error status:', error.response?.status);
-      console.error('❌ CompanyReviewStatus: Error data:', error.response?.data);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } } }) : null;
+      console.error('❌ CompanyReviewStatus: Error response:', axiosError?.response);
+      console.error('❌ CompanyReviewStatus: Error status:', axiosError?.response?.status);
+      console.error('❌ CompanyReviewStatus: Error data:', axiosError?.response?.data);
       
-      if (error.response?.status === 401) {
+      if (axiosError?.response?.status === 401) {
         setError('Authentication required. Please login again.');
-      } else if (error.response?.status === 404) {
+      } else if (axiosError?.response?.status === 404) {
         setError('Company profile not found. Please complete your profile setup.');
-      } else if (error.response?.data?.error) {
-        setError(`Server error: ${error.response.data.error}`);
+      } else if (axiosError?.response?.data?.error) {
+        setError(`Server error: ${axiosError.response.data.error}`);
       } else {
         setError('Failed to load company profile. Please try again.');
       }
@@ -123,16 +126,21 @@ const CompanyReviewStatus = () => {
       
       // Navigate to profile setup to complete the reapplication
       console.log('🚀 CompanyReviewStatus: Navigating to profile setup for reapplication');
-      navigate('/company/profile-setup');
+      navigate(ROUTES.COMPANY_PROFILE_SETUP);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ CompanyReviewStatus: Error during reapply');
       console.error('❌ CompanyReviewStatus: Error details:', error);
-      console.error('❌ CompanyReviewStatus: Error response:', error.response);
-      console.error('❌ CompanyReviewStatus: Error status:', error.response?.status);
-      console.error('❌ CompanyReviewStatus: Error data:', error.response?.data);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
+      console.error('❌ CompanyReviewStatus: Error response:', axiosError?.response);
+      console.error('❌ CompanyReviewStatus: Error status:', axiosError?.response?.status);
+      console.error('❌ CompanyReviewStatus: Error data:', axiosError?.response?.data);
       
-      const errorMessage = error.response?.data?.error || 'Failed to initiate reapplication. Please try again.';
+      const errorData = axiosError?.response?.data && typeof axiosError.response.data === 'object' && 'error' in axiosError.response.data
+        ? (axiosError.response.data as { error?: string }).error
+        : undefined;
+      const errorMessage = errorData || 'Failed to initiate reapplication. Please try again.';
       toast.error(errorMessage);
       setError(errorMessage);
     } finally {
@@ -233,7 +241,7 @@ const CompanyReviewStatus = () => {
             <h2 className="text-xl font-semibold mb-2">Error Loading Profile</h2>
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="space-y-2">
-              <Button onClick={() => navigate('/company/profile-setup')} className="w-full">
+              <Button onClick={() => navigate(ROUTES.COMPANY_PROFILE_SETUP)} className="w-full">
                 Go to Profile Setup
               </Button>
               <Button 
@@ -296,7 +304,7 @@ const CompanyReviewStatus = () => {
               <div className="flex gap-3 mt-6">
                 {statusInfo.status === 'incomplete' && (
                   <Button 
-                    onClick={() => navigate('/company/profile-setup')}
+                    onClick={() => navigate(ROUTES.COMPANY_PROFILE_SETUP)}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
                     Complete Profile
@@ -315,7 +323,7 @@ const CompanyReviewStatus = () => {
                 
                 {statusInfo.status === 'approved' && (
                   <Button 
-                    onClick={() => navigate('/company/dashboard')}
+                    onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     Go to Dashboard
@@ -396,7 +404,7 @@ const CompanyReviewStatus = () => {
           </Button>
           <Button 
             variant="outline" 
-            onClick={() => navigate('/login')}
+            onClick={() => navigate(ROUTES.LOGIN)}
           >
             Logout
           </Button>

@@ -6,12 +6,11 @@ import { IJobApiRepository } from '../../repositories/implementations/JobApiRepo
 import { IApplicationApiRepository } from '../../repositories/implementations/ApplicationApiRepository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User } from '@prisma/client';
 import { IAdminService } from '../interfaces/IAdminService';
 import { IUserService } from '../interfaces/IUserService';
 import { Company, CompanyApprovalResponse } from '../../types/company';
-import { UserResponse, AuthResponse } from '../../dto/responses/user.response';
-import { mapUserToResponse, mapUserToAuthResponse } from '../../dto/mappers/user.mapper';
+import { UserResponse } from '../../dto/responses/user.response';
+import { mapUserToResponse } from '../../dto/mappers/user.mapper';
 import { AdminTokenPayload } from '../../types/auth';
 import { UserType } from '../../enums/UserType';
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from '../../constants/TimeConstants';
@@ -69,7 +68,7 @@ export class AdminService implements IAdminService {
       const newAccessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
       
       return { accessToken: newAccessToken };
-    } catch (error) {
+    } catch {
       throw new Error('Invalid admin refresh token');
     }
   }
@@ -77,7 +76,7 @@ export class AdminService implements IAdminService {
   async logoutWithToken(refreshToken: string): Promise<void> {
     try {
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as AdminTokenPayload;
-    } catch (error) {
+    } catch {
       throw new Error('Invalid refresh token');
     }
   }
@@ -258,7 +257,7 @@ export class AdminService implements IAdminService {
 
       console.log('[AdminService] Successfully compiled statistics response');
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AdminService] Unexpected error in getDashboardStatistics:', error);
       // Return default values so the dashboard can still load
       const endDate = new Date();

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -79,7 +80,7 @@ const CompanySettings = () => {
   };
 
   const handleLogout = async () => {
-    navigate('/login', { replace: true });
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   if (loading) {
@@ -129,7 +130,7 @@ const CompanySettings = () => {
                 }`}
                 onClick={() => {
                   if (company?.profileCompleted && company?.isVerified) {
-                    navigate('/company/post-job');
+                    navigate(ROUTES.COMPANY_POST_JOB);
                   }
                 }}
                 disabled={!company?.profileCompleted || !company?.isVerified}
@@ -152,7 +153,7 @@ const CompanySettings = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate('/company/review-status')}
+                    onClick={() => navigate(ROUTES.COMPANY_REVIEW_STATUS)}
                     className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
                     Check Status
@@ -189,7 +190,7 @@ const CompanySettings = () => {
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Home className="h-5 w-5" />
@@ -200,7 +201,7 @@ const CompanySettings = () => {
                 Messages
               </button>
               <button 
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Building2 className="h-5 w-5" />
@@ -211,21 +212,21 @@ const CompanySettings = () => {
                 All Applicants
               </button>
               <button 
-                onClick={() => navigate('/company/jobs')}
+                onClick={() => navigate(ROUTES.COMPANY_JOBS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <GraduationCap className="h-5 w-5" />
                 Job Listing
               </button>
               <button 
-                onClick={() => navigate('/company/interviews')}
+                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CalendarIcon className="h-5 w-5" />
                 Interview Management
               </button>
               <button 
-                onClick={() => navigate('/subscriptions')}
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CreditCard className="h-5 w-5" />

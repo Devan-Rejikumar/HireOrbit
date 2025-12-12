@@ -124,7 +124,7 @@ const AdminRevenue: React.FC = () => {
       if (response.data?.statistics) {
         setStatistics(response.data.statistics);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching revenue statistics:', error);
       toast.error('Failed to load revenue statistics', {
         duration: 4000
@@ -151,7 +151,7 @@ const AdminRevenue: React.FC = () => {
         setTransactionsTotal(response.data.total);
         setTransactionsPage(response.data.page);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching transactions:', error);
       toast.error('Failed to load transaction history', {
         duration: 4000
@@ -176,7 +176,7 @@ const AdminRevenue: React.FC = () => {
       // Refresh data after sync
       await fetchStatistics();
       await fetchTransactions(1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error syncing transactions:', error);
       toast.error('Failed to sync transactions from Stripe', {
         duration: 4000
@@ -272,8 +272,9 @@ const AdminRevenue: React.FC = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
-            return `Revenue: ${formatCurrency(context.parsed.y || context.parsed)}`;
+          label: (context: { parsed: { y?: number } | number }) => {
+            const value = typeof context.parsed === 'number' ? context.parsed : context.parsed.y;
+            return `Revenue: ${formatCurrency(value || 0)}`;
           },
         },
       },
@@ -290,7 +291,7 @@ const AdminRevenue: React.FC = () => {
       y: {
         ticks: {
           color: '#9ca3af',
-          callback: (value: any) => formatCurrency(value),
+          callback: (value: number | string) => formatCurrency(typeof value === 'number' ? value : parseFloat(value) || 0),
         },
         grid: {
           color: 'rgba(75, 85, 99, 0.3)',
@@ -312,7 +313,7 @@ const AdminRevenue: React.FC = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
+          label: (context: { label?: string; parsed: number }) => {
             const label = context.label || '';
             const value = formatCurrency(context.parsed);
             return `${label}: ${value}`;

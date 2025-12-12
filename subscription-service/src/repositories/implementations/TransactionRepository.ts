@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { PrismaClient, Transaction } from '@prisma/client';
+import { PrismaClient, Transaction, Prisma } from '@prisma/client';
 import { ITransactionRepository, CreateTransactionInput, TransactionFilters } from '../interfaces/ITransactionRepository';
 
 const prisma = new PrismaClient();
@@ -49,7 +49,7 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async findMany(filters?: TransactionFilters): Promise<Transaction[]> {
-    const where: any = {};
+    const where: Prisma.TransactionWhereInput = {};
 
     if (filters?.userId) {
       where.userId = filters.userId;
@@ -98,7 +98,7 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async count(filters?: TransactionFilters): Promise<number> {
-    const where: any = {};
+    const where: Prisma.TransactionWhereInput = {};
 
     if (filters?.userId) {
       where.userId = filters.userId;
@@ -136,7 +136,7 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async getTotalRevenue(filters?: Omit<TransactionFilters, 'limit' | 'offset'>): Promise<number> {
-    const where: any = {
+    const where: Prisma.TransactionWhereInput = {
       status: 'succeeded', // Only count successful payments
     };
 
@@ -180,7 +180,7 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async getRevenueByUserType(filters?: Omit<TransactionFilters, 'limit' | 'offset'>): Promise<{ user: number; company: number }> {
-    const where: any = {
+    const where: Prisma.TransactionWhereInput = {
       status: 'succeeded',
     };
 
@@ -230,7 +230,7 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async getRevenueByPlan(filters?: Omit<TransactionFilters, 'limit' | 'offset'>): Promise<Array<{ planId: string; planName: string; userType: string; revenue: number }>> {
-    const where: any = {
+    const where: Prisma.TransactionWhereInput = {
       status: 'succeeded',
     };
 
@@ -279,7 +279,7 @@ export class TransactionRepository implements ITransactionRepository {
   }
 
   async getRevenueByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month', userType?: 'user' | 'company'): Promise<Array<{ period: string; revenue: number }>> {
-    const where: any = {
+    const where: Prisma.TransactionWhereInput = {
       status: 'succeeded',
       paymentDate: {
         gte: startDate,

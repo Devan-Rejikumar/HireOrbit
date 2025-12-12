@@ -4,7 +4,7 @@ import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class EmailService {
-  private transporter = nodemailer.createTransport({
+  private _transporter = nodemailer.createTransport({
     host: AppConfig.SMTP_HOST,
     port: AppConfig.SMTP_PORT,
     secure: false,
@@ -29,7 +29,7 @@ export class EmailService {
         html: `<p>Your OTP code is: <b>${otp}</b></p>`,
       };
       
-      await this.transporter.sendMail(mailOptions);
+      await this._transporter.sendMail(mailOptions);
       console.log(` [EmailService] Email sent successfully to ${email}`);
     } catch (error) {
       console.log(' [EmailService] Error in sendOTP:', error);
@@ -54,7 +54,7 @@ export class EmailService {
       `,
       };
 
-      await this.transporter.sendMail(mailOptions);
+      await this._transporter.sendMail(mailOptions);
       console.log(`[EmailService] Password reset OTP sent successfully to ${email}`);
     } catch (error) {
       console.log('[EmailService] Error in sendPasswordResetOTP:', error);

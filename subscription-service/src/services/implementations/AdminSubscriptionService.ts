@@ -58,7 +58,7 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
             input.priceMonthly,
             'inr',
             'month',
-            { planName: input.name, userType: input.userType, billingPeriod: 'monthly' }
+            { planName: input.name, userType: input.userType, billingPeriod: 'monthly' },
           );
           stripePriceIdMonthly = monthlyPrice.id;
         }
@@ -68,13 +68,14 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
             input.priceYearly,
             'inr',
             'year',
-            { planName: input.name, userType: input.userType, billingPeriod: 'yearly' }
+            { planName: input.name, userType: input.userType, billingPeriod: 'yearly' },
           );
           stripePriceIdYearly = yearlyPrice.id;
         }
-      } catch (error: any) {
-        console.error('Failed to create Stripe product/prices', { error: error.message });
-        throw new AppError(`Failed to create Stripe product: ${error.message}`, HttpStatusCode.INTERNAL_SERVER_ERROR);
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.error('Failed to create Stripe product/prices', { error: err.message });
+        throw new AppError(`Failed to create Stripe product: ${err.message || 'Unknown error'}`, HttpStatusCode.INTERNAL_SERVER_ERROR);
       }
     }
     const plan = await this._planRepository.create({
@@ -103,7 +104,7 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
         await this.addFeaturesToPlan(id, input.features);
       }
     }
-    const updateData: any = {};
+    const updateData: Partial<SubscriptionPlan> = {};
     if (input.name !== undefined) updateData.name = input.name;
     const priceChanged = (input.priceMonthly !== undefined && input.priceMonthly !== plan.priceMonthly) ||
                          (input.priceYearly !== undefined && input.priceYearly !== plan.priceYearly);
@@ -146,21 +147,23 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
       throw new AppError('Yearly price must be non-negative', HttpStatusCode.BAD_REQUEST);
     }
 
-    const updateData: any = {};
+    const updateData: Partial<SubscriptionPlan> = {};
     let productId: string | null = null;
     if (plan.stripePriceIdMonthly) {
       try {
         const existingPrice = await this._stripeService.getPrice(plan.stripePriceIdMonthly);
         productId = typeof existingPrice.product === 'string' ? existingPrice.product : existingPrice.product.id;
-      } catch (error: any) {
-        console.error('Failed to retrieve product ID from monthly price', { error: error.message });
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.error('Failed to retrieve product ID from monthly price', { error: err.message });
       }
     } else if (plan.stripePriceIdYearly) {
       try {
         const existingPrice = await this._stripeService.getPrice(plan.stripePriceIdYearly);
         productId = typeof existingPrice.product === 'string' ? existingPrice.product : existingPrice.product.id;
-      } catch (error: any) {
-        console.error('Failed to retrieve product ID from yearly price', { error: error.message });
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.error('Failed to retrieve product ID from yearly price', { error: err.message });
       }
     }
 
@@ -169,8 +172,9 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
       if (plan.stripePriceIdMonthly) {
         try {
           await this._stripeService.updatePrice(plan.stripePriceIdMonthly, undefined, false);
-        } catch (error: any) {
-          console.error('Failed to archive old monthly price', { error: error.message });
+        } catch (error: unknown) {
+          const err = error as { message?: string };
+          console.error('Failed to archive old monthly price', { error: err.message });
         }
       }
       if (input.priceMonthly > 0 && productId) {
@@ -180,12 +184,13 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
             input.priceMonthly,
             'inr',
             'month',
-            { planName: plan.name, userType: plan.userType, billingPeriod: 'monthly' }
+            { planName: plan.name, userType: plan.userType, billingPeriod: 'monthly' },
           );
           updateData.stripePriceIdMonthly = newMonthlyPrice.id;
-        } catch (error: any) {
-          console.error('Failed to create new monthly price in Stripe', { error: error.message });
-          throw new AppError(`Failed to create new Stripe price: ${error.message}`, HttpStatusCode.INTERNAL_SERVER_ERROR);
+        } catch (error: unknown) {
+          const err = error as { message?: string };
+          console.error('Failed to create new monthly price in Stripe', { error: err.message });
+          throw new AppError(`Failed to create new Stripe price: ${err.message || 'Unknown error'}`, HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
       } else if (input.priceMonthly === 0 || input.priceMonthly === null) {
         updateData.stripePriceIdMonthly = null;
@@ -197,8 +202,9 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
       if (plan.stripePriceIdYearly) {
         try {
           await this._stripeService.updatePrice(plan.stripePriceIdYearly, undefined, false);
-        } catch (error: any) {
-          console.error('Failed to archive old yearly price', { error: error.message });
+        } catch (error: unknown) {
+          const err = error as { message?: string };
+          console.error('Failed to archive old yearly price', { error: err.message });
         }
       }
 
@@ -209,12 +215,13 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
             input.priceYearly,
             'inr',
             'year',
-            { planName: plan.name, userType: plan.userType, billingPeriod: 'yearly' }
+            { planName: plan.name, userType: plan.userType, billingPeriod: 'yearly' },
           );
           updateData.stripePriceIdYearly = newYearlyPrice.id;
-        } catch (error: any) {
-          console.error('Failed to create new yearly price in Stripe', { error: error.message });
-          throw new AppError(`Failed to create new Stripe price: ${error.message}`, HttpStatusCode.INTERNAL_SERVER_ERROR);
+        } catch (error: unknown) {
+          const err = error as { message?: string };
+          console.error('Failed to create new yearly price in Stripe', { error: err.message });
+          throw new AppError(`Failed to create new Stripe price: ${err.message || 'Unknown error'}`, HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
       } else if (input.priceYearly === 0 || input.priceYearly === null) {
         updateData.stripePriceIdYearly = null;
@@ -234,7 +241,7 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
     if (activeSubscriptions > 0) {
       throw new AppError(
         `Cannot delete plan. There are ${activeSubscriptions} active subscription(s) using this plan.`,
-        HttpStatusCode.CONFLICT
+        HttpStatusCode.CONFLICT,
       );
     }
 
@@ -254,9 +261,10 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
             planId,
           },
         });
-      } catch (error: any) {
-        if (!error.message?.includes('Unique constraint')) {
-          console.error('Failed to add feature to plan', { error: error.message, featureName, planId });
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        if (!err.message?.includes('Unique constraint')) {
+          console.error('Failed to add feature to plan', { error: err.message, featureName, planId });
         }
       }
     }
@@ -268,23 +276,23 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
     });
   }
 
-  async createDiscount(input: any): Promise<any> {
+  async createDiscount(_input: Record<string, unknown>): Promise<Record<string, unknown>> {
     throw new AppError('Discount functionality not implemented', HttpStatusCode.INTERNAL_SERVER_ERROR);
   }
 
-  async updateDiscount(id: string, input: any): Promise<any> {
+  async updateDiscount(_id: string, _input: Record<string, unknown>): Promise<Record<string, unknown>> {
     throw new AppError('Discount functionality not implemented', HttpStatusCode.INTERNAL_SERVER_ERROR);
   }
 
-  async deleteDiscount(id: string): Promise<void> {
+  async deleteDiscount(_id: string): Promise<void> {
     throw new AppError('Discount functionality not implemented', HttpStatusCode.INTERNAL_SERVER_ERROR);
   }
 
-  async getAllDiscounts(): Promise<any[]> {
+  async getAllDiscounts(): Promise<Record<string, unknown>[]> {
     return [];
   }
 
-  async getDiscountsByPlan(planId: string): Promise<any[]> {
+  async getDiscountsByPlan(_planId: string): Promise<Record<string, unknown>[]> {
     return [];
   }
 }

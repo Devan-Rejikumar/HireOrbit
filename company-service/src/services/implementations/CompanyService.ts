@@ -46,7 +46,7 @@ export class CompanyService implements ICompanyService {
    * @param password 
    * @returns 
    */
-  async login(email: string, password: string): Promise<CompanyAuthResponse> {
+  async login(email: string, _password: string): Promise<CompanyAuthResponse> {
     
     const company = await this._companyRepository.findByEmail(email);
     if (!company) throw new Error('Invalid credentials');
@@ -55,11 +55,11 @@ export class CompanyService implements ICompanyService {
       companyId: company.id,
       email: company.email,
       role: 'company',
-      userType: 'company'
+      userType: 'company',
     };
     const accessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
     const refreshToken = jwt.sign(tokenPayload, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: REFRESH_TOKEN_EXPIRY });
-    return mapCompanyToAuthResponse(company, { accessToken, refreshToken })
+    return mapCompanyToAuthResponse(company, { accessToken, refreshToken });
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
@@ -76,7 +76,7 @@ export class CompanyService implements ICompanyService {
 
       const newAccessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
       return { accessToken: newAccessToken };
-    } catch (error) {
+    } catch {
       throw new Error('Invalid refresh token');
     }
   }
@@ -121,15 +121,13 @@ export class CompanyService implements ICompanyService {
     return mapCompaniesToResponse(companies);
   }
 
-
   async getAllCompaniesWithPagination(page: number = 1, limit: number = 10): Promise<PaginationResult<CompanyResponse>> {
     const result = await this._companyRepository.getAllCompaniesWithPagination(page, limit);
     return {
       ...result,
-      data: mapCompaniesToResponse(result.data)
+      data: mapCompaniesToResponse(result.data),
     };
   }
-
 
   async blockCompany(id: string): Promise<void> {
     await this._companyRepository.blockCompany(id);
@@ -143,7 +141,7 @@ export class CompanyService implements ICompanyService {
     return mapCompanyToResponse(company);
   }
 
-  async completeStep2(companyId: string, step2Data: CompanyRegistrationStep2,): Promise<CompanyResponse> {
+  async completeStep2(companyId: string, step2Data: CompanyRegistrationStep2): Promise<CompanyResponse> {
     try {
       console.log('COMPANY-SERVICE Checking if company exists...');
       const existingCompany = await this._companyRepository.getCompanyProfile(companyId);
@@ -175,16 +173,11 @@ export class CompanyService implements ICompanyService {
     }
   }
 
-  async completeStep3(companyId: string, step3Data: CompanyRegistrationStep3,): Promise<CompanyResponse> {
-    const company = await this._companyRepository.updateCompanyProfile(
-      companyId,
-      step3Data,
-    );
-
+  async completeStep3(companyId: string, step3Data: CompanyRegistrationStep3): Promise<CompanyResponse> {
     const updatedCompany = await this._companyRepository.updateCompanyProfile(companyId, {
       ...step3Data,
       profileCompleted: true,
-    } as any);
+    } as Partial<CompanyProfileData>);
 
     await this._companyRepository.updateProfileStep(companyId, {
       contactInfoCompleted: true,
@@ -199,7 +192,7 @@ export class CompanyService implements ICompanyService {
     return company ? mapCompanyToResponse(company) : null;
   }
 
-  async updateCompanyProfile(companyId: string, profileData: Partial<CompanyProfileData>,): Promise<CompanyResponse> {
+  async updateCompanyProfile(companyId: string, profileData: Partial<CompanyProfileData>): Promise<CompanyResponse> {
     const company = await this._companyRepository.updateCompanyProfile(companyId, profileData);
     return mapCompanyToResponse(company);
   }
@@ -208,7 +201,7 @@ export class CompanyService implements ICompanyService {
     return this._companyRepository.getProfileStep(companyId);
   }
 
-  async markStepCompleted(companyId: string, step: number,): Promise<CompanyProfileStep> {
+  async markStepCompleted(companyId: string, step: number): Promise<CompanyProfileStep> {
     const updateData: Partial<CompanyProfileStepData> = {
       currentStep: step + 1,
     };
@@ -223,8 +216,6 @@ export class CompanyService implements ICompanyService {
     const companies = await this._companyRepository.getPendingCompanies();
     return mapCompaniesToResponse(companies);
   }
-
-
 
   async getAllCompaniesForAdmin(): Promise<CompanyResponse[]> {
     const companies = await this._companyRepository.getAllCompaniesForAdmin();
@@ -243,7 +234,7 @@ export class CompanyService implements ICompanyService {
     return mapCompanyToResponse(company);
   }
 
-  async rejectCompany(companyId: string, reason: string, adminId: string,): Promise<CompanyResponse> {
+  async rejectCompany(companyId: string, reason: string, adminId: string): Promise<CompanyResponse> {
     const company = await this._companyRepository.getCompanyProfile(companyId);
     if (company) {
       await this._emailService.sendRejectionEmail(
@@ -257,12 +248,11 @@ export class CompanyService implements ICompanyService {
     return mapCompanyToResponse(rejectedCompany);
   }
 
-
   async getAllCompaniesForAdminWithPagination(page: number = 1, limit: number = 10): Promise<PaginationResult<CompanyResponse>> {
     const result = await this._companyRepository.getAllCompaniesForAdminWithPagination(page, limit);
     return {
       ...result,
-      data: mapCompaniesToResponse(result.data)
+      data: mapCompaniesToResponse(result.data),
     };
   }
 
@@ -278,7 +268,7 @@ export class CompanyService implements ICompanyService {
     try {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as CompanyTokenPayload;
       console.log(`Company ${decoded.email} logged out successfully`);
-    } catch (error) {
+    } catch {
       console.log('Invalid company refresh token during logout');
     }
   }
@@ -328,7 +318,7 @@ export class CompanyService implements ICompanyService {
 
     return {
       company: mapCompanyToResponse(updatedCompany),
-      message: 'Reapplication initiated successfully. You can now complete your profile from step 2.'
+      message: 'Reapplication initiated successfully. You can now complete your profile from step 2.',
     };
   }
 
@@ -362,7 +352,7 @@ export class CompanyService implements ICompanyService {
   async getCompanyStatisticsByTimePeriod(
     startDate: Date, 
     endDate: Date, 
-    groupBy: 'day' | 'week' | 'month' | 'year'
+    groupBy: 'day' | 'week' | 'month' | 'year',
   ): Promise<Array<{ date: string; count: number }>> {
     return this._companyRepository.getCompanyStatisticsByTimePeriod(startDate, endDate, groupBy);
   }

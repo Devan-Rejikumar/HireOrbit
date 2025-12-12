@@ -19,7 +19,7 @@ import { buildErrorResponse } from 'shared-dto';
 export const extractUserFromHeaders = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const authReq = req as AuthenticatedRequest;
   const headerUserId = req.headers['x-user-id'] as string;
@@ -33,7 +33,7 @@ export const extractUserFromHeaders = (
       userId: isCompany ? undefined : headerUserId,
       companyId: isCompany ? headerUserId : undefined,
       role: userRole,
-      email: userEmail
+      email: userEmail,
     };
   }
   
@@ -48,13 +48,13 @@ export const extractUserFromHeaders = (
 export const requireAuth = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const authReq = req as AuthenticatedRequest;
   
   if (!authReq.user || (!authReq.user.userId && !authReq.user.companyId)) {
     res.status(HttpStatusCode.UNAUTHORIZED).json(
-      buildErrorResponse('Authentication required', 'User authentication is required to access this resource')
+      buildErrorResponse('Authentication required', 'User authentication is required to access this resource'),
     );
     return;
   }
@@ -70,13 +70,13 @@ export const requireAuth = (
 export const requireAdmin = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const authReq = req as AuthenticatedRequest;
   
   if (!authReq.user || authReq.user.role !== 'admin') {
     res.status(HttpStatusCode.FORBIDDEN).json(
-      buildErrorResponse('Admin access required', 'Admin privileges are required to access this resource')
+      buildErrorResponse('Admin access required', 'Admin privileges are required to access this resource'),
     );
     return;
   }

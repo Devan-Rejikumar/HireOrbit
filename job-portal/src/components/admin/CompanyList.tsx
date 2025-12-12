@@ -140,8 +140,10 @@ const CompanyList = () => {
         ),
       );
       toast.success('Company approved successfully! Approval email sent.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to approve company');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to approve company');
     } finally {
       setActionLoading(null);
     }
@@ -168,8 +170,10 @@ const CompanyList = () => {
       setShowModal(false);
       setRejectionReason('');
       toast.success('Company rejected successfully! Rejection email sent.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to reject company');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to reject company');
     } finally {
       setActionLoading(null);
     }
@@ -200,9 +204,11 @@ const CompanyList = () => {
         console.log('🔍 Full response structure:', JSON.stringify(response.data, null, 2));
         toast.error('No company data received');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching company details:', error);
-      toast.error(error.response?.data?.error || 'Failed to fetch company details');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to fetch company details');
     } finally {
       setDetailsLoading(false);
     }

@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import TYPES from '../config/types';
 import { IRevenueService } from '../services/interfaces/IRevenueService';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -12,7 +12,7 @@ import { AppError } from '../utils/errors/AppError';
 export class AdminRevenueController {
   constructor(
     @inject(TYPES.IRevenueService)
-    private readonly _revenueService: IRevenueService
+    private readonly _revenueService: IRevenueService,
   ) {}
 
   getRevenueStatistics = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -52,7 +52,7 @@ export class AdminRevenueController {
     const statistics = await this._revenueService.getRevenueStatistics(startDate, endDate, userType);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ statistics }, 'Revenue statistics retrieved successfully')
+      buildSuccessResponse({ statistics }, 'Revenue statistics retrieved successfully'),
     );
   });
 
@@ -69,7 +69,7 @@ export class AdminRevenueController {
       limit,
     } = req.query;
 
-    const filters: any = {};
+    const filters: Parameters<IRevenueService['getTransactionHistory']>[0] = {};
 
     if (userId) filters.userId = userId as string;
     if (companyId) filters.companyId = companyId as string;
@@ -106,7 +106,7 @@ export class AdminRevenueController {
     const history = await this._revenueService.getTransactionHistory(filters);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(history, 'Transaction history retrieved successfully')
+      buildSuccessResponse(history, 'Transaction history retrieved successfully'),
     );
   });
 
@@ -123,7 +123,7 @@ export class AdminRevenueController {
     console.log('Sync completed', result);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, `Synced ${result.synced} transactions, skipped ${result.skipped}, ${result.errors} errors`)
+      buildSuccessResponse(result, `Synced ${result.synced} transactions, skipped ${result.skipped}, ${result.errors} errors`),
     );
   });
 }

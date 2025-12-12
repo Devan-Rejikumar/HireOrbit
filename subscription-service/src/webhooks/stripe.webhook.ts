@@ -57,33 +57,33 @@ export class StripeWebhookHandler {
 
     try {
       switch (event.type) {
-        case 'customer.subscription.created':
-          await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
-          break;
+      case 'customer.subscription.created':
+        await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
+        break;
 
-        case 'customer.subscription.updated':
-          await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-          break;
+      case 'customer.subscription.updated':
+        await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        break;
 
-        case 'customer.subscription.deleted':
-          await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-          break;
+      case 'customer.subscription.deleted':
+        await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
+        break;
 
-        case 'invoice.payment_succeeded':
-        case 'invoice_payment.paid':  
-          await this.handlePaymentSucceeded(event.data.object as Stripe.Invoice);
-          break;
+      case 'invoice.payment_succeeded':
+      case 'invoice_payment.paid':  
+        await this.handlePaymentSucceeded(event.data.object as Stripe.Invoice);
+        break;
 
-        case 'invoice.payment_failed':
-          await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
-          break;
+      case 'invoice.payment_failed':
+        await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
 
-        case 'checkout.session.completed':
-          await this.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
-          break;
+      case 'checkout.session.completed':
+        await this.handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
 
-        default:
-          console.log('Unhandled webhook event type', { type: event.type });
+      default:
+        console.log('Unhandled webhook event type', { type: event.type });
       }
 
       res.status(HttpStatusCode.OK).json(buildSuccessResponse({ received: true }, 'Webhook processed'));
@@ -141,7 +141,6 @@ export class StripeWebhookHandler {
     try {
 
       let metadata = stripeSubscription.metadata || {};
-      
   
       if ((!metadata.planId || (!metadata.userId && !metadata.companyId)) && stripeSubscription.customer) {
         const customerId = typeof stripeSubscription.customer === 'string' 
@@ -158,13 +157,14 @@ export class StripeWebhookHandler {
             };
             console.log('Retrieved metadata from customer', { 
               customerId, 
-              customerMetadata: JSON.stringify(customer.metadata) 
+              customerMetadata: JSON.stringify(customer.metadata), 
             });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { message?: string };
           console.warn('Failed to retrieve customer for metadata', { 
-            error: error?.message, 
-            customerId 
+            error: err.message, 
+            customerId, 
           });
         }
       }
@@ -180,7 +180,6 @@ export class StripeWebhookHandler {
         companyId,
         planId,
       });
-
       
       if (!planId) {
         const subscriptionItem = stripeSubscription.items.data[0];
@@ -191,7 +190,7 @@ export class StripeWebhookHandler {
        
           const allPlans = await this._subscriptionPlanRepository.findAll();
           const matchingPlan = allPlans.find(
-            plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId
+            plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId,
           );
           
           if (matchingPlan) {
@@ -219,7 +218,6 @@ export class StripeWebhookHandler {
         });
         return;
       }
-
       
       const plan = await this._subscriptionPlanRepository.findById(planId);
       if (!plan) {
@@ -273,10 +271,11 @@ export class StripeWebhookHandler {
         companyId,
         planId,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; stack?: string };
       console.error('Failed to create subscription from Stripe webhook', {
-        error: error?.message || error,
-        stack: error?.stack,
+        error: err.message || error,
+        stack: err.stack,
         subscriptionId: stripeSubscription.id,
         metadata: JSON.stringify(stripeSubscription.metadata || {}),
       });
@@ -404,10 +403,11 @@ export class StripeWebhookHandler {
           }
           
           await this.createSubscriptionFromStripe(stripeSubscription);
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { message?: string; stack?: string };
           console.error('Failed to retrieve and create subscription from Stripe', {
-            error: error?.message || error,
-            stack: error?.stack,
+            error: err.message || error,
+            stack: err.stack,
             subscriptionId,
           });
         }
@@ -450,7 +450,7 @@ export class StripeWebhookHandler {
         if (existingTransaction) {
           console.log('Transaction already exists for invoice', { 
             invoiceId: invoice.id,
-            transactionId: existingTransaction.id 
+            transactionId: existingTransaction.id, 
           });
           return;
         }
@@ -474,7 +474,7 @@ export class StripeWebhookHandler {
         const priceId = invoiceData.lines.data[0].price.id;
         const allPlans = await this._subscriptionPlanRepository.findAll();
         const matchingPlan = allPlans.find(
-          plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId
+          plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId,
         );
         if (matchingPlan) {
           planId = matchingPlan.id;
@@ -492,7 +492,7 @@ export class StripeWebhookHandler {
           subscriptionId,
           priceId: invoiceData.lines?.data?.[0]?.price?.id,
           amount: invoiceData.amount_paid ? invoiceData.amount_paid / 100 : 0,
-          hasSubscription: !!subscription
+          hasSubscription: !!subscription,
         });
         return;
       }
@@ -549,13 +549,13 @@ export class StripeWebhookHandler {
         paymentDate: transaction.paymentDate,
       });
       console.log('=== TRANSACTION CREATION COMPLETED ===');
-    } catch (error: any) {
-  
+    } catch (error: unknown) {
+      const err = error as { message?: string; stack?: string };
       const errorAmount = invoiceData.amount_paid ? invoiceData.amount_paid / 100 : 0;
       
       console.error(' Failed to create transaction from invoice', {
-        error: error?.message || error,
-        stack: error?.stack,
+        error: err.message || error,
+        stack: err.stack,
         invoiceId: invoice.id,
         amount: errorAmount,
         subscriptionId: subscriptionId || 'unknown',

@@ -38,7 +38,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);

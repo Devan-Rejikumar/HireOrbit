@@ -96,7 +96,7 @@ export class SubscriptionService implements ISubscriptionService {
           userId: input.userId || '',
           companyId: input.companyId || '',
           planId: input.planId,
-        }
+        },
       );
 
       // Create subscription record in database
@@ -133,7 +133,7 @@ export class SubscriptionService implements ISubscriptionService {
       // FIX: Use proper error message instead of success message
       throw new AppError(
         'Failed to create subscription. Please try again later.',
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -175,8 +175,9 @@ export class SubscriptionService implements ISubscriptionService {
           });
           // Don't throw - just log the warning, as the user might have already paid
         }
-      } catch (error: any) {
-        console.error('Failed to verify Stripe price', { error: error.message, stripePriceId });
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.error('Failed to verify Stripe price', { error: err.message, stripePriceId });
         // Continue anyway - price might still work
       }
 
@@ -203,7 +204,7 @@ export class SubscriptionService implements ISubscriptionService {
           userId: input.userId || '',
           companyId: input.companyId || '',
           planId: input.planId,
-        }
+        },
       );
 
       console.log('Checkout session created', {
@@ -224,7 +225,7 @@ export class SubscriptionService implements ISubscriptionService {
       }
       throw new AppError(
         'Failed to create checkout session. Please try again later.',
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -279,7 +280,7 @@ export class SubscriptionService implements ISubscriptionService {
       // Update in Stripe
       const updatedStripeSubscription = await this._stripeService.updateSubscription(
         subscription.stripeSubscriptionId,
-        newStripePriceId
+        newStripePriceId,
       );
 
       // Update in database
@@ -354,7 +355,7 @@ export class SubscriptionService implements ISubscriptionService {
         subscription,
         plan || null,
         features,
-        isActive
+        isActive,
       );
     } catch (error) {
       console.error('Failed to get subscription status', { error, userId, companyId });

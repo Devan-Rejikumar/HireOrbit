@@ -2,7 +2,7 @@ import { injectable, inject } from 'inversify';
 import { Request, Response } from 'express';
 import TYPES from '../config/types';
 import { ICertificationService } from '../services/interfaces/ICertificationService';
-import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
+import { buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
 import { getUserIdFromRequest } from '../utils/requestHelpers';

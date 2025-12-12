@@ -3,7 +3,7 @@ import { AppConfig } from './app.config';
 
 if (!AppConfig.STRIPE_SECRET_KEY) {
   throw new Error(
-    'STRIPE_SECRET_KEY is required. Please add it to your .env file.'
+    'STRIPE_SECRET_KEY is required. Please add it to your .env file.',
   );
 }
 

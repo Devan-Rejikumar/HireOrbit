@@ -23,7 +23,7 @@ const determineUserType = (role: string): string => {
 };
 
 const createUnauthorizedResponse = () => ({
-  error: 'User not authenticated. Request must go through API Gateway.'
+  error: 'User not authenticated. Request must go through API Gateway.',
 });
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
@@ -40,7 +40,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     userId,
     email,
     role,
-    userType: determineUserType(role)
+    userType: determineUserType(role),
   };
 
   logger.info('User context set from API Gateway headers', { userId, email, role });

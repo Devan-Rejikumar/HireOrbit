@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import api from '@/api/axios';
 import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import type { AxiosResponse } from 'axios';
 
 interface IndustryCategory {
   id: string;
@@ -24,12 +23,14 @@ const AdminIndustryCategories: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const response: AxiosResponse<{ data: { categories: IndustryCategory[] } }> = await api.get('/company/admin/industries?includeInactive=true');
+      const response = await api.get<{ data: { categories: IndustryCategory[] } }>('/company/admin/industries?includeInactive=true');
       const apiCategories: IndustryCategory[] = response.data?.data?.categories || [];
       setCategories(apiCategories);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load industry categories', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to load industry categories');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to load industry categories');
     } finally {
       setLoading(false);
     }
@@ -66,9 +67,11 @@ const AdminIndustryCategories: React.FC = () => {
 
       resetForm();
       await loadCategories();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to save industry category', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to save industry category');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to save industry category');
     } finally {
       setLoading(false);
     }
@@ -100,9 +103,11 @@ const AdminIndustryCategories: React.FC = () => {
       toast.success(`Industry category "${categoryToDelete.name}" deleted successfully`);
       closeDeleteModal();
       await loadCategories();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete industry category', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to delete industry category');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to delete industry category');
     } finally {
       setDeleteLoading(false);
     }
@@ -116,9 +121,11 @@ const AdminIndustryCategories: React.FC = () => {
         isActive: !category.isActive,
       });
       await loadCategories();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update industry category status', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to update industry category status');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to update industry category status');
     } finally {
       setLoading(false);
     }

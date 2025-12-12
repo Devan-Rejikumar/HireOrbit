@@ -122,8 +122,8 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
 
   async searchCompanyByName(companyName: string): Promise<Company | null> {
     return prisma.company.findFirst({
-      where:{companyName:{equals: companyName, mode:'insensitive'}}
-    })
+      where:{ companyName:{ equals: companyName, mode:'insensitive' } },
+    });
   }
 
   async getTotalCompanyCount(): Promise<number> {
@@ -133,55 +133,53 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
   async getCompanyStatisticsByTimePeriod(
     startDate: Date, 
     endDate: Date, 
-    groupBy: 'day' | 'week' | 'month' | 'year'
+    groupBy: 'day' | 'week' | 'month' | 'year',
   ): Promise<Array<{ date: string; count: number }>> {
     console.log('[CompanyRepository] Querying companies with date range:', {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       startDateLocal: startDate.toLocaleString(),
       endDateLocal: endDate.toLocaleString(),
-      groupBy
+      groupBy,
     });
-    
 
     const companies = await prisma.company.findMany({
       where: {
         createdAt: {
           gte: startDate,
-          lte: endDate
-        }
+          lte: endDate,
+        },
       },
       select: {
-        createdAt: true
+        createdAt: true,
       },
       orderBy: {
-        createdAt: 'asc'
-      }
+        createdAt: 'asc',
+      },
     });
     
     const allCompanies = await prisma.company.findMany({
       select: {
-        createdAt: true
+        createdAt: true,
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'desc',
       },
-      take: 5
+      take: 5,
     });
     console.log('[CompanyRepository] Sample of all companies (latest 5):', {
       count: allCompanies.length,
       dates: allCompanies.map(c => ({
         iso: c.createdAt.toISOString(),
         local: c.createdAt.toLocaleString(),
-        dateOnly: c.createdAt.toISOString().split('T')[0]
-      }))
+        dateOnly: c.createdAt.toISOString().split('T')[0],
+      })),
     });
     
     console.log('[CompanyRepository] Found companies:', {
       count: companies.length,
-      dates: companies.map(c => c.createdAt.toISOString())
+      dates: companies.map(c => c.createdAt.toISOString()),
     });
-
 
     const grouped = new Map<string, number>();
     
@@ -216,7 +214,7 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
     
     console.log('[CompanyRepository] Grouped companies:', {
       groupedCount: grouped.size,
-      groups: Array.from(grouped.entries())
+      groups: Array.from(grouped.entries()),
     });
 
     const allPeriods = new Map<string, number>();
@@ -241,7 +239,7 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
           allPeriods.set(key, grouped.get(key) || 0);
         }
       }
-      } else {
+    } else {
       const current = new Date(startDate);
       current.setUTCHours(0, 0, 0, 0);
       const end = new Date(endDate);
@@ -277,7 +275,7 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
     
     console.log('[CompanyRepository] Generated periods:', {
       periodCount: allPeriods.size,
-      periods: Array.from(allPeriods.entries()).slice(0, 10) // Log first 10
+      periods: Array.from(allPeriods.entries()).slice(0, 10), // Log first 10
     });
     const result = Array.from(allPeriods.entries())
       .map(([date, count]) => ({ date, count }))

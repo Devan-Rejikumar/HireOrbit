@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Briefcase, Plus, LogOut, UserCheck, MapPin, Edit, Trash2, ChevronLeft, ChevronRight, TrendingUp, Calendar, CheckCircle, AlertCircle, Settings, BarChart3, Eye, FileText, Star, Mail, Home, MessageSquare, User, GraduationCap, Clock, CreditCard, Bell, ChevronDown, ArrowRight, Calendar as CalendarIcon, RefreshCw, XCircle, Search, Lock } from 'lucide-react';
@@ -17,9 +18,8 @@ import { ConversationResponse } from '@/api/chatService';
 import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
 import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
 import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
-import { _applicationService } from '@/api/applicationService';
+import { _applicationService, Application } from '@/api/applicationService';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
   Chart as ChartJS,
@@ -139,7 +139,7 @@ const CompanyDashboard = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatusResponse | null>(null);
   const [currentPlan, setCurrentPlan] = useState<'free' | 'basic' | 'premium'>('free');
   const [isPremium, setIsPremium] = useState(false);
-  const [premiumApplications, setPremiumApplications] = useState<any[]>([]);
+  const [premiumApplications, setPremiumApplications] = useState<Application[]>([]);
   const [premiumInterviews, setPremiumInterviews] = useState<InterviewWithDetails[]>([]);
   const [dateRange, setDateRange] = useState<DateRange>('30days');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -234,7 +234,7 @@ const CompanyDashboard = () => {
       if (allApplications.length === 0 || allInterviews.length === 0) {
         try {
           // Load applications
-          const appsResponse = await api.get<{ data?: { applications?: any[] } }>('/applications/company/applications');
+          const appsResponse = await api.get<{ data?: { applications?: Application[] } }>('/applications/company/applications');
           allApplications = appsResponse.data?.data?.applications || appsResponse.data?.applications || [];
           
           // Load interviews
@@ -247,7 +247,7 @@ const CompanyDashboard = () => {
       }
 
       // Calculate new candidates (pending applications)
-      const newCandidates = Array.isArray(allApplications) ? allApplications.filter((app: any) => 
+      const newCandidates = Array.isArray(allApplications) ? allApplications.filter((app: Application) => 
         app.status === 'PENDING' || app.status === 'REVIEWING'
       ).length : 0;
 
@@ -374,8 +374,10 @@ const CompanyDashboard = () => {
         setCurrentPlan('free');
         setIsPremium(false);
       }
-    } catch (error: any) {
-      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
         setCurrentPlan('free');
         setIsPremium(false);
       }
@@ -412,13 +414,13 @@ const CompanyDashboard = () => {
 
   const loadPremiumApplications = async () => {
     try {
-      const response = await api.get<{ data?: { applications?: any[] } }>('/applications/company/applications');
-      let apps = response.data?.data?.applications || response.data?.applications || [];
+      const response = await api.get<{ data?: { applications?: Application[] } }>('/applications/company/applications');
+      let apps: Application[] = response.data?.data?.applications || response.data?.applications || [];
       
       // Filter by date range
       const filterDate = getFilterDate(dateRange);
       if (filterDate) {
-        apps = apps.filter((app: any) => {
+        apps = apps.filter((app: Application) => {
           const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date(app.createdAt || app.updatedAt);
           return appDate >= filterDate;
         });
@@ -463,15 +465,15 @@ const CompanyDashboard = () => {
     let filtered = premiumApplications;
     
     if (statusFilter !== 'all') {
-      filtered = filtered.filter((app: any) => app.status === statusFilter);
+      filtered = filtered.filter((app: Application) => app.status === statusFilter);
     }
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter((app: any) => 
+      filtered = filtered.filter((app: Application) => 
         app.jobTitle?.toLowerCase().includes(term) ||
-        app.userName?.toLowerCase().includes(term) ||
-        app.userEmail?.toLowerCase().includes(term)
+        (app as Application & { userName?: string; userEmail?: string }).userName?.toLowerCase().includes(term) ||
+        (app as Application & { userName?: string; userEmail?: string }).userEmail?.toLowerCase().includes(term)
       );
     }
     
@@ -481,10 +483,10 @@ const CompanyDashboard = () => {
   // Calculate premium statistics
   const premiumStats = useMemo(() => {
     const total = filteredApplications.length;
-    const shortlisted = filteredApplications.filter((a: any) => a.status === 'SHORTLISTED').length;
-    const accepted = filteredApplications.filter((a: any) => a.status === 'ACCEPTED').length;
-    const rejected = filteredApplications.filter((a: any) => a.status === 'REJECTED').length;
-    const pending = filteredApplications.filter((a: any) => a.status === 'PENDING' || a.status === 'REVIEWING').length;
+    const shortlisted = filteredApplications.filter((a: Application) => a.status === 'SHORTLISTED').length;
+    const accepted = filteredApplications.filter((a: Application) => a.status === 'ACCEPTED').length;
+    const rejected = filteredApplications.filter((a: Application) => a.status === 'REJECTED').length;
+    const pending = filteredApplications.filter((a: Application) => a.status === 'PENDING' || a.status === 'REVIEWING').length;
     const scheduledInterviews = premiumInterviews.filter(i => 
       i.status === 'PENDING' || i.status === 'CONFIRMED'
     ).length;
@@ -504,7 +506,7 @@ const CompanyDashboard = () => {
       'Remote': 0
     };
 
-    premiumApplications.forEach((app: any) => {
+    premiumApplications.forEach((app: Application) => {
       // Get job type from the application's job data
       const job = jobs.find(j => j.id === app.jobId);
       if (job) {
@@ -572,8 +574,8 @@ const CompanyDashboard = () => {
       labels.push(label);
       
       // Count applications in this period
-      const count = filteredApplications.filter((app: any) => {
-        const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date(app.createdAt || app.updatedAt);
+      const count = filteredApplications.filter((app: Application) => {
+        const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date((app as Application & { createdAt?: string; updatedAt?: string }).createdAt || app.updatedAt);
         return appDate >= periodStart && appDate <= periodEnd;
       }).length;
       
@@ -604,8 +606,8 @@ const CompanyDashboard = () => {
       const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       labels.push(dateStr);
       
-      const count = filteredApplications.filter((app: any) => {
-        const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date(app.createdAt || app.updatedAt);
+      const count = filteredApplications.filter((app: Application) => {
+        const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date((app as Application & { createdAt?: string; updatedAt?: string }).createdAt || app.updatedAt);
         return appDate.toDateString() === date.toDateString();
       }).length;
       data.push(count);
@@ -626,11 +628,11 @@ const CompanyDashboard = () => {
   // Prepare pie chart data
   const pieChartData = useMemo(() => {
     const statusCounts = {
-      PENDING: filteredApplications.filter((a: any) => a.status === 'PENDING').length,
-      REVIEWING: filteredApplications.filter((a: any) => a.status === 'REVIEWING').length,
-      SHORTLISTED: filteredApplications.filter((a: any) => a.status === 'SHORTLISTED').length,
-      ACCEPTED: filteredApplications.filter((a: any) => a.status === 'ACCEPTED').length,
-      REJECTED: filteredApplications.filter((a: any) => a.status === 'REJECTED').length
+      PENDING: filteredApplications.filter((a: Application) => a.status === 'PENDING').length,
+      REVIEWING: filteredApplications.filter((a: Application) => a.status === 'REVIEWING').length,
+      SHORTLISTED: filteredApplications.filter((a: Application) => a.status === 'SHORTLISTED').length,
+      ACCEPTED: filteredApplications.filter((a: Application) => a.status === 'ACCEPTED').length,
+      REJECTED: filteredApplications.filter((a: Application) => a.status === 'REJECTED').length
     };
     
     return {
@@ -674,7 +676,7 @@ const CompanyDashboard = () => {
   };
 
   const handleUpgradeClick = () => {
-    navigate('/subscriptions');
+    navigate(ROUTES.SUBSCRIPTIONS);
     toast('Upgrade to unlock premium analytics features', { icon: '🔒' });
   };
 
@@ -731,7 +733,7 @@ const CompanyDashboard = () => {
   };
 
   const handleJobListingClick = () => {
-    navigate('/company/jobs');
+    navigate(ROUTES.COMPANY_JOBS);
   };
 
   const handleMessagesClick = async () => {
@@ -776,11 +778,11 @@ const CompanyDashboard = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   const handleCompleteProfile = () => {
-    navigate('/company/profile-setup');
+    navigate(ROUTES.COMPANY_PROFILE_SETUP);
   };
 
   // Check if profile needs completion
@@ -861,7 +863,7 @@ const CompanyDashboard = () => {
                 }`}
                 onClick={() => {
                   if (company?.profileCompleted && company?.isVerified) {
-                    navigate('/company/post-job');
+                    navigate(ROUTES.COMPANY_POST_JOB);
                   }
                 }}
                 disabled={!company?.profileCompleted || !company?.isVerified}
@@ -884,7 +886,7 @@ const CompanyDashboard = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate('/company/review-status')}
+                    onClick={() => navigate(ROUTES.COMPANY_REVIEW_STATUS)}
                     className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
                     Check Status
@@ -951,7 +953,7 @@ const CompanyDashboard = () => {
                 <Building2 className="h-5 w-5" />
                 Company Profile
               </button>
-              <button onClick={() => navigate('/company/applications')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <User className="h-5 w-5" />
                 All Applicants
               </button>
@@ -960,14 +962,14 @@ const CompanyDashboard = () => {
                 Job Listing
               </button>
               <button 
-                onClick={() => navigate('/company/interviews')}
+                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CalendarIcon className="h-5 w-5" />
                 Interview Management
               </button>
               <button 
-                onClick={() => navigate('/subscriptions')}
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CreditCard className="h-5 w-5" />
@@ -977,7 +979,7 @@ const CompanyDashboard = () => {
             
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button onClick={() => navigate('/company/settings')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <Settings className="h-5 w-5" />
                 Settings
               </button>
@@ -1321,11 +1323,11 @@ const CompanyDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentPlan !== 'free' && filteredApplications.slice(0, 10).map((app: any) => (
+                  {currentPlan !== 'free' && filteredApplications.slice(0, 10).map((app: Application) => (
                     <tr key={app.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{app.userName || app.userEmail || 'N/A'}</div>
-                        <div className="text-xs text-gray-500">{app.userEmail || ''}</div>
+                        <div className="text-sm font-medium text-gray-900">{(app as Application & { userName?: string; userEmail?: string }).userName || (app as Application & { userName?: string; userEmail?: string }).userEmail || 'N/A'}</div>
+                        <div className="text-xs text-gray-500">{(app as Application & { userName?: string; userEmail?: string }).userEmail || ''}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {app.jobTitle || 'N/A'}
@@ -1340,7 +1342,7 @@ const CompanyDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
-                          onClick={() => navigate('/company/applications')}
+                          onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)}
                           className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
                         >
                           <Eye className="h-4 w-4" />
@@ -1654,7 +1656,7 @@ const CompanyDashboard = () => {
                     <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-500 mb-4">No jobs posted yet</p>
                     <Button 
-                      onClick={() => navigate('/company/post-job')}
+                      onClick={() => navigate(ROUTES.COMPANY_POST_JOB)}
                       className="bg-purple-600 hover:bg-purple-700 text-white"
                     >
                       <Plus className="h-4 w-4 mr-2" />

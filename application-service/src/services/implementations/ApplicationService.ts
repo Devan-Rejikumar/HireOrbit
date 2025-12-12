@@ -1,5 +1,4 @@
 import { injectable, inject } from 'inversify';
-import { ApplicationStatus as PrismaApplicationStatus } from '@prisma/client';
 import { ApplicationStatus } from '../../enums/ApplicationStatus';
 import { IApplicationService } from '../interfaces/IApplicationService';
 import { IApplicationRepository } from '../../repositories/interfaces/IApplicationRepository';
@@ -9,12 +8,12 @@ import {
   ApplicationResponse, 
   ApplicationDetailsResponse,
   CompanyApplicationsResponse,
-  UserApplicationsResponse 
+  UserApplicationsResponse, 
 } from '../../dto/responses/application.response';
 import { 
   CreateApplicationInput, 
   UpdateApplicationStatusInput, 
-  AddApplicationNoteInput 
+  AddApplicationNoteInput, 
 } from '../../dto/schemas/application.schema';
 import {
   mapApplicationToResponse,
@@ -22,9 +21,9 @@ import {
   mapUserApplicationsResponse,
   mapCompanyApplicationsResponse,
   mapPaginatedApplicationsResponse,
-  calculateApplicationStats
+  calculateApplicationStats,
 } from '../../dto/mappers/application.mapper';
-import {TYPES} from '../../config/types';
+import { TYPES } from '../../config/types';
 import { logger } from '../../utils/logger';
 import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
@@ -32,9 +31,6 @@ import { Events } from '../../constants/Events';
 import { HttpStatusCode } from '../../enums/StatusCodes';
 import { IUserServiceClient } from '../interfaces/IUserServiceClient';
 import { IJobServiceClient } from '../interfaces/IJobServiceClient';
-import { UserApiResponse, JobApiResponse } from '../../types/external-api.types';
-
-
 
 @injectable()
 export class ApplicationService implements IApplicationService {
@@ -43,7 +39,7 @@ export class ApplicationService implements IApplicationService {
     @inject(TYPES.IEventService) private _eventService: IEventService,
     @inject(TYPES.StatusUpdateService) private _statusUpdateService: StatusUpdateService,
     @inject(TYPES.IUserServiceClient) private _userServiceClient: IUserServiceClient,
-    @inject(TYPES.IJobServiceClient) private _jobServiceClient: IJobServiceClient
+    @inject(TYPES.IJobServiceClient) private _jobServiceClient: IJobServiceClient,
   ) {}
 
   async applyForJob(data: CreateApplicationInput): Promise<ApplicationResponse> {
@@ -54,16 +50,16 @@ export class ApplicationService implements IApplicationService {
 
     const application = await this._applicationRepository.create(data);
     
- try {
-  await this._eventService.publish(Events.APPLICATION.CREATED, {
-    applicationId: application.id,
-    userId: application.userId,
-    jobId: application.jobId,
-    companyId: application.companyId,
-  });
-} catch (error) {
-  logger.warn('Kafka not available, continuing...', error);
-}
+    try {
+      await this._eventService.publish(Events.APPLICATION.CREATED, {
+        applicationId: application.id,
+        userId: application.userId,
+        jobId: application.jobId,
+        companyId: application.companyId,
+      });
+    } catch (error) {
+      logger.warn('Kafka not available, continuing...', error);
+    }
 
     return mapApplicationToResponse(application);
   }
@@ -79,17 +75,17 @@ export class ApplicationService implements IApplicationService {
           return {
             ...app,
             jobTitle: jobData.data?.job?.title || jobData.job?.title || 'Job Title',
-            companyName: jobData.data?.job?.company || jobData.job?.company || 'Company Name'
+            companyName: jobData.data?.job?.company || jobData.job?.company || 'Company Name',
           };
         } catch (error) {
           logger.error(`Error enriching application ${app.id} with job details:`, error);
           return {
             ...app,
             jobTitle: 'Job Title',
-            companyName: 'Company Name'
+            companyName: 'Company Name',
           };
         }
-      })
+      }),
     );
     const finalTotal = total || enrichedApplications.length;
 
@@ -97,25 +93,25 @@ export class ApplicationService implements IApplicationService {
       enrichedApplications.map(app => ({ 
         id: app.id, 
         jobTitle: app.jobTitle, 
-        companyName: app.companyName 
-      }))
+        companyName: app.companyName, 
+      })),
     );
 
     return mapUserApplicationsResponse(enrichedApplications, finalTotal);
   }
 
-async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean; status?: string }> {
-  try {
-    const application = await this._applicationRepository.checkDuplicateApplication(userId, jobId);
-    return {
-      hasApplied: !!application && application.status !== ApplicationStatus.WITHDRAWN,
-      status: application?.status
-    };
-  } catch (error) {
+  async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplied: boolean; status?: string }> {
+    try {
+      const application = await this._applicationRepository.checkDuplicateApplication(userId, jobId);
+      return {
+        hasApplied: !!application && application.status !== ApplicationStatus.WITHDRAWN,
+        status: application?.status,
+      };
+    } catch {
     
-    throw new AppError('Failed to check application status', HttpStatusCode.INTERNAL_SERVER_ERROR);
+      throw new AppError('Failed to check application status', HttpStatusCode.INTERNAL_SERVER_ERROR);
+    }
   }
-}
 
   async getApplicationById(id: string): Promise<ApplicationDetailsResponse> {
     const application = await this._applicationRepository.findWithRelations(id);
@@ -140,11 +136,10 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       throw new AppError('Application already withdrawn', HttpStatusCode.BAD_REQUEST);
     }
 
-
     const updatedApplication = await this._applicationRepository.updateStatus(
       applicationId,
       { status: ApplicationStatus.WITHDRAWN },
-      userId
+      userId,
     );
 
     try {
@@ -153,7 +148,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
         userId: updatedApplication.userId,
         jobId: updatedApplication.jobId,
         companyId: updatedApplication.companyId,
-        withdrawnAt: new Date()
+        withdrawnAt: new Date(),
       });
     } catch (error) {
       logger.warn('Kafka not available, continuing...', error);
@@ -167,9 +162,9 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
       const allApplications = await this._applicationRepository.findByCompanyIdWithRelations(companyId);
       logger.info(`Total applications for company ${companyId}:`, allApplications.length);
       const applications = allApplications.filter(app => app.status !== ApplicationStatus.WITHDRAWN);
-      logger.info(`Active applications (excluding WITHDRAWN):`, applications.length);
+      logger.info('Active applications (excluding WITHDRAWN):', applications.length);
       const stats = calculateApplicationStats(applications);
-      logger.info(`Stats calculated:`, stats);
+      logger.info('Stats calculated:', stats);
     
       const externalDataMap = new Map();
       await Promise.all(
@@ -178,7 +173,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
             const externalData = await this.fetchExternalData(app.userId, app.jobId);
             logger.info(`Fetched data for ${app.id}:`, {
               userName: externalData.userName,
-              jobTitle: externalData.jobTitle
+              jobTitle: externalData.jobTitle,
             });
             externalDataMap.set(app.id, {
               userName: externalData.userName,
@@ -186,7 +181,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
               userPhone: null,
               userProfile: null,
               jobTitle: externalData.jobTitle,
-              companyName: externalData.companyName
+              companyName: externalData.companyName,
             });
           } catch (error) {
             logger.error(` Error for application ${app.id}:`, error);
@@ -196,17 +191,17 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
               userPhone: null,
               userProfile: null,
               jobTitle: 'Unknown Job',
-              companyName: 'Unknown Company'
+              companyName: 'Unknown Company',
             });
           }
-        })
+        }),
       );
 
       return mapCompanyApplicationsResponse(applications, externalDataMap, {
         total: stats.total,
         pending: stats.pending,
         shortlisted: stats.shortlisted,
-        rejected: stats.rejected
+        rejected: stats.rejected,
       });
     } catch (error) {
       logger.error('ApplicationService Error in getCompanyApplications:', error);
@@ -222,7 +217,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     }
     this._statusUpdateService.validateOrThrow(
       existingApplication.status as ApplicationStatus, 
-      data.status as ApplicationStatus
+      data.status as ApplicationStatus,
     );
     const updatedApplication = await this._applicationRepository.updateStatus(applicationId, data, changedBy);
     const applicationWithRelations = await this._applicationRepository.findWithRelations(applicationId);
@@ -238,7 +233,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
         newStatus: updatedApplication.status,
         changedBy,
         reason: data.reason,
-        updatedAt: updatedApplication.updatedAt
+        updatedAt: updatedApplication.updatedAt,
       });
     } catch (error) {
       logger.warn('Kafka event publish failed, continuing...', error);
@@ -246,7 +241,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
 
     const externalData = await this.fetchExternalData(
       existingApplication.userId,
-      existingApplication.jobId
+      existingApplication.jobId,
     );
 
     return mapApplicationToDetailsResponse(applicationWithRelations, externalData);
@@ -267,7 +262,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
 
     const externalData = await this.fetchExternalData(
       updatedApplication.userId,
-      updatedApplication.jobId
+      updatedApplication.jobId,
     );
 
     return mapApplicationToDetailsResponse(updatedApplication, externalData);
@@ -287,7 +282,7 @@ async checkApplicationStatus(userId: string, jobId: string): Promise<{ hasApplie
     return mapApplicationToDetailsResponse(application, externalData);
   }
 
-async searchApplications(filters: {
+  async searchApplications(filters: {
   companyId?: string;
   userId?: string;
   status?: string;
@@ -305,25 +300,25 @@ async searchApplications(filters: {
     hasPrev: boolean;
   };
 }> {
-  const page = filters.page || 1;
-  const limit = filters.limit || 10;
+    const page = filters.page || 1;
+    const limit = filters.limit || 10;
 
-  const result = await this._applicationRepository.findPaginated(page, limit, {
-    companyId: filters.companyId,
-    userId: filters.userId,
-    status: filters.status as ApplicationStatus,
-    jobId: filters.jobId
-  });
+    const result = await this._applicationRepository.findPaginated(page, limit, {
+      companyId: filters.companyId,
+      userId: filters.userId,
+      status: filters.status as ApplicationStatus,
+      jobId: filters.jobId,
+    });
 
-  const applications = result.applications.map(mapApplicationToResponse);
+    const applications = result.applications.map(mapApplicationToResponse);
   
-  const paginatedResponse = mapPaginatedApplicationsResponse(applications, result.total, page, limit);
+    const paginatedResponse = mapPaginatedApplicationsResponse(applications, result.total, page, limit);
   
-  return {
-    applications: paginatedResponse.data, 
-    pagination: paginatedResponse.pagination
-  };
-}
+    return {
+      applications: paginatedResponse.data, 
+      pagination: paginatedResponse.pagination,
+    };
+  }
 
   async getCompanyApplicationStats(companyId: string): Promise<{
     total: number;
@@ -340,7 +335,7 @@ async searchApplications(filters: {
     applicationIds: string[], 
     status: string, 
     changedBy: string,
-    companyId: string
+    companyId: string,
   ): Promise<void> {
     for (const applicationId of applicationIds) {
       const application = await this._applicationRepository.findById(applicationId);
@@ -354,7 +349,7 @@ async searchApplications(filters: {
     await this._applicationRepository.bulkUpdateStatus(
       applicationIds, 
       status as ApplicationStatus, 
-      changedBy
+      changedBy,
     );
 
     await this._eventService.publish(Events.APPLICATION.BULK_STATUS_UPDATED, {
@@ -362,7 +357,7 @@ async searchApplications(filters: {
       newStatus: status,
       changedBy,
       companyId,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
   }
 
@@ -374,7 +369,7 @@ async searchApplications(filters: {
     if (existingApplication && existingApplication.status !== ApplicationStatus.WITHDRAWN) {
       return {
         eligible: false,
-        reason: 'You have already applied for this job'
+        reason: 'You have already applied for this job',
       };
     }
     try {
@@ -386,7 +381,7 @@ async searchApplications(filters: {
         if (deadline < now) {
           return {
             eligible: false,
-            reason: 'Application deadline has passed'
+            reason: 'Application deadline has passed',
           };
         }
       }
@@ -407,7 +402,7 @@ async searchApplications(filters: {
       jobTitle: 'Job Title',
       companyName: 'Company Name',
       userName: 'User Name',
-      userEmail: 'user@example.com'
+      userEmail: 'user@example.com',
     };
 
     try {
@@ -442,7 +437,6 @@ async searchApplications(filters: {
   async getTopApplicantsByApplicationCount(limit: number): Promise<Array<{ userId: string; userName: string; userEmail: string; applicationCount: number }>> {
     const topApplicants = await this._applicationRepository.getTopApplicantsByApplicationCount(limit);
     
-    
     const applicantsWithDetails = await Promise.all(
       topApplicants.map(async (applicant) => {
         try {
@@ -451,7 +445,7 @@ async searchApplications(filters: {
             userId: applicant.userId,
             userName: userData.data?.user?.name || userData.data?.user?.username || 'Unknown User',
             userEmail: userData.data?.user?.email || 'unknown@example.com',
-            applicationCount: applicant.applicationCount
+            applicationCount: applicant.applicationCount,
           };
         } catch (error) {
           logger.error(`Error fetching user details for ${applicant.userId}:`, error);
@@ -459,10 +453,10 @@ async searchApplications(filters: {
             userId: applicant.userId,
             userName: 'Unknown User',
             userEmail: 'unknown@example.com',
-            applicationCount: applicant.applicationCount
+            applicationCount: applicant.applicationCount,
           };
         }
-      })
+      }),
     );
 
     return applicantsWithDetails;
@@ -479,7 +473,7 @@ async searchApplications(filters: {
             jobId: job.jobId,
             jobTitle: jobData.data?.job?.title || 'Unknown Job',
             companyName: jobData.data?.job?.company || 'Unknown Company',
-            applicationCount: job.applicationCount
+            applicationCount: job.applicationCount,
           };
         } catch (error) {
           logger.error(`Error fetching job details for ${job.jobId}:`, error);
@@ -487,10 +481,10 @@ async searchApplications(filters: {
             jobId: job.jobId,
             jobTitle: 'Unknown Job',
             companyName: 'Unknown Company',
-            applicationCount: job.applicationCount
+            applicationCount: job.applicationCount,
           };
         }
-      })
+      }),
     );
 
     return jobsWithDetails;

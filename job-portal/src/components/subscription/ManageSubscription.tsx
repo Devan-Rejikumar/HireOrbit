@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { subscriptionService, SubscriptionStatusResponse, SubscriptionPlan } from '../../api/subscriptionService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import ConfirmationModal from '../ConfirmationModal';
 
 export const ManageSubscription = () => {
@@ -26,9 +27,11 @@ export const ManageSubscription = () => {
       const userType = statusResponse.data.plan?.userType || 'user';
       const plansRes = await subscriptionService.getPlans(userType);
       setAvailablePlans(plansRes.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading data:', error);
-      toast.error(error.response?.data?.message || 'Failed to load subscription data');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to load subscription data');
     } finally {
       setLoading(false);
     }
@@ -47,9 +50,11 @@ export const ManageSubscription = () => {
       await subscriptionService.cancelSubscription(status.subscription.id);
       toast.success('Subscription cancelled successfully');
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error cancelling subscription:', error);
-      toast.error(error.response?.data?.message || 'Failed to cancel subscription');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to cancel subscription');
     } finally {
       setProcessing(false);
     }
@@ -63,9 +68,11 @@ export const ManageSubscription = () => {
       await subscriptionService.upgradeSubscription(status.subscription.id, newPlanId);
       toast.success('Subscription upgraded successfully');
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error upgrading subscription:', error);
-      toast.error(error.response?.data?.message || 'Failed to upgrade subscription');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to upgrade subscription');
     } finally {
       setProcessing(false);
     }
@@ -85,7 +92,7 @@ export const ManageSubscription = () => {
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
           <p className="text-gray-600 mb-4">No active subscription found.</p>
           <button
-            onClick={() => navigate('/subscriptions')}
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Browse Plans

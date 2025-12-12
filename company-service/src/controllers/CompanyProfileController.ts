@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { inject, injectable } from 'inversify';
 import TYPES from '../config/types';
 import { ICompanyService } from '../services/interfaces/ICompanyService';
@@ -13,7 +13,7 @@ import { Messages } from '../constants/Messages';
 @injectable()
 export class CompanyProfileController {
   constructor(
-    @inject(TYPES.ICompanyService) private _companyService: ICompanyService
+    @inject(TYPES.ICompanyService) private _companyService: ICompanyService,
   ) {}
 
   async getMe(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -29,8 +29,8 @@ export class CompanyProfileController {
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(
         { id: company.id, companyName: company.companyName, email: company.email },
-        Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS
-      )
+        Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS,
+      ),
     );
   }
 
@@ -42,7 +42,7 @@ export class CompanyProfileController {
     const profileStep = await this._companyService.getProfileStep(companyId);
     
     res.status(CompanyStatusCode.PROFILE_RETRIEVED).json(
-      buildSuccessResponse({ company, profileStep }, Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ company, profileStep }, Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS),
     );
   }
 
@@ -54,7 +54,7 @@ export class CompanyProfileController {
     const updateCompany = await this._companyService.updateCompanyProfile(companyId, validatedData);
     
     res.status(CompanyStatusCode.COMPANY_PROFILE_UPDATED).json(
-      buildSuccessResponse({ company: updateCompany }, Messages.COMPANY.PROFILE_UPDATED_SUCCESS)
+      buildSuccessResponse({ company: updateCompany }, Messages.COMPANY.PROFILE_UPDATED_SUCCESS),
     );
   }
 
@@ -66,21 +66,21 @@ export class CompanyProfileController {
     
     if (company?.isVerified) {
       res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse({ profileStep: 'approved' }, Messages.COMPANY.IS_APPROVED)
+        buildSuccessResponse({ profileStep: 'approved' }, Messages.COMPANY.IS_APPROVED),
       );
       return;
     }
     
     if (company?.rejectionReason) {
       res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse({ profileStep: 'rejected' }, Messages.COMPANY.IS_REJECTED)
+        buildSuccessResponse({ profileStep: 'rejected' }, Messages.COMPANY.IS_REJECTED),
       );
       return;
     }
     
     const profileStep = await this._companyService.getProfileStep(companyId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ profileStep }, Messages.COMPANY.PROFILE_STEP_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ profileStep }, Messages.COMPANY.PROFILE_STEP_RETRIEVED_SUCCESS),
     );
   }
 
@@ -97,7 +97,7 @@ export class CompanyProfileController {
     const company = await this._companyService.completeStep2(companyId, step2Data);
     
     res.status(CompanyStatusCode.STEP2_COMPLETED).json(
-      buildSuccessResponse({ company }, Messages.COMPANY.STEP2_COMPLETED_SUCCESS)
+      buildSuccessResponse({ company }, Messages.COMPANY.STEP2_COMPLETED_SUCCESS),
     );
   }
 
@@ -116,8 +116,8 @@ export class CompanyProfileController {
     res.status(CompanyStatusCode.STEP3_COMPLETED).json(
       buildSuccessResponse(
         { company, message: Messages.COMPANY.PROFILE_SUBMITTED_FOR_REVIEW },
-        Messages.COMPANY.STEP3_COMPLETED_SUCCESS
-      )
+        Messages.COMPANY.STEP3_COMPLETED_SUCCESS,
+      ),
     );
   }
 
@@ -128,7 +128,7 @@ export class CompanyProfileController {
     const result = await this._companyService.reapplyCompany(companyId);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.COMPANY.REAPPLY_SUCCESS)
+      buildSuccessResponse(result, Messages.COMPANY.REAPPLY_SUCCESS),
     );
   }
 
@@ -139,7 +139,7 @@ export class CompanyProfileController {
     const status = await this._companyService.getReapplyStatus(companyId);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(status, Messages.COMPANY.REAPPLY_STATUS_RETRIEVED_SUCCESS)
+      buildSuccessResponse(status, Messages.COMPANY.REAPPLY_STATUS_RETRIEVED_SUCCESS),
     );
   }
 
@@ -150,7 +150,7 @@ export class CompanyProfileController {
     const jobCount = await this._companyService.getCompanyJobCount(companyId);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ count: jobCount }, Messages.COMPANY.JOB_COUNT_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ count: jobCount }, Messages.COMPANY.JOB_COUNT_RETRIEVED_SUCCESS),
     );
   }
 }

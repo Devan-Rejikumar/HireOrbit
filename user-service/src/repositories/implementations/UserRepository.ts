@@ -8,8 +8,8 @@ import { UserRole } from '../../enums/UserRole';
 
 @injectable()
 export class UserRepository extends BaseRepository<User> implements IUserRepository {
-  protected getModel() {
-    return prisma.user as unknown as ReturnType<BaseRepository<User>['getModel']>;
+  protected _getModel() {
+    return prisma.user as unknown as ReturnType<BaseRepository<User>['_getModel']>;
   }
 
   

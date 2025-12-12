@@ -9,13 +9,13 @@ import { ChatResponseMapper, ConversationResponse, MessageResponse } from '../..
 @injectable()
 export class ChatService implements IChatService {
   constructor(
-    @inject(TYPES.IChatRepository) private _chatRepository: IChatRepository
+    @inject(TYPES.IChatRepository) private _chatRepository: IChatRepository,
   ) {}
   async getApplicationDetails(applicationId: string, authHeaders?: Record<string, string>): Promise<{ userId: string; companyId: string; status: string }> {
     try {      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...authHeaders
+        ...authHeaders,
       };
 
       if (authHeaders?.Authorization) {
@@ -26,12 +26,12 @@ export class ChatService implements IChatService {
       
       const axiosConfig: AxiosRequestConfig = { 
         headers,
-        ...(headers.Cookie && { withCredentials: true })
+        ...(headers.Cookie && { withCredentials: true }),
       };
       
       const response = await axios.get(
         `${AppConfig.API_GATEWAY_URL}/api/applications/${applicationId}`,
-        axiosConfig
+        axiosConfig,
       );
       const applicationData = response.data?.data || response.data;
       
@@ -42,7 +42,7 @@ export class ChatService implements IChatService {
       return {
         userId: applicationData.userId,
         companyId: applicationData.companyId,
-        status: applicationData.status || 'PENDING'
+        status: applicationData.status || 'PENDING',
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -53,7 +53,7 @@ export class ChatService implements IChatService {
   async createConversationFromApplication(
     applicationId: string,
     userId: string,
-    companyId: string
+    companyId: string,
   ): Promise<ConversationResponse> {
     const existingConversation = await this._chatRepository.findConversationByUserAndCompany(userId, companyId);
     if (existingConversation) {
@@ -67,7 +67,7 @@ export class ChatService implements IChatService {
 
   async getConversationByUserAndCompany(
     userId: string,
-    companyId: string
+    companyId: string,
   ): Promise<ConversationResponse | null> {
     const conversation = await this._chatRepository.findConversationByUserAndCompany(userId, companyId);
     return conversation ? ChatResponseMapper.toConversationResponse(conversation) : null;
@@ -85,7 +85,7 @@ export class ChatService implements IChatService {
 
   async getConversation(
     conversationId: string,
-    userId?: string
+    userId?: string,
   ): Promise<ConversationResponse | null> {
     const conversation = await this._chatRepository.findConversationById(conversationId);
     if (conversation && userId && !conversation.participants.includes(userId)) {
@@ -104,7 +104,7 @@ export class ChatService implements IChatService {
     conversationId: string,
     senderId: string,
     content: string,
-    messageType: 'text' | 'image' | 'file' = 'text'
+    messageType: 'text' | 'image' | 'file' = 'text',
   ): Promise<MessageResponse> {
     const conversation = await this._chatRepository.findConversationById(conversationId);
     if (!conversation) {
@@ -118,7 +118,7 @@ export class ChatService implements IChatService {
     await this._chatRepository.updateConversationLastMessage(conversationId, {
       content,
       senderId,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
     
     const otherParticipant = conversation.participants.find(id => id !== senderId);
@@ -132,7 +132,7 @@ export class ChatService implements IChatService {
   async getMessages(
     conversationId: string,
     limit: number = 50,
-    skip: number = 0
+    skip: number = 0,
   ): Promise<MessageResponse[]> {
     const messages = await this._chatRepository.getConversationMessages(conversationId, limit, skip);
     return messages.map(msg => ChatResponseMapper.toMessageResponse(msg));

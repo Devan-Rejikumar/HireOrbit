@@ -8,8 +8,8 @@ import { BaseRepository } from './BaseRepository';
 @injectable()
 export class ProfileRepository extends BaseRepository<UserProfile> implements IProfileRepository {
   
-  protected getModel() {
-    return prisma.userProfile as unknown as ReturnType<BaseRepository<UserProfile>['getModel']>;
+  protected _getModel() {
+    return prisma.userProfile as unknown as ReturnType<BaseRepository<UserProfile>['_getModel']>;
   }
   
   async createProfile(

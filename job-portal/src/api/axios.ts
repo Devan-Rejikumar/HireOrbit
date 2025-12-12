@@ -1,5 +1,5 @@
-
 import axios from 'axios';
+import { ROUTES } from '../constants/routes';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api',
@@ -64,7 +64,7 @@ api.interceptors.response.use(
           .replace(/^ +/, "")
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
-      window.location.href = '/blocked';
+      window.location.href = ROUTES.BLOCKED;
       return Promise.reject(error);
     }
     
@@ -113,7 +113,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError);
         localStorage.removeItem('role');
-        window.location.href = '/login';
+        window.location.href = ROUTES.LOGIN;
       }
     }
     

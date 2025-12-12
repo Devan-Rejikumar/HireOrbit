@@ -37,12 +37,12 @@ const CompanyProfileModal: React.FC<CompanyProfileModalProps> = ({
     try {
       const response = await companyService.searchCompanyByName(companyName);
       
-      if (response.success) {
+      if (response.success && response.data && response.data.company) {
         setCompany(response.data.company);
       } else {
         setError('Company not found');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error fetching company profile:', err);
       setError('Failed to load company details');
     } finally {

@@ -21,13 +21,12 @@ export class JobService implements IJobService {
   async createJob(jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobResponse> {
     const existingJobs = await this._jobRepository.findByCompany(jobData.companyId || '');
     const duplicate = existingJobs.find(job => 
-      job.title.toLowerCase() === jobData.title.toLowerCase()
+      job.title.toLowerCase() === jobData.title.toLowerCase(),
     );
     
     if (duplicate) {
       throw new AppError(Messages.JOB.DUPLICATE_TITLE, HttpStatusCode.CONFLICT);
     }
-
 
     const job = await this._jobRepository.create(jobData);
     return mapJobToResponse(job);
@@ -51,18 +50,18 @@ export class JobService implements IJobService {
   async searchJobs(filters: JobSearchFilters): Promise<{ jobs: JobResponse[]; total: number }> {
     const [jobs, total] = await Promise.all([
       this._jobRepository.search(filters),
-      this._jobRepository.count(filters)
+      this._jobRepository.count(filters),
     ]);
     return {
       jobs: mapJobsToResponse(jobs),
-      total
+      total,
     };
   }
 
   async getJobSuggestions(query: string, limit?: number): Promise<string[]> {
     const processedLimit = Math.min(
       limit || AppConfig.JOB_SUGGESTION_MIN_LIMIT, 
-      AppConfig.JOB_SUGGESTION_MAX_LIMIT
+      AppConfig.JOB_SUGGESTION_MAX_LIMIT,
     );
     return this._jobRepository.getSuggestions(query.trim(), processedLimit);
   }
@@ -92,7 +91,7 @@ export class JobService implements IJobService {
   async getJobStatisticsByTimePeriod(
     startDate: Date, 
     endDate: Date, 
-    groupBy: 'day' | 'week' | 'month'
+    groupBy: 'day' | 'week' | 'month',
   ): Promise<Array<{ date: string; count: number }>> {
     return this._jobRepository.getJobStatisticsByTimePeriod(startDate, endDate, groupBy);
   }

@@ -90,7 +90,13 @@ const AdminJobManagement: React.FC = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      interface JobQueryParams {
+        page: number;
+        limit: number;
+        isActive?: boolean;
+        search?: string;
+      }
+      const params: JobQueryParams = {
         page: currentPage,
         limit: itemsPerPage,
       };
@@ -124,9 +130,11 @@ const AdminJobManagement: React.FC = () => {
       const response = await api.get<{ data: { reportedJobs: ReportedJob[] } }>('/jobs/admin/reported');
       const reportedJobsList = response.data?.data?.reportedJobs || [];
       setReportedJobs(reportedJobsList);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching reported jobs:', error);
-      toast.error(error.response?.data?.error || 'Failed to fetch reported jobs');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to fetch reported jobs');
     } finally {
       setLoadingReported(false);
     }
@@ -149,9 +157,11 @@ const AdminJobManagement: React.FC = () => {
       } else {
         fetchReportedJobs();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting job:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete job');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to delete job');
     } finally {
       setDeletingJobId(null);
     }
@@ -169,9 +179,11 @@ const AdminJobManagement: React.FC = () => {
       });
       toast.success(`Job ${job.isActive ? 'deactivated' : 'activated'} successfully`);
       fetchJobs();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error toggling job status:', error);
-      toast.error(error.response?.data?.message || 'Failed to update job status');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to update job status');
     } finally {
       setTogglingJobId(null);
     }

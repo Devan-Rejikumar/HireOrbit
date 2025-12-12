@@ -3,7 +3,7 @@ import { AppError } from '../utils/errors/AppError';
 // Logger removed - using console.log instead
 import { buildErrorResponse } from 'shared-dto';
 
-export const ErrorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+export const ErrorHandler = (err: Error, req: Request, res: Response, _next: NextFunction): void => {
   console.error('Error occurred:', {
     error: err.message,
     stack: err.stack,

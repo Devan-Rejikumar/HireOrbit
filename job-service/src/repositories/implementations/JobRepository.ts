@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Job, PrismaClient } from '@prisma/client';
+import { Job, PrismaClient, Prisma } from '@prisma/client';
 import { IJobRepository } from '../interfaces/IJobRepository';
 import { JobSearchFilters } from '../../types/job';
 
@@ -18,7 +18,7 @@ export class JobRepository implements IJobRepository {
   async findAll(): Promise<Job[]> {
     return this.prisma.job.findMany({ 
       where: { isActive: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -27,11 +27,11 @@ export class JobRepository implements IJobRepository {
       where: { 
         OR: [
           { companyId: companyId },
-          { company: companyId } 
+          { company: companyId }, 
         ],
-        isActive: true 
+        isActive: true, 
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -45,7 +45,7 @@ export class JobRepository implements IJobRepository {
       where,
       orderBy,
       skip,
-      take
+      take,
     });
   }
 
@@ -60,13 +60,13 @@ export class JobRepository implements IJobRepository {
 
   async delete(id: string): Promise<void> {
     await this.prisma.job.delete({
-      where:{id}
-    })
+      where:{ id },
+    });
   }
 
   async countByCompany(companyId: string): Promise<number> {
     return this.prisma.job.count({ 
-      where: { companyId, isActive: true } 
+      where: { companyId, isActive: true }, 
     });
   }
 
@@ -74,20 +74,18 @@ export class JobRepository implements IJobRepository {
     const jobs = await this.prisma.job.findMany({
       where: { 
         isActive: true,
-        title: { contains: query, mode: 'insensitive' }
+        title: { contains: query, mode: 'insensitive' },
       },
       select: { title: true },
       distinct: ['title'],
       take: limit,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
     return jobs.map(job => job.title);
   }
 
-
-
   private _buildWhereClause(filters: JobSearchFilters) {
-    const where: any = {};
+    const where: Prisma.JobWhereInput = {};
  
     if (filters.isActive !== undefined) {
       where.isActive = filters.isActive;
@@ -112,36 +110,36 @@ export class JobRepository implements IJobRepository {
   }
 
   private _buildOrderBy(filters: JobSearchFilters) {
-    const orderBy: any = {};
+    const orderBy: Prisma.JobOrderByWithRelationInput = {};
     orderBy[filters.sortBy || 'createdAt'] = filters.sortOrder || 'desc';
     return orderBy;
   }
 
   async getTotalJobCount(): Promise<number> {
     return this.prisma.job.count({
-      where: { isActive: true }
+      where: { isActive: true },
     });
   }
 
   async getJobStatisticsByTimePeriod(
     startDate: Date, 
     endDate: Date, 
-    groupBy: 'day' | 'week' | 'month'
+    groupBy: 'day' | 'week' | 'month',
   ): Promise<Array<{ date: string; count: number }>> {
     const jobs = await this.prisma.job.findMany({
       where: {
         createdAt: {
           gte: startDate,
-          lte: endDate
+          lte: endDate,
         },
-        isActive: true
+        isActive: true,
       },
       select: {
-        createdAt: true
+        createdAt: true,
       },
       orderBy: {
-        createdAt: 'asc'
-      }
+        createdAt: 'asc',
+      },
     });
 
     // Group by time period
@@ -204,12 +202,12 @@ export class JobRepository implements IJobRepository {
     const jobs = await this.prisma.job.findMany({
       where: {
         isActive: true,
-        companyId: { not: null }
+        companyId: { not: null },
       },
       select: {
         companyId: true,
-        company: true
-      }
+        company: true,
+      },
     });
 
     // Group by company
@@ -225,7 +223,7 @@ export class JobRepository implements IJobRepository {
         companyMap.set(companyId, {
           companyId,
           companyName,
-          jobCount: 1
+          jobCount: 1,
         });
       }
     });

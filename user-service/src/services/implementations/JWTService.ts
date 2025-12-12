@@ -7,8 +7,8 @@ import { logger } from '../../utils/logger';
 
 @injectable()
 export class JWTService {
-  private readonly ACCESS_TOKEN_SECRET = process.env.JWT_SECRET!;
-  private readonly REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!; 
+  private readonly _accessTokenSecret = process.env.JWT_SECRET!;
+  private readonly _refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET!; 
 
   generateTokenPair(payload: Omit<AccessTokenPayload, 'userId'> & { userId: string }): TokenPair {
     const tokenId = uuidv4();
@@ -28,11 +28,11 @@ export class JWTService {
       tokenId
     };
 
-    const accessToken = jwt.sign(accessTokenPayload, this.ACCESS_TOKEN_SECRET, {
+    const accessToken = jwt.sign(accessTokenPayload, this._accessTokenSecret, {
       expiresIn: ACCESS_TOKEN_EXPIRY
     });
 
-    const refreshToken = jwt.sign(refreshTokenPayload, this.REFRESH_TOKEN_SECRET, {
+    const refreshToken = jwt.sign(refreshTokenPayload, this._refreshTokenSecret, {
       expiresIn: REFRESH_TOKEN_EXPIRY
     });
 
@@ -43,44 +43,44 @@ export class JWTService {
   }
 
   verifyAccessToken(token: string): AccessTokenPayload {
-    return jwt.verify(token, this.ACCESS_TOKEN_SECRET) as AccessTokenPayload;
+    return jwt.verify(token, this._accessTokenSecret) as AccessTokenPayload;
   }
 
   verifyRefreshToken(token: string): RefreshTokenPayload {
-  logger.debug('JWTService - Verifying refresh token');
-  try {
-    const decoded = jwt.verify(token, this.REFRESH_TOKEN_SECRET) as RefreshTokenPayload;
-    logger.debug('JWTService - Token verified:', {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role,
-      tokenId: decoded.tokenId
-    });
-    return decoded;
-  } catch (error) {
-    logger.error('JWTService - Token verification failed:', error);
-    throw error;
+    logger.debug('JWTService - Verifying refresh token');
+    try {
+      const decoded = jwt.verify(token, this._refreshTokenSecret) as RefreshTokenPayload;
+      logger.debug('JWTService - Token verified:', {
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+        tokenId: decoded.tokenId
+      });
+      return decoded;
+    } catch (error) {
+      logger.error('JWTService - Token verification failed:', error);
+      throw error;
+    }
   }
-}
 
   generateNewAccessToken(refreshTokenPayload: RefreshTokenPayload): string {
-  logger.debug('JWTService - Generating new access token:', {
-    userId: refreshTokenPayload.userId,
-    role: refreshTokenPayload.role
-  });
+    logger.debug('JWTService - Generating new access token:', {
+      userId: refreshTokenPayload.userId,
+      role: refreshTokenPayload.role
+    });
   
-  const accessTokenPayload: AccessTokenPayload = {
-    userId: refreshTokenPayload.userId,
-    email: refreshTokenPayload.email,
-    role: refreshTokenPayload.role,
-    userType: refreshTokenPayload.userType
-  };
+    const accessTokenPayload: AccessTokenPayload = {
+      userId: refreshTokenPayload.userId,
+      email: refreshTokenPayload.email,
+      role: refreshTokenPayload.role,
+      userType: refreshTokenPayload.userType
+    };
 
-  const token = jwt.sign(accessTokenPayload, this.ACCESS_TOKEN_SECRET, {
+    const token = jwt.sign(accessTokenPayload, this._accessTokenSecret, {
       expiresIn: ACCESS_TOKEN_EXPIRY
     });
   
-  logger.debug('JWTService - New access token generated');
-  return token;
+    logger.debug('JWTService - New access token generated');
+    return token;
   }
 }

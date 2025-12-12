@@ -60,8 +60,10 @@ export const companyService = {
         message: string;
       }>(`/company/search?name=${encodeURIComponent(companyName)}`);
       return response.data;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      if (axiosError?.response?.status === 404) {
         return { success: false, data: null, message: 'Company not found' };
       }
       throw error;

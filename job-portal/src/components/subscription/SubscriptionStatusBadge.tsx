@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscriptionService, SubscriptionStatusResponse } from '../../api/subscriptionService';
-import { CreditCard, Sparkles, Crown } from 'lucide-react';
-import axios from 'axios';
+import { CreditCard, Crown } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
 
 interface SubscriptionStatusBadgeProps {
   userType: 'user' | 'company';
@@ -23,8 +23,12 @@ export const SubscriptionStatusBadge = ({ userType, className = '' }: Subscripti
       setLoading(true);
       const response = await subscriptionService.getSubscriptionStatus();
       setStatus(response.data);
-    } catch (error: any) {
-      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+    } catch (error: unknown) {
+      // Check if it's an axios error (has response property)
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      
+      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
         // User is not authenticated or doesn't have subscription - treat as free
         setStatus({ subscription: null, isActive: false, plan: null, features: [] });
       } else {
@@ -51,7 +55,7 @@ export const SubscriptionStatusBadge = ({ userType, className = '' }: Subscripti
 
   return (
     <button
-      onClick={() => navigate('/subscriptions')}
+      onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:shadow-md ${
         isPremium
           ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'

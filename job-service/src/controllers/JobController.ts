@@ -19,7 +19,7 @@ export class JobController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
     
@@ -29,7 +29,7 @@ export class JobController {
     if (!companyId) {
       throw new AppError(
         Messages.VALIDATION.COMPANY_ID_REQUIRED,
-        ValidationStatusCode.MISSING_REQUIRED_FIELDS
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
       );
     }
     try {
@@ -45,14 +45,14 @@ export class JobController {
             'x-user-role': 'company',
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       if (!limitResponse.ok) {
         const errorData = await limitResponse.json().catch(() => ({})) as { message?: string };
         throw new AppError(
           errorData.message || 'Failed to check job posting limit',
-          HttpStatusCode.INTERNAL_SERVER_ERROR
+          HttpStatusCode.INTERNAL_SERVER_ERROR,
         );
       }
 
@@ -69,17 +69,17 @@ export class JobController {
         const limit = limitData.data?.limit || 0;
         throw new AppError(
           `Job posting limit reached. You have posted ${limit} jobs. ${remaining === 0 ? 'Please upgrade your plan to post more jobs.' : `${remaining} jobs remaining.`}`,
-          HttpStatusCode.FORBIDDEN
+          HttpStatusCode.FORBIDDEN,
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof AppError) {
         throw error;
       }
       console.error('Error checking job posting limit:', error);
       throw new AppError(
         'Failed to verify job posting limit',
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
       );
     }
     
@@ -105,14 +105,14 @@ export class JobController {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ companyId }),
-        }
+        },
       );
     } catch (error) {
       console.error('Failed to increment job posting count:', error);
     }
     
     res.status(JobStatusCode.JOB_CREATED).json(
-      buildSuccessResponse({ job }, Messages.JOB.CREATED_SUCCESS)
+      buildSuccessResponse({ job }, Messages.JOB.CREATED_SUCCESS),
     );
   }
 
@@ -120,7 +120,7 @@ export class JobController {
     const jobs = await this._jobService.getAllJobs();
     
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
-      buildSuccessResponse({ jobs }, Messages.JOB.RETRIEVED_SUCCESS)
+      buildSuccessResponse({ jobs }, Messages.JOB.RETRIEVED_SUCCESS),
     );
   }
 
@@ -130,7 +130,7 @@ export class JobController {
     if (!id) {
       throw new AppError(
         Messages.VALIDATION.MISSING_JOB_ID,
-        ValidationStatusCode.MISSING_REQUIRED_FIELDS
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
       );
     }
     
@@ -139,12 +139,12 @@ export class JobController {
     if (!job) {
       throw new AppError(
         Messages.JOB.NOT_FOUND,
-        JobStatusCode.JOB_NOT_FOUND
+        JobStatusCode.JOB_NOT_FOUND,
       );
     }
     
     res.status(JobStatusCode.JOB_RETRIEVED).json(
-      buildSuccessResponse({ job }, Messages.JOB.RETRIEVED_SUCCESS)
+      buildSuccessResponse({ job }, Messages.JOB.RETRIEVED_SUCCESS),
     );
   }
 
@@ -154,14 +154,14 @@ export class JobController {
     if (!searchValidation.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${searchValidation.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
     
     const { jobs, total } = await this._jobService.searchJobs(searchValidation.data);
     
     res.status(JobStatusCode.JOBS_SEARCHED).json(
-      buildSuccessResponse({ jobs, total, page: searchValidation.data.page || 1, limit: searchValidation.data.limit || 10 }, Messages.JOB.SEARCHED_SUCCESS)
+      buildSuccessResponse({ jobs, total, page: searchValidation.data.page || 1, limit: searchValidation.data.limit || 10 }, Messages.JOB.SEARCHED_SUCCESS),
     );
   }
 
@@ -170,7 +170,7 @@ export class JobController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
     
@@ -178,7 +178,7 @@ export class JobController {
     const suggestions = await this._jobService.getJobSuggestions(q);
     
     res.status(JobStatusCode.SUGGESTIONS_RETRIEVED).json(
-      buildSuccessResponse({ suggestions }, Messages.JOB.SUGGESTIONS_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ suggestions }, Messages.JOB.SUGGESTIONS_RETRIEVED_SUCCESS),
     );
   }
 
@@ -188,14 +188,14 @@ export class JobController {
     const count = await this._jobService.getJobCountByCompany(companyId);
     
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
-      buildSuccessResponse({ count }, Messages.JOB.COUNT_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ count }, Messages.JOB.COUNT_RETRIEVED_SUCCESS),
     );
   }
 
   async getTotalJobCount(req: Request, res: Response): Promise<void> {
     const total = await this._jobService.getTotalJobCount();
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
-      buildSuccessResponse({ total }, 'Total job count retrieved successfully')
+      buildSuccessResponse({ total }, 'Total job count retrieved successfully'),
     );
   }
 
@@ -215,11 +215,11 @@ export class JobController {
     const statistics = await this._jobService.getJobStatisticsByTimePeriod(
       start, 
       end, 
-      groupBy as 'day' | 'week' | 'month'
+      groupBy as 'day' | 'week' | 'month',
     );
 
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
-      buildSuccessResponse({ statistics }, 'Job statistics retrieved successfully')
+      buildSuccessResponse({ statistics }, 'Job statistics retrieved successfully'),
     );
   }
 
@@ -228,7 +228,7 @@ export class JobController {
     const companies = await this._jobService.getTopCompaniesByJobCount(limit);
     
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
-      buildSuccessResponse({ companies }, 'Top companies retrieved successfully')
+      buildSuccessResponse({ companies }, 'Top companies retrieved successfully'),
     );
   }
 
@@ -238,14 +238,14 @@ export class JobController {
     if (!companyId) {
       throw new AppError(
         Messages.VALIDATION.MISSING_COMPANY_ID,
-        ValidationStatusCode.MISSING_REQUIRED_FIELDS
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
       );
     }
     
     const jobs = await this._jobService.getJobsByCompany(companyId);
     
     res.status(JobStatusCode.JOBS_RETRIEVED).json(
-      buildSuccessResponse({ jobs }, Messages.JOB.RETRIEVED_SUCCESS)
+      buildSuccessResponse({ jobs }, Messages.JOB.RETRIEVED_SUCCESS),
     );
   }
 
@@ -255,7 +255,7 @@ export class JobController {
     if (!id) {
       throw new AppError(
         Messages.VALIDATION.MISSING_JOB_ID,
-        ValidationStatusCode.MISSING_REQUIRED_FIELDS
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
       );
     }
 
@@ -263,7 +263,7 @@ export class JobController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
 
@@ -277,7 +277,7 @@ export class JobController {
     const job = await this._jobService.updateJob(id, jobData);
     
     res.status(JobStatusCode.JOB_UPDATED).json(
-      buildSuccessResponse({ job }, Messages.JOB.UPDATED_SUCCESS)
+      buildSuccessResponse({ job }, Messages.JOB.UPDATED_SUCCESS),
     );
   }
 
@@ -287,14 +287,14 @@ export class JobController {
     if (!id) {
       throw new AppError(
         Messages.VALIDATION.MISSING_JOB_ID,
-        ValidationStatusCode.MISSING_REQUIRED_FIELDS
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
       );
     }
     
     await this._jobService.deleteJob(id);
     
     res.status(JobStatusCode.JOB_DELETED).json(
-      buildSuccessResponse({}, Messages.JOB.DELETED_SUCCESS)
+      buildSuccessResponse({}, Messages.JOB.DELETED_SUCCESS),
     );
   }
 }

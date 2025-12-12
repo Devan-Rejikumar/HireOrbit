@@ -29,11 +29,18 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
     const fetchSkills = async () => {
       try {
         setLoadingSuggestions(true);
-        const response = await api.get('/skills');
+        interface SkillsResponse {
+          success: boolean;
+          data: {
+            skills: Array<{ name: string }>;
+          };
+          message?: string;
+        }
+        const response = await api.get<SkillsResponse>('/skills');
         const apiSkills: string[] =
-          response.data?.data?.skills?.map((s: { name: string }) => s.name) || [];
+          response.data?.data?.skills?.map((s) => s.name) || [];
         setAvailableSkills(apiSkills);
-      } catch (err) {
+      } catch (err: unknown) {
         // silently ignore, user can still type custom skills
         console.error('Failed to load skills suggestions', err);
       } finally {
@@ -79,8 +86,10 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
       toast.success('Skills updated successfully!');
       onSave();
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to update skills';
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to update skills';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

@@ -14,7 +14,7 @@ export const getCompanyIdFromRequest = (req: Request, res: Response): string | n
 
   if (!companyId) {
     res.status(HttpStatusCode.UNAUTHORIZED).json(
-      buildErrorResponse(Messages.AUTH.COMPANY_NOT_AUTHENTICATED, Messages.AUTH.AUTHENTICATION_REQUIRED)
+      buildErrorResponse(Messages.AUTH.COMPANY_NOT_AUTHENTICATED, Messages.AUTH.AUTHENTICATION_REQUIRED),
     );
     return null;
   }
@@ -32,7 +32,7 @@ export const getAdminIdFromRequest = (req: Request, res: Response): string | nul
 
   if (!userId || role !== 'admin') {
     res.status(HttpStatusCode.UNAUTHORIZED).json(
-      buildErrorResponse(Messages.AUTH.ADMIN_NOT_AUTHENTICATED, Messages.AUTH.ADMIN_AUTH_REQUIRED)
+      buildErrorResponse(Messages.AUTH.ADMIN_NOT_AUTHENTICATED, Messages.AUTH.ADMIN_AUTH_REQUIRED),
     );
     return null;
   }

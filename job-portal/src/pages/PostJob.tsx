@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -124,12 +125,14 @@ const PostJob = () => {
       
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        navigate('/company/dashboard');
+        navigate(ROUTES.COMPANY_DASHBOARD);
       }, 2000);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error posting job:', err);
-      console.error('Error response:', err.response?.data);
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: unknown } }) : null;
+      console.error('Error response:', axiosError?.response?.data);
       console.error('Form data that failed:', formData);
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to post job';
       
@@ -644,7 +647,7 @@ const PostJob = () => {
                 <Button
                   onClick={() => {
                     setShowLimitModal(false);
-                    navigate('/subscriptions');
+                    navigate(ROUTES.SUBSCRIPTIONS);
                   }}
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                 >

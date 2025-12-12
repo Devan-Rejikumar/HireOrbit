@@ -1,20 +1,19 @@
-import { Request, Response } from "express";
-import { injectable, inject } from "inversify";
-import { IApplicationService } from "../services/interfaces/IApplicationService";
-import { CreateApplicationSchema, UpdateApplicationStatusSchema,  AddApplicationNoteSchema,GetApplicationsQuerySchema } from "../dto/schemas/application.schema";
+import { Request, Response } from 'express';
+import { injectable, inject } from 'inversify';
+import { IApplicationService } from '../services/interfaces/IApplicationService';
+import { CreateApplicationSchema, UpdateApplicationStatusSchema,  AddApplicationNoteSchema,GetApplicationsQuerySchema } from '../dto/schemas/application.schema';
 import { buildSuccessResponse } from 'shared-dto';
-import { HttpStatusCode, ValidationStatusCode } from "../enums/StatusCodes";
+import { HttpStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { TYPES } from '../config/types';
 import { uploadToCloudinary } from '../config/cloudinary';
-import { mapApplicationToResponse,mapUserApplicationsResponse} from '../dto/mappers/application.mapper';
+import { mapApplicationToResponse,mapUserApplicationsResponse } from '../dto/mappers/application.mapper';
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
-import { logger } from '../utils/logger';
 import '../types/express';
 @injectable()
 export class ApplicationController {
   constructor(
-    @inject(TYPES.IApplicationService) private _applicationService: IApplicationService
+    @inject(TYPES.IApplicationService) private _applicationService: IApplicationService,
   ) {}
 
   async applyForJob(req: Request, res: Response): Promise<void> {
@@ -24,23 +23,23 @@ export class ApplicationController {
     if (!userId || userRole !== 'jobseeker') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
     const validationResult = CreateApplicationSchema.safeParse({
       ...req.body,
-      userId
+      userId,
     });
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
 
-      const { jobId, companyId, coverLetter, expectedSalary, availability, experience, resumeBase64, resumeFileName, resumeUrl: resumeUrlFromBody } = validationResult.data;
-      const resumeFile = req.file as Express.Multer.File;
+    const { jobId, companyId, coverLetter, expectedSalary, availability, experience, resumeBase64, resumeFileName, resumeUrl: resumeUrlFromBody } = validationResult.data;
+    const resumeFile = req.file as Express.Multer.File;
 
     let resumeUrl: string | undefined;
     if (resumeUrlFromBody) {
@@ -50,11 +49,11 @@ export class ApplicationController {
         const fileBuffer = Buffer.from(resumeBase64, 'base64');
         const uploadPromise = uploadToCloudinary(fileBuffer, resumeFileName, userId);
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Upload timeout')), 10000)
+          setTimeout(() => reject(new Error('Upload timeout')), 10000),
         );
         
         resumeUrl = await Promise.race([uploadPromise, timeoutPromise]) as string;
-      } catch (uploadError) {
+      } catch {
         
         throw new AppError(Messages.RESUME.UPLOAD_FAILED, HttpStatusCode.BAD_REQUEST);
       }
@@ -63,34 +62,34 @@ export class ApplicationController {
         
         const uploadPromise = uploadToCloudinary(resumeFile.buffer, resumeFile.originalname, userId);
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Upload timeout')), 10000)
+          setTimeout(() => reject(new Error('Upload timeout')), 10000),
         );
         
         resumeUrl = await Promise.race([uploadPromise, timeoutPromise]) as string;
         
-      } catch (uploadError) {
+      } catch {
         
         throw new AppError(Messages.RESUME.UPLOAD_FAILED, HttpStatusCode.BAD_REQUEST);
       }
     }
 
-      const applicationData = {
-        jobId,
-        companyId,
-        coverLetter,
-        expectedSalary,
-        availability,
-        experience,
-        resumeUrl,
-        userId
-      };
+    const applicationData = {
+      jobId,
+      companyId,
+      coverLetter,
+      expectedSalary,
+      availability,
+      experience,
+      resumeUrl,
+      userId,
+    };
 
     const result = await this._applicationService.applyForJob(applicationData);
     
     const responseData = mapApplicationToResponse(result);
     
     res.status(HttpStatusCode.CREATED).json(
-      buildSuccessResponse(responseData, Messages.APPLICATION.CREATED_SUCCESS)
+      buildSuccessResponse(responseData, Messages.APPLICATION.CREATED_SUCCESS),
     );
   }
 
@@ -101,7 +100,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'jobseeker') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -121,9 +120,9 @@ export class ApplicationController {
           page,
           limit,
           total: result.total,
-          totalPages: Math.ceil(result.total / limit)
-        }
-      }, Messages.APPLICATION.RETRIEVED_SUCCESS)
+          totalPages: Math.ceil(result.total / limit),
+        },
+      }, Messages.APPLICATION.RETRIEVED_SUCCESS),
     );
   }
 
@@ -134,17 +133,16 @@ export class ApplicationController {
     if (!userId || userRole !== 'jobseeker') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
     const { jobId } = req.params;
     
     const result = await this._applicationService.checkApplicationStatus(userId, jobId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, 'Application status checked successfully')
+      buildSuccessResponse(result, 'Application status checked successfully'),
     );
   }
-
  
   async getApplicationById(req: Request, res: Response): Promise<void> {
     const userId = req.user?.userId ;
@@ -153,7 +151,7 @@ export class ApplicationController {
     if (!userId || !userRole) {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -169,7 +167,7 @@ export class ApplicationController {
     const responseData = mapApplicationToResponse(result);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(responseData, Messages.APPLICATION.RETRIEVED_SUCCESS)
+      buildSuccessResponse(responseData, Messages.APPLICATION.RETRIEVED_SUCCESS),
     );
   }
 
@@ -180,7 +178,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'jobseeker') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -190,7 +188,7 @@ export class ApplicationController {
     const responseData = mapApplicationToResponse(result);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(responseData, Messages.APPLICATION.WITHDRAWN_SUCCESS)
+      buildSuccessResponse(responseData, Messages.APPLICATION.WITHDRAWN_SUCCESS),
     );
   }
 
@@ -201,14 +199,14 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
     
     const result = await this._applicationService.getCompanyApplications(userId);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.APPLICATION.RETRIEVED_SUCCESS)
+      buildSuccessResponse(result, Messages.APPLICATION.RETRIEVED_SUCCESS),
     );
   }
 
@@ -219,7 +217,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -228,7 +226,7 @@ export class ApplicationController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
     
@@ -237,7 +235,7 @@ export class ApplicationController {
     const responseData = mapApplicationToResponse(result);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(responseData, Messages.APPLICATION.STATUS_UPDATED_SUCCESS)
+      buildSuccessResponse(responseData, Messages.APPLICATION.STATUS_UPDATED_SUCCESS),
     );
   }
 
@@ -248,7 +246,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -258,7 +256,7 @@ export class ApplicationController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
     
@@ -268,7 +266,7 @@ export class ApplicationController {
     const result = await this._applicationService.addApplicationNote(id, noteData);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.APPLICATION.NOTE_ADDED_SUCCESS)
+      buildSuccessResponse(result, Messages.APPLICATION.NOTE_ADDED_SUCCESS),
     );
   }
 
@@ -279,7 +277,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -288,7 +286,7 @@ export class ApplicationController {
     const result = await this._applicationService.getApplicationDetails(id, userId);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.APPLICATION.RETRIEVED_SUCCESS)
+      buildSuccessResponse(result, Messages.APPLICATION.RETRIEVED_SUCCESS),
     );
   }
 
@@ -299,7 +297,7 @@ export class ApplicationController {
     if (!userId || !userRole) {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -307,7 +305,7 @@ export class ApplicationController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
 
@@ -318,20 +316,18 @@ export class ApplicationController {
       status: validatedQuery.status,
       jobId: validatedQuery.jobId,
       page: validatedQuery.page || 1,
-      limit: validatedQuery.limit || 10
+      limit: validatedQuery.limit || 10,
     };
-
-   
 
     const result = await this._applicationService.searchApplications(filters);
 
     const responseData = {
       applications: result.applications.map(app => mapApplicationToResponse(app)),
-      pagination: result.pagination
+      pagination: result.pagination,
     };
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(responseData, Messages.APPLICATION.SEARCH_SUCCESS)
+      buildSuccessResponse(responseData, Messages.APPLICATION.SEARCH_SUCCESS),
     );
   }
 
@@ -342,7 +338,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
     
@@ -355,11 +351,11 @@ export class ApplicationController {
       shortlisted: result.shortlisted,
       rejected: result.rejected,
       accepted: result.accepted,
-      withdrawn: result.withdrawn
+      withdrawn: result.withdrawn,
     };
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(responseData, Messages.APPLICATION.STATS_RETRIEVED_SUCCESS)
+      buildSuccessResponse(responseData, Messages.APPLICATION.STATS_RETRIEVED_SUCCESS),
     );
   }
 
@@ -370,7 +366,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
     
@@ -388,7 +384,7 @@ export class ApplicationController {
 
     res.status(HttpStatusCode.OK).json({ 
       success: true,
-      data: { resumeUrl: application.resumeUrl }
+      data: { resumeUrl: application.resumeUrl },
     });
   }
 
@@ -399,7 +395,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
     const { applicationId } = req.params;
@@ -425,7 +421,7 @@ export class ApplicationController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -434,16 +430,16 @@ export class ApplicationController {
     if (!Array.isArray(applicationIds) || !status) {
       throw new AppError(
         'Application IDs and status are required',
-        HttpStatusCode.BAD_REQUEST
+        HttpStatusCode.BAD_REQUEST,
       );
     }
 
     await this._applicationService.bulkUpdateApplicationStatus(
-      applicationIds, status, userId, userId
+      applicationIds, status, userId, userId,
     );
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, Messages.APPLICATION.BULK_STATUS_UPDATED_SUCCESS)
+      buildSuccessResponse(null, Messages.APPLICATION.BULK_STATUS_UPDATED_SUCCESS),
     );
   }
 
@@ -451,7 +447,7 @@ export class ApplicationController {
     const limit = parseInt(req.query.limit as string) || 10;
     const applicants = await this._applicationService.getTopApplicantsByApplicationCount(limit);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ applicants }, 'Top applicants retrieved successfully')
+      buildSuccessResponse({ applicants }, 'Top applicants retrieved successfully'),
     );
   }
 
@@ -459,7 +455,7 @@ export class ApplicationController {
     const limit = parseInt(req.query.limit as string) || 10;
     const jobs = await this._applicationService.getTopJobsByApplicationCount(limit);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ jobs }, 'Top jobs retrieved successfully')
+      buildSuccessResponse({ jobs }, 'Top jobs retrieved successfully'),
     );
   }
 }

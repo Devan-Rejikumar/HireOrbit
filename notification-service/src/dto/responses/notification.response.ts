@@ -40,7 +40,7 @@ export class NotificationResponseMapper {
       data: notification.data,
       read: notification.read,
       createdAt: notification.createdAt.toISOString(),
-      readAt: notification.readAt?.toISOString()
+      readAt: notification.readAt?.toISOString(),
     };
   }
 
@@ -49,7 +49,7 @@ export class NotificationResponseMapper {
       notifications: notifications.map(notification => this.toResponse(notification)),
       total,
       page,
-      limit
+      limit,
     };
   }
 }

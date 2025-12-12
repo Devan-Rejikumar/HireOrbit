@@ -5,7 +5,7 @@ import { IAdminService } from '../services/interfaces/IAdminService';
 import { IUserService } from '../services/interfaces/IUserService';
 import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
-import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
 import { getAdminIdFromRequest } from '../utils/requestHelpers';
 import { RequestWithUser } from '../types/express/RequestWithUser';
 import { AppError } from '../utils/errors/AppError';
@@ -199,7 +199,7 @@ export class AdminController {
       console.log(`[AdminController] Fetching dashboard statistics with timeFilter: ${timeFilter}`);
       const statistics = await this._adminService.getDashboardStatistics(timeFilter);
       
-      console.log(`[AdminController] Successfully fetched statistics:`, {
+      console.log('[AdminController] Successfully fetched statistics:', {
         totalUsers: statistics.totalUsers,
         totalCompanies: statistics.totalCompanies,
         totalJobs: statistics.totalJobs
@@ -209,7 +209,7 @@ export class AdminController {
         success: true,
         data: statistics
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AdminController] Error in getDashboardStatistics:', error);
 
       const endDate = new Date();

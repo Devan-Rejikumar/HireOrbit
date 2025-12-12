@@ -17,7 +17,7 @@ export class RedisService {
       maxRetriesPerRequest: 3,   
     });
 
-    this._redis.on('error', (error: any) => {
+    this._redis.on('error', (error: Error) => {
       console.error('Redis connection error:', error);
     });
 

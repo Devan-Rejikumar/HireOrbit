@@ -1,4 +1,4 @@
-import { SubscriptionPlan } from '../../api/subscriptionService';
+import { SubscriptionPlan, SubscriptionFeature } from '../../api/subscriptionService';
 import { Check } from 'lucide-react';
 
 interface SubscriptionCardProps {
@@ -38,6 +38,16 @@ export const SubscriptionCard = ({
     return '/Monthly';
   };
 
+  // Helper function to extract feature name (handles both string and SubscriptionFeature)
+  const getFeatureName = (feature: string | SubscriptionFeature): string => {
+    return typeof feature === 'string' ? feature : feature.name;
+  };
+
+  // Helper function to check if a feature exists in the features array
+  const hasFeature = (featureName: string): boolean => {
+    return plan.features.some(f => getFeatureName(f) === featureName);
+  };
+
   const formatFeatureName = (feature: string) => {
     return feature
       .replace(/_/g, ' ')
@@ -50,13 +60,6 @@ export const SubscriptionCard = ({
   const getDisplayFeatures = () => {
     if (userType === 'user' && plan.name.toLowerCase() === 'premium') {
       // For User Premium, show all three features
-      const features = [...plan.features];
-      
-      // Check if ats_checker exists, if not add it
-      if (!features.includes('ats_checker')) {
-        features.push('ats_checker');
-      }
-      
       // Add implicit features with special formatting
       return [
         'ATS Score Checker - Optimize your resume for job applications',
@@ -67,27 +70,28 @@ export const SubscriptionCard = ({
     
     // For other plans, format the actual features
     return plan.features.map(feature => {
-      const formatted = formatFeatureName(feature);
+      const featureName = getFeatureName(feature);
+      const formatted = formatFeatureName(featureName);
       // Add descriptions for common features
-      if (feature === 'ats_checker') {
+      if (featureName === 'ats_checker') {
         return 'ATS Score Checker - Optimize your resume for job applications';
       }
-      if (feature === 'unlimited_jobs') {
+      if (featureName === 'unlimited_jobs') {
         return 'Unlimited job postings';
       }
-      if (feature === 'featured_jobs') {
+      if (featureName === 'featured_jobs') {
         return 'Featured job listings';
       }
-      if (feature === 'user_profile_search') {
+      if (featureName === 'user_profile_search') {
         return 'User profile search';
       }
-      if (feature === 'company_ats_filter') {
+      if (featureName === 'company_ats_filter') {
         return 'ATS-filtered resumes';
       }
-      if (feature === 'enhanced_analytics') {
+      if (featureName === 'enhanced_analytics') {
         return 'Enhanced analytics';
       }
-      if (feature === 'advanced_analytics') {
+      if (featureName === 'advanced_analytics') {
         return 'Advanced analytics';
       }
       return formatted;

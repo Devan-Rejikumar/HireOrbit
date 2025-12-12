@@ -1,7 +1,6 @@
 import { Application, ApplicationStatusHistory, ApplicationNotes } from '@prisma/client';
 import { ApplicationResponse, ApplicationDetailsResponse, ApplicationStatusHistoryResponse, ApplicationNoteResponse,CompanyApplicationsResponse,UserApplicationsResponse } from '../responses/application.response';
 
-
 export function mapApplicationToResponse(application: Application): ApplicationResponse {
   return {
     id: application.id,
@@ -18,7 +17,6 @@ export function mapApplicationToResponse(application: Application): ApplicationR
     updatedAt: application.updatedAt,
   };
 }
-
 
 export function mapApplicationStatusHistoryToResponse(statusHistory: ApplicationStatusHistory): ApplicationStatusHistoryResponse {
   return {
@@ -39,15 +37,14 @@ export function mapApplicationNoteToResponse(note: ApplicationNotes): Applicatio
   };
 }
 
-
 export function mapApplicationToDetailsResponse(application: Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];
   },
-  externalData: {
+externalData: {
     jobTitle: string;
     companyName: string;
     userName: string;
     userEmail: string;
-  }
+  },
 ): ApplicationDetailsResponse {
   return {
     ...mapApplicationToResponse(application),
@@ -60,20 +57,18 @@ export function mapApplicationToDetailsResponse(application: Application & {stat
   };
 }
 
-
 export function mapApplicationsToResponse(applications: Application[]): ApplicationResponse[] {
   return applications.map(mapApplicationToResponse);
 }
 
-
 export function mapApplicationsToDetailsResponse(applications: Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];
   }>,
-  externalDataMap: Map<string, {
+externalDataMap: Map<string, {
     jobTitle: string;
     companyName: string;
     userName: string;
     userEmail: string;
-  }>
+  }>,
 ): ApplicationDetailsResponse[] {
   return applications.map(application => {
     const externalData = externalDataMap.get(application.id);
@@ -84,21 +79,20 @@ export function mapApplicationsToDetailsResponse(applications: Array<Application
   });
 }
 
-
 export function mapCompanyApplicationsResponse(applications: Array<Application & {statusHistory: ApplicationStatusHistory[];notes: ApplicationNotes[];
   }>,
-  externalDataMap: Map<string, {
+externalDataMap: Map<string, {
     jobTitle: string;
     companyName: string;
     userName: string;
     userEmail: string;
   }>,
-  stats: {
+stats: {
     total: number;
     pending: number;
     shortlisted: number;
     rejected: number;
-  }
+  },
 ): CompanyApplicationsResponse {
   return {
     applications: mapApplicationsToDetailsResponse(applications, externalDataMap),
@@ -109,7 +103,6 @@ export function mapCompanyApplicationsResponse(applications: Array<Application &
   };
 }
 
-
 export function mapUserApplicationsResponse(
   applications: Array<Application & {
     jobTitle?: string;
@@ -117,7 +110,7 @@ export function mapUserApplicationsResponse(
     userName?: string;
     userEmail?: string;
   }>,
-  total: number
+  total: number,
 ): UserApplicationsResponse {
   const result = {
     applications: applications.map(application => {
@@ -129,15 +122,13 @@ export function mapUserApplicationsResponse(
         userName: application.userName || 'User Name',
         userEmail: application.userEmail || 'user@example.com',
         statusHistory: [],
-        notes: []
+        notes: [],
       };
-      
       
       return mappedApp;
     }),
     total,
   };
-
 
   return result;
 }
@@ -163,24 +154,24 @@ export function calculateApplicationStats(applications: Application[]): {
 
   applications.forEach(app => {
     switch (app.status) {
-      case 'PENDING':
-        stats.pending++;
-        break;
-      case 'REVIEWING':
-        stats.reviewing++;
-        break;
-      case 'SHORTLISTED':
-        stats.shortlisted++;
-        break;
-      case 'REJECTED':
-        stats.rejected++;
-        break;
-      case 'ACCEPTED':
-        stats.accepted++;
-        break;
-      case 'WITHDRAWN':
-        stats.withdrawn++;
-        break;
+    case 'PENDING':
+      stats.pending++;
+      break;
+    case 'REVIEWING':
+      stats.reviewing++;
+      break;
+    case 'SHORTLISTED':
+      stats.shortlisted++;
+      break;
+    case 'REJECTED':
+      stats.rejected++;
+      break;
+    case 'ACCEPTED':
+      stats.accepted++;
+      break;
+    case 'WITHDRAWN':
+      stats.withdrawn++;
+      break;
     }
   });
 
@@ -191,7 +182,7 @@ export function mapPaginatedApplicationsResponse<T>(
   data: T[],
   total: number,
   page: number,
-  limit: number
+  limit: number,
 ): {
   data: T[];
   pagination: {
@@ -218,7 +209,7 @@ export function mapPaginatedApplicationsResponse<T>(
   };
 }
 export function isApplicationWithRelations(
-  application: Application | (Application & { statusHistory: ApplicationStatusHistory[]; notes: ApplicationNotes[] })
+  application: Application | (Application & { statusHistory: ApplicationStatusHistory[]; notes: ApplicationNotes[] }),
 ): application is Application & { statusHistory: ApplicationStatusHistory[]; notes: ApplicationNotes[] } {
   return 'statusHistory' in application && 'notes' in application;
 }

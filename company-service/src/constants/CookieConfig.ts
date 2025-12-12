@@ -7,11 +7,11 @@
 export const CookieConfig = {
   COMPANY_ACCESS_TOKEN_MAX_AGE: parseInt(
     process.env.COMPANY_ACCESS_TOKEN_MAX_AGE || '900000', // 15 minutes
-    10
+    10,
   ),
   COMPANY_REFRESH_TOKEN_MAX_AGE: parseInt(
     process.env.COMPANY_REFRESH_TOKEN_MAX_AGE || '604800000', // 7 days
-    10
+    10,
   ),
 } as const;
 

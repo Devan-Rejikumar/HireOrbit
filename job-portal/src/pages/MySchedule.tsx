@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Clock, MapPin, Video, Phone, Loader2, CheckCircle, XCircle, User, MessageSquare, Lock, LogOut, Home, Search, Briefcase, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
 import toast from 'react-hot-toast';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -27,7 +28,7 @@ const MySchedule = () => {
 
   useEffect(() => {
     if (role !== 'jobseeker') {
-      navigate('/');
+      navigate(ROUTES.HOME);
       return;
     }
   }, [role, navigate]);
@@ -50,9 +51,11 @@ const MySchedule = () => {
       setInterviews(interviewsList);
       setTotalInterviews(response.data?.pagination?.total || interviewsList.length);
       setTotalPages(response.data?.pagination?.totalPages || 1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch interviews:', err);
-      setError(err.response?.data?.message || 'Failed to load interviews');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      setError(axiosError?.response?.data?.message || 'Failed to load interviews');
       toast.error('Failed to load interviews');
     } finally {
       setLoading(false);
@@ -179,7 +182,7 @@ const MySchedule = () => {
             
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => navigate('/jobs')} 
+                onClick={() => navigate(ROUTES.JOBS)} 
                 className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                 title="Search Jobs"
               >

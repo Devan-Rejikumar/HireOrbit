@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
 import { IResumeService } from '../services/interfaces/IResumeService';
-import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
+import { buildErrorResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
@@ -49,7 +49,7 @@ export class ResumeController {
       let buffer: Buffer;
       try {
         buffer = Buffer.from(base64Data, 'base64');
-      } catch (error) {
+      } catch {
         throw new AppError('Invalid base64 data', HttpStatusCode.BAD_REQUEST);
       }
 
@@ -81,10 +81,11 @@ export class ResumeController {
         data: { resume: result },
         message: Messages.RESUME.UPLOADED_SUCCESS
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; stack?: string };
       console.error(' [ResumeController] Resume upload error:', {
-        error: error.message,
-        stack: error.stack
+        error: err.message,
+        stack: err.stack
       });
 
       if (error instanceof AppError) {

@@ -135,16 +135,24 @@ export const Chat = () => {
                 const jobData = responseData?.data?.job || responseData?.job || responseData?.data || responseData;
                 
                 // Extract company name - company is a string in job response, not an object
+                interface JobData {
+                  company?: {
+                    companyName?: string;
+                    name?: string;
+                  } | string;
+                  companyName?: string;
+                }
                 if (jobData && typeof jobData === 'object') {
-                  companyName = (jobData as any)?.company?.companyName ||
-                              (jobData as any)?.companyName ||
-                              (jobData as any)?.company?.name ||
-                              (typeof (jobData as any)?.company === 'string' ? (jobData as any)?.company : null) ||
+                  const typedJobData = jobData as JobData;
+                  companyName = (typeof typedJobData?.company === 'object' ? typedJobData.company?.companyName : null) ||
+                              typedJobData?.companyName ||
+                              (typeof typedJobData?.company === 'object' ? typedJobData.company?.name : null) ||
+                              (typeof typedJobData?.company === 'string' ? typedJobData.company : null) ||
                               null;
                 }
                 
                 console.log(`📋 [Chat] Company name from job service:`, companyName);
-              } catch (jobError: any) {
+              } catch (jobError: unknown) {
                 console.error(`❌ [Chat] Error fetching job details:`, jobError);
               }
             }
@@ -156,9 +164,11 @@ export const Chat = () => {
             } else {
               console.warn(`⚠️ [Chat] Company name not found or invalid in application response`);
             }
-          } catch (appError: any) {
+          } catch (appError: unknown) {
             console.error(`❌ [Chat] Error fetching application details:`, appError);
-            console.error(`❌ [Chat] Error response:`, appError.response?.data);
+            const isAxiosError = appError && typeof appError === 'object' && 'response' in appError;
+            const axiosError = isAxiosError ? (appError as { response?: { data?: unknown } }) : null;
+            console.error(`❌ [Chat] Error response:`, axiosError?.response?.data);
           }
           
           // Final fallback

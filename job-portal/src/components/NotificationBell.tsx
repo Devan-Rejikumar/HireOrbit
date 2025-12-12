@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Dropdown, DropdownContent, DropdownItem, DropdownHeader } from './ui/dropdown';
 import { useNotificationContext } from '../context/NotificationContext';
+import { NotificationData } from '../api/notificationService';
 
 // Main notification bell component
 export const NotificationBell: React.FC = () => {
@@ -19,7 +20,7 @@ export const NotificationBell: React.FC = () => {
   } = useNotificationContext();
 
   // Function to format notification message based on type
-  const formatNotificationMessage = (notification: any) => {
+  const formatNotificationMessage = (notification: NotificationData) => {
     // Use the message from the notification if available (for stored notifications)
     if (notification.message) {
       return notification.message;

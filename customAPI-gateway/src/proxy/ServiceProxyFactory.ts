@@ -11,13 +11,13 @@ export interface ProxyConfig {
 
 const USER_HEADERS = ['x-user-id', 'x-user-email', 'x-user-role'] as const;
 
-const stripClientUserHeaders = (headers: Record<string, any>): void => {
+const stripClientUserHeaders = (headers: Record<string, unknown>): void => {
   USER_HEADERS.forEach(header => {
     delete headers[header];
   });
 };
 
-const forwardServerUserHeaders = (sourceHeaders: Record<string, any>, targetHeaders: Record<string, any>): void => {
+const forwardServerUserHeaders = (sourceHeaders: Record<string, unknown>, targetHeaders: Record<string, unknown>): void => {
   USER_HEADERS.forEach(header => {
     if (sourceHeaders[header]) {
       targetHeaders[header] = sourceHeaders[header];
@@ -25,7 +25,7 @@ const forwardServerUserHeaders = (sourceHeaders: Record<string, any>, targetHead
   });
 };
 
-const forwardStandardHeaders = (sourceHeaders: Record<string, any>, targetHeaders: Record<string, any>): void => {
+const forwardStandardHeaders = (sourceHeaders: Record<string, unknown>, targetHeaders: Record<string, unknown>): void => {
   if (sourceHeaders.authorization) {
     targetHeaders['Authorization'] = sourceHeaders.authorization;
   }

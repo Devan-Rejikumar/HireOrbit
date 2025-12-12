@@ -8,16 +8,14 @@ import { CookieConfig } from '../constants/CookieConfig';
 import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import path from 'path';
-import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
 import { UserRole } from '../enums/UserRole';
 import { GOOGLE_AUTH_TOKEN_EXPIRY } from '../constants/TimeConstants';
-import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, RefreshTokenSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
-import { buildSuccessResponse, buildErrorResponse } from 'shared-dto';
-import multer from 'multer';
+import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
+import { buildSuccessResponse } from 'shared-dto';
 import { v2 as cloudinary } from 'cloudinary';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { AppError } from '../utils/errors/AppError';
-import { AppConfig } from '../config/app.config';
 import { logger } from '../utils/logger';
 
 if (!admin.apps.length) {
@@ -36,22 +34,6 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const storage = multer.memoryStorage();
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: AppConfig.MAX_FILE_SIZE_BYTES,
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'));
-    }
-  }
 });
 
 @injectable()
@@ -319,13 +301,14 @@ export class UserController {
       res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
         .json(buildSuccessResponse({ user, token, isNewUser }, 
           isNewUser ? Messages.AUTH.GOOGLE_REGISTRATION_SUCCESS : Messages.AUTH.GOOGLE_LOGIN_SUCCESS));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; stack?: string; code?: string; name?: string; response?: { data?: unknown } };
       console.error('[UserController] Google auth error:', {
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-        response: error.response?.data,
-        name: error.name
+        message: err.message,
+        stack: err.stack,
+        code: err.code,
+        response: err.response?.data,
+        name: err.name
       });
       
       if (error instanceof AppError) {
@@ -333,12 +316,12 @@ export class UserController {
       }
       
       // Check if it's a Firebase Admin error
-      if (error.code === 'auth/invalid-argument' || error.code === 'auth/id-token-expired') {
+      if (err.code === 'auth/invalid-argument' || err.code === 'auth/id-token-expired') {
         throw new AppError('Invalid or expired Google token', HttpStatusCode.UNAUTHORIZED);
       }
       
       throw new AppError(
-        error.message || Messages.AUTH.GOOGLE_AUTH_FAILED,
+        err.message || Messages.AUTH.GOOGLE_AUTH_FAILED,
         HttpStatusCode.INTERNAL_SERVER_ERROR
       );
     }

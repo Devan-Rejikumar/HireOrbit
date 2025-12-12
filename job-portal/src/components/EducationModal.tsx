@@ -132,8 +132,10 @@ const EducationModal: React.FC<EducationModalProps> = ({
 
       onSave();
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to save education';
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to save education';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -155,8 +157,10 @@ const EducationModal: React.FC<EducationModalProps> = ({
       onSave();
       onClose();
       setShowDeleteConfirm(false);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to delete education';
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to delete education';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

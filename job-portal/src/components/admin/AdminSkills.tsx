@@ -32,7 +32,13 @@ const AdminSkills: React.FC = () => {
       setLoading(true);
       setError(null);
       // Fetch all skills with a large limit, similar to UserList
-      const response = await api.get<{ success: boolean; data: { skills: Skill[]; pagination?: any }; message: string }>(
+      interface PaginationInfo {
+        total?: number;
+        page?: number;
+        limit?: number;
+        totalPages?: number;
+      }
+      const response = await api.get<{ success: boolean; data: { skills: Skill[]; pagination?: PaginationInfo }; message: string }>(
         `/skills?includeInactive=true&page=1&limit=1000`
       );
       
@@ -55,9 +61,11 @@ const AdminSkills: React.FC = () => {
       }
       
       setSkills(apiSkills);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load skills', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to load skills';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to load skills';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -98,9 +106,11 @@ const AdminSkills: React.FC = () => {
       resetForm();
       await loadSkills();
       toast.success(editingSkill ? 'Skill updated successfully' : 'Skill created successfully');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to save skill', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to save skill';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to save skill';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -134,9 +144,11 @@ const AdminSkills: React.FC = () => {
       await loadSkills();
       closeDeleteModal();
       toast.success('Skill deleted successfully');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete skill', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to delete skill';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to delete skill';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -153,9 +165,11 @@ const AdminSkills: React.FC = () => {
       });
       await loadSkills();
       toast.success(`Skill ${!skill.isActive ? 'activated' : 'deactivated'} successfully`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update skill status', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to update skill status';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to update skill status';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {

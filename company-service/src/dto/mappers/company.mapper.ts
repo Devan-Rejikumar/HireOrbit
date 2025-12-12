@@ -56,6 +56,6 @@ export function mapCompanyDashboardResponse(
 export function mapCompanyToAuthResponse(company: Company, tokens: {accessToken: string; refreshToken: string}): CompanyAuthResponse {
   return {
     company: mapCompanyToResponse(company),
-    tokens
+    tokens,
   };
 }

@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import path from 'path';
 import dotenv from 'dotenv';
+import { Request } from 'express';
 import { logger } from '../utils/logger';
 import { Messages } from '../constants/Messages';
 
@@ -38,7 +39,7 @@ cloudinary.config({
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (ALLOWED_MIME_TYPES.includes(file.mimetype as typeof ALLOWED_MIME_TYPES[number])) {
     cb(null, true);
   } else {
@@ -63,9 +64,8 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
       hasApiSecret: !!process.env.CLOUDINARY_API_SECRET,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'MISSING',
       fileSize: fileBuffer.length,
-      fileName: originalName
+      fileName: originalName,
     });
-
 
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
       throw new Error(Messages.CLOUDINARY.CONFIG_VALIDATION_FAILED);
@@ -81,7 +81,7 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
       publicId,
       mimeType,
       fileSize: fileBuffer.length,
-      userId
+      userId,
     });
 
     const base64String = fileBuffer.toString('base64');
@@ -91,7 +91,7 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
       public_id: publicId,
       resource_type: 'raw',
       overwrite: false,
-      use_filename: false
+      use_filename: false,
     });
     
     if (!result || !result.secure_url) {
@@ -101,20 +101,21 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
 
     logger.info(` ${Messages.CLOUDINARY.UPLOAD_SUCCESS}:`, result.secure_url);
     return result.secure_url;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; http_code?: number; name?: string; stack?: string };
     logger.error(' [Cloudinary] Error uploading:', {
-      error: error.message,
-      stack: error.stack,
-      http_code: error.http_code,
-      name: error.name
+      error: err.message,
+      stack: err.stack,
+      http_code: err.http_code,
+      name: err.name,
     });
     
-    if (error.http_code === 401) {
+    if (err.http_code === 401) {
       throw new Error(Messages.CLOUDINARY.AUTH_FAILED);
-    } else if (error.http_code === 400) {
-      throw new Error(`${Messages.CLOUDINARY.UPLOAD_ERROR}: ${error.message || 'Invalid request'}`);
-    } else if (error.message) {
-      throw new Error(`${Messages.CLOUDINARY.UPLOAD_ERROR}: ${error.message}`);
+    } else if (err.http_code === 400) {
+      throw new Error(`${Messages.CLOUDINARY.UPLOAD_ERROR}: ${err.message || 'Invalid request'}`);
+    } else if (err.message) {
+      throw new Error(`${Messages.CLOUDINARY.UPLOAD_ERROR}: ${err.message}`);
     } else {
       throw new Error(Messages.CLOUDINARY.UPLOAD_FAILED);
     }
@@ -124,7 +125,7 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
 export const deleteResume = async (publicId: string): Promise<void> => {
   try {
     await cloudinary.uploader.destroy(publicId, {
-      resource_type: 'raw'
+      resource_type: 'raw',
     });
   } catch (error) {
     logger.error(` ${Messages.CLOUDINARY.DELETE_ERROR}:`, error);

@@ -23,10 +23,10 @@ export class InterviewService implements IInterviewService {
     @inject(TYPES.IApplicationRepository) private _applicationRepository: IApplicationRepository,
     @inject(TYPES.IEventService) private _eventService: IEventService,
     @inject(TYPES.IUserServiceClient) private _userServiceClient: IUserServiceClient,
-    @inject(TYPES.IJobServiceClient) private _jobServiceClient: IJobServiceClient
+    @inject(TYPES.IJobServiceClient) private _jobServiceClient: IJobServiceClient,
   ) {}
 
-  async scheduleInterview(data: CreateInterviewInput, scheduledBy: string): Promise<InterviewResponse> {
+  async scheduleInterview(data: CreateInterviewInput, _scheduledBy: string): Promise<InterviewResponse> {
     const application = await this._applicationRepository.findById(data.applicationId);
     if (!application) {
       throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
@@ -45,7 +45,7 @@ export class InterviewService implements IInterviewService {
       type: data.type,
       location: data.location,
       meetingLink: data.meetingLink, // Optional - external meeting link as fallback
-      notes: data.notes
+      notes: data.notes,
     });
 
     return this.mapToResponse(interview);
@@ -64,7 +64,7 @@ export class InterviewService implements IInterviewService {
 
     const [userDetails, jobDetails] = await Promise.all([
       this.fetchUserDetails(application.userId),
-      this.fetchJobDetails(application.jobId)
+      this.fetchJobDetails(application.jobId),
     ]);
 
     return {
@@ -72,7 +72,7 @@ export class InterviewService implements IInterviewService {
       candidateName: userDetails.name || 'Unknown',
       candidateEmail: userDetails.email || 'Unknown',
       jobTitle: jobDetails.title || 'Unknown',
-      companyName: jobDetails.company || 'Unknown'
+      companyName: jobDetails.company || 'Unknown',
     };
   }
 
@@ -95,7 +95,7 @@ export class InterviewService implements IInterviewService {
 
         const [userDetails, jobDetails] = await Promise.all([
           this.fetchUserDetails(application.userId),
-          this.fetchJobDetails(application.jobId)
+          this.fetchJobDetails(application.jobId),
         ]);
 
         return {
@@ -103,9 +103,9 @@ export class InterviewService implements IInterviewService {
           candidateName: userDetails.name || 'Unknown',
           candidateEmail: userDetails.email || 'Unknown',
           jobTitle: jobDetails.title || 'Unknown',
-          companyName: jobDetails.company || 'Unknown'
+          companyName: jobDetails.company || 'Unknown',
         };
-      })
+      }),
     );
 
     return interviewsWithDetails.filter(i => i !== null) as InterviewWithDetailsResponse[];
@@ -117,7 +117,7 @@ export class InterviewService implements IInterviewService {
   }> {
     const applications = await this._applicationRepository.findByUserId(userId);
     const allInterviews = await Promise.all(
-      applications.map(app => this._interviewRepository.findByApplicationId(app.id))
+      applications.map(app => this._interviewRepository.findByApplicationId(app.id)),
     );
     
     let interviews = allInterviews.flat();
@@ -138,7 +138,7 @@ export class InterviewService implements IInterviewService {
 
         const [userDetails, jobDetails] = await Promise.all([
           this.fetchUserDetails(application.userId),
-          this.fetchJobDetails(application.jobId)
+          this.fetchJobDetails(application.jobId),
         ]);
 
         return {
@@ -146,14 +146,14 @@ export class InterviewService implements IInterviewService {
           candidateName: userDetails.name || 'Unknown',
           candidateEmail: userDetails.email || 'Unknown',
           jobTitle: jobDetails.title || 'Unknown',
-          companyName: jobDetails.company || 'Unknown'
+          companyName: jobDetails.company || 'Unknown',
         };
-      })
+      }),
     );
 
     return {
       interviews: interviewsWithDetails.filter(i => i !== null) as InterviewWithDetailsResponse[],
-      total
+      total,
     };
   }
 
@@ -192,7 +192,7 @@ export class InterviewService implements IInterviewService {
             location: updatedInterview.location,
             meetingLink: updatedInterview.meetingLink,
             confirmedBy: updatedBy,
-            confirmedAt: new Date()
+            confirmedAt: new Date(),
           });
         }
       } catch (error) {
@@ -203,7 +203,7 @@ export class InterviewService implements IInterviewService {
     return this.mapToResponse(updatedInterview);
   }
 
-  async cancelInterview(id: string, cancelledBy: string, reason?: string): Promise<InterviewResponse> {
+  async cancelInterview(id: string, _cancelledBy: string, _reason?: string): Promise<InterviewResponse> {
     const interview = await this._interviewRepository.findById(id);
     if (!interview) {
       throw new AppError(Messages.INTERVIEW.NOT_FOUND, HttpStatusCode.NOT_FOUND);
@@ -227,7 +227,7 @@ export class InterviewService implements IInterviewService {
       decisionReason: data.decisionReason,
       feedback: data.feedback,
       decidedAt: new Date(),
-      decidedBy: decidedBy
+      decidedBy: decidedBy,
     };
 
     const updatedInterview = await this._interviewRepository.update(id, updateData);
@@ -238,9 +238,9 @@ export class InterviewService implements IInterviewService {
         interview.applicationId, 
         { 
           status: newApplicationStatus, 
-          reason: `Interview ${data.status.toLowerCase()}: ${data.decisionReason}` 
+          reason: `Interview ${data.status.toLowerCase()}: ${data.decisionReason}`, 
         }, 
-        decidedBy
+        decidedBy,
       );
     } catch (error) {
       logger.error('Failed to update application status:', error);
@@ -261,7 +261,7 @@ export class InterviewService implements IInterviewService {
           decisionReason: data.decisionReason,
           feedback: data.feedback,
           decidedBy: decidedBy,
-          decidedAt: new Date()
+          decidedAt: new Date(),
         });
       }
     } catch (error) {
@@ -283,7 +283,7 @@ export class InterviewService implements IInterviewService {
       status: interview.status,
       notes: interview.notes,
       createdAt: interview.createdAt,
-      updatedAt: interview.updatedAt
+      updatedAt: interview.updatedAt,
     };
   }
 
@@ -292,7 +292,7 @@ export class InterviewService implements IInterviewService {
       const userData = await this._userServiceClient.getUserById(userId);
       return {
         name: userData.data?.user?.name || userData.data?.user?.username || 'Unknown',
-        email: userData.data?.user?.email || 'Unknown'
+        email: userData.data?.user?.email || 'Unknown',
       };
     } catch (error) {
       logger.error('Failed to fetch user details:', error);
@@ -305,7 +305,7 @@ export class InterviewService implements IInterviewService {
       const jobData = await this._jobServiceClient.getJobById(jobId);
       return {
         title: jobData.data?.job?.title || jobData.job?.title || 'Unknown',
-        company: jobData.data?.job?.company || jobData.job?.company || 'Unknown'
+        company: jobData.data?.job?.company || jobData.job?.company || 'Unknown',
       };
     } catch (error) {
       logger.error('Failed to fetch job details:', error);

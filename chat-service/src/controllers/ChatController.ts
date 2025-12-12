@@ -12,7 +12,7 @@ import { AppError } from '../utils/errors/AppError';
 @injectable()
 export class ChatController {
   constructor(
-    @inject(TYPES.IChatService) private _chatService: IChatService
+    @inject(TYPES.IChatService) private _chatService: IChatService,
   ) {}
 
   async getUserConversations(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -23,7 +23,7 @@ export class ChatController {
     
     const conversations = await this._chatService.getUserConversations(userId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ conversations }, Messages.CHAT.CONVERSATIONS_RETRIEVED)
+      buildSuccessResponse({ conversations }, Messages.CHAT.CONVERSATIONS_RETRIEVED),
     );
   }
 
@@ -35,7 +35,7 @@ export class ChatController {
     
     const conversations = await this._chatService.getCompanyConversations(companyId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ conversations }, Messages.CHAT.CONVERSATIONS_RETRIEVED)
+      buildSuccessResponse({ conversations }, Messages.CHAT.CONVERSATIONS_RETRIEVED),
     );
   }
 
@@ -49,7 +49,7 @@ export class ChatController {
     }
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED)
+      buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED),
     );
   }
 
@@ -71,17 +71,17 @@ export class ChatController {
     }
     const applicationDetails = await this._chatService.getApplicationDetails(
       applicationId,
-      authHeaders
+      authHeaders,
     );
     let conversation = await this._chatService.getConversationByUserAndCompany(
       applicationDetails.userId,
-      applicationDetails.companyId
+      applicationDetails.companyId,
     );
 
     if (conversation) {
       console.log('[ChatController] Found existing conversation between user and company:', conversation.id);
       res.status(HttpStatusCode.OK).json(
-        buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED)
+        buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED),
       );
       return;
     }
@@ -89,10 +89,10 @@ export class ChatController {
     conversation = await this._chatService.createConversationFromApplication(
       applicationId,
       applicationDetails.userId,
-      applicationDetails.companyId
+      applicationDetails.companyId,
     );
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED)
+      buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED),
     );
   }
 
@@ -100,7 +100,7 @@ export class ChatController {
     const validationResult = getMessagesSchema.safeParse({
       conversationId: req.params.conversationId,
       limit: req.query.limit,
-      skip: req.query.skip
+      skip: req.query.skip,
     });
 
     if (!validationResult.success) {
@@ -111,7 +111,7 @@ export class ChatController {
     const { conversationId, limit, skip } = validationResult.data;
     const messages = await this._chatService.getMessages(conversationId, limit, skip);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ messages }, Messages.CHAT.MESSAGES_RETRIEVED)
+      buildSuccessResponse({ messages }, Messages.CHAT.MESSAGES_RETRIEVED),
     );
   }
 
@@ -136,7 +136,7 @@ export class ChatController {
     
     await this._chatService.markAsRead(conversationId, userId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, Messages.CHAT.MARKED_AS_READ)
+      buildSuccessResponse(null, Messages.CHAT.MARKED_AS_READ),
     );
   }
 
@@ -150,7 +150,7 @@ export class ChatController {
     
     const count = await this._chatService.getUnreadCount(conversationId, userId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ unreadCount: count }, Messages.CHAT.UNREAD_COUNT_RETRIEVED)
+      buildSuccessResponse({ unreadCount: count }, Messages.CHAT.UNREAD_COUNT_RETRIEVED),
     );
   }
 
@@ -163,7 +163,7 @@ export class ChatController {
     
     const count = await this._chatService.getTotalUnreadCount(userId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ unreadCount: count }, Messages.CHAT.TOTAL_UNREAD_COUNT_RETRIEVED)
+      buildSuccessResponse({ unreadCount: count }, Messages.CHAT.TOTAL_UNREAD_COUNT_RETRIEVED),
     );
   }
 
@@ -176,7 +176,7 @@ export class ChatController {
     
     const conversations = await this._chatService.getConversationsWithUnread(userId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ conversations }, Messages.CHAT.CONVERSATIONS_WITH_UNREAD_RETRIEVED)
+      buildSuccessResponse({ conversations }, Messages.CHAT.CONVERSATIONS_WITH_UNREAD_RETRIEVED),
     );
   }
 }

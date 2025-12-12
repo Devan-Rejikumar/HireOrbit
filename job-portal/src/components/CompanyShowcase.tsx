@@ -3,14 +3,7 @@ import { Building2, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import CompanyDetailsModal from '@/components/CompanyDetailsModal';
 import { companyService } from '@/api/companyService';
-import { useJobs } from '@/hooks/useJobs';
-
-interface Job {
-  id: string;
-  company: string;
-  companyId?: string;
-  location?: string;
-}
+import { useJobs, type Job } from '@/hooks/useJobs';
 
 interface Company {
   name: string;
@@ -30,7 +23,8 @@ interface Company {
 }
 
 const CompanyShowcase = () => {
-  const { data: jobs = [], isLoading: jobsLoading } = useJobs();
+  const { data: jobsData, isLoading: jobsLoading } = useJobs();
+  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -39,7 +33,7 @@ const CompanyShowcase = () => {
 
   // Memoize top companies calculation from jobs
   const topCompanies = useMemo(() => {
-    if (!jobs.length) return [];
+    if (!jobs || jobs.length === 0) return [];
     
     // Group jobs by company and count
     const companyMap = new Map<string, Company>();
@@ -111,9 +105,11 @@ const CompanyShowcase = () => {
             company.linkedinUrl = profile.socialMedia?.linkedin;
             company.logo = profile.logo;
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Silently skip - company profile doesn't exist or rate limited
-          if (error?.response?.status !== 429) {
+          const isAxiosError = error && typeof error === 'object' && 'response' in error;
+          const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+          if (axiosError?.response?.status !== 429) {
             // Silent skip for expected 404s
           }
         }
@@ -152,7 +148,7 @@ const CompanyShowcase = () => {
             logo: profile.logo,
           });
         }
-      } catch (error) {
+      } catch (error: unknown) {
         // Silently skip - profile doesn't exist
       } finally {
         setLoadingDetails(false);
