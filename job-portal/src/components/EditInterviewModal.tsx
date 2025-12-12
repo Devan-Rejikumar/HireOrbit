@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, MapPin, Video } from 'lucide-react';
-import { _interviewService, UpdateInterviewData, InterviewWithDetails } from '@/api/_interviewService';
+import { _interviewService, UpdateInterviewData, InterviewWithDetails } from '@/api/interviewService';
 import toast from 'react-hot-toast';
 
 interface EditInterviewModalProps {
@@ -50,7 +50,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
         location: interview.location || '',
         meetingLink: interview.meetingLink || '',
         notes: interview.notes || '',
-        status: interview.status as any
+        status: interview.status as FormData['status']
       });
       setError('');
     }
@@ -108,9 +108,11 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
 
       await onSuccess(interview.id, updateData);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update interview:', err);
-      setError(err.response?.data?.message || 'Failed to update interview. Please try again.');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      setError(axiosError?.response?.data?.message || 'Failed to update interview. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -206,7 +208,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
                       name="type"
                       value={value}
                       checked={formData.type === value}
-                      onChange={(e) => handleInputChange('type', e.target.value as any)}
+                      onChange={(e) => handleInputChange('type', e.target.value as FormData['type'])}
                       className="mr-3"
                     />
                     <Icon className="h-4 w-4 mr-2 text-gray-500" />
@@ -257,7 +259,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
               <select
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value as any)}
+                onChange={(e) => handleInputChange('status', e.target.value as FormData['status'])}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="PENDING">Pending</option>

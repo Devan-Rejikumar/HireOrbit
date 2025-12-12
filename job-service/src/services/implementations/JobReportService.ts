@@ -34,25 +34,25 @@ export class JobReportService implements IJobReportService {
       userIdLength: userId?.length,
     });
 
-   const existingReport = await this._jobReportRepository.findByJobIdAndUserId(jobId,userId);
-     console.log('🔍 [DEBUG] Existing report result:', {
-    found: !!existingReport,
-    existingReport: existingReport ? {
-      id: existingReport.id,
-      jobId: existingReport.jobId,
-      userId: existingReport.userId,
-      // Check if values match exactly
-      jobIdMatches: existingReport.jobId === jobId,
-      userIdMatches: existingReport.userId === userId,
-      // Check string comparison
-      jobIdStrictEqual: existingReport.jobId === jobId,
-      userIdStrictEqual: existingReport.userId === userId,
-    } : null,
-  });
+    const existingReport = await this._jobReportRepository.findByJobIdAndUserId(jobId,userId);
+    console.log('🔍 [DEBUG] Existing report result:', {
+      found: !!existingReport,
+      existingReport: existingReport ? {
+        id: existingReport.id,
+        jobId: existingReport.jobId,
+        userId: existingReport.userId,
+        // Check if values match exactly
+        jobIdMatches: existingReport.jobId === jobId,
+        userIdMatches: existingReport.userId === userId,
+        // Check string comparison
+        jobIdStrictEqual: existingReport.jobId === jobId,
+        userIdStrictEqual: existingReport.userId === userId,
+      } : null,
+    });
   
-   if(existingReport){
-    throw new AppError(Messages.JOB.ALREADY_REPORTED, HttpStatusCode.BAD_REQUEST);
-   }
+    if(existingReport){
+      throw new AppError(Messages.JOB.ALREADY_REPORTED, HttpStatusCode.BAD_REQUEST);
+    }
     const report = await this._jobReportRepository.create(jobId, userId, reason);
 
     return {
@@ -108,7 +108,7 @@ export class JobReportService implements IJobReportService {
 
     // Convert to ReportedJobResponse array
     const reportedJobs: ReportedJobResponse[] = [];
-    for (const [jobId, reports] of reportsByJob.entries()) {
+    for (const [_jobId, reports] of reportsByJob.entries()) {
       const firstReport = reports[0];
       if (firstReport && firstReport.job) {
         reportedJobs.push({

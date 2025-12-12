@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Lock, Eye, EyeOff } from 'lucide-react';
 import { userService } from '../api/userService';
 import toast from 'react-hot-toast';
+import { ROUTES } from '../constants/routes';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -108,17 +109,22 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
       
       // Redirect to login after a short delay
       setTimeout(() => {
-        window.location.href = '/login';
+        window.location.href = ROUTES.LOGIN;
       }, 2000);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error changing password:', error);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { message?: string; response?: { data?: unknown } }) : null;
       console.error('❌ Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
+        message: axiosError?.message,
+        response: axiosError?.response?.data,
+        status: axiosError?.response?.status
       });
-      toast.error(error.response?.data?.message || 'Failed to change password');
+      const errorMessage = axiosError?.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data
+        ? (axiosError.response.data as { message?: string }).message
+        : undefined;
+      toast.error(errorMessage || 'Failed to change password');
     } finally {
       setIsLoading(false);
     }
@@ -263,7 +269,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 console.log('🔥 Is loading:', isLoading);
                 console.log('🔥 Event:', e);
                 // Manually trigger form submission
-                handleSubmit(e as any);
+                handleSubmit(e as React.FormEvent<HTMLButtonElement>);
               }}
             >
               {isLoading ? 'Saving...' : 'Save Password'}

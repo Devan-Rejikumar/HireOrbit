@@ -4,15 +4,15 @@ import TYPES from '../config/types';
 import { ISubscriptionService } from '../services/interfaces/ISubscriptionService';
 import { IFeatureService } from '../services/interfaces/IFeatureService';
 import { asyncHandler } from '../utils/asyncHandler';
-import { buildSuccessResponse, buildErrorResponse } from 'shared-dto';
+import { buildSuccessResponse } from 'shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
 import { AppError } from '../utils/errors/AppError';
 import { AuthenticatedRequest } from '../types/request';
+import { Subscription, SubscriptionPlan, SubscriptionFeature } from '@prisma/client';
 import {
   mapSubscriptionToResponse,
   mapSubscriptionPlansToResponse,
-  mapSubscriptionStatusToResponse,
 } from '../dto/mappers/subscription.mapper';
 
 @injectable()
@@ -35,7 +35,7 @@ export class SubscriptionController {
     const plansResponse = mapSubscriptionPlansToResponse(plans);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ plans: plansResponse }, Messages.SUBSCRIPTION.PLANS_RETRIEVED)
+      buildSuccessResponse({ plans: plansResponse }, Messages.SUBSCRIPTION.PLANS_RETRIEVED),
     );
   });
 
@@ -62,10 +62,10 @@ export class SubscriptionController {
         billingPeriod,
       });
 
-      const subscriptionResponse = mapSubscriptionToResponse(subscription as any);
+      const subscriptionResponse = mapSubscriptionToResponse(subscription as Subscription & { plan?: SubscriptionPlan & { features?: SubscriptionFeature[] } });
 
       res.status(HttpStatusCode.CREATED).json(
-        buildSuccessResponse({ subscription: subscriptionResponse }, Messages.SUBSCRIPTION.CREATED_SUCCESS)
+        buildSuccessResponse({ subscription: subscriptionResponse }, Messages.SUBSCRIPTION.CREATED_SUCCESS),
       );
       return;
     }
@@ -79,8 +79,8 @@ export class SubscriptionController {
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(
         { checkoutUrl: checkoutSession.url, sessionId: checkoutSession.sessionId },
-        'Checkout session created. Redirect to checkout URL to complete payment.'
-      )
+        'Checkout session created. Redirect to checkout URL to complete payment.',
+      ),
     );
   });
 
@@ -94,7 +94,7 @@ export class SubscriptionController {
     await this._subscriptionService.cancelSubscription(subscriptionId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, Messages.SUBSCRIPTION.CANCELLED_SUCCESS)
+      buildSuccessResponse(null, Messages.SUBSCRIPTION.CANCELLED_SUCCESS),
     );
   });
 
@@ -108,10 +108,10 @@ export class SubscriptionController {
 
     const subscription = await this._subscriptionService.upgradeSubscription(subscriptionId, newPlanId);
 
-    const subscriptionResponse = mapSubscriptionToResponse(subscription as any);
+    const subscriptionResponse = mapSubscriptionToResponse(subscription as Subscription & { plan?: SubscriptionPlan & { features?: SubscriptionFeature[] } });
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ subscription: subscriptionResponse }, Messages.SUBSCRIPTION.UPGRADE_SUCCESS)
+      buildSuccessResponse({ subscription: subscriptionResponse }, Messages.SUBSCRIPTION.UPGRADE_SUCCESS),
     );
   });
 
@@ -126,7 +126,7 @@ export class SubscriptionController {
     const status = await this._subscriptionService.getSubscriptionStatus(userId, companyId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(status, Messages.SUBSCRIPTION.STATUS_RETRIEVED)
+      buildSuccessResponse(status, Messages.SUBSCRIPTION.STATUS_RETRIEVED),
     );
   });
 
@@ -140,7 +140,7 @@ export class SubscriptionController {
     const limitInfo = await this._featureService.checkJobPostingLimit(companyId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(limitInfo, Messages.FEATURE.JOB_LIMIT_RETRIEVED)
+      buildSuccessResponse(limitInfo, Messages.FEATURE.JOB_LIMIT_RETRIEVED),
     );
   });
 
@@ -156,7 +156,7 @@ export class SubscriptionController {
     const hasAccess = await this._featureService.checkFeatureAccess(userId, companyId, featureName);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ hasAccess, featureName }, Messages.FEATURE.FEATURE_ACCESS_CHECKED)
+      buildSuccessResponse({ hasAccess, featureName }, Messages.FEATURE.FEATURE_ACCESS_CHECKED),
     );
   });
 
@@ -170,7 +170,7 @@ export class SubscriptionController {
     await this._featureService.incrementJobPostingCount(companyId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({}, 'Job posting count incremented successfully')
+      buildSuccessResponse({}, 'Job posting count incremented successfully'),
     );
   });
 }

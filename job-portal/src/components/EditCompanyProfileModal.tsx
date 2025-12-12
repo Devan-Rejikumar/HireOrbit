@@ -141,11 +141,13 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
       toast.success('Company profile updated successfully!');
       onProfileUpdated();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating company profile:', error);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to update company profile';
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string; message?: string } } }) : null;
+      console.error('Error response:', axiosError?.response);
+      console.error('Error response data:', axiosError?.response?.data);
+      const errorMessage = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to update company profile';
       toast.error(errorMessage);
     } finally {
       setLoading(false);

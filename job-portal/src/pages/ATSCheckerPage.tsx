@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/context/AuthContext';
 import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
 import { FileCheck, Upload, Sparkles, ArrowLeft, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+
+interface ATSAnalysis {
+  score: number;
+  strengths: string[];
+  improvements: string[];
+  missingKeywords: string[];
+  keywordMatch: number;
+}
 
 export const ATSCheckerPage = () => {
   const { user } = useAuth();
@@ -16,7 +24,7 @@ export const ATSCheckerPage = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<ATSAnalysis | null>(null);
 
   useEffect(() => {
     checkPremiumAccess();
@@ -33,12 +41,14 @@ export const ATSCheckerPage = () => {
       
       if (!premium) {
         toast.error('ATS Score Checker is a Premium feature. Please upgrade to access it.');
-        navigate('/subscriptions');
+        navigate(ROUTES.SUBSCRIPTIONS);
       }
-    } catch (error: any) {
-      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
         toast.error('ATS Score Checker is a Premium feature. Please upgrade to access it.');
-        navigate('/subscriptions');
+        navigate(ROUTES.SUBSCRIPTIONS);
       }
     } finally {
       setLoading(false);
@@ -93,7 +103,7 @@ export const ATSCheckerPage = () => {
       setScore(mockScore);
       setAnalysis(mockAnalysis);
       toast.success('Resume analysis complete!');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error analyzing resume:', error);
       toast.error('Failed to analyze resume. Please try again.');
     } finally {
@@ -124,7 +134,7 @@ export const ATSCheckerPage = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate('/user/dashboard')}
+                onClick={() => navigate(ROUTES.USER_DASHBOARD)}
                 className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
               >
                 <ArrowLeft className="h-5 w-5" />

@@ -95,15 +95,18 @@ const UserList = () => {
         setTotalPages(1);
         toast.error('Invalid response format from server');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching users:', error);
       setUsers([]);
       setTotalUsers(0);
       setTotalPages(1);
       
-      if (error.response?.status === 401) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      
+      if (axiosError?.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
-      } else if (error.response?.status === 403) {
+      } else if (axiosError?.response?.status === 403) {
         toast.error('Access denied. Admin privileges required.');
       } else {
         toast.error('Failed to fetch users');
@@ -163,8 +166,10 @@ const UserList = () => {
         users.map(u => u.id === id ? { ...u, isBlocked: !currentBlocked } : u),
       );
       toast.success(`${userName} has been ${currentBlocked ? 'unblocked' : 'blocked'} successfully`);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { status?: number } }) : null;
+      if (axiosError?.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
       } else {
         toast.error(`Failed to ${action} user`);

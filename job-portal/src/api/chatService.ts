@@ -83,14 +83,13 @@ export const _chatService = {
         `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/application/${applicationId}`
       );
       return response.data.data;
-    } catch (error: any) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { status?: number; data?: any } };
-        // Handle 404 (not found) or 500 (creation failed) as "no conversation yet"
-        if (axiosError.response?.status === 404 || axiosError.response?.status === 500) {
-          console.warn(`⚠️ [ChatService] Conversation not found/created for ${applicationId}:`, axiosError.response?.data);
-          return null;
-        }
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
+      // Handle 404 (not found) or 500 (creation failed) as "no conversation yet"
+      if (axiosError && (axiosError.response?.status === 404 || axiosError.response?.status === 500)) {
+        console.warn(`⚠️ [ChatService] Conversation not found/created for ${applicationId}:`, axiosError.response?.data);
+        return null;
       }
       console.error(`❌ [ChatService] Unexpected error fetching conversation:`, error);
       throw error;

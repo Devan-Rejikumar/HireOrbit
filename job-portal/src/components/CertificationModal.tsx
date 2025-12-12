@@ -100,8 +100,10 @@ const handleDelete = async () => {
     onDelete(certification.id);
     onClose();
     setShowDeleteConfirm(false);
-  } catch (error: any) {
-    toast.error(error.response?.data?.error || 'Failed to delete certification');
+  } catch (error: unknown) {
+    const isAxiosError = error && typeof error === 'object' && 'response' in error;
+    const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+    toast.error(axiosError?.response?.data?.error || 'Failed to delete certification');
   } finally {
     setIsLoading(false);
   }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { ROUTES } from '@/constants/routes';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,16 +81,18 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
     
       switch (role) {
       case 'jobseeker':
-        navigate('/');
+        navigate(ROUTES.HOME);
         break;
       case 'company':
-        navigate('/company/dashboard');
+        navigate(ROUTES.COMPANY_DASHBOARD);
         break;
       default:
-        navigate('/');
+        navigate(ROUTES.HOME);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -118,26 +121,30 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
         console.log('[LoginForm] Login successful!');
         setSuccess('Successfully signed in! You can now navigate to the home page.');
         // Don't auto-navigate - let user see the success message
-      } catch (loginError: any) {
+      } catch (loginError: unknown) {
         console.error('[LoginForm] Login after Google signin failed:', loginError);
+        const isAxiosError = loginError && typeof loginError === 'object' && 'response' in loginError;
+        const axiosLoginError = isAxiosError ? (loginError as { response?: { status?: number; data?: { error?: string } }; message?: string }) : null;
         console.error('[LoginForm] Error details:', {
-          status: loginError?.response?.status,
-          data: loginError?.response?.data,
-          message: loginError?.message
+          status: axiosLoginError?.response?.status,
+          data: axiosLoginError?.response?.data,
+          message: axiosLoginError?.message
         });
-        setError(`Failed to fetch user data: ${loginError?.response?.data?.error || loginError?.message || 'Unknown error'}`);
+        setError(`Failed to fetch user data: ${axiosLoginError?.response?.data?.error || axiosLoginError?.message || 'Unknown error'}`);
         // Don't auto-navigate - let user see the error
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[LoginForm] Google sign-in error:', error);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } }; message?: string; code?: string }) : null;
       console.error('[LoginForm] Error details:', {
-        status: error?.response?.status,
-        data: error?.response?.data,
-        message: error?.message,
-        code: error?.code
+        status: axiosError?.response?.status,
+        data: axiosError?.response?.data,
+        message: axiosError?.message,
+        code: axiosError?.code
       });
-      const errorMessage = error?.response?.data?.error || error?.message || 'Google sign-in failed. Please try again.';
+      const errorMessage = axiosError?.response?.data?.error || axiosError?.message || 'Google sign-in failed. Please try again.';
       setError(errorMessage);
       // Don't auto-navigate - let user see the error
     }
@@ -158,8 +165,10 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
         setResetEmail('');
         setSuccess('');
       }, 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send reset email');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Failed to send reset email');
     } finally {
       setResetLoading(false);
     }

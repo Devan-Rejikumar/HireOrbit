@@ -1,9 +1,8 @@
-import { inject, injectable } from "inversify";
-import { PrismaClient, Application, ApplicationStatusHistory, ApplicationNotes, ApplicationStatus } from "@prisma/client";
-import { IApplicationRepository } from "../interfaces/IApplicationRepository";
-import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from "../../dto/schemas/application.schema";
+import { inject, injectable } from 'inversify';
+import { PrismaClient, Application, ApplicationStatusHistory, ApplicationNotes, ApplicationStatus, Prisma } from '@prisma/client';
+import { IApplicationRepository } from '../interfaces/IApplicationRepository';
+import { CreateApplicationInput, UpdateApplicationStatusInput, AddApplicationNoteInput } from '../../dto/schemas/application.schema';
 import { TYPES } from '../../config/types';
-import { logger } from '../../utils/logger';
 
 @injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -14,14 +13,14 @@ export class ApplicationRepository implements IApplicationRepository {
         ...data,
         status: 'PENDING' as ApplicationStatus,
         appliedAt: new Date(),
-      }
-    })
+      },
+    });
 
   }
   async findById(id: string): Promise<Application | null> {
     return await this._prisma.application.findUnique({
-      where: { id }
-    })
+      where: { id },
+    });
   }
 
   async findByUserId(userId: string): Promise<Array<Application & {
@@ -30,14 +29,13 @@ export class ApplicationRepository implements IApplicationRepository {
   }>> {
     const applications = await this._prisma.application.findMany({
       where: { userId },
-      orderBy: { appliedAt: 'desc' }
+      orderBy: { appliedAt: 'desc' },
     });
-
  
     return applications.map(app => ({
       ...app,
       jobTitle: undefined,
-      companyName: undefined
+      companyName: undefined,
     }));
   }
 
@@ -45,9 +43,9 @@ export class ApplicationRepository implements IApplicationRepository {
     applications: Array<Application & {jobTitle?: string;companyName?: string;}>;
     total: number;
   }> {
-    const where: any = { userId };
+    const where: Prisma.ApplicationWhereInput = { userId };
     if (status) {
-      where.status = status;
+      where.status = status as ApplicationStatus;
     }
 
     const [applications, total] = await Promise.all([
@@ -55,27 +53,26 @@ export class ApplicationRepository implements IApplicationRepository {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { appliedAt: 'desc' }
+        orderBy: { appliedAt: 'desc' },
       }),
-      this._prisma.application.count({ where })
+      this._prisma.application.count({ where }),
     ]);
 
     return {
       applications: applications.map(app => ({
         ...app,
         jobTitle: undefined,
-        companyName: undefined
+        companyName: undefined,
       })),
-      total
+      total,
     };
   }
 
   async findByCompanyId(companyId: string): Promise<Application[]> {
     let applications = await this._prisma.application.findMany({
       where: { companyId },
-      orderBy: { appliedAt: 'desc' }
+      orderBy: { appliedAt: 'desc' },
     });
-
     
     return applications;
   }
@@ -83,8 +80,8 @@ export class ApplicationRepository implements IApplicationRepository {
   async findByJobId(jobId: string): Promise<Application[]> {
     return await this._prisma.application.findMany({
       where: { jobId },
-      orderBy: { appliedAt: 'desc' }
-    })
+      orderBy: { appliedAt: 'desc' },
+    });
   }
 
   async update(id: string, data: Partial<Application>): Promise<Application> {
@@ -93,16 +90,15 @@ export class ApplicationRepository implements IApplicationRepository {
       data: {
         ...data,
         updatedAt: new Date(),
-      }
-    })
+      },
+    });
   }
 
   async delete(id: string): Promise<void> {
     await this._prisma.application.delete({
-      where: { id }
-    })
+      where: { id },
+    });
   }
-
 
   async updateStatus(id: string, data: UpdateApplicationStatusInput, changedBy: string): Promise<Application> {
     return await this._prisma.$transaction(async (tx) => {
@@ -135,7 +131,6 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
-
   async addNote(applicationId: string, data: AddApplicationNoteInput): Promise<ApplicationNotes> {
     return await this._prisma.applicationNotes.create({
       data: {
@@ -159,7 +154,6 @@ export class ApplicationRepository implements IApplicationRepository {
       where: { id: noteId },
     });
   }
-
 
   async findWithRelations(id: string): Promise<(Application & {
     statusHistory: ApplicationStatusHistory[];
@@ -237,7 +231,6 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
-
   async getApplicationStats(companyId: string): Promise<{total: number;pending: number;reviewing: number;shortlisted: number;rejected: number;accepted: number;withdrawn: number;}> {
     const applications = await this._prisma.application.findMany({
       where: { companyId },
@@ -256,30 +249,29 @@ export class ApplicationRepository implements IApplicationRepository {
 
     applications.forEach(app => {
       switch (app.status) {
-        case 'PENDING':
-          stats.pending++;
-          break;
-        case 'REVIEWING':
-          stats.reviewing++;
-          break;
-        case 'SHORTLISTED':
-          stats.shortlisted++;
-          break;
-        case 'REJECTED':
-          stats.rejected++;
-          break;
-        case 'ACCEPTED':
-          stats.accepted++;
-          break;
-        case 'WITHDRAWN':
-          stats.withdrawn++;
-          break;
+      case 'PENDING':
+        stats.pending++;
+        break;
+      case 'REVIEWING':
+        stats.reviewing++;
+        break;
+      case 'SHORTLISTED':
+        stats.shortlisted++;
+        break;
+      case 'REJECTED':
+        stats.rejected++;
+        break;
+      case 'ACCEPTED':
+        stats.accepted++;
+        break;
+      case 'WITHDRAWN':
+        stats.withdrawn++;
+        break;
       }
     });
 
     return stats;
   }
-
 
   async findPaginated(page: number,limit: number,filters?: {companyId?: string;userId?: string;status?: string;jobId?: string;}): Promise<{
     applications: Application[];
@@ -305,7 +297,6 @@ export class ApplicationRepository implements IApplicationRepository {
     return { applications, total };
   }
 
-
   async checkDuplicateApplication(userId: string, jobId: string): Promise<Application | null> {
     return await this._prisma.application.findFirst({
       where: {
@@ -313,11 +304,10 @@ export class ApplicationRepository implements IApplicationRepository {
         jobId,
       },
       orderBy: {
-        appliedAt: 'desc'
-      }
+        appliedAt: 'desc',
+      },
     });
   }
-
 
   async bulkUpdateStatus(applicationIds: string[], status: string, changedBy: string): Promise<void> {
     await this._prisma.$transaction(async (tx) => {
@@ -350,19 +340,19 @@ export class ApplicationRepository implements IApplicationRepository {
     const applications = await this._prisma.application.groupBy({
       by: ['userId'],
       _count: {
-        id: true
+        id: true,
       },
       orderBy: {
         _count: {
-          id: 'desc'
-        }
+          id: 'desc',
+        },
       },
-      take: limit
+      take: limit,
     });
 
     return applications.map(app => ({
       userId: app.userId,
-      applicationCount: app._count.id
+      applicationCount: app._count.id,
     }));
   }
 
@@ -370,19 +360,19 @@ export class ApplicationRepository implements IApplicationRepository {
     const applications = await this._prisma.application.groupBy({
       by: ['jobId'],
       _count: {
-        id: true
+        id: true,
       },
       orderBy: {
         _count: {
-          id: 'desc'
-        }
+          id: 'desc',
+        },
       },
-      take: limit
+      take: limit,
     });
 
     return applications.map(app => ({
       jobId: app.jobId,
-      applicationCount: app._count.id
+      applicationCount: app._count.id,
     }));
   }
 

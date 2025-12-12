@@ -6,6 +6,7 @@ import { useLocation, Link } from 'react-router-dom';
 import AutocompleteInput from '../components/AutocompleteInput';
 import Header from '@/components/Header';
 import JobApplicationModal from '../components/JobApplicationModal';
+import type { ApplicationData } from '@/api/applicationService';
 
 interface Job {
   id: string;
@@ -71,11 +72,16 @@ const JobListings = () => {
       if (searchFilters.location) params.append('location', searchFilters.location);
       if (searchFilters.jobType) params.append('jobType', searchFilters.jobType);
       const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
-      const jobsData = (response.data as any).data?.jobs || [];
+      interface JobsResponseData {
+        data?: {
+          jobs?: Job[];
+        };
+      }
+      const jobsData = (response.data as JobsResponseData).data?.jobs || [];
 
       setAllJobs(jobsData);
       setCurrentPage(1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching jobs:', error);
       setSearchError('Failed to fetch jobs. Please try again.');
       setAllJobs([]);
@@ -212,7 +218,7 @@ const JobListings = () => {
     setShowApplicationModal(true);
   }, []);
 
-  const handleApplicationSubmit = useCallback((applicationData: any) => {
+  const handleApplicationSubmit = useCallback((applicationData: ApplicationData) => {
     if (selectedJob) {
       setAllJobs(prevJobs => 
         prevJobs.map(job => 

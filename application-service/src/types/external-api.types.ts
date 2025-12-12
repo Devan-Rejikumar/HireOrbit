@@ -23,7 +23,7 @@ export interface JobApiResponse {
       description?: string;
       location?: string;
       applicationDeadline?: string | Date;
-      [key: string]: any;
+      [key: string]: unknown;
     };
     title?: string;
     company?: string;
@@ -31,7 +31,7 @@ export interface JobApiResponse {
   job?: {
     title?: string;
     company?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -39,12 +39,12 @@ export interface CompanyApiResponse {
   data?: {
     company?: {
       companyName?: string;
-      [key: string]: any;
+      [key: string]: unknown;
     };
   };
   company?: {
     companyName?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

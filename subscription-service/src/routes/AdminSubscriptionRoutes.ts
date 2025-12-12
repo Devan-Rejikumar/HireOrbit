@@ -9,11 +9,9 @@ const router = Router();
 const adminSubscriptionController = container.get<AdminSubscriptionController>(TYPES.AdminSubscriptionController);
 const adminRevenueController = container.get<AdminRevenueController>(TYPES.AdminRevenueController);
 
-
 router.use(extractUserFromHeaders);
 
 router.use(requireAdmin);
-
 
 router.get('/plans', adminSubscriptionController.getAllPlans);
 router.get('/plans/:id', adminSubscriptionController.getPlanById);

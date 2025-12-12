@@ -7,7 +7,6 @@ import adminSubscriptionRoutes from './routes/AdminSubscriptionRoutes';
 import container from './config/inversify.config';
 import TYPES from './config/types';
 import { StripeWebhookHandler } from './webhooks/stripe.webhook';
-import { asyncHandler } from './utils/asyncHandler';
 
 const app = express();
 
@@ -21,7 +20,6 @@ app.use(cors({
   credentials: true,
 }));
 
-
 app.use('/api/subscriptions/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json({ limit: `${AppConfig.JSON_BODY_SIZE_LIMIT_MB}mb` }));
@@ -33,7 +31,6 @@ app.get('/health', (req, res) => {
 
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/admin/subscriptions', adminSubscriptionRoutes);
-
 
 const webhookHandler = container.get<StripeWebhookHandler>(TYPES.StripeWebhookHandler);
 app.post('/api/subscriptions/webhook', webhookHandler.handleWebhook);

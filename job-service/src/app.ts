@@ -20,14 +20,13 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-
 app.use((req, res, next) => {
   const start = Date.now();
   logger.info({
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -35,7 +34,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);

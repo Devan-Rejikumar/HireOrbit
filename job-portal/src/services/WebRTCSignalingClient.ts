@@ -116,7 +116,11 @@ export class WebRTCSignalingClient {
           this.socket?.emit(WebRTCEvent.JOIN_ROOM, joinData);
         });
 
-        this.socket.on(WebRTCEvent.ROOM_JOINED, (data: { interviewId: string; room: any }) => {
+        interface RoomData {
+          participants?: string[];
+          [key: string]: unknown;
+        }
+        this.socket.on(WebRTCEvent.ROOM_JOINED, (data: { interviewId: string; room: RoomData }) => {
           console.log('✅ WebRTC Signaling: ROOM_JOINED event received!', data.interviewId);
           console.log('📊 Room participants:', data.room?.participants);
           console.log('📊 Full room data:', JSON.stringify(data.room, null, 2));

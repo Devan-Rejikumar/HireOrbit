@@ -15,7 +15,7 @@ import { RTCIceServer } from '../types/webrtc.types';
 @injectable()
 export class InterviewController {
   constructor(
-    @inject(TYPES.IInterviewService) private _interviewService: IInterviewService
+    @inject(TYPES.IInterviewService) private _interviewService: IInterviewService,
   ) {}
 
   async scheduleInterview(req: Request, res: Response): Promise<void> {
@@ -25,7 +25,7 @@ export class InterviewController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -33,7 +33,7 @@ export class InterviewController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
 
@@ -44,11 +44,11 @@ export class InterviewController {
       id: result.id,
       applicationId: result.applicationId,
       scheduledAt: result.scheduledAt,
-      type: result.type
+      type: result.type,
     });
 
     res.status(HttpStatusCode.CREATED).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.SCHEDULED_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.SCHEDULED_SUCCESS),
     );
   }
 
@@ -59,7 +59,7 @@ export class InterviewController {
     if (!userId || !userRole) {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -67,7 +67,7 @@ export class InterviewController {
     const result = await this._interviewService.getInterviewById(id);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.RETRIEVED_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.RETRIEVED_SUCCESS),
     );
   }
 
@@ -78,7 +78,7 @@ export class InterviewController {
     if (!userId || (userRole !== 'company' && userRole !== 'jobseeker')) {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -88,7 +88,7 @@ export class InterviewController {
     if (!validationResult.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validationResult.error.message}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
 
@@ -96,7 +96,7 @@ export class InterviewController {
     const result = await this._interviewService.updateInterview(id, validatedData, userId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.UPDATED_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.UPDATED_SUCCESS),
     );
   }
 
@@ -107,7 +107,7 @@ export class InterviewController {
     if (!userId || (userRole !== 'company' && userRole !== 'jobseeker')) {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -117,7 +117,7 @@ export class InterviewController {
     const result = await this._interviewService.cancelInterview(id, userId, reason);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.CANCELLED_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.CANCELLED_SUCCESS),
     );
   }
 
@@ -128,7 +128,7 @@ export class InterviewController {
     if (!userId || !userRole) {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -136,7 +136,7 @@ export class InterviewController {
     const result = await this._interviewService.getInterviewsByApplication(applicationId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.RETRIEVED_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.RETRIEVED_SUCCESS),
     );
   }
 
@@ -147,14 +147,14 @@ export class InterviewController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
     const result = await this._interviewService.getCompanyInterviews(userId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.RETRIEVED_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.RETRIEVED_SUCCESS),
     );
   }
 
@@ -165,7 +165,7 @@ export class InterviewController {
     if (!userId || userRole !== 'jobseeker') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
@@ -181,9 +181,9 @@ export class InterviewController {
           page,
           limit,
           total: result.total,
-          totalPages: Math.ceil(result.total / limit)
-        }
-      }, Messages.INTERVIEW.RETRIEVED_SUCCESS)
+          totalPages: Math.ceil(result.total / limit),
+        },
+      }, Messages.INTERVIEW.RETRIEVED_SUCCESS),
     );
   }
 
@@ -194,7 +194,7 @@ export class InterviewController {
     if (!userId || userRole !== 'company') {
       throw new AppError(
         Messages.VALIDATION.UNAUTHORIZED_ACCESS,
-        HttpStatusCode.UNAUTHORIZED
+        HttpStatusCode.UNAUTHORIZED,
       );
     }
 
@@ -205,17 +205,16 @@ export class InterviewController {
     if (!validation.success) {
       throw new AppError(
         `${Messages.VALIDATION.VALIDATION_FAILED}: ${validation.error.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ')}`,
-        ValidationStatusCode.VALIDATION_ERROR
+        ValidationStatusCode.VALIDATION_ERROR,
       );
     }
 
     const result = await this._interviewService.makeInterviewDecision(id, validation.data, userId);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(result, Messages.INTERVIEW.DECISION_MADE_SUCCESS)
+      buildSuccessResponse(result, Messages.INTERVIEW.DECISION_MADE_SUCCESS),
     );
   }
-
 
   async getWebRTCConfig(req: Request, res: Response): Promise<void>{
     const userId = req.user?.userId;
@@ -225,33 +224,33 @@ export class InterviewController {
       throw new AppError(Messages.VALIDATION.UNAUTHORIZED_ACCESS,HttpStatusCode.UNAUTHORIZED);
     }
 
-    const {id: interviewId} = req.params;
+    const { id: interviewId } = req.params;
 
-    const interview = await this._interviewService.getInterviewById(interviewId);
+    await this._interviewService.getInterviewById(interviewId);
 
     const iceServers: RTCIceServer[] = [
       {
-        urls: AppConfig.STUN_SERVER_URL
-      }
+        urls: AppConfig.STUN_SERVER_URL,
+      },
     ];
 
     if (AppConfig.TURN_SERVER_URL) {
       iceServers.push({
         urls: AppConfig.TURN_SERVER_URL,
         username: AppConfig.TURN_USERNAME,
-        credential: AppConfig.TURN_CREDENTIAL
+        credential: AppConfig.TURN_CREDENTIAL,
       });
     }
 
-      const webrtcConfig = {
+    const webrtcConfig = {
       interviewId: interviewId, 
       roomId: interviewId, 
       signalingServerUrl: AppConfig.CHAT_SERVICE_URL,
-      iceServers
+      iceServers,
     };
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(webrtcConfig, Messages.INTERVIEW.WEBRTC_CONFIG_RETRIEVED_SUCCESS)
+      buildSuccessResponse(webrtcConfig, Messages.INTERVIEW.WEBRTC_CONFIG_RETRIEVED_SUCCESS),
     );
     
   }

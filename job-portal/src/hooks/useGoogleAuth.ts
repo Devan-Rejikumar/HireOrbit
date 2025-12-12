@@ -36,7 +36,14 @@ export const useGoogleAuth = () => {
   //   handleRedirectResult();
   // }, []);
 
-  const processGoogleUser = async (user: any) => {
+  interface FirebaseUser {
+    getIdToken: () => Promise<string>;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+  }
+
+  const processGoogleUser = async (user: FirebaseUser) => {
     const idToken = await user.getIdToken();
     
     const response = await api.post<GoogleAuthResponse>('/users/google-auth', {
@@ -61,9 +68,12 @@ export const useGoogleAuth = () => {
         const result = await signInWithPopup(auth, googleProvider);
         console.log('[useGoogleAuth] Popup sign-in successful');
         return await processGoogleUser(result.user);
-      } catch (popupError: any) {
+      } catch (popupError: unknown) {
         // Handle actual Firebase auth errors
-        if (popupError.code === 'auth/popup-blocked') {
+        const firebaseError = popupError && typeof popupError === 'object' && 'code' in popupError
+          ? (popupError as { code?: string })
+          : null;
+        if (firebaseError?.code === 'auth/popup-blocked') {
           throw new Error('Popup was blocked by your browser. Please allow popups for this site and try again.');
         } else if (popupError.code === 'auth/popup-closed-by-user') {
           throw new Error('Sign-in was cancelled. Please try again.');

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { subscriptionService, SubscriptionStatusResponse, SubscriptionPlan } from '../../api/subscriptionService';
 import { CreditCard, Sparkles } from 'lucide-react';
 
@@ -42,9 +43,11 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
         if (statusResponse?.data) {
           setStatus(statusResponse.data);
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If 401/403, user is not authenticated or on free plan - that's okay
-        if (error?.response?.status === 401 || error?.response?.status === 403) {
+        const isAxiosError = error && typeof error === 'object' && 'response' in error;
+        const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+        if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
           // User is not authenticated or doesn't have subscription - treat as free
           setStatus(null);
         } else {
@@ -126,7 +129,7 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
           </div>
           <div className="flex gap-3 flex-shrink-0">
             <button
-              onClick={() => navigate('/subscriptions/status')}
+              onClick={() => navigate(ROUTES.SUBSCRIPTIONS_STATUS)}
               className="px-4 py-2 bg-white border border-green-300 rounded-lg text-green-700 hover:bg-green-50 transition-colors text-sm font-medium"
             >
               Manage Plan
@@ -203,7 +206,7 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
         </div>
         <div className="flex gap-3 flex-shrink-0">
           <button
-            onClick={() => navigate('/subscriptions')}
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
             className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
           >
             View Plans
@@ -213,7 +216,7 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
               if (premiumPlan) {
                 navigate(`/subscriptions/checkout?planId=${premiumPlan.id}&billingPeriod=monthly`);
               } else {
-                navigate('/subscriptions');
+                navigate(ROUTES.SUBSCRIPTIONS);
               }
             }}
             className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-semibold"

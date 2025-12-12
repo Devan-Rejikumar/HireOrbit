@@ -196,9 +196,11 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
       setSelectedDate(null);
       setSelectedTime('');
       setCurrentMonth(new Date());
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to schedule interview:', err);
-      setError(err.response?.data?.message || 'Failed to schedule interview. Please try again.');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      setError(axiosError?.response?.data?.message || 'Failed to schedule interview. Please try again.');
     } finally {
       setSubmitting(false);
     }

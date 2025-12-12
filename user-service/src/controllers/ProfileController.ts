@@ -6,9 +6,9 @@ import { IUserService } from '../services/interfaces/IUserService';
 import { IAchievementService } from '../services/interfaces/IAchievementService';
 import { ICertificationService } from '../services/interfaces/ICertificationService';
 import { UserProfile } from '@prisma/client';
-import { HttpStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { HttpStatusCode } from '../enums/StatusCodes';
 import { EducationSchema, ExperienceSchema, UpdateProfileSchema } from '../dto/schemas/profile.schema';
-import { buildErrorResponse, buildSuccessResponse } from 'shared-dto';
+import { buildSuccessResponse } from 'shared-dto';
 import { Messages } from '../constants/Messages';
 import cloudinary from '../config/cloudinary';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
@@ -163,7 +163,7 @@ export class ProfileController {
     let fullProfile = await this._profileService.getFullProfile(userId);
 
     if (!fullProfile) {
-      const emptyProfile = await this._profileService.createProfile(userId, {});
+      await this._profileService.createProfile(userId, {});
       fullProfile = await this._profileService.getFullProfile(userId);
     }
     if (!fullProfile) {
@@ -173,7 +173,7 @@ export class ProfileController {
     const achievements = await this._achievementService.getAchievements(userId);
     const certifications = await this._certificationService.getCertifications(userId);
 
-    const completionPercentage = this.calculateCompletionPercentage(fullProfile);
+    const completionPercentage = this._calculateCompletionPercentage(fullProfile);
     
     const responseData = {
       profile: {
@@ -195,7 +195,7 @@ export class ProfileController {
     );
   }
 
-  private calculateCompletionPercentage(profile: (UserProfile & { experience?: unknown[]; education?: unknown[]; certifications?: unknown; achievements?: unknown }) | null): number {
+  private _calculateCompletionPercentage(profile: (UserProfile & { experience?: unknown[]; education?: unknown[]; certifications?: unknown; achievements?: unknown }) | null): number {
     if (!profile) {
       return 0;
     }
@@ -210,7 +210,7 @@ export class ProfileController {
       { field: 'phone', weight: 4, required: true }
     ];
 
-    essentialFields.forEach(({ field, weight, required }) => {
+    essentialFields.forEach(({ field, weight }) => {
       const value = profile[field as keyof typeof profile];
       if (value && (typeof value !== 'string' || value.trim().length > 0)) {
         score += weight;
@@ -246,7 +246,7 @@ export class ProfileController {
         if (Array.isArray(certifications) && certifications.length >= 1) {
           score += 2;
         }
-      } catch (error) {
+      } catch {
         // Ignore parse errors
       }
     }
@@ -260,7 +260,7 @@ export class ProfileController {
         if (Array.isArray(achievements) && achievements.length >= 1) {
           score += 2;
         }
-      } catch (error) {
+      } catch {
         // Ignore parse errors
       }
     }

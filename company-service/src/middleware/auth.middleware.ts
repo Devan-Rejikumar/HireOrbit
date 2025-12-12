@@ -54,7 +54,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
     if (!token) {
       logger.warn('No access token found in Authorization header or cookies');
       res.status(HttpStatusCode.UNAUTHORIZED).json(
-        buildErrorResponse(Messages.ERROR.NO_TOKEN_PROVIDED, Messages.AUTH.AUTHENTICATION_REQUIRED)
+        buildErrorResponse(Messages.ERROR.NO_TOKEN_PROVIDED, Messages.AUTH.AUTHENTICATION_REQUIRED),
       );
       return;
     }
@@ -68,7 +68,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
     if (decoded.role !== 'company' && decoded.role !== 'admin') {
       logger.warn('Invalid token type', { expected: 'company or admin', got: decoded.role });
       res.status(HttpStatusCode.FORBIDDEN).json(
-        buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.ERROR.COMPANY_TOKEN_REQUIRED)
+        buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.ERROR.COMPANY_TOKEN_REQUIRED),
       );
       return;
     }
@@ -79,7 +79,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
     if (!userId) {
       logger.warn('No user ID found in token');
       res.status(HttpStatusCode.UNAUTHORIZED).json(
-        buildErrorResponse(Messages.AUTH.COMPANY_NOT_AUTHENTICATED, Messages.AUTH.AUTHENTICATION_REQUIRED)
+        buildErrorResponse(Messages.AUTH.COMPANY_NOT_AUTHENTICATED, Messages.AUTH.AUTHENTICATION_REQUIRED),
       );
       return;
     }
@@ -88,7 +88,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
       companyId: companyId,
       email: decoded.email,
       role: decoded.role,
-      userType: decoded.userType
+      userType: decoded.userType,
     };
 
     logger.debug('User context set', {
@@ -103,7 +103,7 @@ export const authenticateCompany = (req: AuthenticatedRequest, res: Response, ne
   } catch (error) {
     logger.error('Token verification failed', { error: error instanceof Error ? error.message : 'Unknown error' });
     res.status(HttpStatusCode.UNAUTHORIZED).json(
-      buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.AUTH.AUTHENTICATION_REQUIRED)
+      buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.AUTH.AUTHENTICATION_REQUIRED),
     );
   }
 };

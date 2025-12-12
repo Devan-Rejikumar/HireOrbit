@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { 
-  User, 
+  User as UserIcon, 
   Calendar, 
   MessageSquare, 
   Lock, 
@@ -33,8 +34,8 @@ import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionS
 import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
 import { _applicationService, Application } from '@/api/applicationService';
-import axios from 'axios';
 import api from '@/api/axios';
+import type { User } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
 import {
   Chart as ChartJS,
@@ -118,15 +119,16 @@ const UserDashboard = () => {
 
   const loadProfileCompletion = async () => {
     try {
-      const response = await api.get<{
+      interface ProfileCompletionResponse {
         success: boolean;
         data: {
-          profile: any;
-          user: any;
+          profile: Record<string, unknown>;
+          user: User;
           completionPercentage: number;
         };
         message: string;
-      }>('/profile/full');
+      }
+      const response = await api.get<ProfileCompletionResponse>('/profile/full');
       
       if (response.data.data?.completionPercentage !== undefined) {
         setProfileCompletion(response.data.data.completionPercentage);
@@ -241,8 +243,10 @@ const UserDashboard = () => {
       if (premium && activeSection === 'overview') {
         loadPremiumDashboardData();
       }
-    } catch (error: any) {
-      if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
         setIsPremium(false);
       }
     }
@@ -250,12 +254,12 @@ const UserDashboard = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/', { replace: true });
+    navigate(ROUTES.HOME, { replace: true });
   };
 
   const sidebarItems = [
     { id: 'overview', label: 'Overview', icon: Home, path: null },
-    { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
+    { id: 'profile', label: 'Profile', icon: UserIcon, path: '/profile' },
     { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
     { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
     { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
@@ -452,7 +456,7 @@ const UserDashboard = () => {
               
               {/* Search Jobs */}
               <button 
-                onClick={() => navigate('/jobs')} 
+                onClick={() => navigate(ROUTES.JOBS)} 
                 className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                 title="Search Jobs"
               >
@@ -564,7 +568,7 @@ const UserDashboard = () => {
                       )}
                     </div>
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-blue-600" />
+                      <UserIcon className="h-6 w-6 text-blue-600" />
                     </div>
                   </div>
                 </div>
@@ -800,10 +804,10 @@ const UserDashboard = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
-                    onClick={() => navigate('/profile')}
+                    onClick={() => navigate(ROUTES.PROFILE)}
                     className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
                   >
-                    <User className="h-5 w-5 text-blue-600" />
+                    <UserIcon className="h-5 w-5 text-blue-600" />
                     <div>
                       <p className="font-medium text-gray-900">View Profile</p>
                       <p className="text-sm text-gray-600">Manage your profile information</p>
@@ -811,7 +815,7 @@ const UserDashboard = () => {
                   </button>
                   
                   <button
-                    onClick={() => navigate('/schedule')}
+                    onClick={() => navigate(ROUTES.SCHEDULE)}
                     className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
                   >
                     <Calendar className="h-5 w-5 text-green-600" />
@@ -822,7 +826,7 @@ const UserDashboard = () => {
                   </button>
                   
                   <button
-                    onClick={() => navigate('/jobs')}
+                    onClick={() => navigate(ROUTES.JOBS)}
                     className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
                   >
                     <Search className="h-5 w-5 text-purple-600" />
@@ -834,7 +838,7 @@ const UserDashboard = () => {
                   
                   {isPremium ? (
                     <button
-                      onClick={() => navigate('/ats-checker')}
+                      onClick={() => navigate(ROUTES.ATS_CHECKER)}
                       className="flex items-center gap-3 p-4 border-2 border-purple-300 rounded-lg hover:bg-purple-50 transition-colors text-left bg-gradient-to-r from-purple-50 to-blue-50"
                     >
                       <div className="relative">
@@ -851,7 +855,7 @@ const UserDashboard = () => {
                     </button>
                   ) : (
                     <button
-                      onClick={() => navigate('/subscriptions')}
+                      onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                       className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left opacity-60"
                       disabled
                     >

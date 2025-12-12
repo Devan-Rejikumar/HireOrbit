@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { subscriptionService, SubscriptionStatusResponse } from '../../api/subscriptionService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { CheckCircle, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -44,9 +45,11 @@ export const SubscriptionStatus = () => {
           navigate(dashboardPath); // Now dashboardPath is accessible
         }, 3000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading subscription status:', error);
-      toast.error(error.response?.data?.message || 'Failed to load subscription status');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to load subscription status');
     } finally {
       setLoading(false);
     }
@@ -67,7 +70,7 @@ export const SubscriptionStatus = () => {
           <h3 className="text-xl font-semibold mb-2">No Active Subscription</h3>
           <p className="text-gray-600 mb-4">You don't have an active subscription plan.</p>
           <button
-            onClick={() => navigate('/subscriptions')}
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Browse Plans
@@ -106,7 +109,7 @@ export const SubscriptionStatus = () => {
                   <ArrowRight className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => navigate('/subscriptions')}
+                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                   className="px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50"
                 >
                   View All Plans
@@ -181,13 +184,13 @@ export const SubscriptionStatus = () => {
 
         <div className="flex gap-4">
           <button
-            onClick={() => navigate('/subscriptions/manage')}
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS_MANAGE)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Manage Subscription
           </button>
           <button
-            onClick={() => navigate('/subscriptions')}
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
             className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
           >
             View Plans

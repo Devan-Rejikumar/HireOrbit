@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import api from '@/api/axios';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 
 interface ForgotPasswordProps {
   onSwitchToLogin?: () => void;
@@ -53,9 +54,12 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
           duration: 3000,
         });
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
-      toast.error(err.response?.data?.error || 'Failed to send OTP', {
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to send OTP. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage, {
         duration: 3000,
       });
     } finally {
@@ -78,9 +82,12 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
           duration: 3000,
         });
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'OTP verification failed. Please try again.');
-      toast.error(err.response?.data?.error || 'OTP verification failed', {
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'OTP verification failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage, {
         duration: 3000,
       });
     } finally {
@@ -101,9 +108,12 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
           duration: 3000,
         });
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to resend OTP. Please try again.');
-      toast.error(err.response?.data?.error || 'Failed to resend OTP', {
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to resend OTP. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage, {
         duration: 3000,
       });
     } finally {
@@ -141,13 +151,16 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onSwitchToLogin }) => {
           if (onSwitchToLogin) {
             onSwitchToLogin();
           } else {
-            navigate('/login');
+            navigate(ROUTES.LOGIN);
           }
         }, 2000);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Password reset failed. Please try again.');
-      toast.error(err.response?.data?.error || 'Password reset failed', {
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Password reset failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage, {
         duration: 3000,
       });
     } finally {

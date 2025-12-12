@@ -34,8 +34,9 @@ export class JobServiceClient implements IJobServiceClient {
 
       const data = await response.json() as JobApiResponse;
       return data;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error: unknown) {
+      const err = error as { name?: string };
+      if (err.name === 'AbortError') {
         logger.error(`JobServiceClient: Request timeout for job ${jobId}`);
       } else {
         logger.error(`JobServiceClient: Error fetching job ${jobId}:`, error);

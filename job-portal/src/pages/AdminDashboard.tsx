@@ -8,6 +8,7 @@ import AdminStatistics from '@/components/admin/AdminStatistics';
 import AdminSubscriptionPlans from '@/components/admin/AdminSubscriptionPlans';
 import AdminRevenue from '@/components/admin/AdminRevenue';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import api from '@/api/axios';
 import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase, FiLayers, FiCreditCard } from 'react-icons/fi';
 
@@ -19,7 +20,7 @@ const AdminDashboard: React.FC = () => {
     try {
       console.log(1);
       await api.post('/users/admin/logout');
-      navigate('/admin/login',{ replace:true });
+      navigate(ROUTES.ADMIN_LOGIN,{ replace:true });
     } catch (error) {
       console.error('Logout failed:', error);
     }

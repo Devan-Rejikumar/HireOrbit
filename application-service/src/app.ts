@@ -5,7 +5,7 @@ import { IEventService } from './services/interfaces/IEventService';
 import applicationRoutes from './routes/ApplicationRoutes';
 import interviewRoutes from './routes/InterviewRoutes';
 import { APPLICATION_ROUTES, INTERVIEW_ROUTES } from './constants/routes';
-import {TYPES} from './config/types';
+import { TYPES } from './config/types';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { ErrorHandler } from './middleware/error-handler.middleware';
@@ -32,7 +32,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -40,7 +40,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);
@@ -66,24 +66,23 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy', 
     service: 'application-service',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.use(APPLICATION_ROUTES.API_BASE_PATH, applicationRoutes);
 app.use(INTERVIEW_ROUTES.API_BASE_PATH, interviewRoutes);
 
-
 app.use(ErrorHandler);
-
 
 async function initializeServices(): Promise<void> {
   try {
     const _eventService = container.get<IEventService>(TYPES.IEventService);
     await _eventService.start();
     logger.info('Event service (Kafka) initialized successfully');
-  } catch (error: any) {
-    logger.warn('Failed to initialize event service (Kafka not available):', error.message);
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    logger.warn('Failed to initialize event service (Kafka not available):', err.message);
     logger.info('Continuing without Kafka - events will not be published');
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { ROUTES } from '../constants/routes';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -79,7 +80,7 @@ const ProtectedRoute = ({
     
     if (requireAuth && !isAuthenticated) {
       hasRedirected.current = true;
-      navigate('/login', { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
       return;
     }
 
@@ -88,13 +89,13 @@ const ProtectedRoute = ({
       hasRedirected.current = true;
       switch (role) {
       case 'jobseeker':
-        navigate('/', { replace: true });
+        navigate(ROUTES.HOME, { replace: true });
         break;
       case 'company':
-        navigate('/company/dashboard', { replace: true });
+        navigate(ROUTES.COMPANY_DASHBOARD, { replace: true });
         break;
       case 'admin':
-        navigate('/admin/dashboard', { replace: true });
+        navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
         break;
       }
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -162,7 +163,7 @@ const CompanyProfileSetup = () => {
         if (step.profileCompleted) {
           console.log('Profile completed, redirecting to review status');
           setIsNavigating(true);
-          navigate('/company/review-status', { replace: true });
+          navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else {
           console.log('Profile not completed, setting to step 2');
@@ -173,17 +174,17 @@ const CompanyProfileSetup = () => {
         if (step === 'approved') {
           console.log('Redirecting to dashboard...');
           setIsNavigating(true);
-          navigate('/company/dashboard', { replace: true });
+          navigate(ROUTES.COMPANY_DASHBOARD, { replace: true });
           return;
         } else if (step === 'rejected') {
           console.log('Redirecting to review status...');
           setIsNavigating(true);
-          navigate('/company/review-status', { replace: true });
+          navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else if (step === 'completed') {
           console.log('Redirecting to review status...');
           setIsNavigating(true);
-          navigate('/company/review-status', { replace: true });
+          navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else if (step === 'step3') {
           setCurrentStep(3);
@@ -191,11 +192,13 @@ const CompanyProfileSetup = () => {
           setCurrentStep(2);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('=== Frontend Error ===');
-      console.error('Error details:', error.response?.data);
-      console.error('Status:', error.response?.status);
-      console.error('Headers:', error.response?.headers);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown; status?: number; headers?: unknown } }) : null;
+      console.error('Error details:', axiosError?.response?.data);
+      console.error('Status:', axiosError?.response?.status);
+      console.error('Headers:', axiosError?.response?.headers);
     }
   };
 
@@ -235,8 +238,10 @@ const CompanyProfileSetup = () => {
         setCurrentStep(3);
         setSuccess('');
       }, 1000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save profile data');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Failed to save profile data');
     } finally {
       setLoading(false);
     }
@@ -258,10 +263,12 @@ const CompanyProfileSetup = () => {
       await api.post<{ success: boolean; message: string }>('/company/profile/step3', step3Data);
       setSuccess('Profile completed! Redirecting to review status...');
       setTimeout(() => {
-        navigate('/company/review-status');
+        navigate(ROUTES.COMPANY_REVIEW_STATUS);
       }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to complete profile');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Failed to complete profile');
     } finally {
       setLoading(false);
     }

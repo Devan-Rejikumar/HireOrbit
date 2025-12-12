@@ -29,10 +29,10 @@ export interface IAdminSubscriptionService {
   updatePlan(id: string, input: UpdatePlanInput): Promise<SubscriptionPlan>;
   updatePlanPrice(id: string, input: UpdatePlanPriceInput): Promise<SubscriptionPlan>;
   deletePlan(id: string): Promise<void>;
-  createDiscount(input: any): Promise<any>;
-  updateDiscount(id: string, input: any): Promise<any>;
+  createDiscount(input: Record<string, unknown>): Promise<Record<string, unknown>>;
+  updateDiscount(id: string, input: Record<string, unknown>): Promise<Record<string, unknown>>;
   deleteDiscount(id: string): Promise<void>;
-  getAllDiscounts(): Promise<any[]>;
-  getDiscountsByPlan(planId: string): Promise<any[]>;
+  getAllDiscounts(): Promise<Record<string, unknown>[]>;
+  getDiscountsByPlan(planId: string): Promise<Record<string, unknown>[]>;
 }
 

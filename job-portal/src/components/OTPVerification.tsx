@@ -54,8 +54,10 @@ function OTPVerification({ email, onVerificationSuccess, onBack, role }: OTPVeri
           onVerificationSuccess();
         }, 1500);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'OTP verification failed. Please try again.');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'OTP verification failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -77,8 +79,10 @@ function OTPVerification({ email, onVerificationSuccess, onBack, role }: OTPVeri
         setSuccess('New OTP sent successfully!');
         setCountdown(60); 
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to resend OTP. Please try again.');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Failed to resend OTP. Please try again.');
     } finally {
       setIsResending(false);
     }

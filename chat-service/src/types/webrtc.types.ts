@@ -5,12 +5,10 @@
 
 export type WebRTCRole = 'company' | 'jobseeker';
 
-
 export interface SessionDescription {
   type: 'offer' | 'answer';
   sdp: string;
 }
-
 
 export interface IceCandidate {
   candidate: string;
@@ -18,14 +16,12 @@ export interface IceCandidate {
   sdpMid: string | null;
 }
 
-
 export interface WebRTCParticipant {
   userId: string;
   socketId: string;
   role: WebRTCRole;
   joinedAt: Date;
 }
-
 
 export interface SerializableWebRTCParticipant {
   userId: string;
@@ -41,14 +37,12 @@ export interface WebRTCRoom {
   createdAt: Date;
 }
 
-
 export interface SerializableWebRTCRoom {
   interviewId: string;
   roomId?: string;
   participants: Record<string, SerializableWebRTCParticipant>;
   createdAt: string;
 }
-
 
 export interface JoinRoomData {
   interviewId: string;

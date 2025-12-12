@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { subscriptionService, SubscriptionPlan, SubscriptionStatusResponse } from '../api/subscriptionService';
 import { SubscriptionCard } from '../components/subscription/SubscriptionCard';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { useAuth } from '../context/AuthContext';
 import { 
   Home, 
@@ -81,7 +82,7 @@ export const SubscriptionPage = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/', { replace: true });
+    navigate(ROUTES.HOME, { replace: true });
   };
 
   // Sidebar items based on role
@@ -136,7 +137,7 @@ export const SubscriptionPage = () => {
         <div className="text-center">
           <p className="text-gray-600 mb-4">Please log in to view subscription plans.</p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate(ROUTES.LOGIN)}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
           >
             Go to Login
@@ -181,7 +182,7 @@ export const SubscriptionPage = () => {
               <div className="flex items-center gap-2">
                 <Button 
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white"
-                  onClick={() => navigate('/company/post-job')}
+                  onClick={() => navigate(ROUTES.COMPANY_POST_JOB)}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Post a job
@@ -217,14 +218,14 @@ export const SubscriptionPage = () => {
               <div className="space-y-1 mb-8">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
                 <button 
-                  onClick={() => navigate('/company/dashboard')}
+                  onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                   className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
                 >
                   <Home className="h-5 w-5" />
                   Dashboard
                 </button>
                 <button 
-                  onClick={() => navigate('/chat')}
+                  onClick={() => navigate(ROUTES.CHAT)}
                   className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left relative"
                 >
                   <MessageSquare className="h-5 w-5" />
@@ -239,23 +240,23 @@ export const SubscriptionPage = () => {
                   <Building2 className="h-5 w-5" />
                   Company Profile
                 </button>
-                <button onClick={() => navigate('/company/applications')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                   <User className="h-5 w-5" />
                   All Applicants
                 </button>
-                <button onClick={() => navigate('/company/jobs')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <button onClick={() => navigate(ROUTES.COMPANY_JOBS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                   <Briefcase className="h-5 w-5" />
                   Job Listing
                 </button>
                 <button 
-                  onClick={() => navigate('/company/interviews')}
+                  onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
                   className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
                 >
                   <CalendarIcon className="h-5 w-5" />
                   Interview Management
                 </button>
                 <button 
-                  onClick={() => navigate('/subscriptions')}
+                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                   className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left"
                 >
                   <CreditCard className="h-5 w-5" />
@@ -265,7 +266,7 @@ export const SubscriptionPage = () => {
               
               <div className="space-y-1">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-                <button onClick={() => navigate('/company/settings')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                   <Settings className="h-5 w-5" />
                   Settings
                 </button>
@@ -318,7 +319,7 @@ export const SubscriptionPage = () => {
               <div className="space-y-1">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Subscription</h3>
                 <button 
-                  onClick={() => navigate('/subscriptions')}
+                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                   className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left"
                 >
                   <CreditCard className="h-5 w-5" />

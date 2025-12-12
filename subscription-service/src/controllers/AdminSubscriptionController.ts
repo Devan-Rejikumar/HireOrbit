@@ -1,5 +1,5 @@
 import { injectable, inject } from 'inversify';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import TYPES from '../config/types';
 import { IAdminSubscriptionService } from '../services/interfaces/IAdminSubscriptionService';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -12,13 +12,13 @@ import { AppError } from '../utils/errors/AppError';
 export class AdminSubscriptionController {
   constructor(
     @inject(TYPES.IAdminSubscriptionService)
-    private readonly _adminSubscriptionService: IAdminSubscriptionService
+    private readonly _adminSubscriptionService: IAdminSubscriptionService,
   ) {}
 
   getAllPlans = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const plans = await this._adminSubscriptionService.getAllPlans();
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ plans }, 'Subscription plans retrieved successfully')
+      buildSuccessResponse({ plans }, 'Subscription plans retrieved successfully'),
     );
   });
 
@@ -43,7 +43,7 @@ export class AdminSubscriptionController {
     });
 
     res.status(HttpStatusCode.CREATED).json(
-      buildSuccessResponse({ plan }, 'Subscription plan created successfully')
+      buildSuccessResponse({ plan }, 'Subscription plan created successfully'),
     );
   });
 
@@ -56,7 +56,7 @@ export class AdminSubscriptionController {
     }
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ plan }, 'Subscription plan retrieved successfully')
+      buildSuccessResponse({ plan }, 'Subscription plan retrieved successfully'),
     );
   });
 
@@ -73,7 +73,7 @@ export class AdminSubscriptionController {
     });
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ plan: updatedPlan }, 'Subscription plan updated successfully')
+      buildSuccessResponse({ plan: updatedPlan }, 'Subscription plan updated successfully'),
     );
   });
 
@@ -99,7 +99,7 @@ export class AdminSubscriptionController {
     });
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ plan: updatedPlan }, 'Plan price updated successfully and synced with Stripe')
+      buildSuccessResponse({ plan: updatedPlan }, 'Plan price updated successfully and synced with Stripe'),
     );
   });
 
@@ -109,7 +109,7 @@ export class AdminSubscriptionController {
     await this._adminSubscriptionService.deletePlan(id);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, 'Subscription plan deleted successfully')
+      buildSuccessResponse(null, 'Subscription plan deleted successfully'),
     );
   });
 
@@ -133,7 +133,7 @@ export class AdminSubscriptionController {
     });
 
     res.status(HttpStatusCode.CREATED).json(
-      buildSuccessResponse({ discount }, 'Discount created successfully and synced with Stripe')
+      buildSuccessResponse({ discount }, 'Discount created successfully and synced with Stripe'),
     );
   });
 
@@ -141,7 +141,7 @@ export class AdminSubscriptionController {
     const { id } = req.params;
     const { name, percentage, startDate, endDate, isActive } = req.body;
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (percentage !== undefined) {
       if (percentage < 0 || percentage > 100) {
@@ -156,7 +156,7 @@ export class AdminSubscriptionController {
     const updatedDiscount = await this._adminSubscriptionService.updateDiscount(id, updateData);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ discount: updatedDiscount }, 'Discount updated successfully')
+      buildSuccessResponse({ discount: updatedDiscount }, 'Discount updated successfully'),
     );
   });
 
@@ -164,14 +164,14 @@ export class AdminSubscriptionController {
     const { id } = req.params;
     await this._adminSubscriptionService.deleteDiscount(id);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, 'Discount deleted successfully')
+      buildSuccessResponse(null, 'Discount deleted successfully'),
     );
   });
 
   getAllDiscounts = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const discounts = await this._adminSubscriptionService.getAllDiscounts();
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ discounts }, 'Discounts retrieved successfully')
+      buildSuccessResponse({ discounts }, 'Discounts retrieved successfully'),
     );
   });
 
@@ -179,7 +179,7 @@ export class AdminSubscriptionController {
     const { planId } = req.params;
     const discounts = await this._adminSubscriptionService.getDiscountsByPlan(planId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ discounts }, 'Discounts retrieved successfully')
+      buildSuccessResponse({ discounts }, 'Discounts retrieved successfully'),
     );
   });
 }

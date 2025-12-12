@@ -3,7 +3,7 @@ import LokiTransport from 'winston-loki';
 import { AppConfig } from '../config/app.config';
 
 const { combine, timestamp, printf, colorize, json } = format;
-const serviceName = 'company-service'
+const serviceName = 'company-service';
 
 const consoleFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} [${serviceName}] ${level}: ${message}`;

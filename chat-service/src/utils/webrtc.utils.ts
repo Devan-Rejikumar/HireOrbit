@@ -7,7 +7,7 @@ import {
   WebRTCRoom, 
   SerializableWebRTCRoom,
   WebRTCParticipant,
-  SerializableWebRTCParticipant
+  SerializableWebRTCParticipant,
 } from '../types/webrtc.types';
 
 /**
@@ -21,7 +21,7 @@ export function serializeRoom(room: WebRTCRoom): SerializableWebRTCRoom {
       userId: participant.userId,
       socketId: participant.socketId,
       role: participant.role,
-      joinedAt: participant.joinedAt.toISOString()
+      joinedAt: participant.joinedAt.toISOString(),
     };
   });
 
@@ -29,7 +29,7 @@ export function serializeRoom(room: WebRTCRoom): SerializableWebRTCRoom {
     interviewId: room.interviewId,
     roomId: room.roomId,
     participants,
-    createdAt: room.createdAt.toISOString()
+    createdAt: room.createdAt.toISOString(),
   };
 }
 
@@ -37,12 +37,12 @@ export function serializeRoom(room: WebRTCRoom): SerializableWebRTCRoom {
  * Convert participant to serializable format
  */
 export function serializeParticipant(
-  participant: WebRTCParticipant
+  participant: WebRTCParticipant,
 ): SerializableWebRTCParticipant {
   return {
     userId: participant.userId,
     socketId: participant.socketId,
     role: participant.role,
-    joinedAt: participant.joinedAt.toISOString()
+    joinedAt: participant.joinedAt.toISOString(),
   };
 }

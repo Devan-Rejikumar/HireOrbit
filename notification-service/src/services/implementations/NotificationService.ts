@@ -11,14 +11,14 @@ import {
   StatusUpdatedInput, 
   ApplicationWithdrawnInput,
   InterviewConfirmedInput,
-  InterviewDecisionInput
+  InterviewDecisionInput,
 } from '../../dto/mappers/notification.mapper';
 import { io } from '../../server';
 
 @injectable()
 export class NotificationService implements INotificationService {
   constructor(
-    @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository
+    @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository,
   ) {}
 
   async createNotification(input: CreateNotificationInput): Promise<INotificationDocument> {
@@ -53,32 +53,31 @@ export class NotificationService implements INotificationService {
     await this._notificationRepository.delete(notificationId);
   }
 
-
-async sendApplicationReceivedNotification(input: ApplicationReceivedInput): Promise<void> {
-  const notificationData = NotificationMapper.toApplicationReceivedNotification(input);
-  const notification = await this.createNotification(notificationData);
-  io.to(input.companyId).emit('notification', {
-    type: 'APPLICATION_RECEIVED',
-    id: notification._id.toString(),
-    recipientId: input.companyId,
-    data: {
-      applicationId: input.applicationId,
-      jobId: input.jobId,
-      applicantName: input.applicantName,
-      jobTitle: input.jobTitle
-    },
-    timestamp: new Date().toISOString()
-  });
+  async sendApplicationReceivedNotification(input: ApplicationReceivedInput): Promise<void> {
+    const notificationData = NotificationMapper.toApplicationReceivedNotification(input);
+    const notification = await this.createNotification(notificationData);
+    io.to(input.companyId).emit('notification', {
+      type: 'APPLICATION_RECEIVED',
+      id: notification._id.toString(),
+      recipientId: input.companyId,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        applicantName: input.applicantName,
+        jobTitle: input.jobTitle,
+      },
+      timestamp: new Date().toISOString(),
+    });
   
-  console.log('Application received notification created and sent via WebSocket:', notification.id);
-}
+    console.log('Application received notification created and sent via WebSocket:', notification.id);
+  }
 
-async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
-  let jobTitle = 'Job';
-  try {
-    const jobResponse = await fetch(`${AppConfig.JOB_SERVICE_URL}/api/jobs/${input.jobId}`);
-    if (jobResponse.ok) {
-      const jobData = await jobResponse.json() as {
+  async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
+    let jobTitle = 'Job';
+    try {
+      const jobResponse = await fetch(`${AppConfig.JOB_SERVICE_URL}/api/jobs/${input.jobId}`);
+      if (jobResponse.ok) {
+        const jobData = await jobResponse.json() as {
         data?: {
           job?: {
             title?: string;
@@ -86,95 +85,95 @@ async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
           title?: string;
         };
       };
-      jobTitle = jobData.data?.job?.title || jobData.data?.title || 'Job';
+        jobTitle = jobData.data?.job?.title || jobData.data?.title || 'Job';
+      }
+    } catch (error) {
+      console.error(`Error fetching job title for jobId ${input.jobId}:`, error);
     }
-  } catch (error) {
-    console.error(`Error fetching job title for jobId ${input.jobId}:`, error);
+
+    const notificationData = NotificationMapper.toStatusUpdatedNotification(input, jobTitle);
+    const notification = await this.createNotification(notificationData);
+  
+    io.to(input.userId).emit('notification', {
+      type: 'STATUS_UPDATED',
+      id: notification._id.toString(),
+      recipientId: input.userId,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        jobTitle: jobTitle,
+        oldStatus: input.oldStatus,
+        newStatus: input.newStatus,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  
+    console.log('Status updated notification created and sent via WebSocket:', notification.id);
   }
 
-  const notificationData = NotificationMapper.toStatusUpdatedNotification(input, jobTitle);
-  const notification = await this.createNotification(notificationData);
+  async sendApplicationWithdrawnNotification(input: ApplicationWithdrawnInput): Promise<void> {
+    const notificationData = NotificationMapper.toApplicationWithdrawnNotification(input);
+    const notification = await this.createNotification(notificationData);
+    io.to(input.companyId).emit('notification', {
+      type: 'APPLICATION_WITHDRAWN',
+      id: notification._id.toString(),
+      recipientId: input.companyId,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        applicantName: input.applicantName,
+        jobTitle: input.jobTitle,
+      },
+      timestamp: new Date().toISOString(),
+    });
   
-  io.to(input.userId).emit('notification', {
-    type: 'STATUS_UPDATED',
-    id: notification._id.toString(),
-    recipientId: input.userId,
-    data: {
-      applicationId: input.applicationId,
-      jobId: input.jobId,
-      jobTitle: jobTitle,
-      oldStatus: input.oldStatus,
-      newStatus: input.newStatus
-    },
-    timestamp: new Date().toISOString()
-  });
-  
-  console.log('Status updated notification created and sent via WebSocket:', notification.id);
-}
+    console.log('Application withdrawn notification created and sent via WebSocket:', notification.id);
+  }
 
-async sendApplicationWithdrawnNotification(input: ApplicationWithdrawnInput): Promise<void> {
-  const notificationData = NotificationMapper.toApplicationWithdrawnNotification(input);
-  const notification = await this.createNotification(notificationData);
-  io.to(input.companyId).emit('notification', {
-    type: 'APPLICATION_WITHDRAWN',
-    id: notification._id.toString(),
-    recipientId: input.companyId,
-    data: {
-      applicationId: input.applicationId,
-      jobId: input.jobId,
-      applicantName: input.applicantName,
-      jobTitle: input.jobTitle
-    },
-    timestamp: new Date().toISOString()
-  });
+  async sendInterviewConfirmedNotification(input: InterviewConfirmedInput): Promise<void> {
+    const notificationData = NotificationMapper.toInterviewConfirmedNotification(input);
+    const notification = await this.createNotification(notificationData);
   
-  console.log('Application withdrawn notification created and sent via WebSocket:', notification.id);
-}
+    io.to(input.userId).emit('notification', {
+      type: 'INTERVIEW_CONFIRMED',
+      id: notification._id.toString(),
+      recipientId: input.userId,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        jobTitle: input.jobTitle,
+        interviewId: input.interviewId,
+        scheduledAt: typeof input.scheduledAt === 'string' ? input.scheduledAt : input.scheduledAt.toISOString(),
+        type: input.type,
+        location: input.location,
+        meetingLink: input.meetingLink,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  
+    console.log('Interview confirmed notification created and sent via WebSocket:', notification.id);
+  }
 
-async sendInterviewConfirmedNotification(input: InterviewConfirmedInput): Promise<void> {
-  const notificationData = NotificationMapper.toInterviewConfirmedNotification(input);
-  const notification = await this.createNotification(notificationData);
+  async sendInterviewDecisionNotification(input: InterviewDecisionInput): Promise<void> {
+    const notificationData = NotificationMapper.toInterviewDecisionNotification(input);
+    const notification = await this.createNotification(notificationData);
   
-  io.to(input.userId).emit('notification', {
-    type: 'INTERVIEW_CONFIRMED',
-    id: notification._id.toString(),
-    recipientId: input.userId,
-    data: {
-      applicationId: input.applicationId,
-      jobId: input.jobId,
-      jobTitle: input.jobTitle,
-      interviewId: input.interviewId,
-      scheduledAt: typeof input.scheduledAt === 'string' ? input.scheduledAt : input.scheduledAt.toISOString(),
-      type: input.type,
-      location: input.location,
-      meetingLink: input.meetingLink
-    },
-    timestamp: new Date().toISOString()
-  });
+    io.to(input.userId).emit('notification', {
+      type: 'INTERVIEW_DECISION',
+      id: notification._id.toString(),
+      recipientId: input.userId,
+      data: {
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        jobTitle: input.jobTitle,
+        interviewId: input.interviewId,
+        decision: input.decision,
+        decisionReason: input.decisionReason,
+        feedback: input.feedback,
+      },
+      timestamp: new Date().toISOString(),
+    });
   
-  console.log('Interview confirmed notification created and sent via WebSocket:', notification.id);
-}
-
-async sendInterviewDecisionNotification(input: InterviewDecisionInput): Promise<void> {
-  const notificationData = NotificationMapper.toInterviewDecisionNotification(input);
-  const notification = await this.createNotification(notificationData);
-  
-  io.to(input.userId).emit('notification', {
-    type: 'INTERVIEW_DECISION',
-    id: notification._id.toString(),
-    recipientId: input.userId,
-    data: {
-      applicationId: input.applicationId,
-      jobId: input.jobId,
-      jobTitle: input.jobTitle,
-      interviewId: input.interviewId,
-      decision: input.decision,
-      decisionReason: input.decisionReason,
-      feedback: input.feedback
-    },
-    timestamp: new Date().toISOString()
-  });
-  
-  console.log('Interview decision notification created and sent via WebSocket:', notification.id);
-}
+    console.log('Interview decision notification created and sent via WebSocket:', notification.id);
+  }
 }

@@ -13,7 +13,7 @@ export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepos
   constructor() {
     this.prisma = prisma;
   }
-    protected abstract getModel(): any;
+    protected abstract getModel(): unknown;
     
     async findById(id: string): Promise<T | null> {
       const model = this.getModel();

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageResponse } from '@/api/_chatService';
+import { MessageResponse } from '@/api/chatService';
 import { useChatSocket } from '@/hooks/useChatSocket';
 import { format } from 'date-fns';
 import { User, Building2, Send, Check, CheckCheck } from 'lucide-react';

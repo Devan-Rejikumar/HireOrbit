@@ -94,10 +94,10 @@ export class RevenueService implements IRevenueService {
 
     const planIds: string[] = [...new Set(transactions.map((t: Transaction) => t.planId))];
     const plans: (SubscriptionPlan | null)[] = await Promise.all(
-      planIds.map((id: string) => this._planRepository.findById(id))
+      planIds.map((id: string) => this._planRepository.findById(id)),
     );
     const planMap = new Map<string, SubscriptionPlan>(
-      plans.filter((p: SubscriptionPlan | null): p is SubscriptionPlan => p !== null).map((p: SubscriptionPlan) => [p.id, p])
+      plans.filter((p: SubscriptionPlan | null): p is SubscriptionPlan => p !== null).map((p: SubscriptionPlan) => [p.id, p]),
     );
 
     const transactionHistory = transactions.map((transaction: Transaction) => {
@@ -143,7 +143,7 @@ export class RevenueService implements IRevenueService {
         console.log(`Fetched ${invoices.data.length} invoices from Stripe`, {
           total: invoices.data.length,
           hasMore: invoices.has_more,
-          statuses: invoices.data.map((inv: Stripe.Invoice) => ({ id: inv.id, status: inv.status }))
+          statuses: invoices.data.map((inv: Stripe.Invoice) => ({ id: inv.id, status: inv.status })),
         });
         
         for (const invoice of invoices.data) {
@@ -154,9 +154,8 @@ export class RevenueService implements IRevenueService {
               status: invoice.status,
               amount: invoice.amount_paid,
               currency: invoice.currency,
-              hasSubscription: !!invoiceDataForLog.subscription
+              hasSubscription: !!invoiceDataForLog.subscription,
             });
-
    
             if (invoice.id) {
               const existing = await this._transactionRepository.findByStripeInvoiceId(invoice.id);
@@ -166,14 +165,12 @@ export class RevenueService implements IRevenueService {
                 continue;
               }
             }
-
        
             if (invoice.status !== 'paid') {
               console.log('Skipping invoice - not paid', { invoiceId: invoice.id, status: invoice.status });
               skipped++;
               continue;
             }
-
            
             const invoiceData = invoice as unknown as {
               subscription?: string | Stripe.Subscription | null;
@@ -203,7 +200,6 @@ export class RevenueService implements IRevenueService {
             let companyId: string | undefined;
             let planId: string | undefined;
             let billingPeriod: string = 'monthly';
-            
            
             if (invoiceData.metadata?.userId && invoiceData.metadata.userId !== '') {
               userId = invoiceData.metadata.userId;
@@ -213,7 +209,6 @@ export class RevenueService implements IRevenueService {
               companyId = invoiceData.metadata.companyId;
               console.log('Found companyId from invoice metadata (initial)', { invoiceId: invoice.id, companyId });
             }
-            
             
             if ((!userId && !companyId) && invoiceData.customer) {
               try {
@@ -232,8 +227,9 @@ export class RevenueService implements IRevenueService {
                     console.log('Found companyId from customer metadata (initial)', { customerId, companyId });
                   }
                 }
-              } catch (error: any) {
-                console.error('Failed to retrieve customer for metadata (initial)', { error: error?.message, invoiceId: invoice.id });
+              } catch (error: unknown) {
+                const err = error as { message?: string };
+                console.error('Failed to retrieve customer for metadata (initial)', { error: err.message, invoiceId: invoice.id });
               }
             }
 
@@ -252,7 +248,6 @@ export class RevenueService implements IRevenueService {
             } else {
               console.log('Invoice has no subscription', { invoiceId: invoice.id });
             }
-
     
             let priceId: string | undefined;
        
@@ -260,7 +255,6 @@ export class RevenueService implements IRevenueService {
               const price = invoiceData.lines.data[0].price;
               priceId = typeof price === 'string' ? price : price.id;
             }
-            
      
             if (!priceId && invoice.id) {
               try {
@@ -272,14 +266,17 @@ export class RevenueService implements IRevenueService {
                 };
                 console.log('Full invoice structure', {
                   invoiceId: invoice.id,
-                  lines: fullInvoice.lines?.data?.map((line: any) => ({
-                    price: line.price,
-                    priceId: typeof line.price === 'string' ? line.price : line.price?.id,
-                    amount: line.amount,
-                    description: line.description
-                  })),
+                  lines: fullInvoice.lines?.data?.map((line) => {
+                    const lineData = line as { price?: string | { id?: string }; amount?: number; description?: string };
+                    return {
+                      price: lineData.price,
+                      priceId: typeof lineData.price === 'string' ? lineData.price : lineData.price?.id,
+                      amount: lineData.amount,
+                      description: lineData.description,
+                    };
+                  }),
                   metadata: fullInvoice.metadata,
-                  payment_intent: fullInvoiceForLog.payment_intent
+                  payment_intent: fullInvoiceForLog.payment_intent,
                 });
                 
                 const fullInvoiceData = fullInvoice as unknown as {
@@ -296,7 +293,6 @@ export class RevenueService implements IRevenueService {
                   metadata?: Record<string, string>;
                   payment_intent?: string | Stripe.PaymentIntent;
                 };
-                
            
                 if (fullInvoiceData.lines?.data?.[0]?.price) {
                   const price = fullInvoiceData.lines.data[0].price;
@@ -335,11 +331,11 @@ export class RevenueService implements IRevenueService {
                         console.log('Found companyId from customer metadata', { customerId, companyId });
                       }
                     }
-                  } catch (error: any) {
-                    console.error('Failed to retrieve customer for metadata', { error: error?.message, invoiceId: invoice.id });
+                  } catch (error: unknown) {
+                    const err = error as { message?: string };
+                    console.error('Failed to retrieve customer for metadata', { error: err.message, invoiceId: invoice.id });
                   }
                 }
-                
             
                 if (!planId && invoice.amount_paid) {
                   const amountInRupees = invoice.amount_paid / 100;
@@ -347,7 +343,7 @@ export class RevenueService implements IRevenueService {
                   const allPlans = await this._planRepository.findAll();
                   const matchingPlan = allPlans.find(plan => 
                     (plan.priceMonthly && Math.abs(plan.priceMonthly - amountInRupees) < 0.01) || 
-                    (plan.priceYearly && Math.abs(plan.priceYearly - amountInRupees) < 0.01)
+                    (plan.priceYearly && Math.abs(plan.priceYearly - amountInRupees) < 0.01),
                   );
                   if (matchingPlan) {
                     planId = matchingPlan.id;
@@ -361,15 +357,13 @@ export class RevenueService implements IRevenueService {
                         id: p.id,
                         name: p.name,
                         monthlyPrice: p.priceMonthly,
-                        yearlyPrice: p.priceYearly
-                      }))
+                        yearlyPrice: p.priceYearly,
+                      })),
                     });
-                    
               
                     const invoiceLine = fullInvoice.lines?.data?.[0];
                     const invoiceDescription = invoiceLine?.description || '';
                     console.log('Trying to match plan by description', { invoiceId: invoice.id, description: invoiceDescription });
-                    
                     
                     const planNameMatch = invoiceDescription.match(/(?:Company|User)\s+(\w+)\s+Plan/i);
                     if (planNameMatch) {
@@ -379,41 +373,41 @@ export class RevenueService implements IRevenueService {
                       console.log('Extracted plan info from description', { 
                         invoiceId: invoice.id,
                         planName: extractedPlanName,
-                        userType 
+                        userType, 
                       });
-                      
                     
                       const planByName = allPlans.find(plan => 
                         plan.name.toLowerCase() === extractedPlanName.toLowerCase() && 
-                        plan.userType === userType
+                        plan.userType === userType,
                       );
                       
                       if (planByName) {
                         planId = planByName.id;
                   
                         billingPeriod = invoiceDescription.toLowerCase().includes('/ month') ? 'monthly' : 
-                                      invoiceDescription.toLowerCase().includes('/ year') ? 'yearly' : 'monthly';
+                          invoiceDescription.toLowerCase().includes('/ year') ? 'yearly' : 'monthly';
                         console.log(' Found matching plan by description', { 
                           planId, 
                           planName: planByName.name, 
                           userType: planByName.userType,
                           billingPeriod,
                           originalAmount: amountInRupees,
-                          currentPlanPrice: planByName.priceMonthly || planByName.priceYearly
+                          currentPlanPrice: planByName.priceMonthly || planByName.priceYearly,
                         });
                       } else {
                         console.warn('Plan not found by name and userType', {
                           invoiceId: invoice.id,
                           extractedPlanName,
                           userType,
-                          availablePlans: allPlans.map(p => ({ name: p.name, userType: p.userType }))
+                          availablePlans: allPlans.map(p => ({ name: p.name, userType: p.userType })),
                         });
                       }
                     }
                   }
                 }
-              } catch (error: any) {
-                console.error('Failed to retrieve full invoice', { error: error?.message, invoiceId: invoice.id });
+              } catch (error: unknown) {
+                const err = error as { message?: string };
+                console.error('Failed to retrieve full invoice', { error: err.message, invoiceId: invoice.id });
               }
             }
             
@@ -422,7 +416,7 @@ export class RevenueService implements IRevenueService {
               const allPlans = await this._planRepository.findAll();
               console.log(`Found ${allPlans.length} plans in database`);
               const matchingPlan = allPlans.find(
-                plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId
+                plan => plan.stripePriceIdMonthly === priceId || plan.stripePriceIdYearly === priceId,
               );
               if (matchingPlan) {
                 planId = matchingPlan.id;
@@ -436,15 +430,15 @@ export class RevenueService implements IRevenueService {
                     id: p.id, 
                     name: p.name, 
                     monthlyPriceId: p.stripePriceIdMonthly,
-                    yearlyPriceId: p.stripePriceIdYearly 
-                  }))
+                    yearlyPriceId: p.stripePriceIdYearly, 
+                  })),
                 });
               }
             } else {
               console.warn('No price ID found in invoice', { 
                 invoiceId: invoice.id,
                 hasLines: !!invoiceData.lines,
-                linesCount: invoiceData.lines?.data?.length || 0
+                linesCount: invoiceData.lines?.data?.length || 0,
               });
             }
 
@@ -453,19 +447,17 @@ export class RevenueService implements IRevenueService {
                 invoiceId: invoice.id,
                 subscriptionId,
                 hasPriceId: !!invoiceData.lines?.data?.[0]?.price?.id,
-                priceId: invoiceData.lines?.data?.[0]?.price?.id
+                priceId: invoiceData.lines?.data?.[0]?.price?.id,
               });
               skipped++;
               continue;
             }
-
       
             const amountPaid = invoiceData.amount_paid || 0;
             const amount = amountPaid / 100;
             const paymentIntentId = invoiceData.payment_intent
               ? (typeof invoiceData.payment_intent === 'string' ? invoiceData.payment_intent : invoiceData.payment_intent.id)
               : undefined;
-
            
             const invoiceObj = invoice as unknown as { created?: number; status_transitions?: { paid_at?: number } };
             const paymentDate = invoiceObj.status_transitions?.paid_at
@@ -489,9 +481,10 @@ export class RevenueService implements IRevenueService {
 
             synced++;
             console.log('Transaction synced from Stripe', { invoiceId: invoice.id, amount, status });
-          } catch (error: any) {
+          } catch (error: unknown) {
+            const err = error as { message?: string };
             console.error('Failed to sync transaction from invoice', {
-              error: error?.message || error,
+              error: err.message || error,
               invoiceId: invoice.id,
             });
             errors++;
@@ -502,8 +495,9 @@ export class RevenueService implements IRevenueService {
         if (invoices.data.length > 0) {
           startingAfter = invoices.data[invoices.data.length - 1].id;
         }
-      } catch (error: any) {
-        console.error('Failed to fetch invoices from Stripe', { error: error?.message || error });
+      } catch (error: unknown) {
+        const err = error as { message?: string };
+        console.error('Failed to fetch invoices from Stripe', { error: err.message || error });
         errors++;
         hasMore = false;
       }

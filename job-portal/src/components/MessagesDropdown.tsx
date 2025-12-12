@@ -88,9 +88,11 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
                               jobData?.company?.name ||
                               jobData?.company ||
                               null;
-                } catch (jobError: any) {
+                } catch (jobError: unknown) {
                   // Only log non-429 errors
-                  if (jobError?.response?.status !== 429) {
+                  const isAxiosError = jobError && typeof jobError === 'object' && 'response' in jobError;
+                  const axiosError = isAxiosError ? (jobError as { response?: { status?: number } }) : null;
+                  if (axiosError?.response?.status !== 429) {
                     console.error('Error fetching job details:', jobError);
                   }
                 }
@@ -102,9 +104,11 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
                 names[conversation.id] = 'Company';
               }
               fetchedNamesRef.current.add(conversation.id);
-            } catch (appError: any) {
+            } catch (appError: unknown) {
               // Only log non-429 errors
-              if (appError?.response?.status !== 429) {
+              const isAxiosError = appError && typeof appError === 'object' && 'response' in appError;
+              const axiosError = isAxiosError ? (appError as { response?: { status?: number } }) : null;
+              if (axiosError?.response?.status !== 429) {
                 console.error('Error fetching application details:', appError);
               }
               names[conversation.id] = 'Company';
@@ -119,9 +123,11 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
             names[conversation.id] = userName;
             fetchedNamesRef.current.add(conversation.id);
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Only log non-429 errors
-          if (error?.response?.status !== 429) {
+          const isAxiosError = error && typeof error === 'object' && 'response' in error;
+          const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+          if (axiosError?.response?.status !== 429) {
             console.error('Error fetching participant name:', error);
           }
           names[conversation.id] = role === 'jobseeker' ? 'Company' : 'User';

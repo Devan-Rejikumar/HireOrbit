@@ -7,7 +7,7 @@ import { NotificationData } from '../api/notificationService';
 interface NotificationContextType {
   notifications: NotificationData[];
   unreadCount: number;
-  realTimeNotifications: any[];
+  realTimeNotifications: NotificationData[];
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -88,7 +88,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
   };
 
-  const getNotificationMessage = (notification: any) => {
+  const getNotificationMessage = (notification: NotificationData) => {
     switch (notification.type) {
       case 'APPLICATION_RECEIVED':
         return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;

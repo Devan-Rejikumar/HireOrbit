@@ -22,7 +22,6 @@ import {
   StatusUpdatedEventData,
   InterviewConfirmedEventData,
   InterviewDecisionEventData,
-  ApplicationWithdrawnEventData
 } from './types/events';
 
 dotenv.config();
@@ -32,8 +31,8 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: AppConfig.FRONTEND_URL,
-    methods: ["GET", "POST"]
-  }
+    methods: ['GET', 'POST'],
+  },
 });
 
 app.use(helmet());
@@ -42,7 +41,7 @@ app.use(cors({
   origin: AppConfig.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role'],
 }));
 app.use(morgan('combined'));
 app.use(express.json());
@@ -53,7 +52,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -61,7 +60,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);

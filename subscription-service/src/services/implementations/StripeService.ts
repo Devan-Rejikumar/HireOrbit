@@ -25,7 +25,7 @@ export class StripeService implements IStripeService {
   async createSubscription(
     customerId: string,
     priceId: string,
-    metadata?: Record<string, string>
+    metadata?: Record<string, string>,
   ): Promise<Stripe.Subscription> {
     try {
       const subscription = await stripe.subscriptions.create({
@@ -47,7 +47,7 @@ export class StripeService implements IStripeService {
     priceId: string,
     successUrl: string,
     cancelUrl: string,
-    metadata?: Record<string, string>
+    metadata?: Record<string, string>,
   ): Promise<Stripe.Checkout.Session> {
     try {
       const session = await stripe.checkout.sessions.create({
@@ -134,7 +134,7 @@ export class StripeService implements IStripeService {
       const event = stripe.webhooks.constructEvent(
         payload,
         signature,
-        AppConfig.STRIPE_WEBHOOK_SECRET
+        AppConfig.STRIPE_WEBHOOK_SECRET,
       );
       return event;
     } catch (error) {
@@ -163,7 +163,7 @@ export class StripeService implements IStripeService {
     amount: number,
     currency: string = 'usd',
     interval: 'month' | 'year' = 'month',
-    metadata?: Record<string, string>
+    metadata?: Record<string, string>,
   ): Promise<Stripe.Price> {
     try {
       const price = await stripe.prices.create({
@@ -185,7 +185,7 @@ export class StripeService implements IStripeService {
 
   async updatePrice(priceId: string, metadata?: Record<string, string>, active?: boolean): Promise<Stripe.Price> {
     try {
-      const updateData: any = {};
+      const updateData: Stripe.PriceUpdateParams = {};
       if (metadata !== undefined) updateData.metadata = metadata;
       if (active !== undefined) updateData.active = active;
       

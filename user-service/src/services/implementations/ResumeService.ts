@@ -50,10 +50,11 @@ export class ResumeService implements IResumeService {
       console.log('✅ [ResumeService] Resume URL saved to database');
       
       return result.secure_url;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string; stack?: string; http_code?: number };
       console.error(' [ResumeService] Resume upload error:', {
-        error: error.message,
-        stack: error.stack,
+        error: err.message,
+        stack: err.stack,
         userId,
         fileName,
         mimeType
@@ -64,16 +65,16 @@ export class ResumeService implements IResumeService {
       }
 
    
-      if (error.http_code) {
+      if (err.http_code) {
         throw new AppError(
-          `Cloudinary upload failed: ${error.message || 'Unknown error'}`,
+          `Cloudinary upload failed: ${err.message || 'Unknown error'}`,
           HttpStatusCode.INTERNAL_SERVER_ERROR
         );
       }
 
   
       throw new AppError(
-        error.message || Messages.RESUME.UPLOAD_FAILED,
+        err.message || Messages.RESUME.UPLOAD_FAILED,
         HttpStatusCode.INTERNAL_SERVER_ERROR
       );
     }

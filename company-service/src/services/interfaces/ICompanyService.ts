@@ -1,5 +1,5 @@
-import { Company, CompanyProfileStep } from '@prisma/client';
-import { CompanyProfileData, CompanyProfileStepData,CompanyRegistrationStep2,CompanyRegistrationStep3,} from '../../types/company';
+import { CompanyProfileStep } from '@prisma/client';
+import { CompanyProfileData, CompanyRegistrationStep2, CompanyRegistrationStep3 } from '../../types/company';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
 import { PaginationResult } from '../../repositories/interfaces/IBaseRepository';
 

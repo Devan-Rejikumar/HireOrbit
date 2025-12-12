@@ -147,8 +147,10 @@ const ExperienceModal: React.FC<ExperienceModalProps> = ({
 
       onSave();
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to save experience';
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to save experience';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -170,8 +172,10 @@ const ExperienceModal: React.FC<ExperienceModalProps> = ({
       onSave();
       onClose();
       setShowDeleteConfirm(false);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to delete experience';
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to delete experience';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

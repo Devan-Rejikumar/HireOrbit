@@ -95,8 +95,10 @@ const handleDelete = async () => {
     onDelete(achievement.id);
     onClose();
     setShowDeleteConfirm(false);
-  } catch (error: any) {
-    toast.error(error.response?.data?.error || 'Failed to delete achievement');
+  } catch (error: unknown) {
+    const isAxiosError = error && typeof error === 'object' && 'response' in error;
+    const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+    toast.error(axiosError?.response?.data?.error || 'Failed to delete achievement');
   } finally {
     setIsLoading(false);
   }

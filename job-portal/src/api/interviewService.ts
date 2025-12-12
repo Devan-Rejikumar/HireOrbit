@@ -141,7 +141,19 @@ export const _interviewService = {
     if (status) params.append('status', status);
     if (search) params.append('search', search);
     
-    const response = await api.get(`${INTERVIEWS_ENDPOINT}/candidate/all?${params.toString()}`);
+    const response = await api.get<{
+      success: boolean;
+      data: {
+        interviews: InterviewWithDetails[];
+        pagination?: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      };
+      message: string;
+    }>(`${INTERVIEWS_ENDPOINT}/candidate/all?${params.toString()}`);
     return response.data;
   },
 

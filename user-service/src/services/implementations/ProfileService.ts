@@ -2,7 +2,7 @@ import { injectable, inject } from 'inversify';
 import { UserProfile, Experience, Education } from '@prisma/client';
 import { IProfileService, ProfileData, ExperienceData, EducationData } from '../interfaces/IProfileService';
 import { IProfileRepository } from '../../repositories/interfaces/IProfileRepository';
-import { IUserProfile } from '../../types/profile';
+// import { IUserProfile } from '../../types/profile';
 import TYPES from '../../config/types';
 
 @injectable()

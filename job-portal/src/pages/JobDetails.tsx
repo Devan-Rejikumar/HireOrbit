@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import {
   MapPin,
   Briefcase,
@@ -105,9 +106,11 @@ const JobDetails = () => {
       } else {
         setError('Job not found');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching job details:', error);
-      if (error.response?.status === 404) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      if (axiosError?.response?.status === 404) {
         setError('Job not found');
       } else {
         setError('Failed to load job details. Please try again.');
@@ -145,7 +148,7 @@ const JobDetails = () => {
 
   const handleApplyClick = () => {
     if (!isAuthenticated) {
-      navigate('/login');
+      navigate(ROUTES.LOGIN);
       return;
     }
 

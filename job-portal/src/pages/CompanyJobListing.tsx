@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -202,11 +203,11 @@ const CompanyJobListing = () => {
   };
 
   const handleCompanyProfileClick = () => {
-    navigate('/company/dashboard');
+    navigate(ROUTES.COMPANY_DASHBOARD);
   };
 
   const handleLogout = async () => {
-    navigate('/login', { replace: true });
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
 
@@ -254,7 +255,7 @@ const CompanyJobListing = () => {
                 }`}
                 onClick={() => {
                   if (company?.profileCompleted && company?.isVerified) {
-                    navigate('/company/post-job');
+                    navigate(ROUTES.COMPANY_POST_JOB);
                   }
                 }}
                 disabled={!company?.profileCompleted || !company?.isVerified}
@@ -277,7 +278,7 @@ const CompanyJobListing = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate('/company/review-status')}
+                    onClick={() => navigate(ROUTES.COMPANY_REVIEW_STATUS)}
                     className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
                     Check Status
@@ -315,7 +316,7 @@ const CompanyJobListing = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
                 type="button"
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Home className="h-5 w-5" />
@@ -323,7 +324,7 @@ const CompanyJobListing = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/chat')}
+                onClick={() => navigate(ROUTES.CHAT)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <MessageSquare className="h-5 w-5" />
@@ -339,7 +340,7 @@ const CompanyJobListing = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/applications')}
+                onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <User className="h-5 w-5" />
@@ -355,7 +356,7 @@ const CompanyJobListing = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/interviews')}
+                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CalendarIcon className="h-5 w-5" />
@@ -363,7 +364,7 @@ const CompanyJobListing = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/subscriptions')}
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CreditCard className="h-5 w-5" />
@@ -375,7 +376,7 @@ const CompanyJobListing = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
               <button 
                 type="button"
-                onClick={() => navigate('/company/settings')} 
+                onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Settings className="h-5 w-5" />
@@ -517,7 +518,7 @@ const CompanyJobListing = () => {
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs posted yet</h3>
                   <p className="text-gray-600 mb-6">Create your first job posting to start attracting candidates.</p>
                   <Button 
-                    onClick={() => navigate('/company/post-job')} 
+                    onClick={() => navigate(ROUTES.COMPANY_POST_JOB)} 
                     className="bg-purple-600 hover:bg-purple-700"
                   >
                     <Plus className="h-4 w-4 mr-2" />

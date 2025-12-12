@@ -6,7 +6,7 @@ import {
 } from '../responses/subscription.response';
 
 export function mapSubscriptionPlanToResponse(
-  plan: SubscriptionPlan & { features?: SubscriptionFeature[] }
+  plan: SubscriptionPlan & { features?: SubscriptionFeature[] },
 ): SubscriptionPlanResponse {
   return {
     id: plan.id,
@@ -21,7 +21,7 @@ export function mapSubscriptionPlanToResponse(
 }
 
 export function mapSubscriptionPlansToResponse(
-  plans: (SubscriptionPlan & { features?: SubscriptionFeature[] })[]
+  plans: (SubscriptionPlan & { features?: SubscriptionFeature[] })[],
 ): SubscriptionPlanResponse[] {
   return plans.map(mapSubscriptionPlanToResponse);
 }
@@ -29,7 +29,7 @@ export function mapSubscriptionPlansToResponse(
 export function mapSubscriptionToResponse(
   subscription: Subscription & {
     plan?: SubscriptionPlan & { features?: SubscriptionFeature[] };
-  }
+  },
 ): SubscriptionResponse {
   return {
     id: subscription.id,
@@ -53,7 +53,7 @@ export function mapSubscriptionStatusToResponse(
   subscription: Subscription | null,
   plan: SubscriptionPlan | null,
   features: string[],
-  isActive: boolean
+  isActive: boolean,
 ): SubscriptionStatusResponse {
   const subscriptionWithPlan = subscription as unknown as {
     plan?: SubscriptionPlan & { features?: SubscriptionFeature[] };
@@ -64,9 +64,9 @@ export function mapSubscriptionStatusToResponse(
   return {
     subscription: subscription
       ? mapSubscriptionToResponse({
-          ...subscription,
-          plan: subscriptionWithPlan?.plan,
-        })
+        ...subscription,
+        plan: subscriptionWithPlan?.plan,
+      })
       : null,
     plan: planWithFeatures
       ? mapSubscriptionPlanToResponse(planWithFeatures)

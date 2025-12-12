@@ -31,9 +31,11 @@ const AdminSubscriptionPlans: React.FC = () => {
       setError(null);
       const response = await subscriptionService.admin.getAllPlans();
       setPlans(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load plans', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to load subscription plans';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to load subscription plans';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -67,7 +69,15 @@ const AdminSubscriptionPlans: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const planData: any = {
+      interface PlanData {
+        name: string;
+        userType: 'user' | 'company';
+        description?: string;
+        priceMonthly?: number;
+        priceYearly?: number;
+        features?: string[];
+      }
+      const planData: PlanData = {
         name: name.trim(),
         userType,
         description: description.trim() || undefined,
@@ -108,9 +118,11 @@ const AdminSubscriptionPlans: React.FC = () => {
 
       resetForm();
       await loadPlans();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to save plan', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to save subscription plan';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to save subscription plan';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -151,9 +163,11 @@ const AdminSubscriptionPlans: React.FC = () => {
       toast.success('Subscription plan deleted successfully');
       await loadPlans();
       closeDeleteModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete plan', err);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to delete subscription plan';
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to delete subscription plan';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {

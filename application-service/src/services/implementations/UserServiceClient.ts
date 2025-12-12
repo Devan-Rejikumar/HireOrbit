@@ -34,8 +34,9 @@ export class UserServiceClient implements IUserServiceClient {
 
       const data = await response.json() as UserApiResponse;
       return data;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error: unknown) {
+      const err = error as { name?: string };
+      if (err.name === 'AbortError') {
         logger.error(`UserServiceClient: Request timeout for user ${userId}`);
       } else {
         logger.error(`UserServiceClient: Error fetching user ${userId}:`, error);

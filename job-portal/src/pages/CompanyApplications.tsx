@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, Settings, ChevronLeft, ChevronRight, User, Bell, LogOut, Plus, X } from 'lucide-react';
@@ -57,7 +58,7 @@ const CompanyApplications = () => {
   };
 
   const handleLogout = async () => {
-    navigate('/login', { replace: true });
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   const fetchApplications = async () => {
@@ -243,7 +244,7 @@ const CompanyApplications = () => {
                 }`}
                 onClick={() => {
                   if (company?.profileCompleted && company?.isVerified) {
-                    navigate('/company/post-job');
+                    navigate(ROUTES.COMPANY_POST_JOB);
                   }
                 }}
                 disabled={!company?.profileCompleted || !company?.isVerified}
@@ -266,7 +267,7 @@ const CompanyApplications = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate('/company/review-status')}
+                    onClick={() => navigate(ROUTES.COMPANY_REVIEW_STATUS)}
                     className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
                     Check Status
@@ -303,7 +304,7 @@ const CompanyApplications = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
                 type="button"
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <Home className="h-5 w-5" />
@@ -311,7 +312,7 @@ const CompanyApplications = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/chat')}
+                onClick={() => navigate(ROUTES.CHAT)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <MessageSquare className="h-5 w-5" />
@@ -319,7 +320,7 @@ const CompanyApplications = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <Building2 className="h-5 w-5" />
@@ -335,7 +336,7 @@ const CompanyApplications = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/jobs')}
+                onClick={() => navigate(ROUTES.COMPANY_JOBS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <Briefcase className="h-5 w-5" />
@@ -343,7 +344,7 @@ const CompanyApplications = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/company/interviews')}
+                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <CalendarIcon className="h-6 w-6" />
@@ -351,7 +352,7 @@ const CompanyApplications = () => {
               </button>
               <button 
                 type="button"
-                onClick={() => navigate('/subscriptions')}
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <CreditCard className="h-5 w-5" />
@@ -363,7 +364,7 @@ const CompanyApplications = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
               <button 
                 type="button"
-                onClick={() => navigate('/company/settings')} 
+                onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
               >
                 <Settings className="h-5 w-5" />

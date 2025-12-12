@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { subscriptionService, SubscriptionPlan } from '../api/subscriptionService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -43,7 +44,7 @@ export const CheckoutPage = () => {
   useEffect(() => {
     if (!planId) {
       toast.error('Invalid plan selection');
-      navigate('/subscriptions');
+      navigate(ROUTES.SUBSCRIPTIONS);
       return;
     }
     loadPlan();
@@ -57,7 +58,7 @@ export const CheckoutPage = () => {
       
       if (!selectedPlan) {
         toast.error('Plan not found');
-        navigate('/subscriptions');
+        navigate(ROUTES.SUBSCRIPTIONS);
         return;
       }
       
@@ -65,7 +66,7 @@ export const CheckoutPage = () => {
     } catch (error) {
       console.error('Error loading plan:', error);
       toast.error('Failed to load plan details');
-      navigate('/subscriptions');
+      navigate(ROUTES.SUBSCRIPTIONS);
     } finally {
       setLoading(false);
     }
@@ -87,10 +88,12 @@ export const CheckoutPage = () => {
       
       // For free plans, subscription is created directly
       toast.success(response.message || 'Subscription created successfully!');
-      navigate('/subscriptions/status');
-    } catch (error: any) {
+      navigate(ROUTES.SUBSCRIPTIONS_STATUS);
+    } catch (error: unknown) {
       console.error('Error creating subscription:', error);
-      toast.error(error.response?.data?.message || 'Failed to create subscription');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to create subscription');
     } finally {
       setProcessing(false);
     }
@@ -98,7 +101,7 @@ export const CheckoutPage = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/', { replace: true });
+    navigate(ROUTES.HOME, { replace: true });
   };
 
   // Sidebar items based on role
@@ -223,7 +226,7 @@ export const CheckoutPage = () => {
             
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => navigate('/jobs')} 
+                onClick={() => navigate(ROUTES.JOBS)} 
                 className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                 title="Search Jobs"
               >

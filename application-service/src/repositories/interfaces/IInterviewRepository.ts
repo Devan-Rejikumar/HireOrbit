@@ -1,4 +1,4 @@
-import { Interview, Application } from "@prisma/client";
+import { Interview, Application } from '@prisma/client';
 
 export type InterviewWithApplication = Interview & {
     application: Application;

@@ -34,9 +34,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         duration: 3000,
       });
       onSwitchToLogin();
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsLoading(false);
-      toast.error(error.response?.data?.error || 'Registration failed');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Registration failed');
     }
   };
 
