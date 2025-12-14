@@ -30,13 +30,13 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
   onDelete,
   onRefresh,
   achievement = null,
-  isEditing = false
+  isEditing = false,
 }) => {
   const [formData, setFormData] = useState({
     title: achievement?.title || '',
     description: achievement?.description || '',
     date: achievement?.date || '',
-    category: achievement?.category || ''
+    category: achievement?.category || '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +48,7 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
       title: achievement?.title || '',
       description: achievement?.description || '',
       date: achievement?.date || '',
-      category: achievement?.category || ''
+      category: achievement?.category || '',
     });
   }, [achievement]);
 
@@ -57,52 +57,52 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
     'Academic',
     'Volunteer',
     'Sports',
-    'Other'
+    'Other',
   ];
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  try {
-    const cleanedData: Omit<Achievement, 'id'> = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      date: formData.date,
-      category: formData.category.trim()
-    };
+    try {
+      const cleanedData: Omit<Achievement, 'id'> = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        date: formData.date,
+        category: formData.category.trim(),
+      };
 
-    await onSave(cleanedData);
-    // Success toast is handled in UserProfile.tsx, but we can add one here too for immediate feedback
-    if (isEditing) {
-      toast.success('Achievement updated successfully!');
-    } else {
-      toast.success('Achievement added successfully!');
+      await onSave(cleanedData);
+      // Success toast is handled in UserProfile.tsx, but we can add one here too for immediate feedback
+      if (isEditing) {
+        toast.success('Achievement updated successfully!');
+      } else {
+        toast.success('Achievement added successfully!');
+      }
+      onClose();
+    } catch (error) {
+      toast.error('Failed to save achievement');
+    } finally {
+      setIsLoading(false);
     }
-    onClose();
-  } catch (error) {
-    toast.error('Failed to save achievement');
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
-const handleDelete = async () => {
-  if (!achievement || !isEditing || !onDelete) return;
+  const handleDelete = async () => {
+    if (!achievement || !isEditing || !onDelete) return;
 
-  setIsLoading(true);
-  try {
-    onDelete(achievement.id);
-    onClose();
-    setShowDeleteConfirm(false);
-  } catch (error: unknown) {
-    const isAxiosError = error && typeof error === 'object' && 'response' in error;
-    const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
-    toast.error(axiosError?.response?.data?.error || 'Failed to delete achievement');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    setIsLoading(true);
+    try {
+      onDelete(achievement.id);
+      onClose();
+      setShowDeleteConfirm(false);
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to delete achievement');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

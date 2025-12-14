@@ -40,7 +40,7 @@ export const _notificationService = {
   },
   getNotificationsPaginated: async (recipientId: string, page: number = 1, limit: number = 10) => {
     const response = await api.get(`${API_BASE_URL}/${recipientId}/paginated`, {
-      params: { page, limit }
+      params: { page, limit },
     });
     return response.data;
   },
@@ -63,5 +63,5 @@ export const _notificationService = {
   deleteNotification: async (notificationId: string) => {
     const response = await api.delete(`${API_BASE_URL}/${notificationId}`);
     return response.data;
-  }
+  },
 };

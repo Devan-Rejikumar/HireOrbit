@@ -46,7 +46,7 @@ export const useFeaturedJobs = () => {
   const allJobs: Job[] = Array.isArray(allJobsData) ? allJobsData : [];
   return {
     data: allJobs.slice(0, 4),
-    ...rest
+    ...rest,
   };
 };
 

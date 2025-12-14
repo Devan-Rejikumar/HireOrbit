@@ -13,6 +13,7 @@ type Company = {
   headquarters?: string;
   phone?: string;
   linkedinUrl?: string;
+  logo?: string;
 };
 
 type CompanyDetailsModalProps = {
@@ -69,13 +70,28 @@ const CompanyDetailsModal: React.FC<CompanyDetailsModalProps> = ({ isOpen, onClo
 
         {/* Body */}
         <div className="p-6 space-y-6 overflow-y-auto h-[calc(100%-64px)]">
-          {/* Name & Description */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{company?.companyName || 'N/A'}</h2>
-            {company?.description ? (
-              <p className="mt-2 text-gray-600 leading-relaxed whitespace-pre-wrap">{company.description}</p>
+          {/* Company Logo & Name - Same Line */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+            {company?.logo ? (
+              <img 
+                src={company.logo} 
+                alt={company.companyName || 'Company logo'} 
+                className="w-16 h-16 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0"
+              />
             ) : (
-              <p className="mt-2 text-gray-500 italic flex items-center gap-2"><Info className="h-4 w-4" /> No description provided</p>
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-8 w-8 text-white" />
+              </div>
+            )}
+            <h2 className="text-2xl font-bold text-gray-900">{company?.companyName || 'N/A'}</h2>
+          </div>
+
+          {/* Description - Below in separate div */}
+          <div>
+            {company?.description ? (
+              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{company.description}</p>
+            ) : (
+              <p className="text-gray-500 italic flex items-center gap-2"><Info className="h-4 w-4" /> No description provided</p>
             )}
           </div>
 
@@ -98,23 +114,23 @@ const CompanyDetailsModal: React.FC<CompanyDetailsModalProps> = ({ isOpen, onClo
 
 const DetailItem: React.FC<{ icon: React.ReactNode; label: string; value?: string | null; isLink?: boolean }>
   = ({ icon, label, value, isLink }) => {
-  const display = value && `${value}`.trim() !== '' ? `${value}` : 'N/A';
-  return (
-    <div className="p-4 border rounded-lg bg-gray-50">
-      <div className="text-xs uppercase tracking-wide text-gray-500 flex items-center gap-2 mb-1">
-        {icon}
-        {label}
+    const display = value && `${value}`.trim() !== '' ? `${value}` : 'N/A';
+    return (
+      <div className="p-4 border rounded-lg bg-gray-50">
+        <div className="text-xs uppercase tracking-wide text-gray-500 flex items-center gap-2 mb-1">
+          {icon}
+          {label}
+        </div>
+        {isLink && value ? (
+          <a href={value} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">
+            {value}
+          </a>
+        ) : (
+          <div className="text-gray-900 break-words">{display}</div>
+        )}
       </div>
-      {isLink && value ? (
-        <a href={value} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">
-          {value}
-        </a>
-      ) : (
-        <div className="text-gray-900 break-words">{display}</div>
-      )}
-    </div>
-  );
-};
+    );
+  };
 
 export default CompanyDetailsModal;
 

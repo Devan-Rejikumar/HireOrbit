@@ -39,7 +39,7 @@ const AdminSkills: React.FC = () => {
         totalPages?: number;
       }
       const response = await api.get<{ success: boolean; data: { skills: Skill[]; pagination?: PaginationInfo }; message: string }>(
-        `/skills?includeInactive=true&page=1&limit=1000`
+        '/skills?includeInactive=true&page=1&limit=1000',
       );
       
       let apiSkills: Skill[] = [];

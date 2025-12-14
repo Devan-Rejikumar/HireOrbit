@@ -22,7 +22,7 @@ export const CompanyCard = ({
   jobCount,
   logo,
   tags = [],
-  onClick
+  onClick,
 }: CompanyCardProps) => {
   return (
     <Card 

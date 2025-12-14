@@ -9,10 +9,10 @@ const BlockedUser = () => {
   const handleLogout = () => {
     localStorage.removeItem('role');
     // Clear all cookies
-    document.cookie.split(";").forEach((c) => {
+    document.cookie.split(';').forEach((c) => {
       document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        .replace(/^ +/, '')
+        .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
     });
     navigate('/login', { replace: true });
   };

@@ -241,17 +241,17 @@ export const ATSCheckerPage = () => {
                   <div className="text-center">
                     <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full text-4xl font-bold ${
                       score >= 90 ? 'bg-green-100 text-green-700' :
-                      score >= 75 ? 'bg-blue-100 text-blue-700' :
-                      score >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-red-100 text-red-700'
+                        score >= 75 ? 'bg-blue-100 text-blue-700' :
+                          score >= 60 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
                     }`}>
                       {score}%
                     </div>
                     <p className="mt-4 text-sm text-gray-600">
                       {score >= 90 ? 'Excellent match!' :
-                       score >= 75 ? 'Good match' :
-                       score >= 60 ? 'Fair match' :
-                       'Needs improvement'}
+                        score >= 75 ? 'Good match' :
+                          score >= 60 ? 'Fair match' :
+                            'Needs improvement'}
                     </p>
                   </div>
                 </div>

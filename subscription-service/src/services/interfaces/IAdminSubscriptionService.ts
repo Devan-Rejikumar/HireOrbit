@@ -22,8 +22,16 @@ export interface UpdatePlanPriceInput {
   priceYearly?: number;
 }
 
+export interface PaginationResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface IAdminSubscriptionService {
-  getAllPlans(): Promise<SubscriptionPlan[]>;
+  getAllPlans(page?: number, limit?: number, userType?: string): Promise<PaginationResult<SubscriptionPlan>>;
   getPlanById(id: string): Promise<SubscriptionPlan | null>;
   createPlan(input: CreatePlanInput): Promise<SubscriptionPlan>;
   updatePlan(id: string, input: UpdatePlanInput): Promise<SubscriptionPlan>;

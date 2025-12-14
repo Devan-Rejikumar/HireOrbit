@@ -21,7 +21,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 type TimeFilter = 'week' | 'month' | 'year';
@@ -76,65 +76,65 @@ const AdminStatistics: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [totalRevenue, setTotalRevenue] = useState<number>(0);
 
-      const fetchStatistics = useCallback(async () => {
-        try {
-          setRefreshing(true);
+  const fetchStatistics = useCallback(async () => {
+    try {
+      setRefreshing(true);
           
-          // Fetch dashboard statistics and revenue in parallel
-          const [dashboardResponse, revenueResponse] = await Promise.all([
-            api.get<{ success: boolean; data: DashboardStatistics }>(
-              `/users/admin/dashboard/statistics?timeFilter=${timeFilter}`
-            ),
-            subscriptionService.admin.getRevenueStatistics().catch(() => null) // Don't fail if revenue fetch fails
-          ]);
+      // Fetch dashboard statistics and revenue in parallel
+      const [dashboardResponse, revenueResponse] = await Promise.all([
+        api.get<{ success: boolean; data: DashboardStatistics }>(
+          `/users/admin/dashboard/statistics?timeFilter=${timeFilter}`,
+        ),
+        subscriptionService.admin.getRevenueStatistics().catch(() => null), // Don't fail if revenue fetch fails
+      ]);
 
-          if (dashboardResponse.data.success && dashboardResponse.data.data) {
-            console.log('Statistics received:', {
-              topCompanies: dashboardResponse.data.data.topCompanies?.length || 0,
-              topApplicants: dashboardResponse.data.data.topApplicants?.length || 0,
-              totalUsers: dashboardResponse.data.data.totalUsers,
-              totalCompanies: dashboardResponse.data.data.totalCompanies,
-              totalJobs: dashboardResponse.data.data.totalJobs,
-              userRegistrations: dashboardResponse.data.data.userRegistrations?.length || 0,
-              companyRegistrations: dashboardResponse.data.data.companyRegistrations?.length || 0,
-              userRegData: dashboardResponse.data.data.userRegistrations,
-              companyRegData: dashboardResponse.data.data.companyRegistrations
-            });
-            setStatistics(dashboardResponse.data.data);
-          }
+      if (dashboardResponse.data.success && dashboardResponse.data.data) {
+        console.log('Statistics received:', {
+          topCompanies: dashboardResponse.data.data.topCompanies?.length || 0,
+          topApplicants: dashboardResponse.data.data.topApplicants?.length || 0,
+          totalUsers: dashboardResponse.data.data.totalUsers,
+          totalCompanies: dashboardResponse.data.data.totalCompanies,
+          totalJobs: dashboardResponse.data.data.totalJobs,
+          userRegistrations: dashboardResponse.data.data.userRegistrations?.length || 0,
+          companyRegistrations: dashboardResponse.data.data.companyRegistrations?.length || 0,
+          userRegData: dashboardResponse.data.data.userRegistrations,
+          companyRegData: dashboardResponse.data.data.companyRegistrations,
+        });
+        setStatistics(dashboardResponse.data.data);
+      }
 
-          // Set revenue if available
-          if (revenueResponse?.data?.statistics) {
-            setTotalRevenue(revenueResponse.data.statistics.totalRevenue);
-          }
-        } catch (error: unknown) {
-          console.error('Error fetching statistics:', error);
-          const isAxiosError = error && typeof error === 'object' && 'response' in error;
-          const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      // Set revenue if available
+      if (revenueResponse?.data?.statistics) {
+        setTotalRevenue(revenueResponse.data.statistics.totalRevenue);
+      }
+    } catch (error: unknown) {
+      console.error('Error fetching statistics:', error);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
           
-          // Handle specific error types
-          if (axiosError?.response?.status === 503) {
-            toast.error('Some services are temporarily unavailable. Please try again in a moment.', {
-              duration: 5000
-            });
-          } else if (axiosError?.response?.status === 429) {
-            toast.error('Too many requests. Please wait a moment before trying again.', {
-              duration: 5000
-            });
-          } else if (axiosError?.response?.status && axiosError.response.status >= 500) {
-            toast.error('Server error. Please try again later.', {
-              duration: 5000
-            });
-          } else {
-            toast.error('Failed to load statistics. Some data may be incomplete.', {
-              duration: 4000
-            });
-          }
-        } finally {
-          setLoading(false);
-          setRefreshing(false);
-        }
-      }, [timeFilter]);
+      // Handle specific error types
+      if (axiosError?.response?.status === 503) {
+        toast.error('Some services are temporarily unavailable. Please try again in a moment.', {
+          duration: 5000,
+        });
+      } else if (axiosError?.response?.status === 429) {
+        toast.error('Too many requests. Please wait a moment before trying again.', {
+          duration: 5000,
+        });
+      } else if (axiosError?.response?.status && axiosError.response.status >= 500) {
+        toast.error('Server error. Please try again later.', {
+          duration: 5000,
+        });
+      } else {
+        toast.error('Failed to load statistics. Some data may be incomplete.', {
+          duration: 4000,
+        });
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [timeFilter]);
 
   useEffect(() => {
     fetchStatistics();

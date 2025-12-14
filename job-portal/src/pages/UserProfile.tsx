@@ -151,12 +151,9 @@ const UserProfile = () => {
   const fetchProfile = async () => {
     try {
       const response = await api.get<ProfileResponse>('/profile/full');
-        setProfileData(response.data.data);
-      console.log('🔍 Frontend - Profile data received:', response.data.data);
-      console.log('🔍 Frontend - User data:', response.data.data?.user);
-      console.log('🔍 Frontend - User isVerified:', response.data.data?.user?.isVerified);
+      setProfileData(response.data.data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      // Error handled silently - user will see loading state
     } finally {
       setLoading(false);
     }
@@ -192,7 +189,6 @@ const UserProfile = () => {
       await userService.uploadResume(file);
       await fetchProfile();
     } catch (error) {
-      console.error('Resume upload error:', error);
       throw error;
     } finally {
       setIsResumeUploading(false);
@@ -205,7 +201,6 @@ const UserProfile = () => {
       await userService.deleteResume();
       await fetchProfile(); 
     } catch (error) {
-      console.error('Resume delete error:', error);
       throw error;
     } finally {
       setIsResumeUploading(false);
@@ -243,14 +238,13 @@ const UserProfile = () => {
     location?: string;
     phone?: string;
     profilePicture?: string;
-    [key: string]: unknown;
   }
 
   const handleSaveProfile = async (profileData: ProfileUpdateData) => {
     try {
       // Always send as JSON now - no more multipart/form-data
       const response = await api.put('/profile/', profileData, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const responseData = response.data as {
@@ -272,7 +266,6 @@ const UserProfile = () => {
         toast.success('Profile updated successfully!');
       }
     } catch (error: unknown) {
-      console.error('Profile update error:', error);
       throw new Error(extractErrorMessage(error, 'Failed to update profile'));
     }
   };
@@ -285,10 +278,6 @@ const UserProfile = () => {
         await fetchProfile();
       }
     } catch (error: unknown) {
-      console.error('Error adding certification:', error);
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
-      console.error('Error response data:', axiosError?.response?.data);
       toast.error(extractErrorMessage(error, 'Failed to add certification'));
     }
   };
@@ -301,10 +290,6 @@ const UserProfile = () => {
         await fetchProfile();
       }
     } catch (error: unknown) {
-      console.error('Error deleting certification:', error);
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
-      console.error('Error response data:', axiosError?.response?.data);
       toast.error(extractErrorMessage(error, 'Failed to delete certification'));
     }
   };
@@ -313,17 +298,12 @@ const UserProfile = () => {
     if (!editingCertification) return;
     
     try {
-      console.log('🔍 [CERTIFICATION-UPDATE] Sending data:', certification);
       const response = await api.put(`/profile/certifications/${editingCertification.id}`, certification);
       if ((response.data as { success: boolean }).success) {
         toast.success('Certification updated successfully!');
         await fetchProfile();
       }
     } catch (error: unknown) {
-      console.error('Error updating certification:', error);
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
-      console.error('Error response data:', axiosError?.response?.data);
       toast.error(extractErrorMessage(error, 'Failed to update certification'));
     }
   };
@@ -336,10 +316,6 @@ const UserProfile = () => {
         await fetchProfile();
       }
     } catch (error: unknown) {
-      console.error('Error adding achievement:', error);
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
-      console.error('Error response data:', axiosError?.response?.data);
       toast.error(extractErrorMessage(error, 'Failed to add achievement'));
     }
   };
@@ -352,10 +328,6 @@ const UserProfile = () => {
         await fetchProfile();
       }
     } catch (error: unknown) {
-      console.error('Error deleting achievement:', error);
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
-      console.error('Error response data:', axiosError?.response?.data);
       toast.error(extractErrorMessage(error, 'Failed to delete achievement'));
     }
   };
@@ -364,17 +336,12 @@ const UserProfile = () => {
     if (!editingAchievement) return;
     
     try {
-      console.log('🔍 [ACHIEVEMENT-UPDATE] Sending data:', achievement);
       const response = await api.put(`/profile/achievements/${editingAchievement.id}`, achievement);
       if ((response.data as { success: boolean }).success) {
         toast.success('Achievement updated successfully!');
         await fetchProfile();
       }
     } catch (error: unknown) {
-      console.error('Error updating achievement:', error);
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown } }) : null;
-      console.error('Error response data:', axiosError?.response?.data);
       toast.error(extractErrorMessage(error, 'Failed to update achievement'));
     }
   };
@@ -446,7 +413,7 @@ const UserProfile = () => {
                             strokeDashoffset={251.2 - (completionPercentage / 100) * 251.2}
                             style={{
                               transition: 'stroke-dashoffset 0.7s ease-out',
-                              filter: 'drop-shadow(0 0 2px rgba(168, 85, 247, 0.3))'
+                              filter: 'drop-shadow(0 0 2px rgba(168, 85, 247, 0.3))',
                             }}
                           />
                           
@@ -502,7 +469,7 @@ const UserProfile = () => {
                               strokeLinecap="round"
                               transform={`rotate(${-90 + (completionPercentage / 100) * 180} 100 100)`}
                               style={{
-                                transition: 'transform 0.7s ease-out'
+                                transition: 'transform 0.7s ease-out',
                               }}
                             />
                             <circle
@@ -523,10 +490,10 @@ const UserProfile = () => {
                             {completionPercentage === 100 
                               ? 'Complete' 
                               : completionPercentage >= 70 
-                              ? 'Stable state'
-                              : completionPercentage >= 40
-                              ? 'In progress'
-                              : 'Getting started'}
+                                ? 'Stable state'
+                                : completionPercentage >= 40
+                                  ? 'In progress'
+                                  : 'Getting started'}
                           </div>
                           <div className="text-sm text-gray-500">
                             {completionPercentage === 100 
@@ -607,431 +574,431 @@ const UserProfile = () => {
 
           {/* Profile Content */}
           <>
-              {/* About Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mr-4">
-                  <User className="h-6 w-6 text-blue-600" />
+            {/* About Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mr-4">
+                    <User className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">About</h2>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">About</h2>
               </div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-6">
-              <p className="text-gray-700 leading-relaxed text-lg">
-                {profile.about ||
+              <div className="bg-gray-50 rounded-xl p-6">
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  {profile.about ||
                   'Add a summary to highlight your personality or work experience'}
-              </p>
-            </div>
-          </div>
-
-          {/* Resume Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl flex items-center justify-center mr-4">
-                  <Briefcase className="h-6 w-6 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">Resume</h2>
+                </p>
               </div>
             </div>
+
+            {/* Resume Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl flex items-center justify-center mr-4">
+                    <Briefcase className="h-6 w-6 text-green-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Resume</h2>
+                </div>
+              </div>
             
-            <ResumeUpload
-              onUpload={handleResumeUpload}
-              onDelete={handleResumeDelete}
-              currentResume={profile.resume}
-              isLoading={isResumeUploading}
-            />
-          </div>
+              <ResumeUpload
+                onUpload={handleResumeUpload}
+                onDelete={handleResumeDelete}
+                currentResume={profile.resume}
+                isLoading={isResumeUploading}
+              />
+            </div>
 
-          {/* Experience Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center mr-4">
-                  <Briefcase className="h-6 w-6 text-purple-600" />
+            {/* Experience Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center mr-4">
+                    <Briefcase className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Experience</h2>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Experience</h2>
-              </div>
-              <button
-                onClick={() => {
-                  setEditingExperience(null);
-                  setIsExperienceModalOpen(true);
-                }}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
-              >
-                <Briefcase className="h-5 w-5 mr-2" />
+                <button
+                  onClick={() => {
+                    setEditingExperience(null);
+                    setIsExperienceModalOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                >
+                  <Briefcase className="h-5 w-5 mr-2" />
                 Add Experience
-              </button>
-            </div>
-
-            {(!profile.experience || profile.experience.length === 0) ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Briefcase className="h-8 w-8 text-gray-400" />
-                </div>
-                <p className="text-gray-500 text-lg mb-2">No experience added yet</p>
-                <p className="text-gray-400 text-sm">Add your work experience to showcase your professional journey</p>
+                </button>
               </div>
-            ) : (
-              <div className="space-y-8">
-                {profile.experience?.map((exp, index) => (
-                  <div
-                    key={exp.id}
-                    className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
-                  >
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                        <Briefcase className="h-8 w-8 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
-                              {exp.title}
-                            </h3>
-                            <p className="text-lg text-gray-600 font-medium mb-2">{exp.company}</p>
-                            {exp.location && (
-                              <div className="flex items-center text-gray-500 mb-3">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                <span className="text-sm">{exp.location}</span>
+
+              {(!profile.experience || profile.experience.length === 0) ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Briefcase className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg mb-2">No experience added yet</p>
+                  <p className="text-gray-400 text-sm">Add your work experience to showcase your professional journey</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {profile.experience?.map((exp, index) => (
+                    <div
+                      key={exp.id}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                    >
+                      <div className="flex items-start">
+                        <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
+                          <Briefcase className="h-8 w-8 text-purple-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                {exp.title}
+                              </h3>
+                              <p className="text-lg text-gray-600 font-medium mb-2">{exp.company}</p>
+                              {exp.location && (
+                                <div className="flex items-center text-gray-500 mb-3">
+                                  <MapPin className="h-4 w-4 mr-1" />
+                                  <span className="text-sm">{exp.location}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center text-sm text-gray-500 mb-4">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                <span className="font-medium">
+                                  {formatDate(exp.startDate)} -{' '}
+                                  {exp.isCurrentRole
+                                    ? 'Present'
+                                    : exp.endDate
+                                      ? formatDate(exp.endDate)
+                                      : 'Present'}
+                                </span>
+                                <span className="mx-3 text-gray-300">•</span>
+                                <span className="font-medium">
+                                  {calculateDuration(
+                                    exp.startDate,
+                                    exp.isCurrentRole ? undefined : exp.endDate,
+                                  )}
+                                </span>
                               </div>
-                            )}
-                            <div className="flex items-center text-sm text-gray-500 mb-4">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              <span className="font-medium">
-                                {formatDate(exp.startDate)} -{' '}
-                                {exp.isCurrentRole
-                                  ? 'Present'
-                                  : exp.endDate
-                                    ? formatDate(exp.endDate)
-                                    : 'Present'}
-                              </span>
-                              <span className="mx-3 text-gray-300">•</span>
-                              <span className="font-medium">
-                                {calculateDuration(
-                                  exp.startDate,
-                                  exp.isCurrentRole ? undefined : exp.endDate,
-                                )}
-                              </span>
                             </div>
+                            <button
+                              onClick={() => {
+                                setEditingExperience(exp);
+                                setIsExperienceModalOpen(true);
+                              }}
+                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => {
-                              setEditingExperience(exp);
-                              setIsExperienceModalOpen(true);
-                            }}
-                            className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </button>
+                          {exp.description && (
+                            <div className="bg-gray-50 rounded-xl p-4 mt-4">
+                              <p className="text-gray-700 leading-relaxed">
+                                {exp.description}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {exp.description && (
-                          <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                            <p className="text-gray-700 leading-relaxed">
-                              {exp.description}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Education Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl flex items-center justify-center mr-4">
-                  <GraduationCap className="h-6 w-6 text-indigo-600" />
+                  ))}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Education</h2>
-              </div>
-              <button
-                onClick={() => {
-                  setEditingEducation(null);
-                  setIsEducationModalOpen(true);
-                }}
-                className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
-              >
-                <GraduationCap className="h-5 w-5 mr-2" />
+              )}
+            </div>
+
+            {/* Education Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl flex items-center justify-center mr-4">
+                    <GraduationCap className="h-6 w-6 text-indigo-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Education</h2>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingEducation(null);
+                    setIsEducationModalOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                >
+                  <GraduationCap className="h-5 w-5 mr-2" />
                 Add Education
-              </button>
-            </div>
-
-            {(!profile.education || profile.education.length === 0) ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <GraduationCap className="h-8 w-8 text-gray-400" />
-                </div>
-                <p className="text-gray-500 text-lg mb-2">No education added yet</p>
-                <p className="text-gray-400 text-sm">Add your educational background to showcase your qualifications</p>
+                </button>
               </div>
-            ) : (
-              <div className="space-y-8">
-                {profile.education?.map((edu, index) => (
-                  <div
-                    key={edu.id}
-                    className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
-                  >
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                        <GraduationCap className="h-8 w-8 text-indigo-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
-                              {edu.institution}
-                            </h3>
-                            <p className="text-lg text-gray-600 font-medium mb-3">{edu.degree}</p>
-                            <div className="flex items-center text-sm text-gray-500">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              <span className="font-medium">
-                                {formatDate(edu.startDate)} -{' '}
-                                {edu.endDate
-                                  ? formatDate(edu.endDate)
-                                  : 'Present'}
-                              </span>
+
+              {(!profile.education || profile.education.length === 0) ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <GraduationCap className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg mb-2">No education added yet</p>
+                  <p className="text-gray-400 text-sm">Add your educational background to showcase your qualifications</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {profile.education?.map((edu, index) => (
+                    <div
+                      key={edu.id}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                    >
+                      <div className="flex items-start">
+                        <div className="w-16 h-16 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
+                          <GraduationCap className="h-8 w-8 text-indigo-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                {edu.institution}
+                              </h3>
+                              <p className="text-lg text-gray-600 font-medium mb-3">{edu.degree}</p>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                <span className="font-medium">
+                                  {formatDate(edu.startDate)} -{' '}
+                                  {edu.endDate
+                                    ? formatDate(edu.endDate)
+                                    : 'Present'}
+                                </span>
+                              </div>
                             </div>
+                            <button
+                              onClick={() => {
+                                setEditingEducation(edu);
+                                setIsEducationModalOpen(true);
+                              }}
+                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => {
-                              setEditingEducation(edu);
-                              setIsEducationModalOpen(true);
-                            }}
-                            className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </button>
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Skills Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-orange-100 to-red-100 rounded-xl flex items-center justify-center mr-4">
+                    <Award className="h-6 w-6 text-orange-600" />
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Skills Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-100 to-red-100 rounded-xl flex items-center justify-center mr-4">
-                  <Award className="h-6 w-6 text-orange-600" />
+                  <h2 className="text-2xl font-bold text-gray-900">Skills</h2>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Skills</h2>
-              </div>
-              <button
-                onClick={() => setIsSkillsModalOpen(true)}
-                className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-xl hover:from-orange-700 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
-              >
-                <Award className="h-5 w-5 mr-2" />
+                <button
+                  onClick={() => setIsSkillsModalOpen(true)}
+                  className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-xl hover:from-orange-700 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                >
+                  <Award className="h-5 w-5 mr-2" />
                 Add Skills
-              </button>
+                </button>
+              </div>
+
+              {(!profile.skills || profile.skills.length === 0) ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Award className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg mb-2">No skills added yet</p>
+                  <p className="text-gray-400 text-sm">Add your skills to showcase your expertise</p>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {profile.skills?.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-4 py-2 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {(!profile.skills || profile.skills.length === 0) ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-gray-400" />
+            {/* Certifications Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-100 to-green-100 rounded-xl flex items-center justify-center mr-4">
+                    <Award className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Certifications</h2>
                 </div>
-                <p className="text-gray-500 text-lg mb-2">No skills added yet</p>
-                <p className="text-gray-400 text-sm">Add your skills to showcase your expertise</p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {profile.skills?.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-4 py-2 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Certifications Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-100 to-green-100 rounded-xl flex items-center justify-center mr-4">
-                  <Award className="h-6 w-6 text-emerald-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">Certifications</h2>
-              </div>
-              <button
-                onClick={() => {
-                  setEditingCertification(null);
-                  setIsCertificationModalOpen(true);
-                }}
-                className="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
-              >
-                <Award className="h-5 w-5 mr-2" />
+                <button
+                  onClick={() => {
+                    setEditingCertification(null);
+                    setIsCertificationModalOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                >
+                  <Award className="h-5 w-5 mr-2" />
                 Add Certification
-              </button>
-            </div>
-
-            {(!profile || !profile.certifications || !Array.isArray(profile.certifications) || profile.certifications.length === 0) ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-gray-400" />
-                </div>
-                <p className="text-gray-500 text-lg mb-2">No certifications added yet</p>
-                <p className="text-gray-400 text-sm">Add your professional certifications to enhance your profile</p>
+                </button>
               </div>
-            ) : (
-              <div className="space-y-8">
-                {profile.certifications?.map((cert, index) => (
-                  <div
-                    key={cert.id}
-                    className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
-                  >
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 bg-gradient-to-r from-emerald-100 to-green-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                        <Award className="h-8 w-8 text-emerald-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
-                              {cert.name}
-                            </h3>
-                            <p className="text-lg text-gray-600 font-medium mb-3">{cert.issuer}</p>
-                            <div className="flex items-center text-sm text-gray-500 mb-3">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              <span className="font-medium">Issued: {formatDate(cert.issue_date)}</span>
-                              {cert.expiry_date && (
-                                <>
-                                  <span className="mx-3 text-gray-300">•</span>
-                                  <span className="font-medium">Expires: {formatDate(cert.expiry_date)}</span>
-                                </>
+
+              {(!profile || !profile.certifications || !Array.isArray(profile.certifications) || profile.certifications.length === 0) ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Award className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg mb-2">No certifications added yet</p>
+                  <p className="text-gray-400 text-sm">Add your professional certifications to enhance your profile</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {profile.certifications?.map((cert, index) => (
+                    <div
+                      key={cert.id}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                    >
+                      <div className="flex items-start">
+                        <div className="w-16 h-16 bg-gradient-to-r from-emerald-100 to-green-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
+                          <Award className="h-8 w-8 text-emerald-600" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                {cert.name}
+                              </h3>
+                              <p className="text-lg text-gray-600 font-medium mb-3">{cert.issuer}</p>
+                              <div className="flex items-center text-sm text-gray-500 mb-3">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                <span className="font-medium">Issued: {formatDate(cert.issue_date)}</span>
+                                {cert.expiry_date && (
+                                  <>
+                                    <span className="mx-3 text-gray-300">•</span>
+                                    <span className="font-medium">Expires: {formatDate(cert.expiry_date)}</span>
+                                  </>
+                                )}
+                              </div>
+                              {cert.credential_id && (
+                                <div className="flex items-center text-sm text-gray-500 mb-3">
+                                  <span className="font-medium">ID: {cert.credential_id}</span>
+                                </div>
+                              )}
+                              {cert.credential_url && (
+                                <a
+                                  href={cert.credential_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium text-sm mb-3 bg-emerald-50 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
+                                >
+                                  <ExternalLink className="h-4 w-4 mr-1" />
+                                View Credential
+                                </a>
                               )}
                             </div>
-                            {cert.credential_id && (
-                              <div className="flex items-center text-sm text-gray-500 mb-3">
-                                <span className="font-medium">ID: {cert.credential_id}</span>
-                              </div>
-                            )}
-                            {cert.credential_url && (
-                              <a
-                                href={cert.credential_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium text-sm mb-3 bg-emerald-50 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
-                              >
-                                <ExternalLink className="h-4 w-4 mr-1" />
-                                View Credential
-                              </a>
-                            )}
+                            <button
+                              onClick={() => {
+                                setEditingCertification(cert);
+                                setIsCertificationModalOpen(true);
+                              }}
+                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              title="Edit certification"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => {
-                              setEditingCertification(cert);
-                              setIsCertificationModalOpen(true);
-                            }}
-                            className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            title="Edit certification"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </button>
+                          {cert.description && (
+                            <div className="bg-gray-50 rounded-xl p-4 mt-4">
+                              <p className="text-gray-700 leading-relaxed">
+                                {cert.description}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {cert.description && (
-                          <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                            <p className="text-gray-700 leading-relaxed">
-                              {cert.description}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Achievements Section */}
-          <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl flex items-center justify-center mr-4">
-                  <Award className="h-6 w-6 text-yellow-600" />
+                  ))}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900">Achievements</h2>
-              </div>
-              <button
-                onClick={() => {
-                  setEditingAchievement(null);
-                  setIsAchievementModalOpen(true);
-                }}
-                className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
-              >
-                <Award className="h-5 w-5 mr-2" />
-                Add Achievement
-              </button>
+              )}
             </div>
 
-            {(!profile || !profile.achievements || !Array.isArray(profile.achievements) || profile.achievements.length === 0) ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-gray-400" />
+            {/* Achievements Section */}
+            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl flex items-center justify-center mr-4">
+                    <Award className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Achievements</h2>
                 </div>
-                <p className="text-gray-500 text-lg mb-2">No achievements added yet</p>
-                <p className="text-gray-400 text-sm">Add your achievements to showcase your accomplishments</p>
+                <button
+                  onClick={() => {
+                    setEditingAchievement(null);
+                    setIsAchievementModalOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                >
+                  <Award className="h-5 w-5 mr-2" />
+                Add Achievement
+                </button>
               </div>
-            ) : (
-              <div className="space-y-8">
-                {profile.achievements?.map((achievement, index) => (
-                  <div
-                    key={achievement.id}
-                    className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
-                  >
-                    <div className="flex items-start">
-                      <div className="w-16 h-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                        <Award className="h-8 w-8 text-yellow-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-1">
-                              {achievement.title}
-                            </h3>
-                            <p className="text-lg text-gray-600 font-medium mb-3">{achievement.category}</p>
-                            <div className="flex items-center text-sm text-gray-500 mb-4">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              <span className="font-medium">{formatDate(achievement.date)}</span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setEditingAchievement(achievement);
-                              setIsAchievementModalOpen(true);
-                            }}
-                            className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            title="Edit achievement"
-                          >
-                            <Edit className="h-5 w-5" />
-                          </button>
+
+              {(!profile || !profile.achievements || !Array.isArray(profile.achievements) || profile.achievements.length === 0) ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl">
+                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Award className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg mb-2">No achievements added yet</p>
+                  <p className="text-gray-400 text-sm">Add your achievements to showcase your accomplishments</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {profile.achievements?.map((achievement, index) => (
+                    <div
+                      key={achievement.id}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                    >
+                      <div className="flex items-start">
+                        <div className="w-16 h-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
+                          <Award className="h-8 w-8 text-yellow-600" />
                         </div>
-                        <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                          <p className="text-gray-700 leading-relaxed">
-                            {achievement.description}
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                {achievement.title}
+                              </h3>
+                              <p className="text-lg text-gray-600 font-medium mb-3">{achievement.category}</p>
+                              <div className="flex items-center text-sm text-gray-500 mb-4">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                <span className="font-medium">{formatDate(achievement.date)}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setEditingAchievement(achievement);
+                                setIsAchievementModalOpen(true);
+                              }}
+                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              title="Edit achievement"
+                            >
+                              <Edit className="h-5 w-5" />
+                            </button>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-4 mt-4">
+                            <p className="text-gray-700 leading-relaxed">
+                              {achievement.description}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-            </>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         </div>
       </div>
 
@@ -1066,7 +1033,7 @@ const UserProfile = () => {
           setEditingExperience(null);
         }}
         onSave={refreshProfile}
-        experience={editingExperience}
+        experience={editingExperience ?? undefined}
         isEdit={!!editingExperience}
       />
 
@@ -1077,7 +1044,7 @@ const UserProfile = () => {
           setEditingEducation(null);
         }}
         onSave={refreshProfile}
-        education={editingEducation}
+        education={editingEducation ?? undefined}
         isEdit={!!editingEducation}
       />
 

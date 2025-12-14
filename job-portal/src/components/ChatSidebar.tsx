@@ -18,7 +18,7 @@ export const ChatSidebar = ({
   selectedConversationId,
   currentUserId,
   onSelectConversation,
-  role
+  role,
 }: ChatSidebarProps) => {
   const [participantNames, setParticipantNames] = useState<Record<string, string>>({});
   const fetchedRef = useRef<Set<string>>(new Set());

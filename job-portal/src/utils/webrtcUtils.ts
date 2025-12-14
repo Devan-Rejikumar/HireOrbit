@@ -13,8 +13,8 @@ export function createPeerConnection(iceServers: RTCIceServer[]): RTCPeerConnect
     iceServers: iceServers.map(server => ({
       urls: server.urls,
       ...(server.username && { username: server.username }),
-      ...(server.credential && { credential: server.credential })
-    }))
+      ...(server.credential && { credential: server.credential }),
+    })),
   };
 
   return new RTCPeerConnection(configuration);
@@ -26,7 +26,7 @@ export function createPeerConnection(iceServers: RTCIceServer[]): RTCPeerConnect
  */
 export async function getUserMedia(
   audio: boolean = true,
-  video: boolean = true
+  video: boolean = true,
 ): Promise<MediaStream> {
   // Check if getUserMedia is available
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -41,8 +41,8 @@ export async function getUserMedia(
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: 'user'
-        }
+          facingMode: 'user',
+        },
       });
       return stream;
     } catch (error) {
@@ -52,7 +52,7 @@ export async function getUserMedia(
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio,
-          video: true
+          video: true,
         });
         return stream;
       } catch (error2) {
@@ -63,7 +63,7 @@ export async function getUserMedia(
           try {
             const stream = await navigator.mediaDevices.getUserMedia({
               audio: true,
-              video: false
+              video: false,
             });
             console.warn('Video unavailable, continuing with audio-only');
             return stream;
@@ -81,7 +81,7 @@ export async function getUserMedia(
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
-        video: false
+        video: false,
       });
       return stream;
     } catch (error) {
@@ -97,30 +97,30 @@ function getDetailedMediaError(error: DOMException): Error {
   let message = 'Failed to access camera/microphone. ';
   
   switch (error.name) {
-    case 'NotFoundError':
-    case 'DevicesNotFoundError':
-      message += 'No camera or microphone found. Please connect a device and try again.';
-      break;
-    case 'NotAllowedError':
-    case 'PermissionDeniedError':
-      message += 'Permission denied. Please allow camera/microphone access in your browser settings and try again.';
-      break;
-    case 'NotReadableError':
-    case 'TrackStartError':
-      message += 'Device is already in use by another application. Please close other apps using the camera/microphone and try again.';
-      break;
-    case 'OverconstrainedError':
-    case 'ConstraintNotSatisfiedError':
-      message += 'Requested video settings are not supported by your device. Please try again.';
-      break;
-    case 'AbortError':
-      message += 'Request was aborted. Please try again.';
-      break;
-    case 'TypeError':
-      message += 'Invalid constraints provided. Please try again.';
-      break;
-    default:
-      message += `Error: ${error.message || 'Unknown error occurred'}. Please check your device permissions and try again.`;
+  case 'NotFoundError':
+  case 'DevicesNotFoundError':
+    message += 'No camera or microphone found. Please connect a device and try again.';
+    break;
+  case 'NotAllowedError':
+  case 'PermissionDeniedError':
+    message += 'Permission denied. Please allow camera/microphone access in your browser settings and try again.';
+    break;
+  case 'NotReadableError':
+  case 'TrackStartError':
+    message += 'Device is already in use by another application. Please close other apps using the camera/microphone and try again.';
+    break;
+  case 'OverconstrainedError':
+  case 'ConstraintNotSatisfiedError':
+    message += 'Requested video settings are not supported by your device. Please try again.';
+    break;
+  case 'AbortError':
+    message += 'Request was aborted. Please try again.';
+    break;
+  case 'TypeError':
+    message += 'Invalid constraints provided. Please try again.';
+    break;
+  default:
+    message += `Error: ${error.message || 'Unknown error occurred'}. Please check your device permissions and try again.`;
   }
   
   return new Error(message);
@@ -142,20 +142,20 @@ export function stopMediaStream(stream: MediaStream | null): void {
  */
 export function getConnectionStateDescription(state: RTCPeerConnectionState): string {
   switch (state) {
-    case 'new':
-      return 'Initializing...';
-    case 'connecting':
-      return 'Connecting...';
-    case 'connected':
-      return 'Connected';
-    case 'disconnected':
-      return 'Disconnected';
-    case 'failed':
-      return 'Connection failed';
-    case 'closed':
-      return 'Connection closed';
-    default:
-      return 'Unknown';
+  case 'new':
+    return 'Initializing...';
+  case 'connecting':
+    return 'Connecting...';
+  case 'connected':
+    return 'Connected';
+  case 'disconnected':
+    return 'Disconnected';
+  case 'failed':
+    return 'Connection failed';
+  case 'closed':
+    return 'Connection closed';
+  default:
+    return 'Unknown';
   }
 }
 

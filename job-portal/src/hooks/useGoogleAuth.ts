@@ -17,24 +17,6 @@ interface GoogleAuthResponse {
 export const useGoogleAuth = () => {
   const [loading, setLoading] = useState(false);
 
-  // Disabled redirect result handler to prevent automatic reloads during debugging
-  // useEffect(() => {
-  //   const handleRedirectResult = async () => {
-  //     try {
-  //       const result = await getRedirectResult(auth);
-  //       if (result) {
-  //         setLoading(true);
-  //         await processGoogleUser(result.user);
-  //       }
-  //     } catch (error) {
-  //       console.error('Redirect result error:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   handleRedirectResult();
-  // }, []);
 
   interface FirebaseUser {
     getIdToken: () => Promise<string>;
@@ -71,21 +53,22 @@ export const useGoogleAuth = () => {
       } catch (popupError: unknown) {
         // Handle actual Firebase auth errors
         const firebaseError = popupError && typeof popupError === 'object' && 'code' in popupError
-          ? (popupError as { code?: string })
+          ? (popupError as { code?: string; message?: string })
           : null;
+        
         if (firebaseError?.code === 'auth/popup-blocked') {
           throw new Error('Popup was blocked by your browser. Please allow popups for this site and try again.');
-        } else if (popupError.code === 'auth/popup-closed-by-user') {
+        } else if (firebaseError?.code === 'auth/popup-closed-by-user') {
           throw new Error('Sign-in was cancelled. Please try again.');
-        } else if (popupError.code === 'auth/cancelled-popup-request') {
+        } else if (firebaseError?.code === 'auth/cancelled-popup-request') {
           // This happens when multiple popups are opened - not a real error
           throw new Error('Another sign-in attempt is already in progress. Please wait.');
         }
         
         // For other errors, log but don't treat COOP warnings as fatal
         // COOP warnings are browser security notices and don't prevent sign-in from working
-        if (popupError.message?.includes('Cross-Origin-Opener-Policy')) {
-          console.warn('[useGoogleAuth] COOP warning detected (harmless):', popupError.message);
+        if (firebaseError?.message?.includes('Cross-Origin-Opener-Policy')) {
+          console.warn('[useGoogleAuth] COOP warning detected (harmless):', firebaseError.message);
           // If it's just a COOP warning without an error code, the sign-in might have still succeeded
           // But we can't check, so we'll treat it as an error to be safe
           throw new Error('Sign-in may have been affected by browser security settings. Please try again.');

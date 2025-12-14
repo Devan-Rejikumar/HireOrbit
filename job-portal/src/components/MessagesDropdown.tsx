@@ -6,7 +6,7 @@ import { Dropdown, DropdownContent, DropdownItem, DropdownHeader } from './ui/dr
 import { useConversationsWithUnread, useTotalUnreadCount } from '@/hooks/useChat';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ConversationResponse } from '@/api/_chatService';
+import { ConversationResponse } from '@/api/chatService';
 import api from '@/api/axios';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -28,7 +28,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
   // Create stable list of conversation IDs to track changes
   const conversationIds = React.useMemo(
     () => conversations.map(conv => conv.id).join(','),
-    [conversations]
+    [conversations],
   );
 
   // Fetch participant names with caching and rate limiting
@@ -38,7 +38,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
     
     // Get conversations that need names fetched (only those not in cache)
     const conversationsToFetch = conversations.filter(
-      conv => !fetchedNamesRef.current.has(conv.id)
+      conv => !fetchedNamesRef.current.has(conv.id),
     );
     
     if (conversationsToFetch.length === 0) return;
@@ -68,8 +68,8 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
           if (role === 'jobseeker') {
             // Fetch company name from application
             try {
-              const appResponse = await api.get(`/applications/${conversation.applicationId}`);
-              const applicationData = appResponse.data?.data || appResponse.data;
+              const appResponse = await api.get<{ data?: { companyName?: string; jobId?: string; job?: { company?: { companyName?: string }; companyName?: string }; company?: { companyName?: string } } }>(`/applications/${conversation.applicationId}`);
+              const applicationData = appResponse.data?.data || (appResponse.data as { companyName?: string; jobId?: string; job?: { company?: { companyName?: string }; companyName?: string }; company?: { companyName?: string } } | undefined);
               
               let companyName = applicationData?.companyName ||
                               applicationData?.job?.company?.companyName ||
@@ -81,13 +81,35 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
               if ((!companyName || companyName === 'Company Name') && applicationData?.jobId) {
                 try {
                   await new Promise(resolve => setTimeout(resolve, 200)); // Delay before job fetch
-                  const jobResponse = await api.get(`/jobs/${applicationData.jobId}`);
+                  const jobResponse = await api.get<{ 
+                    data?: { 
+                      job?: { 
+                        company?: { companyName?: string } | string | { name?: string }; 
+                        companyName?: string; 
+                      }; 
+                    }; 
+                    job?: { 
+                      company?: { companyName?: string } | string | { name?: string }; 
+                      companyName?: string; 
+                    }; 
+                  }>(`/jobs/${applicationData.jobId}`);
+                  
                   const jobData = jobResponse.data?.data?.job || jobResponse.data?.job || jobResponse.data?.data || jobResponse.data;
-                  companyName = jobData?.company?.companyName ||
-                              jobData?.companyName ||
-                              jobData?.company?.name ||
-                              jobData?.company ||
-                              null;
+                  
+                  if (jobData && typeof jobData === 'object') {
+                    const jobObj = jobData as { company?: { companyName?: string } | string | { name?: string }; companyName?: string };
+                    if (typeof jobObj.company === 'object' && jobObj.company !== null) {
+                      if ('companyName' in jobObj.company) {
+                        companyName = jobObj.company.companyName || null;
+                      } else if ('name' in jobObj.company) {
+                        companyName = jobObj.company.name || null;
+                      }
+                    } else if (typeof jobObj.company === 'string') {
+                      companyName = jobObj.company || null;
+                    } else if (jobObj.companyName) {
+                      companyName = jobObj.companyName || null;
+                    }
+                  }
                 } catch (jobError: unknown) {
                   // Only log non-429 errors
                   const isAxiosError = jobError && typeof jobError === 'object' && 'response' in jobError;
@@ -116,7 +138,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
             }
           } else {
             // Fetch user name
-            const response = await api.get(`/users/${otherParticipantId}`);
+            const response = await api.get<{ data?: { user?: { username?: string; name?: string } } }>(`/users/${otherParticipantId}`);
             const userName = response.data?.data?.user?.username ||
                             response.data?.data?.user?.name ||
                             'User';
@@ -182,7 +204,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">Messages</h3>
             {totalUnread > 0 && (
-              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+              <Badge variant="secondary" className="bg-red-50 text-red-700 border-red-200">
                 {totalUnread} unread
               </Badge>
             )}

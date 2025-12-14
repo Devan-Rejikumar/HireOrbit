@@ -45,6 +45,7 @@ export const JobSearchSchema = z.object({
   minSalary: z.number().optional(),
   maxSalary: z.number().optional(),
   isActive: z.coerce.boolean().optional(),
+  isListed: z.coerce.boolean().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(10),
   sortBy: z.enum(['createdAt', 'title', 'salary']).default('createdAt'),

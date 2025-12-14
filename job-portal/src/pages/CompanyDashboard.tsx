@@ -31,7 +31,7 @@ import {
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 
@@ -45,7 +45,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
 );
 
 type DateRange = '30days' | '3months' | '6months' | '1year' | 'all';
@@ -61,6 +61,7 @@ interface Company {
   profileCompleted?: boolean;
   jobCount?: number;
   rejectionReason?: string;
+  logo?: string;
 }
 
 interface ProfileStep {
@@ -92,7 +93,7 @@ const CompanyDashboard = () => {
     jobViews: 0,
     jobApplied: 0,
     jobsOpened: 0,
-    totalApplicants: 0
+    totalApplicants: 0,
   });
 
   // Minimal local type for jobs shown in dashboard
@@ -155,7 +156,7 @@ const CompanyDashboard = () => {
   
   // Get messages for selected conversation
   const { data: messages = [], isLoading: messagesLoading } = useMessages(
-    selectedConversation?.id || null
+    selectedConversation?.id || null,
   );
   const markAsReadMutation = useMarkAsRead();
 
@@ -248,7 +249,7 @@ const CompanyDashboard = () => {
 
       // Calculate new candidates (pending applications)
       const newCandidates = Array.isArray(allApplications) ? allApplications.filter((app: Application) => 
-        app.status === 'PENDING' || app.status === 'REVIEWING'
+        app.status === 'PENDING' || app.status === 'REVIEWING',
       ).length : 0;
 
       // Calculate interviews scheduled for today
@@ -278,7 +279,7 @@ const CompanyDashboard = () => {
         jobViews: 0, // Removed - not needed
         jobApplied,
         jobsOpened: activeJobs.length,
-        totalApplicants: Array.isArray(allApplications) ? allApplications.length : 0
+        totalApplicants: Array.isArray(allApplications) ? allApplications.length : 0,
       });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -391,7 +392,7 @@ const CompanyDashboard = () => {
     try {
       await Promise.all([
         loadPremiumApplications(),
-        loadPremiumInterviews()
+        loadPremiumInterviews(),
       ]);
     } catch (error) {
       console.error('Error loading premium dashboard data:', error);
@@ -447,16 +448,16 @@ const CompanyDashboard = () => {
   const getFilterDate = (range: DateRange): Date | null => {
     const now = new Date();
     switch (range) {
-      case '30days':
-        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      case '3months':
-        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      case '6months':
-        return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-      case '1year':
-        return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      default:
-        return null;
+    case '30days':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    case '3months':
+      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    case '6months':
+      return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    case '1year':
+      return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    default:
+      return null;
     }
   };
 
@@ -473,7 +474,7 @@ const CompanyDashboard = () => {
       filtered = filtered.filter((app: Application) => 
         app.jobTitle?.toLowerCase().includes(term) ||
         (app as Application & { userName?: string; userEmail?: string }).userName?.toLowerCase().includes(term) ||
-        (app as Application & { userName?: string; userEmail?: string }).userEmail?.toLowerCase().includes(term)
+        (app as Application & { userName?: string; userEmail?: string }).userEmail?.toLowerCase().includes(term),
       );
     }
     
@@ -488,7 +489,7 @@ const CompanyDashboard = () => {
     const rejected = filteredApplications.filter((a: Application) => a.status === 'REJECTED').length;
     const pending = filteredApplications.filter((a: Application) => a.status === 'PENDING' || a.status === 'REVIEWING').length;
     const scheduledInterviews = premiumInterviews.filter(i => 
-      i.status === 'PENDING' || i.status === 'CONFIRMED'
+      i.status === 'PENDING' || i.status === 'CONFIRMED',
     ).length;
     const successRate = total > 0 ? ((accepted / total) * 100).toFixed(1) : '0';
     const activeJobs = jobs.filter(job => job.isActive !== false && job.status !== 'deleted').length;
@@ -503,7 +504,7 @@ const CompanyDashboard = () => {
       'Part-time': 0,
       'Contract': 0,
       'Internship': 0,
-      'Remote': 0
+      'Remote': 0,
     };
 
     premiumApplications.forEach((app: Application) => {
@@ -589,8 +590,8 @@ const CompanyDashboard = () => {
         data,
         backgroundColor: 'rgba(168, 85, 247, 0.5)',
         borderColor: 'rgba(168, 85, 247, 1)',
-        borderWidth: 1
-      }]
+        borderWidth: 1,
+      }],
     };
   }, [filteredApplications, timeFilter]);
 
@@ -620,8 +621,8 @@ const CompanyDashboard = () => {
         data,
         backgroundColor: 'rgba(168, 85, 247, 0.5)',
         borderColor: 'rgba(168, 85, 247, 1)',
-        borderWidth: 1
-      }]
+        borderWidth: 1,
+      }],
     };
   }, [filteredApplications, dateRange]);
 
@@ -632,7 +633,7 @@ const CompanyDashboard = () => {
       REVIEWING: filteredApplications.filter((a: Application) => a.status === 'REVIEWING').length,
       SHORTLISTED: filteredApplications.filter((a: Application) => a.status === 'SHORTLISTED').length,
       ACCEPTED: filteredApplications.filter((a: Application) => a.status === 'ACCEPTED').length,
-      REJECTED: filteredApplications.filter((a: Application) => a.status === 'REJECTED').length
+      REJECTED: filteredApplications.filter((a: Application) => a.status === 'REJECTED').length,
     };
     
     return {
@@ -643,35 +644,35 @@ const CompanyDashboard = () => {
           statusCounts.REVIEWING,
           statusCounts.SHORTLISTED,
           statusCounts.ACCEPTED,
-          statusCounts.REJECTED
+          statusCounts.REJECTED,
         ],
         backgroundColor: [
           'rgba(234, 179, 8, 0.7)',
           'rgba(59, 130, 246, 0.7)',
           'rgba(168, 85, 247, 0.7)',
           'rgba(34, 197, 94, 0.7)',
-          'rgba(239, 68, 68, 0.7)'
+          'rgba(239, 68, 68, 0.7)',
         ],
         borderColor: [
           'rgba(234, 179, 8, 1)',
           'rgba(59, 130, 246, 1)',
           'rgba(168, 85, 247, 1)',
           'rgba(34, 197, 94, 1)',
-          'rgba(239, 68, 68, 1)'
+          'rgba(239, 68, 68, 1)',
         ],
-        borderWidth: 2
-      }]
+        borderWidth: 2,
+      }],
     };
   }, [filteredApplications]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'REVIEWING': return 'bg-blue-100 text-blue-800';
-      case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
-      case 'ACCEPTED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+    case 'REVIEWING': return 'bg-blue-100 text-blue-800';
+    case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
+    case 'ACCEPTED': return 'bg-green-100 text-green-800';
+    case 'REJECTED': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -743,8 +744,8 @@ const CompanyDashboard = () => {
       const markAllPromises = allConversations.map(conv =>
         markAsReadMutation.mutateAsync({
           conversationId: conv.id,
-          userId: company.id
-        })
+          userId: company.id,
+        }),
       );
       
       // Don't wait for all to complete - just start them
@@ -762,7 +763,7 @@ const CompanyDashboard = () => {
     if (company?.id) {
       markAsReadMutation.mutate({
         conversationId: conversation.id,
-        userId: company.id
+        userId: company.id,
       });
     }
   };
@@ -831,7 +832,15 @@ const CompanyDashboard = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Company</span >
               <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                <Building2 className="h-4 w-4 text-gray-500" />
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-6 h-6 rounded object-cover"
+                  />
+                ) : (
+                  <Building2 className="h-4 w-4 text-gray-500" />
+                )}
                 <span className="font-medium">{company?.companyName || 'Company'}</span>
               </div>
             </div>
@@ -877,10 +886,10 @@ const CompanyDashboard = () => {
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-gray-500 max-w-xs">
                     {!company?.profileCompleted 
-                      ? "Complete your profile to post jobs"
+                      ? 'Complete your profile to post jobs'
                       : !company?.isVerified 
-                      ? "Awaiting admin approval to post jobs"
-                      : "Complete profile and get approval to post jobs"
+                        ? 'Awaiting admin approval to post jobs'
+                        : 'Complete profile and get approval to post jobs'
                     }
                   </div>
                   <Button 
@@ -963,10 +972,13 @@ const CompanyDashboard = () => {
               </button>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
-                <CalendarIcon className="h-5 w-5" />
-                Interview Management
+                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="flex flex-col leading-tight">
+                  <span>Interview</span>
+                  <span>Management</span>
+                </span>
               </button>
               <button 
                 onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
@@ -986,11 +998,19 @@ const CompanyDashboard = () => {
             </div>
           </nav>
           
-          <div className="absolute bottom-6 left-6 right-6">
+          <div className="absolute bottom-3 left-6 right-6">
             <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                <Building2 className="h-4 w-4 text-white" />
-              </div>
+              {company?.logo ? (
+                <img 
+                  src={company.logo} 
+                  alt={company.companyName || 'Company logo'} 
+                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                  <Building2 className="h-4 w-4 text-white" />
+                </div>
+              )}
               <div>
                 <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
                 <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
@@ -1056,676 +1076,678 @@ const CompanyDashboard = () => {
             </div>
           ) : (
             <>
-          {/* Dashboard Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {company?.companyName || 'Company'}.</h1>
-            <p className="text-gray-600 mb-4">Here is your job listings statistic report from {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.</p>
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-            </div>
-          </div>
-
-          {/* Profile Completion Alert */}
-          {needsProfileCompletion && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-900">Complete Your Company Profile</h3>
-                  <p className="text-sm text-gray-600">Your profile needs to be completed and approved before you can post jobs.</p>
-                </div>
-                <Button onClick={handleCompleteProfile} className="bg-yellow-600 hover:bg-yellow-700 text-white">
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Complete Profile
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Subscription Banner */}
-          <SubscriptionBanner userType="company" />
-
-          {/* Premium Dashboard Features - Same UI for all, but with feature gating */}
-          {/* Premium Filters */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 relative">
-            {currentPlan === 'free' && (
-              <div className="absolute inset-0 bg-white bg-opacity-90 rounded-lg flex items-center justify-center z-10">
-                <div className="text-center">
-                  <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 font-medium mb-2">Upgrade to Basic or Premium</p>
-                  <Button onClick={handleUpgradeClick} className="bg-purple-600 hover:bg-purple-700 text-white">
-                    Upgrade Now
-                  </Button>
+              {/* Dashboard Header */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {company?.companyName || 'Company'}.</h1>
+                <p className="text-gray-600 mb-4">Here is your job listings statistic report from {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.</p>
+                <div className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 </div>
               </div>
-            )}
-            <div className={`flex flex-col md:flex-row gap-4 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                <select
-                  value={dateRange}
-                  onChange={(e) => {
-                    if (currentPlan === 'free') {
-                      handleUpgradeClick();
-                      return;
-                    }
-                    setDateRange(e.target.value as DateRange);
-                  }}
-                  disabled={currentPlan === 'free'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="30days">Last 30 Days</option>
-                  <option value="3months">Last 3 Months</option>
-                  <option value="6months">Last 6 Months</option>
-                  <option value="1year">Last Year</option>
-                  <option value="all">All Time</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => {
-                    if (currentPlan === 'free') {
-                      handleUpgradeClick();
-                      return;
-                    }
-                    setStatusFilter(e.target.value as StatusFilter);
-                  }}
-                  disabled={currentPlan === 'free'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="all">All Status</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="REVIEWING">Reviewing</option>
-                  <option value="SHORTLISTED">Shortlisted</option>
-                  <option value="ACCEPTED">Accepted</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Job title or candidate name..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      if (currentPlan === 'free') {
-                        handleUpgradeClick();
-                        return;
-                      }
-                      setSearchTerm(e.target.value);
-                    }}
-                    disabled={currentPlan === 'free'}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Premium Statistics Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Briefcase className="h-4 w-4" />
-                <span className="text-xs font-medium">Total Apps</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{currentPlan !== 'free' ? premiumStats.total : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Clock className="h-4 w-4" />
-                <span className="text-xs font-medium">Pending</span>
-              </div>
-              <p className="text-2xl font-bold text-yellow-600">{currentPlan !== 'free' ? premiumStats.pending : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-xs font-medium">Shortlisted</span>
-              </div>
-              <p className="text-2xl font-bold text-purple-600">{currentPlan !== 'free' ? premiumStats.shortlisted : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-xs font-medium">Accepted</span>
-              </div>
-              <p className="text-2xl font-bold text-green-600">{currentPlan !== 'free' ? premiumStats.accepted : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <XCircle className="h-4 w-4" />
-                <span className="text-xs font-medium">Rejected</span>
-              </div>
-              <p className="text-2xl font-bold text-red-600">{currentPlan !== 'free' ? premiumStats.rejected : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Calendar className="h-4 w-4" />
-                <span className="text-xs font-medium">Interviews</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{currentPlan !== 'free' ? premiumStats.scheduledInterviews : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-xs font-medium">Success Rate</span>
-              </div>
-              <p className="text-2xl font-bold text-indigo-600">{currentPlan !== 'free' ? `${premiumStats.successRate}%` : '—'}</p>
-            </div>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Briefcase className="h-4 w-4" />
-                <span className="text-xs font-medium">Active Jobs</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{premiumStats.activeJobs}</p>
-            </div>
-          </div>
-
-          {/* Charts - Premium Feature */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Bar Chart */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
-              {currentPlan === 'free' && (
-                <div className="absolute inset-0 bg-white bg-opacity-95 rounded-lg flex items-center justify-center z-10">
-                  <div className="text-center">
-                    <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 font-medium mb-2">Upgrade to view analytics</p>
-                    <Button onClick={handleUpgradeClick} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                      Upgrade Now
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Applications Over Time</h3>
-              <div className="h-64">
-                {currentPlan !== 'free' ? (
-                  <Bar 
-                    data={barChartData} 
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: { legend: { display: false } },
-                      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-                    }}
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-50 rounded">
-                    <p className="text-gray-400">Upgrade to view chart</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Pie Chart */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
-              {currentPlan === 'free' && (
-                <div className="absolute inset-0 bg-white bg-opacity-95 rounded-lg flex items-center justify-center z-10">
-                  <div className="text-center">
-                    <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 font-medium mb-2">Upgrade to view analytics</p>
-                    <Button onClick={handleUpgradeClick} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                      Upgrade Now
-                    </Button>
-                  </div>
-                </div>
-              )}
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Distribution</h3>
-              <div className="h-64">
-                {currentPlan !== 'free' ? (
-                  <Pie 
-                    data={pieChartData} 
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: { legend: { position: 'bottom' } }
-                    }}
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center bg-gray-50 rounded">
-                    <p className="text-gray-400">Upgrade to view chart</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Applications Table - Premium Feature */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 relative">
-            {currentPlan === 'free' && (
-              <div className="absolute inset-0 bg-white bg-opacity-95 rounded-lg flex items-center justify-center z-10">
-                <div className="text-center">
-                  <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 font-medium mb-2">Upgrade to view detailed applications</p>
-                  <Button onClick={handleUpgradeClick} className="bg-purple-600 hover:bg-purple-700 text-white">
-                    Upgrade Now
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div className={`p-6 border-b border-gray-200 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
-              <h3 className="text-lg font-semibold text-gray-900">Recent Applications ({currentPlan !== 'free' ? filteredApplications.length : '—'})</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidate</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Applied</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentPlan !== 'free' && filteredApplications.slice(0, 10).map((app: Application) => (
-                    <tr key={app.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{(app as Application & { userName?: string; userEmail?: string }).userName || (app as Application & { userName?: string; userEmail?: string }).userEmail || 'N/A'}</div>
-                        <div className="text-xs text-gray-500">{(app as Application & { userName?: string; userEmail?: string }).userEmail || ''}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {app.jobTitle || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                          {app.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)}
-                          className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {currentPlan !== 'free' && filteredApplications.length === 0 && (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No applications found</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Key Metrics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* New candidates */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 group">
-              <div>
-                <div className="text-3xl font-bold text-blue-900 mb-1">{dashboardStats.newCandidates}</div>
-                <div className="text-blue-700 font-medium">New candidates to review</div>
-              </div>
-              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            
-            {/* Schedule for today */}
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-emerald-100 transition-all duration-300 group">
-              <div>
-                <div className="text-3xl font-bold text-emerald-900 mb-1">{dashboardStats.scheduleToday}</div>
-                <div className="text-emerald-700 font-medium">Schedule for today</div>
-              </div>
-              <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <CalendarIcon className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            
-            {/* Messages received */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-purple-100 transition-all duration-300 group">
-              <div>
-                <div className="text-3xl font-bold text-purple-900 mb-1">{dashboardStats.messagesReceived}</div>
-                <div className="text-purple-700 font-medium">Messages received</div>
-              </div>
-              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <MessageSquare className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </div>
-
-          {/* Job Statistics Section */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-                  <BarChart3 className="h-6 w-6 text-purple-600" />
-                  Job Statistics
-                </h2>
-                <p className="text-sm text-gray-500">
-                  {timeFilter === 'Week' 
-                    ? `Showing job statistics for this week`
-                    : timeFilter === 'Month'
-                    ? `Showing job statistics for last 6 months`
-                    : `Showing job statistics for last year`}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    timeFilter === 'Week' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setTimeFilter('Week')}
-                >
-                  Week
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    timeFilter === 'Month' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setTimeFilter('Month')}
-                >
-                  Month
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    timeFilter === 'Year' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                  onClick={() => setTimeFilter('Year')}
-                >
-                  Year
-                </button>
-              </div>
-            </div>
-            
-            {/* Tabs */}
-            <div className="flex gap-4 mb-6">
-              <button
-                className={`pb-2 text-sm font-medium border-b-2 ${
-                  activeTab === 'Overview' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
-                }`}
-                onClick={() => setActiveTab('Overview')}
-              >
-                Overview
-              </button>
-              <button
-                className={`pb-2 text-sm font-medium border-b-2 ${
-                  activeTab === 'Jobs View' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
-                }`}
-                onClick={() => setActiveTab('Jobs View')}
-              >
-                Jobs View
-              </button>
-              <button
-                className={`pb-2 text-sm font-medium border-b-2 ${
-                  activeTab === 'Jobs Applied' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
-                }`}
-                onClick={() => setActiveTab('Jobs Applied')}
-              >
-                Jobs Applied
-              </button>
-            </div>
-
-            {/* Chart Area */}
-            <div className="flex gap-6">
-              <div className="flex-1">
-                {/* Bar chart for Job Applied per month */}
-                <div className="h-64">
-                  {currentPlan !== 'free' ? (
-                    <Bar 
-                      data={jobAppliedChartData} 
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { 
-                          legend: { display: false },
-                          title: {
-                            display: true,
-                            text: 'Applications Received by Month'
-                          }
-                        },
-                        scales: { 
-                          y: { beginAtZero: true, ticks: { stepSize: 1 } } 
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="h-full bg-gray-50 rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-500">Upgrade to view chart</p>
-                      </div>
+              {/* Profile Completion Alert */}
+              {needsProfileCompletion && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">Complete Your Company Profile</h3>
+                      <p className="text-sm text-gray-600">Your profile needs to be completed and approved before you can post jobs.</p>
                     </div>
-                  )}
-                </div>
-                
-                {/* Legend */}
-                <div className="flex gap-6 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-purple-500 rounded"></div>
-                    <span className="text-sm text-gray-600">Job Applied</span>
+                    <Button onClick={handleCompleteProfile} className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                      <UserCheck className="h-4 w-4 mr-2" />
+                  Complete Profile
+                    </Button>
                   </div>
                 </div>
-              </div>
-              
-              {/* Job Applied Card */}
-              <div className="w-64 space-y-4">
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <FileText className="h-6 w-6 text-purple-600" />
-                    <span className="font-medium text-gray-900">Job Applied</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">
-                    {currentPlan !== 'free' ? dashboardStats.jobApplied : '—'}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Total applications received
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+              )}
 
-          {/* Bottom Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Applicants Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6 relative">
+              {/* Subscription Banner */}
+              <SubscriptionBanner userType="company" />
+
+              {/* Premium Dashboard Features - Same UI for all, but with feature gating */}
+              {/* Premium Filters */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6 relative">
                 {currentPlan === 'free' && (
-                  <div className="absolute inset-0 bg-white bg-opacity-95 rounded-xl flex items-center justify-center z-10">
+                  <div className="absolute inset-0 bg-white bg-opacity-90 rounded-lg flex items-center justify-center z-10">
                     <div className="text-center">
                       <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600 font-medium mb-2">Upgrade to view summary</p>
-                      <Button onClick={handleUpgradeClick} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                        Upgrade Now
+                      <p className="text-gray-600 font-medium mb-2">Upgrade to Basic or Premium</p>
+                      <Button onClick={handleUpgradeClick} className="bg-purple-600 hover:bg-purple-700 text-white">
+                    Upgrade Now
                       </Button>
                     </div>
                   </div>
                 )}
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-600" />
-                  Application Summary
-                </h3>
-                <div className={`text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
-                  {currentPlan !== 'free' ? premiumApplications.length : '—'}
-                </div>
-                <div className={`space-y-3 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">Full Time</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {currentPlan !== 'free' ? applicationSummaryByJobType['Full-time'] : '—'}
-                    </span>
+                <div className={`flex flex-col md:flex-row gap-4 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                    <select
+                      value={dateRange}
+                      onChange={(e) => {
+                        if (currentPlan === 'free') {
+                          handleUpgradeClick();
+                          return;
+                        }
+                        setDateRange(e.target.value as DateRange);
+                      }}
+                      disabled={currentPlan === 'free'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="30days">Last 30 Days</option>
+                      <option value="3months">Last 3 Months</option>
+                      <option value="6months">Last 6 Months</option>
+                      <option value="1year">Last Year</option>
+                      <option value="all">All Time</option>
+                    </select>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">Part-Time</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {currentPlan !== 'free' ? applicationSummaryByJobType['Part-time'] : '—'}
-                    </span>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => {
+                        if (currentPlan === 'free') {
+                          handleUpgradeClick();
+                          return;
+                        }
+                        setStatusFilter(e.target.value as StatusFilter);
+                      }}
+                      disabled={currentPlan === 'free'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="REVIEWING">Reviewing</option>
+                      <option value="SHORTLISTED">Shortlisted</option>
+                      <option value="ACCEPTED">Accepted</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">Remote</span>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Job title or candidate name..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          if (currentPlan === 'free') {
+                            handleUpgradeClick();
+                            return;
+                          }
+                          setSearchTerm(e.target.value);
+                        }}
+                        disabled={currentPlan === 'free'}
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
                     </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {currentPlan !== 'free' ? applicationSummaryByJobType['Remote'] : '—'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">Internship</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {currentPlan !== 'free' ? applicationSummaryByJobType['Internship'] : '—'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-sm text-gray-600">Contract</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {currentPlan !== 'free' ? applicationSummaryByJobType['Contract'] : '—'}
-                    </span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Job Updates - Extended */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Briefcase className="h-5 w-5 text-purple-600" />
-                    Job Updates
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    {/* Pagination Controls */}
-                    {jobs.length > jobUpdatesPageSize && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => goToJobUpdatesPage(jobUpdatesPage - 1)}
-                          disabled={jobUpdatesPage <= 1}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                            jobUpdatesPage <= 1 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                              : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-                          }`}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <span className="text-xs text-gray-500 px-2">
-                          {jobUpdatesPage} / {jobUpdatesTotalPages}
-                        </span>
-                        <button
-                          onClick={() => goToJobUpdatesPage(jobUpdatesPage + 1)}
-                          disabled={jobUpdatesPage >= jobUpdatesTotalPages}
-                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                            jobUpdatesPage >= jobUpdatesTotalPages 
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                              : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-                          }`}
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
+              {/* Premium Statistics Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="text-xs font-medium">Total Apps</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{currentPlan !== 'free' ? premiumStats.total : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-xs font-medium">Pending</span>
+                  </div>
+                  <p className="text-2xl font-bold text-yellow-600">{currentPlan !== 'free' ? premiumStats.pending : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="text-xs font-medium">Shortlisted</span>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600">{currentPlan !== 'free' ? premiumStats.shortlisted : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-xs font-medium">Accepted</span>
+                  </div>
+                  <p className="text-2xl font-bold text-green-600">{currentPlan !== 'free' ? premiumStats.accepted : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <XCircle className="h-4 w-4" />
+                    <span className="text-xs font-medium">Rejected</span>
+                  </div>
+                  <p className="text-2xl font-bold text-red-600">{currentPlan !== 'free' ? premiumStats.rejected : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-xs font-medium">Interviews</span>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600">{currentPlan !== 'free' ? premiumStats.scheduledInterviews : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="text-xs font-medium">Success Rate</span>
+                  </div>
+                  <p className="text-2xl font-bold text-indigo-600">{currentPlan !== 'free' ? `${premiumStats.successRate}%` : '—'}</p>
+                </div>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 text-gray-600 mb-1">
+                    <Briefcase className="h-4 w-4" />
+                    <span className="text-xs font-medium">Active Jobs</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{premiumStats.activeJobs}</p>
+                </div>
+              </div>
+
+              {/* Charts - Premium Feature */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Bar Chart */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
+                  {currentPlan === 'free' && (
+                    <div className="absolute inset-0 bg-white bg-opacity-95 rounded-lg flex items-center justify-center z-10">
+                      <div className="text-center">
+                        <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 font-medium mb-2">Upgrade to view analytics</p>
+                        <Button onClick={handleUpgradeClick} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                      Upgrade Now
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Applications Over Time</h3>
+                  <div className="h-64">
+                    {currentPlan !== 'free' ? (
+                      <Bar 
+                        data={barChartData} 
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { display: false } },
+                          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                        }}
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-400">Upgrade to view chart</p>
                       </div>
                     )}
-                    <button 
-                      onClick={handleJobListingClick}
-                      className="text-sm text-purple-600 hover:text-purple-700 cursor-pointer"
+                  </div>
+                </div>
+
+                {/* Pie Chart */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 relative">
+                  {currentPlan === 'free' && (
+                    <div className="absolute inset-0 bg-white bg-opacity-95 rounded-lg flex items-center justify-center z-10">
+                      <div className="text-center">
+                        <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 font-medium mb-2">Upgrade to view analytics</p>
+                        <Button onClick={handleUpgradeClick} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                      Upgrade Now
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Distribution</h3>
+                  <div className="h-64">
+                    {currentPlan !== 'free' ? (
+                      <Pie 
+                        data={pieChartData} 
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: { legend: { position: 'bottom' } },
+                        }}
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center bg-gray-50 rounded">
+                        <p className="text-gray-400">Upgrade to view chart</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Applications Table - Premium Feature */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 relative">
+                {currentPlan === 'free' && (
+                  <div className="absolute inset-0 bg-white bg-opacity-95 rounded-lg flex items-center justify-center z-10">
+                    <div className="text-center">
+                      <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 font-medium mb-2">Upgrade to view detailed applications</p>
+                      <Button onClick={handleUpgradeClick} className="bg-purple-600 hover:bg-purple-700 text-white">
+                    Upgrade Now
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className={`p-4 border-b border-gray-200 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
+                  <h3 className="text-base font-semibold text-gray-900">Recent Applications ({currentPlan !== 'free' ? filteredApplications.length : '—'})</h3>
+                </div>
+                <div className="overflow-y-auto max-h-[500px]">
+                  <div className="min-w-0">
+                    <table className="w-full table-fixed">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[25%]">Candidate</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[25%]">Job Title</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Status</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[15%]">Applied</th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[20%]">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {currentPlan !== 'free' && filteredApplications.slice(0, 10).map((app: Application) => (
+                          <tr key={app.id} className="hover:bg-gray-50">
+                            <td className="px-3 py-3">
+                              <div className="text-xs font-medium text-gray-900 truncate">{(app as Application & { userName?: string; userEmail?: string }).userName || (app as Application & { userName?: string; userEmail?: string }).userEmail || 'N/A'}</div>
+                              <div className="text-xs text-gray-500 truncate">{(app as Application & { userName?: string; userEmail?: string }).userEmail || ''}</div>
+                            </td>
+                            <td className="px-3 py-3 text-xs text-gray-600 truncate" title={app.jobTitle || 'N/A'}>
+                              {app.jobTitle || 'N/A'}
+                            </td>
+                            <td className="px-3 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                                {app.status}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 text-xs text-gray-500">
+                              {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}
+                            </td>
+                            <td className="px-3 py-3 text-xs">
+                              <button
+                                onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)}
+                                className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                              >
+                                <Eye className="h-3 w-3" />
+                          View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {currentPlan !== 'free' && filteredApplications.length === 0 && (
+                      <div className="text-center py-12">
+                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No applications found</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Metrics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* New candidates */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 group">
+                  <div>
+                    <div className="text-3xl font-bold text-blue-900 mb-1">{dashboardStats.newCandidates}</div>
+                    <div className="text-blue-700 font-medium">New candidates to review</div>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+            
+                {/* Schedule for today */}
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-emerald-100 transition-all duration-300 group">
+                  <div>
+                    <div className="text-3xl font-bold text-emerald-900 mb-1">{dashboardStats.scheduleToday}</div>
+                    <div className="text-emerald-700 font-medium">Schedule for today</div>
+                  </div>
+                  <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <CalendarIcon className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+            
+                {/* Messages received */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-purple-100 transition-all duration-300 group">
+                  <div>
+                    <div className="text-3xl font-bold text-purple-900 mb-1">{dashboardStats.messagesReceived}</div>
+                    <div className="text-purple-700 font-medium">Messages received</div>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <MessageSquare className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Job Statistics Section */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6 mb-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                      <BarChart3 className="h-6 w-6 text-purple-600" />
+                  Job Statistics
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      {timeFilter === 'Week' 
+                        ? 'Showing job statistics for this week'
+                        : timeFilter === 'Month'
+                          ? 'Showing job statistics for last 6 months'
+                          : 'Showing job statistics for last year'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        timeFilter === 'Week' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setTimeFilter('Week')}
                     >
-                      View All →
+                  Week
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        timeFilter === 'Month' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setTimeFilter('Month')}
+                    >
+                  Month
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                        timeFilter === 'Year' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setTimeFilter('Year')}
+                    >
+                  Year
                     </button>
                   </div>
                 </div>
+            
+                {/* Tabs */}
+                <div className="flex gap-4 mb-6">
+                  <button
+                    className={`pb-2 text-sm font-medium border-b-2 ${
+                      activeTab === 'Overview' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
+                    }`}
+                    onClick={() => setActiveTab('Overview')}
+                  >
+                Overview
+                  </button>
+                  <button
+                    className={`pb-2 text-sm font-medium border-b-2 ${
+                      activeTab === 'Jobs View' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
+                    }`}
+                    onClick={() => setActiveTab('Jobs View')}
+                  >
+                Jobs View
+                  </button>
+                  <button
+                    className={`pb-2 text-sm font-medium border-b-2 ${
+                      activeTab === 'Jobs Applied' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
+                    }`}
+                    onClick={() => setActiveTab('Jobs Applied')}
+                  >
+                Jobs Applied
+                  </button>
+                </div>
+
+                {/* Chart Area */}
+                <div className="flex gap-6">
+                  <div className="flex-1">
+                    {/* Bar chart for Job Applied per month */}
+                    <div className="h-64">
+                      {currentPlan !== 'free' ? (
+                        <Bar 
+                          data={jobAppliedChartData} 
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                              legend: { display: false },
+                              title: {
+                                display: true,
+                                text: 'Applications Received by Month',
+                              },
+                            },
+                            scales: { 
+                              y: { beginAtZero: true, ticks: { stepSize: 1 } }, 
+                            },
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full bg-gray-50 rounded-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-gray-500">Upgrade to view chart</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                 
-                {jobs.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500 mb-4">No jobs posted yet</p>
-                    <Button 
-                      onClick={() => navigate(ROUTES.COMPANY_POST_JOB)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Post Your First Job
-                    </Button>
+                    {/* Legend */}
+                    <div className="flex gap-6 mt-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                        <span className="text-sm text-gray-600">Job Applied</span>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Paginated Company Jobs */}
-                    {paginatedJobUpdates.map((job) => (
-                      <div key={job.id} className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                           onClick={() => handleJobListingClick}>
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-                            <Building2 className="h-5 w-5 text-white" />
-                          </div>
+              
+                  {/* Job Applied Card */}
+                  <div className="w-64 space-y-4">
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <FileText className="h-6 w-6 text-purple-600" />
+                        <span className="font-medium text-gray-900">Job Applied</span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {currentPlan !== 'free' ? dashboardStats.jobApplied : '—'}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                    Total applications received
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Section */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Applicants Summary */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6 relative">
+                    {currentPlan === 'free' && (
+                      <div className="absolute inset-0 bg-white bg-opacity-95 rounded-xl flex items-center justify-center z-10">
+                        <div className="text-center">
+                          <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-gray-600 font-medium mb-2">Upgrade to view summary</p>
+                          <Button onClick={handleUpgradeClick} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                        Upgrade Now
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Users className="h-5 w-5 text-purple-600" />
+                  Application Summary
+                    </h3>
+                    <div className={`text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
+                      {currentPlan !== 'free' ? premiumApplications.length : '—'}
+                    </div>
+                    <div className={`space-y-3 ${currentPlan === 'free' ? 'opacity-50' : ''}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">Full Time</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {currentPlan !== 'free' ? applicationSummaryByJobType['Full-time'] : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">Part-Time</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {currentPlan !== 'free' ? applicationSummaryByJobType['Part-time'] : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">Remote</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {currentPlan !== 'free' ? applicationSummaryByJobType['Remote'] : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">Internship</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {currentPlan !== 'free' ? applicationSummaryByJobType['Internship'] : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">Contract</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {currentPlan !== 'free' ? applicationSummaryByJobType['Contract'] : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Job Updates - Extended */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-purple-600" />
+                    Job Updates
+                      </h3>
+                      <div className="flex items-center gap-3">
+                        {/* Pagination Controls */}
+                        {jobs.length > jobUpdatesPageSize && (
                           <div className="flex items-center gap-2">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              job.jobType?.includes('Full') ? 'bg-green-100 text-green-700' : 
-                              job.jobType?.includes('Part') ? 'bg-blue-100 text-blue-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {job.jobType || 'Full-time'}
+                            <button
+                              onClick={() => goToJobUpdatesPage(jobUpdatesPage - 1)}
+                              disabled={jobUpdatesPage <= 1}
+                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                                jobUpdatesPage <= 1 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                              }`}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <span className="text-xs text-gray-500 px-2">
+                              {jobUpdatesPage} / {jobUpdatesTotalPages}
                             </span>
-                          </div>
-                        </div>
-                        
-                        <h4 className="font-medium text-gray-900 mb-1">{job.title}</h4>
-                        <p className="text-sm text-gray-600 mb-3">{company?.companyName || 'Company'} - {job.location}</p>
-                        
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className="px-2 pl-2 text-xs rounded-full bg-orange-100 text-orange-700">
-                            {job.experienceLevel || 'Experience Level'}
-                          </span>
-                          <span className="px-2 pl-2 text-xs rounded-full bg-blue-100 text-blue-700">
-                            {job.education || 'Education'}
-                          </span>
-                          <span className="px-2 pl-2 text-xs rounded-full bg-purple-100 text-purple-700">
-                            {job.workLocation || 'Work Location'}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-500">
-                            Posted {new Date(job.createdAt).toLocaleDateString()}
-                          </p>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            job.isActive === false || job.status === 'deleted' 
-                              ? 'bg-red-100 text-red-700' 
-                              : 'bg-green-100 text-green-700'
-                          }`}>
-                            {job.isActive === false || job.status === 'deleted' ? 'Inactive' : 'Active'}
-                          </span>
-                        </div>
-                        
-                        {job.salary && (
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <span className="text-sm font-medium text-gray-900">
-                              ₹{job.salary.toLocaleString()}
-                            </span>
+                            <button
+                              onClick={() => goToJobUpdatesPage(jobUpdatesPage + 1)}
+                              disabled={jobUpdatesPage >= jobUpdatesTotalPages}
+                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                                jobUpdatesPage >= jobUpdatesTotalPages 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                              }`}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
                           </div>
                         )}
+                        <button 
+                          onClick={handleJobListingClick}
+                          className="text-sm text-purple-600 hover:text-purple-700 cursor-pointer"
+                        >
+                      View All →
+                        </button>
                       </div>
-                    ))}
+                    </div>
+                
+                    {jobs.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-gray-500 mb-4">No jobs posted yet</p>
+                        <Button 
+                          onClick={() => navigate(ROUTES.COMPANY_POST_JOB)}
+                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                      Post Your First Job
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Paginated Company Jobs */}
+                        {paginatedJobUpdates.map((job) => (
+                          <div key={job.id} className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                            onClick={() => handleJobListingClick}>
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                                <Building2 className="h-5 w-5 text-white" />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  job.jobType?.includes('Full') ? 'bg-green-100 text-green-700' : 
+                                    job.jobType?.includes('Part') ? 'bg-blue-100 text-blue-700' :
+                                      'bg-gray-100 text-gray-700'
+                                }`}>
+                                  {job.jobType || 'Full-time'}
+                                </span>
+                              </div>
+                            </div>
+                        
+                            <h4 className="font-medium text-gray-900 mb-1">{job.title}</h4>
+                            <p className="text-sm text-gray-600 mb-3">{company?.companyName || 'Company'} - {job.location}</p>
+                        
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              <span className="px-2 pl-2 text-xs rounded-full bg-orange-100 text-orange-700">
+                                {job.experienceLevel || 'Experience Level'}
+                              </span>
+                              <span className="px-2 pl-2 text-xs rounded-full bg-blue-100 text-blue-700">
+                                {job.education || 'Education'}
+                              </span>
+                              <span className="px-2 pl-2 text-xs rounded-full bg-purple-100 text-purple-700">
+                                {job.workLocation || 'Work Location'}
+                              </span>
+                            </div>
+                        
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm text-gray-500">
+                            Posted {new Date(job.createdAt).toLocaleDateString()}
+                              </p>
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                job.isActive === false || job.status === 'deleted' 
+                                  ? 'bg-red-100 text-red-700' 
+                                  : 'bg-green-100 text-green-700'
+                              }`}>
+                                {job.isActive === false || job.status === 'deleted' ? 'Inactive' : 'Active'}
+                              </span>
+                            </div>
+                        
+                            {job.salary && (
+                              <div className="mt-2 pt-2 border-t border-gray-100">
+                                <span className="text-sm font-medium text-gray-900">
+                              ₹{job.salary.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-            </div>
-          </div>
             </>
           )}
         </main>

@@ -14,7 +14,7 @@ import {
   ExternalLink,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import { _applicationService, Application } from '../api/applicationService';
 import toast from 'react-hot-toast';
@@ -63,39 +63,39 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'PENDING':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'REVIEWING':
-        return <Eye className="h-4 w-4 text-blue-500" />;
-      case 'SHORTLISTED':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'ACCEPTED':
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'REJECTED':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'WITHDRAWN':
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+    case 'PENDING':
+      return <Clock className="h-4 w-4 text-yellow-500" />;
+    case 'REVIEWING':
+      return <Eye className="h-4 w-4 text-blue-500" />;
+    case 'SHORTLISTED':
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'ACCEPTED':
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    case 'REJECTED':
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    case 'WITHDRAWN':
+      return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    default:
+      return <Clock className="h-4 w-4 text-gray-500" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'REVIEWING':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'SHORTLISTED':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'ACCEPTED':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'REJECTED':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'WITHDRAWN':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'PENDING':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'REVIEWING':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'SHORTLISTED':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'ACCEPTED':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'REJECTED':
+      return 'bg-red-100 text-red-800 border-red-200';
+    case 'WITHDRAWN':
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -103,7 +103,7 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -116,7 +116,7 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
       (app) =>
         app.jobTitle?.toLowerCase().includes(searchLower) ||
         app.companyName?.toLowerCase().includes(searchLower) ||
-        app.status.toLowerCase().includes(searchLower)
+        app.status.toLowerCase().includes(searchLower),
     );
   }, [applications, searchTerm]);
 

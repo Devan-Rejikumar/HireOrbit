@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SlideModal } from '@/components/ui/slide-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { X, Camera, Upload, Building2 } from 'lucide-react';
 import api from '@/api/axios';
 import toast from 'react-hot-toast';
+import { MESSAGES } from '@/constants/messages';
 
 interface Company {
   id: string;
@@ -58,6 +60,10 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
   });
   const [industryCategories, setIndustryCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [logoImage, setLogoImage] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -99,15 +105,56 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
         contactPersonEmail: company.contactPersonEmail || '',
         contactPersonPhone: company.contactPersonPhone || '',
       });
+      // Set logo preview if company has logo
+      if (company.logo) {
+        setLogoPreview(company.logo);
+      } else {
+        setLogoPreview(null);
+      }
     }
   }, [company]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setLogoImage(file);
+    
+    // Create preview URL
+    const url = URL.createObjectURL(file);
+    setLogoPreview(url);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoImage(null);
+    if (company?.logo) {
+      setLogoPreview(company.logo);
+    } else {
+      setLogoPreview(null);
+    }
+    if (logoInputRef.current) {
+      logoInputRef.current.value = '';
+    }
   };
 
 
@@ -117,6 +164,20 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
 
     try {
       const { companyName, ...formDataWithoutCompanyName } = formData;
+      
+      // Convert logo to base64 if selected
+      let logoData = null;
+      if (logoImage) {
+        setIsUploadingLogo(true);
+        const reader = new FileReader();
+        logoData = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(logoImage);
+        });
+        setIsUploadingLogo(false);
+      }
+
       const updateData = {
         ...formDataWithoutCompanyName,
         foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : undefined,
@@ -128,6 +189,7 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
         businessType: formData.businessType || undefined,
         headquarters: formData.headquarters || undefined,
         description: formData.description || undefined,
+        ...(logoData && { logo: logoData }),
       };
 
       console.log('Updating company profile with data:', updateData);
@@ -138,7 +200,14 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
       const response = await api.put('/company/profile', updateData);
       console.log('Update response:', response.data);
       
-      toast.success('Company profile updated successfully!');
+      toast.success(MESSAGES.SUCCESS.COMPANY_PROFILE_UPDATED);
+      
+      // Clean up preview URL if it was created from a new file
+      if (logoPreview && logoImage && logoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(logoPreview);
+      }
+      
+      setLogoImage(null);
       onProfileUpdated();
       onClose();
     } catch (error: unknown) {
@@ -151,16 +220,99 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+      setIsUploadingLogo(false);
     }
+  };
+
+  const handleClose = () => {
+    // Clean up preview URL if it was created from a new file
+    if (logoPreview && logoImage && logoPreview.startsWith('blob:')) {
+      setLogoPreview(company?.logo || null);
+      URL.revokeObjectURL(logoPreview);
+    }
+    setLogoImage(null);
+    onClose();
   };
 
   return (
     <SlideModal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Edit Company Profile"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Company Logo Section */}
+        <div className="flex items-center space-x-6 pb-4 border-b">
+          <div className="relative group">
+            <div 
+              className="w-24 h-24 bg-gray-300 rounded-lg border-4 border-white flex items-center justify-center overflow-hidden cursor-pointer"
+              onClick={() => logoInputRef.current?.click()}
+            >
+              {logoPreview ? (
+                <img
+                  src={logoPreview}
+                  alt={company?.companyName || 'Company logo'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Building2 className="h-12 w-12 text-gray-500" />
+              )}
+              
+              {/* Upload overlay */}
+              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="flex flex-col items-center text-white">
+                  <Camera className="h-4 w-4 mb-1" />
+                  <span className="text-xs">Change</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Action buttons */}
+            <div className="absolute -bottom-2 -right-2 flex gap-1">
+              <button
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                className="bg-white border border-gray-300 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm"
+                title="Upload new logo"
+              >
+                <Upload className="h-3 w-3 text-gray-600" />
+              </button>
+              
+              {logoPreview && (
+                <button
+                  type="button"
+                  onClick={handleRemoveLogo}
+                  className="bg-white border border-gray-300 p-1.5 rounded-full hover:bg-gray-50 transition-colors shadow-sm"
+                  title="Remove logo"
+                >
+                  <X className="h-3 w-3 text-gray-600" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1">
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              Company Logo
+            </h3>
+            <p className="text-sm text-gray-500 mb-2">
+              Upload your company logo. JPG, PNG up to 5MB.
+            </p>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoSelect}
+              className="hidden"
+            />
+            {logoImage && (
+              <p className="text-xs text-green-600">
+                ✓ {logoImage.name} selected
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Basic Information */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Basic Information</h3>
@@ -416,7 +568,7 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
           <Button
             type="button"
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
             className="px-6"
           >
@@ -424,10 +576,17 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
           </Button>
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || isUploadingLogo}
             className="px-6 bg-blue-600 hover:bg-blue-700 text-white"
           >
-            {loading ? 'Updating...' : 'Update Profile'}
+            {loading || isUploadingLogo ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                {isUploadingLogo ? 'Uploading logo...' : 'Updating...'}
+              </>
+            ) : (
+              'Update Profile'
+            )}
           </Button>
         </div>
       </form>

@@ -11,14 +11,16 @@ import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
 import { HttpStatusCode } from '../../enums/StatusCodes';
 import { AppConfig } from '../../config/app.config';
+import { SubscriptionValidationService } from './SubscriptionValidationService';
 
 @injectable()
 export class JobService implements IJobService {
   constructor(
     @inject(TYPES.IJobRepository) private _jobRepository: IJobRepository,
+    @inject(TYPES.SubscriptionValidationService) private _subscriptionValidationService: SubscriptionValidationService,
   ) {}
 
-  async createJob(jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt'>): Promise<JobResponse> {
+  async createJob(jobData: Omit<Job, 'id' | 'createdAt' | 'updatedAt' | 'isListed' | 'listedAt'>): Promise<JobResponse> {
     const existingJobs = await this._jobRepository.findByCompany(jobData.companyId || '');
     const duplicate = existingJobs.find(job => 
       job.title.toLowerCase() === jobData.title.toLowerCase(),
@@ -28,7 +30,12 @@ export class JobService implements IJobService {
       throw new AppError(Messages.JOB.DUPLICATE_TITLE, HttpStatusCode.CONFLICT);
     }
 
-    const job = await this._jobRepository.create(jobData);
+    // Ensure new jobs are automatically listed
+    const job = await this._jobRepository.create({
+      ...jobData,
+      isListed: true,
+      listedAt: new Date(),
+    });
     return mapJobToResponse(job);
   }
 
@@ -98,5 +105,39 @@ export class JobService implements IJobService {
 
   async getTopCompaniesByJobCount(limit: number): Promise<Array<{ companyId: string; companyName: string; jobCount: number }>> {
     return this._jobRepository.getTopCompaniesByJobCount(limit);
+  }
+
+  async toggleJobListing(jobId: string, companyId: string, isListed: boolean, authToken?: string): Promise<JobResponse> {
+    // Find the job
+    const job = await this._jobRepository.findById(jobId);
+    
+    if (!job) {
+      throw new AppError(Messages.JOB.NOT_FOUND, HttpStatusCode.NOT_FOUND);
+    }
+
+    // Verify company owns the job
+    if (job.companyId !== companyId) {
+      throw new AppError(
+        Messages.JOB.PERMISSION_DENIED,
+        HttpStatusCode.FORBIDDEN,
+      );
+    }
+
+    // If listing, check subscription status
+    if (isListed) {
+      const subscriptionCheck = await this._subscriptionValidationService.checkSubscriptionStatus(companyId, authToken);
+      if (!subscriptionCheck.isValid) {
+        throw new AppError(
+          subscriptionCheck.message || Messages.JOB.SUBSCRIPTION_REQUIRED,
+          HttpStatusCode.FORBIDDEN,
+        );
+      }
+    }
+
+    // Update listing status
+    const listedAt = isListed ? new Date() : job.listedAt;
+    const updatedJob = await this._jobRepository.updateListingStatus(jobId, isListed, listedAt);
+    
+    return mapJobToResponse(updatedJob);
   }
 }

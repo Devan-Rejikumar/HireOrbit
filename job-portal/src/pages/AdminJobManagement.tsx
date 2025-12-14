@@ -3,6 +3,8 @@ import api from '@/api/axios';
 import { FiBriefcase, FiSearch, FiFilter, FiTrash2, FiEye, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import JobReportsModal, { ReportedJobData } from '@/components/admin/JobReportsModal';
+import JobDetailsModal from '@/components/admin/JobDetailsModal';
+import { MESSAGES } from '@/constants/messages';
 
 interface Job {
   id: string;
@@ -53,6 +55,9 @@ const AdminJobManagement: React.FC = () => {
   const itemsPerPage = 10;
   const [showReportsModal, setShowReportsModal] = useState(false);
   const [selectedJobReports, setSelectedJobReports] = useState<ReportedJobData | null>(null);
+  const [showJobDetailsModal, setShowJobDetailsModal] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchTermReported, setSearchTermReported] = useState('');
   const [currentPageReported, setCurrentPageReported] = useState(1);
   const itemsPerPageReported = 10;
@@ -95,6 +100,7 @@ const AdminJobManagement: React.FC = () => {
         limit: number;
         isActive?: boolean;
         search?: string;
+        companyId?: string;
       }
       const params: JobQueryParams = {
         page: currentPage,
@@ -118,7 +124,7 @@ const AdminJobManagement: React.FC = () => {
       setTotalPages(Math.ceil(total / itemsPerPage));
     } catch (error) {
       console.error('Error fetching jobs:', error);
-      toast.error('Failed to fetch jobs');
+      toast.error(MESSAGES.ERROR.JOB_LOAD_FAILED);
     } finally {
       setLoading(false);
     }
@@ -150,7 +156,7 @@ const AdminJobManagement: React.FC = () => {
     try {
       setDeletingJobId(confirmDelete.jobId);
       await api.delete(`/jobs/${confirmDelete.jobId}`);
-      toast.success('Job deleted successfully');
+      toast.success(MESSAGES.SUCCESS.JOB_DELETED);
       setConfirmDelete(null);
       if (viewMode === 'all') {
         fetchJobs();
@@ -178,7 +184,25 @@ const AdminJobManagement: React.FC = () => {
         isActive: !job.isActive,
       });
       toast.success(`Job ${job.isActive ? 'deactivated' : 'activated'} successfully`);
-      fetchJobs();
+      
+      // Update the job in reportedJobs state if we're in reported view
+      if (viewMode === 'reported') {
+        setReportedJobs(prevJobs => 
+          prevJobs.map(reportedJob => 
+            reportedJob.job.id === job.id 
+              ? { 
+                  ...reportedJob, 
+                  job: { 
+                    ...reportedJob.job, 
+                    isActive: !job.isActive
+                  } 
+                }
+              : reportedJob
+          )
+        );
+      } else {
+        fetchJobs();
+      }
     } catch (error: unknown) {
       console.error('Error toggling job status:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
@@ -197,7 +221,7 @@ const AdminJobManagement: React.FC = () => {
       (job) =>
         job.title.toLowerCase().includes(searchLower) ||
         job.company.toLowerCase().includes(searchLower) ||
-        job.location.toLowerCase().includes(searchLower)
+        job.location.toLowerCase().includes(searchLower),
     );
   }, [jobs, searchTerm]);
 
@@ -282,49 +306,49 @@ const AdminJobManagement: React.FC = () => {
       {viewMode === 'all' && (
         <div className="bg-gray-800 rounded-lg p-3 flex-shrink-0">
           <div className="flex items-center gap-3 flex-wrap">
-          {/* Search */}
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search jobs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
+            {/* Search */}
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Search jobs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Company Filter */}
-          <div className="flex items-center gap-2">
-            <FiFilter className="text-gray-400 h-4 w-4" />
-            <select
-              value={filterCompany}
-              onChange={(e) => setFilterCompany(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="all">All Companies</option>
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.companyName}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Company Filter */}
+            <div className="flex items-center gap-2">
+              <FiFilter className="text-gray-400 h-4 w-4" />
+              <select
+                value={filterCompany}
+                onChange={(e) => setFilterCompany(e.target.value)}
+                className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Companies</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.companyName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-2">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-1.5 text-sm bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
           </div>
         </div>
       )}
@@ -344,158 +368,158 @@ const AdminJobManagement: React.FC = () => {
               </div>
             </div>
           ) : (
-        <div className="bg-gray-800 rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
-          <div className="overflow-auto flex-1">
-            <table className="w-full">
-              <thead className="bg-gray-700 sticky top-0">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+            <div className="bg-gray-800 rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
+              <div className="overflow-auto flex-1">
+                <table className="w-full">
+                  <thead className="bg-gray-700 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Job Title
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Company
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Location
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Type
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
-                  </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      </th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-gray-800 divide-y divide-gray-700">
-                {filteredJobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-gray-750 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-medium text-white">{job.title}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm text-gray-300">{job.company}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm text-gray-300">{job.location}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 text-xs font-medium bg-purple-900 text-purple-200 rounded">
-                        {job.jobType}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleToggleActive(job)}
-                        disabled={togglingJobId === job.id}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
-                          job.isActive
-                            ? 'bg-green-900 text-green-200 hover:bg-green-800'
-                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                        } ${togglingJobId === job.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        {job.isActive ? (
-                          <>
-                            <FiToggleRight className="h-3.5 w-3.5" />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-gray-800 divide-y divide-gray-700">
+                    {filteredJobs.map((job) => (
+                      <tr key={job.id} className="hover:bg-gray-750 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-white">{job.title}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-300">{job.company}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-300">{job.location}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 text-xs font-medium bg-purple-900 text-purple-200 rounded">
+                            {job.jobType}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleToggleActive(job)}
+                            disabled={togglingJobId === job.id}
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              job.isActive
+                                ? 'bg-green-900 text-green-200 hover:bg-green-800'
+                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                            } ${togglingJobId === job.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {job.isActive ? (
+                              <>
+                                <FiToggleRight className="h-3.5 w-3.5" />
                             Active
-                          </>
-                        ) : (
-                          <>
-                            <FiToggleLeft className="h-3.5 w-3.5" />
+                              </>
+                            ) : (
+                              <>
+                                <FiToggleLeft className="h-3.5 w-3.5" />
                             Inactive
-                          </>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => window.open(`/jobs/${job.id}`, '_blank')}
-                          className="text-purple-400 hover:text-purple-300 transition-colors"
-                          title="View Job"
-                        >
-                          <FiEye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteJob(job.id, job.title)}
-                          disabled={deletingJobId === job.id}
-                          className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Delete Job"
-                        >
-                          {deletingJobId === job.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-400"></div>
-                          ) : (
-                            <FiTrash2 className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                              </>
+                            )}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => window.open(`/jobs/${job.id}`, '_blank')}
+                              className="text-purple-400 hover:text-purple-300 transition-colors"
+                              title="View Job"
+                            >
+                              <FiEye className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteJob(job.id, job.title)}
+                              disabled={deletingJobId === job.id}
+                              className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Delete Job"
+                            >
+                              {deletingJobId === job.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-400"></div>
+                              ) : (
+                                <FiTrash2 className="h-4 w-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
-      {/* Pagination - All Jobs */}
-      {viewMode === 'all' && !loading && filteredJobs.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-between bg-gray-800 rounded-lg p-3 flex-shrink-0">
-          <div className="text-xs text-gray-400">
+          {/* Pagination - All Jobs */}
+          {viewMode === 'all' && !loading && filteredJobs.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-between bg-gray-800 rounded-lg p-3 flex-shrink-0">
+              <div className="text-xs text-gray-400">
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalJobs)} of {totalJobs} jobs
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-            >
-              <FiChevronLeft className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  <FiChevronLeft className="h-3.5 w-3.5" />
               Prev
-            </button>
+                </button>
             
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
                 
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`px-2.5 py-1.5 text-sm rounded-lg transition-colors ${
-                      currentPage === pageNum
-                        ? 'bg-purple-600 text-white font-semibold'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-2.5 py-1.5 text-sm rounded-lg transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-purple-600 text-white font-semibold'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-            >
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
               Next
-              <FiChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+                  <FiChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -554,6 +578,9 @@ const AdminJobManagement: React.FC = () => {
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Reports
                       </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        Status
+                      </th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Actions
                       </th>
@@ -604,10 +631,37 @@ const AdminJobManagement: React.FC = () => {
                               {reportedJob.reportCount} {reportedJob.reportCount === 1 ? 'Report' : 'Reports'}
                             </button>
                           </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleToggleActive(reportedJob.job)}
+                              disabled={togglingJobId === reportedJob.job.id}
+                              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                                reportedJob.job.isActive
+                                  ? 'bg-green-900 text-green-200 hover:bg-green-800'
+                                  : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                              } ${togglingJobId === reportedJob.job.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                              {reportedJob.job.isActive ? (
+                                <>
+                                  <FiToggleRight className="h-3.5 w-3.5" />
+                                  Active
+                                </>
+                              ) : (
+                                <>
+                                  <FiToggleLeft className="h-3.5 w-3.5" />
+                                  Inactive
+                                </>
+                              )}
+                            </button>
+                          </td>
                           <td className="px-4 py-3 text-right text-sm font-medium">
                             <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={() => window.open(`/jobs/${reportedJob.job.id}`, '_blank')}
+                                onClick={() => {
+                                  setSelectedJobId(reportedJob.job.id);
+                                  setSelectedJob(reportedJob.job);
+                                  setShowJobDetailsModal(true);
+                                }}
                                 className="text-purple-400 hover:text-purple-300 transition-colors"
                                 title="View Job"
                               >
@@ -756,6 +810,20 @@ const AdminJobManagement: React.FC = () => {
         }}
         reportedJob={selectedJobReports}
       />
+
+      {/* Job Details Modal */}
+      {selectedJobId && (
+        <JobDetailsModal
+          isOpen={showJobDetailsModal}
+          onClose={() => {
+            setShowJobDetailsModal(false);
+            setSelectedJobId(null);
+            setSelectedJob(null);
+          }}
+          jobId={selectedJobId}
+          initialJob={selectedJob || undefined}
+        />
+      )}
     </div>
   );
 };

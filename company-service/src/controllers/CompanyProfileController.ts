@@ -9,6 +9,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { AppError } from '../utils/errors/AppError';
 import { getCompanyIdFromRequest } from '../utils/requestHelpers';
 import { Messages } from '../constants/Messages';
+import cloudinary, { configureCloudinary } from '../config/cloudinary';
 
 @injectable()
 export class CompanyProfileController {
@@ -51,6 +52,44 @@ export class CompanyProfileController {
     if (!companyId) return;
     
     const validatedData = CompanyProfileSchema.parse(req.body);
+    
+    // Handle logo upload to Cloudinary if provided
+    if (validatedData.logo && typeof validatedData.logo === 'string' && validatedData.logo.startsWith('data:image/')) {
+      console.log('[CompanyProfileController] Processing logo upload to Cloudinary...');
+      try {
+        // Ensure Cloudinary is configured
+        if (!configureCloudinary()) {
+          console.error('[CompanyProfileController] Cloudinary configuration missing');
+          throw new AppError('Cloudinary configuration is missing. Please check environment variables.', HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        const result = await cloudinary.uploader.upload(validatedData.logo, {
+          folder: 'company-logos',
+          transformation: [
+            { width: 500, height: 500, crop: 'limit' },
+            { quality: 'auto' }
+          ],
+          resource_type: 'image'
+        });
+        
+        if (!result || !result.secure_url) {
+          console.error('[CompanyProfileController] Cloudinary upload returned invalid result:', result);
+          throw new AppError('Invalid response from Cloudinary', HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
+        
+        validatedData.logo = result.secure_url;
+        console.log('[CompanyProfileController] Cloudinary upload successful:', result.secure_url);
+      } catch (cloudinaryError: unknown) {
+        console.error('[CompanyProfileController] Cloudinary upload error:', cloudinaryError);
+        const errorMessage = cloudinaryError instanceof Error 
+          ? cloudinaryError.message 
+          : typeof cloudinaryError === 'object' && cloudinaryError !== null && 'message' in cloudinaryError
+            ? String(cloudinaryError.message)
+            : 'Failed to upload company logo';
+        throw new AppError(errorMessage, HttpStatusCode.INTERNAL_SERVER_ERROR);
+      }
+    }
+    
     const updateCompany = await this._companyService.updateCompanyProfile(companyId, validatedData);
     
     res.status(CompanyStatusCode.COMPANY_PROFILE_UPDATED).json(

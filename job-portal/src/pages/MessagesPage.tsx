@@ -8,7 +8,7 @@ import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount, useUserConversations, useMessages, useMarkAsRead } from '@/hooks/useChat';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
-import { ConversationResponse } from '@/api/_chatService';
+import { ConversationResponse } from '@/api/chatService';
 import api from '@/api/axios';
 
 const MessagesPage = () => {
@@ -42,7 +42,7 @@ const MessagesPage = () => {
   
   // Get messages for selected conversation
   const { data: messages = [], isLoading: messagesLoading } = useMessages(
-    selectedConversation?.id || null
+    selectedConversation?.id || null,
   );
   
   const markAsReadMutation = useMarkAsRead();
@@ -155,7 +155,7 @@ const MessagesPage = () => {
     if (currentUserId) {
       markAsReadMutation.mutate({
         conversationId: conversation.id,
-        userId: currentUserId
+        userId: currentUserId,
       });
     }
   };

@@ -91,6 +91,12 @@ export class JobRepository implements IJobRepository {
       where.isActive = filters.isActive;
     }
     
+    // Filter by isListed for user-facing queries (non-admin)
+    // Admin queries should explicitly set isListed filter if needed
+    if (filters.isListed !== undefined) {
+      where.isListed = filters.isListed;
+    }
+    
     if (filters.title) where.title = { contains: filters.title, mode: 'insensitive' };
     if (filters.company) where.company = { contains: filters.company, mode: 'insensitive' };
     if (filters.companyId) where.companyId = filters.companyId;
@@ -232,6 +238,13 @@ export class JobRepository implements IJobRepository {
     return Array.from(companyMap.values())
       .sort((a, b) => b.jobCount - a.jobCount)
       .slice(0, limit);
+  }
+
+  async updateListingStatus(jobId: string, isListed: boolean, listedAt: Date): Promise<Job> {
+    return this.prisma.job.update({
+      where: { id: jobId },
+      data: { isListed, listedAt },
+    });
   }
 
 }

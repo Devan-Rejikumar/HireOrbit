@@ -16,7 +16,7 @@ export const SubscriptionCard = ({
   onSelect, 
   userType, 
   isPopular = false,
-  billingPeriod 
+  billingPeriod, 
 }: SubscriptionCardProps) => {
   const isCurrentPlan = currentPlan === plan.id;
   const isFreePlan = plan.priceMonthly === null || plan.priceMonthly === undefined || plan.priceMonthly === 0;
@@ -64,7 +64,7 @@ export const SubscriptionCard = ({
       return [
         'ATS Score Checker - Optimize your resume for job applications',
         'Increased Visibility - Your profile highlighted to recruiters',
-        'Premium Badge - Shows Premium status on your profile'
+        'Premium Badge - Shows Premium status on your profile',
       ];
     }
     
@@ -111,102 +111,96 @@ export const SubscriptionCard = ({
   };
 
   return (
-    <div className={`relative border rounded-lg p-6 h-full flex flex-col transition-all hover:shadow-lg ${
+    <div className={`relative border rounded-lg p-4 h-full flex flex-col transition-all ${
       isPopular 
-        ? 'bg-gradient-to-br from-purple-600 to-purple-700 border-purple-500 text-white shadow-xl scale-105' 
+        ? 'bg-white border-purple-500 shadow-lg' 
         : isCurrentPlan
-        ? 'border-blue-500 bg-blue-50'
-        : 'bg-white border-gray-200 hover:border-purple-300'
+          ? 'border-blue-400 bg-blue-50'
+          : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-md'
     }`}>
       {/* Most Popular Badge */}
       {isPopular && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-          <span className="bg-yellow-400 text-purple-900 px-4 py-1 rounded-full text-xs font-bold">
-            MOST POPULAR PLAN
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+          <span className="bg-purple-600 text-white px-4 py-1 rounded-full text-xs font-semibold shadow-md">
+            MOST POPULAR
           </span>
         </div>
       )}
 
       {/* Current Plan Badge */}
       {isCurrentPlan && !isPopular && (
-        <div className="absolute -top-3 right-4">
-          <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+        <div className="absolute -top-3 right-4 z-10">
+          <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
             Current Plan
           </span>
         </div>
       )}
 
-      <div className="mb-4">
-        <h3 className={`text-2xl font-bold mb-1 ${isPopular ? 'text-white' : 'text-gray-900'}`}>
+      <div className="mb-3">
+        <h3 className={`text-lg font-bold mb-0.5 ${isPopular ? 'text-purple-600' : 'text-gray-900'}`}>
           {plan.name}
         </h3>
-        <p className={`text-sm ${isPopular ? 'text-purple-100' : 'text-gray-600'}`}>
+        <p className="text-xs text-gray-600">
           {getTagline()}
         </p>
       </div>
 
-      <div className="mb-6">
-        <div className={`text-4xl font-bold mb-1 ${isPopular ? 'text-white' : 'text-gray-900'}`}>
+      <div className="mb-4 pb-4 border-b border-gray-200">
+        <div className="text-2xl font-bold text-gray-900 mb-0.5">
           {getPrice()}
         </div>
         {!isFreePlan && (
-          <div className={`text-sm ${isPopular ? 'text-purple-100' : 'text-gray-600'}`}>
+          <div className="text-xs text-gray-600">
             {getPriceLabel()}
           </div>
         )}
         {isFreePlan && (
-          <div className={`text-sm ${isPopular ? 'text-purple-100' : 'text-gray-600'}`}>
+          <div className="text-xs text-gray-600">
             Forever free
           </div>
         )}
       </div>
 
-      <ul className="mb-6 space-y-3 flex-1">
+      <ul className="mb-4 space-y-2.5 flex-1 min-h-0">
         {(() => {
           const displayFeatures = getDisplayFeatures();
           if (displayFeatures.length > 0) {
             return displayFeatures.map((feature, index) => (
               <li key={index} className="flex items-start">
-                <Check className={`h-5 w-5 mr-2 flex-shrink-0 mt-0.5 ${
-                  isPopular ? 'text-white' : 'text-green-500'
-                }`} />
-                <span className={`text-sm leading-relaxed ${isPopular ? 'text-purple-50' : 'text-gray-700'}`}>
+                <Check className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5 text-green-500" />
+                <span className="text-xs md:text-sm text-gray-700 leading-snug">
                   {feature}
                 </span>
               </li>
             ));
           }
           return (
-            <li className={`text-sm ${isPopular ? 'text-purple-200' : 'text-gray-500'}`}>
+            <li className="text-xs md:text-sm text-gray-500">
               Basic features included
             </li>
           );
         })()}
       </ul>
 
-      <div className="mt-auto">
+      <div className="mt-auto pt-2">
         {isFreePlan ? (
-          <div className={`text-center py-3 px-4 rounded-lg ${
-            isPopular ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
-          }`}>
+          <div className="text-center py-2.5 px-4 rounded-lg bg-gray-100 text-gray-600 text-xs md:text-sm">
             Default Plan
           </div>
         ) : (
-          <>
-            <button
-              onClick={() => onSelect(plan.id, 'monthly')}
-              disabled={isCurrentPlan}
-              className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
-                isCurrentPlan
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : isPopular
-                  ? 'bg-white text-purple-600 hover:bg-purple-50 shadow-md'
+          <button
+            onClick={() => onSelect(plan.id, 'monthly')}
+            disabled={isCurrentPlan}
+            className={`w-full py-2.5 px-4 rounded-lg font-semibold text-xs md:text-sm transition-all ${
+              isCurrentPlan
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                : isPopular
+                  ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
                   : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg'
-              }`}
-            >
-              {isCurrentPlan ? 'Current Plan' : 'Select Plan'}
-            </button>
-          </>
+            }`}
+          >
+            {isCurrentPlan ? 'Current Plan' : 'Select Plan'}
+          </button>
         )}
       </div>
     </div>

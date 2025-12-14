@@ -11,11 +11,13 @@ import {
   Legend,
   ArcElement,
   Filler,
+  type TooltipItem,
 } from 'chart.js';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { subscriptionService } from '@/api/subscriptionService';
 import { FiDollarSign, FiUsers, FiHome, FiRefreshCw, FiTrendingUp, FiCalendar } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { MESSAGES } from '@/constants/messages';
 
 // Register Chart.js components
 ChartJS.register(
@@ -28,7 +30,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   ArcElement,
-  Filler
+  Filler,
 );
 
 type TimeFilter = 'day' | 'week' | 'month' | 'year' | 'all';
@@ -126,8 +128,8 @@ const AdminRevenue: React.FC = () => {
       }
     } catch (error: unknown) {
       console.error('Error fetching revenue statistics:', error);
-      toast.error('Failed to load revenue statistics', {
-        duration: 4000
+      toast.error(MESSAGES.ERROR.REVENUE_STATS_LOAD_FAILED, {
+        duration: 4000,
       });
     } finally {
       setLoading(false);
@@ -153,8 +155,8 @@ const AdminRevenue: React.FC = () => {
       }
     } catch (error: unknown) {
       console.error('Error fetching transactions:', error);
-      toast.error('Failed to load transaction history', {
-        duration: 4000
+      toast.error(MESSAGES.ERROR.TRANSACTION_HISTORY_LOAD_FAILED, {
+        duration: 4000,
       });
     } finally {
       setTransactionsLoading(false);
@@ -171,15 +173,15 @@ const AdminRevenue: React.FC = () => {
       setSyncing(true);
       const response = await subscriptionService.admin.syncTransactions(100);
       toast.success(`Synced ${response.data.synced} transactions. ${response.data.skipped} skipped.`, {
-        duration: 5000
+        duration: 5000,
       });
       // Refresh data after sync
       await fetchStatistics();
       await fetchTransactions(1);
     } catch (error: unknown) {
       console.error('Error syncing transactions:', error);
-      toast.error('Failed to sync transactions from Stripe', {
-        duration: 4000
+      toast.error(MESSAGES.ERROR.STRIPE_SYNC_FAILED, {
+        duration: 4000,
       });
     } finally {
       setSyncing(false);
@@ -260,7 +262,7 @@ const AdminRevenue: React.FC = () => {
     ],
   } : null;
 
-  const chartOptions = {
+  const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -272,9 +274,60 @@ const AdminRevenue: React.FC = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: { parsed: { y?: number } | number }) => {
-            const value = typeof context.parsed === 'number' ? context.parsed : context.parsed.y;
-            return `Revenue: ${formatCurrency(value || 0)}`;
+          label: (context: TooltipItem<'line'>) => {
+            const parsed = context.parsed;
+            const value = typeof parsed === 'object' && parsed !== null && 'y' in parsed 
+              ? (parsed.y ?? 0) 
+              : typeof parsed === 'number' 
+                ? parsed 
+                : 0;
+            return `Revenue: ${formatCurrency(value)}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#9ca3af',
+        },
+        grid: {
+          color: 'rgba(75, 85, 99, 0.3)',
+        },
+      },
+      y: {
+        ticks: {
+          color: '#9ca3af',
+          callback: (value: number | string) => formatCurrency(typeof value === 'number' ? value : parseFloat(value) || 0),
+        },
+        grid: {
+          color: 'rgba(75, 85, 99, 0.3)',
+        },
+        beginAtZero: true,
+      },
+    },
+  };
+
+  const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          color: '#e5e7eb',
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<'bar'>) => {
+            const parsed = context.parsed;
+            const value = typeof parsed === 'object' && parsed !== null && 'y' in parsed 
+              ? (parsed.y ?? 0) 
+              : typeof parsed === 'number' 
+                ? parsed 
+                : 0;
+            return `Revenue: ${formatCurrency(value)}`;
           },
         },
       },
@@ -313,10 +366,11 @@ const AdminRevenue: React.FC = () => {
       },
       tooltip: {
         callbacks: {
-          label: (context: { label?: string; parsed: number }) => {
+          label: (context: TooltipItem<'doughnut'>) => {
             const label = context.label || '';
-            const value = formatCurrency(context.parsed);
-            return `${label}: ${value}`;
+            const parsed = context.parsed;
+            const value = typeof parsed === 'number' ? parsed : 0;
+            return `${label}: ${formatCurrency(value)}`;
           },
         },
       },
@@ -428,7 +482,7 @@ const AdminRevenue: React.FC = () => {
           <h3 className="text-lg font-semibold text-white mb-4">Revenue Over Time</h3>
           <div className="h-64">
             {timeChartData ? (
-              <Line data={timeChartData} options={chartOptions} />
+              <Line data={timeChartData} options={lineChartOptions} />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400">
                 No revenue data available
@@ -457,7 +511,7 @@ const AdminRevenue: React.FC = () => {
         <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
           <h3 className="text-lg font-semibold text-white mb-4">Revenue by Plan</h3>
           <div className="h-64">
-            <Bar data={planChartData} options={chartOptions} />
+            <Bar data={planChartData} options={barChartOptions} />
           </div>
         </div>
       )}
@@ -521,8 +575,8 @@ const AdminRevenue: React.FC = () => {
                         transaction.status === 'succeeded'
                           ? 'bg-green-600/20 text-green-400'
                           : transaction.status === 'failed'
-                          ? 'bg-red-600/20 text-red-400'
-                          : 'bg-yellow-600/20 text-yellow-400'
+                            ? 'bg-red-600/20 text-red-400'
+                            : 'bg-yellow-600/20 text-yellow-400'
                       }`}>
                         {transaction.status}
                       </span>

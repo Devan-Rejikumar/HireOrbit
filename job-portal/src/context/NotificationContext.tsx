@@ -4,10 +4,25 @@ import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useD
 import { useWebSocket } from '../hooks/useWebSocket';
 import { NotificationData } from '../api/notificationService';
 
+interface RealTimeNotificationData {
+  type: 'APPLICATION_RECEIVED' | 'STATUS_UPDATED' | 'APPLICATION_WITHDRAWN';
+  id: string;
+  recipientId: string;
+  data: {
+    applicationId: string;
+    jobId: string;
+    applicantName?: string;
+    jobTitle?: string;
+    oldStatus?: string;
+    newStatus?: string;
+  };
+  timestamp: string;
+}
+
 interface NotificationContextType {
   notifications: NotificationData[];
   unreadCount: number;
-  realTimeNotifications: NotificationData[];
+  realTimeNotifications: RealTimeNotificationData[];
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -33,7 +48,7 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
-  recipientId
+  recipientId,
 }) => {
   const navigate = useNavigate();
 
@@ -64,7 +79,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         data: rtNotification.data,
         read: false,
         createdAt: rtNotification.timestamp,
-        readAt: undefined
+        readAt: undefined,
       }));
       
       setAllNotifications(prev => [...convertedNotifications, ...prev]);
@@ -73,38 +88,42 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   const getNotificationTitle = (type: string) => {
     switch (type) {
-      case 'APPLICATION_RECEIVED':
-        return 'New Application';
-      case 'STATUS_UPDATED':
-        return 'Status Update';
-      case 'APPLICATION_WITHDRAWN':
-        return 'Application Withdrawn';
-      case 'INTERVIEW_CONFIRMED':
-        return 'Interview Confirmed';
-      case 'INTERVIEW_DECISION':
-        return 'Interview Result';
-      default:
-        return 'Notification';
+    case 'APPLICATION_RECEIVED':
+      return 'New Application';
+    case 'STATUS_UPDATED':
+      return 'Status Update';
+    case 'APPLICATION_WITHDRAWN':
+      return 'Application Withdrawn';
+    case 'INTERVIEW_CONFIRMED':
+      return 'Interview Confirmed';
+    case 'INTERVIEW_DECISION':
+      return 'Interview Result';
+    default:
+      return 'Notification';
     }
   };
 
-  const getNotificationMessage = (notification: NotificationData) => {
+  const getNotificationMessage = (notification: RealTimeNotificationData | NotificationData) => {
+    // Check if it's a NotificationData (has message property)
+    const hasMessage = 'message' in notification;
+    const message = hasMessage ? (notification as NotificationData).message : undefined;
+    
     switch (notification.type) {
-      case 'APPLICATION_RECEIVED':
-        return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;
-      case 'STATUS_UPDATED':
-        const jobTitle = notification.data.jobTitle || 'Application';
-        const newStatus = notification.data.newStatus || notification.data.status || 'unknown';
-        return `${jobTitle} status has been changed to ${newStatus}`;
-      case 'APPLICATION_WITHDRAWN':
-        return `${notification.data.applicantName || 'Someone'} withdrew their application`;
-      case 'INTERVIEW_CONFIRMED':
-        const interviewJobTitle = notification.data.jobTitle || notification.message?.split('for ')[1]?.split(' has')[0] || 'the position';
-        return notification.message || `Your interview for ${interviewJobTitle} has been confirmed`;
-      case 'INTERVIEW_DECISION':
-        return notification.message || 'Interview decision has been made';
-      default:
-        return notification.message || 'New notification';
+    case 'APPLICATION_RECEIVED':
+      return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;
+    case 'STATUS_UPDATED':
+      const jobTitle = notification.data.jobTitle || 'Application';
+      const newStatus = notification.data.newStatus || 'unknown';
+      return `${jobTitle} status has been changed to ${newStatus}`;
+    case 'APPLICATION_WITHDRAWN':
+      return `${notification.data.applicantName || 'Someone'} withdrew their application`;
+    case 'INTERVIEW_CONFIRMED':
+      const interviewJobTitle = notification.data.jobTitle || (message ? message.split('for ')[1]?.split(' has')[0] : undefined) || 'the position';
+      return message || `Your interview for ${interviewJobTitle} has been confirmed`;
+    case 'INTERVIEW_DECISION':
+      return message || 'Interview decision has been made';
+    default:
+      return message || 'New notification';
     }
   };
 
@@ -168,7 +187,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     markAllAsRead,
     handleNotificationClick,
     joinRoom,
-    leaveRoom
+    leaveRoom,
   };
 
   return (

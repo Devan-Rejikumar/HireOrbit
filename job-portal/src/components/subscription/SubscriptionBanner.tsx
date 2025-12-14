@@ -28,7 +28,7 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
         plansResponse = await subscriptionService.getPlans(userType);
         // Find premium plan - only by name, not by price
         const premium = plansResponse.data.find(plan => 
-          plan.name.toLowerCase() === 'premium'
+          plan.name.toLowerCase() === 'premium',
         );
         setPremiumPlan(premium || null);
       } catch (error) {
