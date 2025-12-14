@@ -16,11 +16,11 @@ const InterviewDecisionModal: React.FC<InterviewDecisionModalProps> = ({
   onClose,
   interview,
   decision,
-  onSuccess
+  onSuccess,
 }) => {
   const [formData, setFormData] = useState({
     decisionReason: '',
-    feedback: ''
+    feedback: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +28,7 @@ const InterviewDecisionModal: React.FC<InterviewDecisionModalProps> = ({
     if (isOpen) {
       setFormData({
         decisionReason: '',
-        feedback: ''
+        feedback: '',
       });
     }
   }, [isOpen]);
@@ -48,7 +48,7 @@ const InterviewDecisionModal: React.FC<InterviewDecisionModalProps> = ({
     const decisionData: InterviewDecisionData = {
       status: decision,
       decisionReason: formData.decisionReason.trim(),
-      feedback: formData.feedback.trim() || undefined
+      feedback: formData.feedback.trim() || undefined,
     };
 
     onSuccess(decisionData);

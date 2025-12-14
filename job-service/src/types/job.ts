@@ -30,6 +30,7 @@ export interface JobSearchFilters {
   minSalary?: number;
   maxSalary?: number;
   isActive?: boolean;
+  isListed?: boolean;
   page?: number;
   limit?: number;
   sortBy?: 'createdAt' | 'title' | 'salary';

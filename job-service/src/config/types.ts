@@ -9,6 +9,8 @@ const TYPES = {
   JobReportRepository: Symbol.for('JobReportRepository'),
   IJobReportRepository: Symbol.for('IJobReportRepository'),
   JobReportController: Symbol.for('JobReportController'),
+  SubscriptionValidationService: Symbol.for('SubscriptionValidationService'),
+  JobUnlistCronService: Symbol.for('JobUnlistCronService'),
 };
 
 export default TYPES;

@@ -1,5 +1,8 @@
 import api from './axios';
-const CHAT_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+import { ENV } from '../config/env';
+import { HTTP_STATUS } from '../constants/statusCodes';
+
+const CHAT_API_BASE_URL = ENV.API_BASE_URL;
 const CHAT_API_PATH = '/chat';
 
 export interface ConversationResponse {
@@ -58,21 +61,21 @@ export interface UnreadCountResponse {
 export const _chatService = {
   getUserConversations: async (userId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations`
+      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations`,
     );
     return response.data.data.conversations;
   },
 
   getCompanyConversations: async (companyId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/companies/${companyId}/conversations`
+      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/companies/${companyId}/conversations`,
     );
     return response.data.data.conversations;
   },
 
   getConversation: async (conversationId: string): Promise<ConversationResponse> => {
     const response = await api.get<ConversationResponseData>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}`
+      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}`,
     );
     return response.data.data;
   },
@@ -80,18 +83,18 @@ export const _chatService = {
   getConversationByApplication: async (applicationId: string): Promise<ConversationResponse | null> => {
     try {
       const response = await api.get<ConversationResponseData>(
-        `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/application/${applicationId}`
+        `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/application/${applicationId}`,
       );
       return response.data.data;
     } catch (error: unknown) {
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
       // Handle 404 (not found) or 500 (creation failed) as "no conversation yet"
-      if (axiosError && (axiosError.response?.status === 404 || axiosError.response?.status === 500)) {
+      if (axiosError && (axiosError.response?.status === HTTP_STATUS.NOT_FOUND || axiosError.response?.status === HTTP_STATUS.INTERNAL_SERVER_ERROR)) {
         console.warn(`⚠️ [ChatService] Conversation not found/created for ${applicationId}:`, axiosError.response?.data);
         return null;
       }
-      console.error(`❌ [ChatService] Unexpected error fetching conversation:`, error);
+      console.error('❌ [ChatService] Unexpected error fetching conversation:', error);
       throw error;
     }
   },
@@ -99,20 +102,20 @@ export const _chatService = {
   getMessages: async (
     conversationId: string,
     limit?: number,
-    skip?: number
+    skip?: number,
   ): Promise<MessageResponse[]> => {
     const response = await api.get<MessageListResponse>(
       `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}/messages`,
       {
-        params: { limit, skip }
-      }
+        params: { limit, skip },
+      },
     );
     return response.data.data.messages;
   },
 
   markAsRead: async (conversationId: string, userId: string): Promise<void> => {
     await api.post(`${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}/read`, {
-      userId
+      userId,
     });
   },
 
@@ -120,24 +123,24 @@ export const _chatService = {
     const response = await api.get<UnreadCountResponse>(
       `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}/unread-count`,
       {
-        params: { userId }
-      }
+        params: { userId },
+      },
     );
     return response.data.data.unreadCount;
   },
 
   getTotalUnreadCount: async (userId: string): Promise<number> => {
     const response = await api.get<UnreadCountResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/total-unread-count`
+      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/total-unread-count`,
     );
     return response.data.data.unreadCount;
   },
 
   getConversationsWithUnread: async (userId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations-with-unread`
+      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations-with-unread`,
     );
     return response.data.data.conversations;
-  }
+  },
 };
 

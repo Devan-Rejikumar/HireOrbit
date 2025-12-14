@@ -60,8 +60,8 @@ export const _applicationService = {
     
     const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
       headers: {
-        'Content-Type': CONTENT_TYPE_JSON
-      }
+        'Content-Type': CONTENT_TYPE_JSON,
+      },
     });
     
     return response.data;
@@ -114,7 +114,7 @@ export const _applicationService = {
       data: Application;
     }>(`/applications/${applicationId}/status`, {
       status,
-      reason
+      reason,
     });
     return response.data;
   },
@@ -124,7 +124,7 @@ export const _applicationService = {
       data: ApplicationNotes;
     }>(`/applications/${applicationId}/notes`, {
       note,
-      addedBy
+      addedBy,
     });
     return response.data;
   },
@@ -134,5 +134,5 @@ export const _applicationService = {
       data: ApplicationStatusHistory[];
     }>(`/applications/${applicationId}/history`);
     return response.data;
-  }
+  },
 };

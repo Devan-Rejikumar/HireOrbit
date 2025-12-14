@@ -20,7 +20,7 @@ export const ChatWindow = ({
   messages,
   isLoading,
   onSendMessage,
-  otherParticipantName = 'User'
+  otherParticipantName = 'User',
 }: ChatWindowProps) => {
   const { role } = useAuth();
   const [messageInput, setMessageInput] = useState('');
@@ -193,75 +193,75 @@ export const ChatWindow = ({
               return getDateValue(dateA) - getDateValue(dateB);
             })
             .map(([date, dateMessages]) => (
-            <div key={date}>
-              {/* Date Separator */}
-              <div className="flex items-center justify-center my-4">
-                <div className="bg-gray-200 px-3 py-1 rounded-full">
-                  <span className="text-xs text-gray-600 font-medium">{date}</span>
-                </div>
-              </div>
-
-              {/* Messages for this date */}
-              {dateMessages.map((message) => {
-                const isOwnMessage = message.senderId === currentUserId;
-                // Check if message is read (the other participant has read it)
-                const isRead = message.readBy && Array.isArray(message.readBy) && message.readBy.length > 0;
-                
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex items-end gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}
-                  >
-                    {/* Avatar for received messages - show opposite icon of current user */}
-                    {!isOwnMessage && (
-                      <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                        {role === 'jobseeker' ? (
-                          <Building2 className="w-4 h-4 text-gray-600" />
-                        ) : (
-                          <User className="w-4 h-4 text-gray-600" />
-                        )}
-                      </div>
-                    )}
-                    
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl ${
-                      isOwnMessage
-                        ? 'bg-blue-600 text-white rounded-tr-sm'
-                        : 'bg-gray-100 text-gray-900 rounded-tl-sm'
-                    }`}>
-                      <p className="text-sm break-words leading-relaxed">{message.content}</p>
-                      <div className={`flex items-center gap-1.5 mt-1.5 ${
-                        isOwnMessage ? 'text-blue-100' : 'text-gray-500'
-                      }`}>
-                        <span className="text-xs">
-                          {formatMessageTime(message.createdAt)}
-                        </span>
-                        {isOwnMessage && (
-                          <div className="flex items-center">
-                            {isRead ? (
-                              <CheckCheck className="w-3.5 h-3.5" />
-                            ) : (
-                              <Check className="w-3.5 h-3.5" />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Avatar for sent messages - show current user's icon */}
-                    {isOwnMessage && (
-                      <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0">
-                        {role === 'jobseeker' ? (
-                          <User className="w-4 h-4 text-blue-600" />
-                        ) : (
-                          <Building2 className="w-4 h-4 text-blue-600" />
-                        )}
-                      </div>
-                    )}
+              <div key={date}>
+                {/* Date Separator */}
+                <div className="flex items-center justify-center my-4">
+                  <div className="bg-gray-200 px-3 py-1 rounded-full">
+                    <span className="text-xs text-gray-600 font-medium">{date}</span>
                   </div>
-                );
-              })}
-            </div>
-          ))
+                </div>
+
+                {/* Messages for this date */}
+                {dateMessages.map((message) => {
+                  const isOwnMessage = message.senderId === currentUserId;
+                  // Check if message is read (the other participant has read it)
+                  const isRead = message.readBy && Array.isArray(message.readBy) && message.readBy.length > 0;
+                
+                  return (
+                    <div
+                      key={message.id}
+                      className={`flex items-end gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}
+                    >
+                      {/* Avatar for received messages - show opposite icon of current user */}
+                      {!isOwnMessage && (
+                        <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
+                          {role === 'jobseeker' ? (
+                            <Building2 className="w-4 h-4 text-gray-600" />
+                          ) : (
+                            <User className="w-4 h-4 text-gray-600" />
+                          )}
+                        </div>
+                      )}
+                    
+                      <div className={`max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl ${
+                        isOwnMessage
+                          ? 'bg-blue-600 text-white rounded-tr-sm'
+                          : 'bg-gray-100 text-gray-900 rounded-tl-sm'
+                      }`}>
+                        <p className="text-sm break-words leading-relaxed">{message.content}</p>
+                        <div className={`flex items-center gap-1.5 mt-1.5 ${
+                          isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+                        }`}>
+                          <span className="text-xs">
+                            {formatMessageTime(message.createdAt)}
+                          </span>
+                          {isOwnMessage && (
+                            <div className="flex items-center">
+                              {isRead ? (
+                                <CheckCheck className="w-3.5 h-3.5" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    
+                      {/* Avatar for sent messages - show current user's icon */}
+                      {isOwnMessage && (
+                        <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0">
+                          {role === 'jobseeker' ? (
+                            <User className="w-4 h-4 text-blue-600" />
+                          ) : (
+                            <Building2 className="w-4 h-4 text-blue-600" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -280,7 +280,7 @@ export const ChatWindow = ({
                 }
               }}
               onKeyPress={handleKeyPress}
-              placeholder={isConnected ? "Type a message..." : "Connecting..."}
+              placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
               disabled={!isConnected}
               rows={1}
               className="w-full px-5 py-3 resize-none focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed bg-transparent"

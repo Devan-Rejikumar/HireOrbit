@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { MessageResponse } from '@/api/chatService';
+import { ENV } from '../config/env';
 
 export interface TypingData {
   userId: string;
@@ -19,10 +20,10 @@ export const useChatSocket = (conversationId: string | null) => {
   useEffect(() => {
     if (!conversationId) return;
 
-    const chatServiceUrl = import.meta.env.VITE_CHAT_SERVICE_URL?.replace('/api/chat', '') || 'http://localhost:4007';
+    const chatServiceUrl = ENV.CHAT_SERVICE_URL;
     const newSocket = io(chatServiceUrl, {
       transports: ['websocket'],
-      autoConnect: true
+      autoConnect: true,
     });
 
     newSocket.on('connect', () => {
@@ -72,14 +73,14 @@ export const useChatSocket = (conversationId: string | null) => {
   const sendMessage = (
     senderId: string,
     content: string,
-    messageType: 'text' | 'image' | 'file' = 'text'
+    messageType: 'text' | 'image' | 'file' = 'text',
   ) => {
     if (socketRef.current && conversationId) {
       socketRef.current.emit('send-message', {
         conversationId,
         senderId,
         content,
-        messageType
+        messageType,
       });
     }
   };
@@ -89,7 +90,7 @@ export const useChatSocket = (conversationId: string | null) => {
       socketRef.current.emit('typing', {
         conversationId,
         userId,
-        isTyping
+        isTyping,
       });
     }
   };
@@ -98,7 +99,7 @@ export const useChatSocket = (conversationId: string | null) => {
     if (socketRef.current && conversationId) {
       socketRef.current.emit('mark-as-read', {
         conversationId,
-        userId
+        userId,
       });
     }
   };
@@ -110,7 +111,7 @@ export const useChatSocket = (conversationId: string | null) => {
     typingUsers,
     sendMessage,
     sendTyping,
-    markAsRead
+    markAsRead,
   };
 };
 

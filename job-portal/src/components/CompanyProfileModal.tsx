@@ -11,7 +11,7 @@ interface CompanyProfileModalProps {
 const CompanyProfileModal: React.FC<CompanyProfileModalProps> = ({
   isOpen,
   onClose,
-  companyName
+  companyName,
 }) => {
   const [company, setCompany] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(false);

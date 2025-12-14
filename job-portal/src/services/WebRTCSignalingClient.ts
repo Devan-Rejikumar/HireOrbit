@@ -10,7 +10,7 @@ import {
   OfferData,
   AnswerData,
   IceCandidateData,
-  PeerInfo
+  PeerInfo,
 } from '@/types/webrtc.types';
 
 export class WebRTCSignalingClient {
@@ -24,7 +24,7 @@ export class WebRTCSignalingClient {
     signalingServerUrl: string,
     interviewId: string,
     userId: string,
-    role: 'company' | 'jobseeker'
+    role: 'company' | 'jobseeker',
   ) {
     this.signalingServerUrl = signalingServerUrl;
     this.interviewId = interviewId;
@@ -56,7 +56,7 @@ export class WebRTCSignalingClient {
           reconnectionAttempts: 5,
           reconnectionDelay: 1000,
           reconnectionDelayMax: 5000,
-          timeout: 10000
+          timeout: 10000,
         });
 
         let connectionTimeout: NodeJS.Timeout | null = null;
@@ -108,7 +108,7 @@ export class WebRTCSignalingClient {
           const joinData: JoinRoomData = {
             interviewId: this.interviewId,
             userId: this.userId,
-            role: this.role
+            role: this.role,
           };
           
           console.log('📤 Emitting JOIN_ROOM:', joinData);
@@ -169,7 +169,7 @@ export class WebRTCSignalingClient {
     if (this.socket) {
       this.socket.emit(WebRTCEvent.USER_LEFT, {
         interviewId: this.interviewId,
-        userId: this.userId
+        userId: this.userId,
       });
       this.socket.disconnect();
       this.socket = null;
@@ -251,10 +251,10 @@ export class WebRTCSignalingClient {
       interviewId: this.interviewId,
       offer: {
         type: offer.type as 'offer' | 'answer',
-        sdp: offer.sdp || ''
+        sdp: offer.sdp || '',
       },
       fromUserId: this.userId,
-      toUserId
+      toUserId,
     };
     console.log('📤 Sending OFFER to:', toUserId);
     this.socket?.emit(WebRTCEvent.OFFER, offerData);
@@ -268,10 +268,10 @@ export class WebRTCSignalingClient {
       interviewId: this.interviewId,
       answer: {
         type: answer.type as 'offer' | 'answer',
-        sdp: answer.sdp || ''
+        sdp: answer.sdp || '',
       },
       fromUserId: this.userId,
-      toUserId
+      toUserId,
     };
     console.log('📤 Sending ANSWER to:', toUserId);
     this.socket?.emit(WebRTCEvent.ANSWER, answerData);
@@ -286,10 +286,10 @@ export class WebRTCSignalingClient {
       candidate: {
         candidate: candidate.candidate || '',
         sdpMLineIndex: candidate.sdpMLineIndex ?? null,
-        sdpMid: candidate.sdpMid ?? null
+        sdpMid: candidate.sdpMid ?? null,
       },
       fromUserId: this.userId,
-      toUserId
+      toUserId,
     };
     this.socket?.emit(WebRTCEvent.ICE_CANDIDATE, candidateData);
   }

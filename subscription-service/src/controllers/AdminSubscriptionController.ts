@@ -16,9 +16,19 @@ export class AdminSubscriptionController {
   ) {}
 
   getAllPlans = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const plans = await this._adminSubscriptionService.getAllPlans();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const userType = req.query.userType as string | undefined;
+
+    const result = await this._adminSubscriptionService.getAllPlans(page, limit, userType);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ plans }, 'Subscription plans retrieved successfully'),
+      buildSuccessResponse({ 
+        plans: result.data, 
+        total: result.total, 
+        page: result.page, 
+        limit: result.limit, 
+        totalPages: result.totalPages 
+      }, 'Subscription plans retrieved successfully'),
     );
   });
 

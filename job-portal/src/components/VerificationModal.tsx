@@ -173,7 +173,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
                   disabled={isSendingOtp}
                   className="text-sm text-blue-600 hover:text-blue-700 underline"
                 >
-                  {isSendingOtp ? 'Resending...' : "Didn't receive code? Resend"}
+                  {isSendingOtp ? 'Resending...' : 'Didn\'t receive code? Resend'}
                 </button>
               </div>
             </div>

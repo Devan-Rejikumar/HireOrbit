@@ -17,19 +17,31 @@ import {
   Building2,
   Calendar as CalendarIcon,
   Plus,
-  Bell
+  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount } from '@/hooks/useChat';
 import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
+import { CompanyHeader } from '@/components/CompanyHeader';
+import api from '@/api/axios';
+
+interface CompanyProfile {
+  id: string;
+  companyName?: string;
+  email?: string;
+  profileCompleted?: boolean;
+  isVerified?: boolean;
+  logo?: string;
+}
 
 export const SubscriptionPage = () => {
-  const { role, user, company, logout } = useAuth();
+  const { role, user, company: authCompany, logout } = useAuth();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [company, setCompany] = useState<CompanyProfile | null>(null);
   const navigate = useNavigate();
 
   // Automatically determine userType based on role
@@ -37,8 +49,46 @@ export const SubscriptionPage = () => {
 
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
-    role === 'jobseeker' ? user?.id || null : company?.id || null
+    role === 'jobseeker' ? user?.id || null : (company?.id || authCompany?.id || null),
   );
+
+  // Fetch company profile with logo for company users
+  useEffect(() => {
+    if (role === 'company') {
+      fetchCompanyProfile();
+    }
+  }, [role]);
+
+  const fetchCompanyProfile = async () => {
+    try {
+      const response = await api.get<{ 
+        success?: boolean; 
+        data?: { company?: CompanyProfile }; 
+        company?: CompanyProfile;
+      }>('/company/profile');
+      
+      let companyData: CompanyProfile | null = null;
+      if (response.data && response.data.success && response.data.data && response.data.data.company) {
+        companyData = response.data.data.company;
+      } else if (response.data && response.data.company) {
+        companyData = response.data.company;
+      }
+      
+      setCompany(companyData);
+    } catch (error) {
+      console.error('Error fetching company profile:', error);
+      // Fallback to auth company if available
+      if (authCompany) {
+        setCompany({
+          id: authCompany.id,
+          companyName: authCompany.companyName,
+          email: authCompany.email,
+          profileCompleted: authCompany.profileCompleted,
+          isVerified: authCompany.isVerified,
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     if (role) {
@@ -88,19 +138,19 @@ export const SubscriptionPage = () => {
   // Sidebar items based on role
   const sidebarItems = role === 'company' 
     ? [
-        { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/company/dashboard' },
-        { id: 'jobs', label: 'My Jobs', icon: Briefcase, path: '/company/jobs' },
-        { id: 'applications', label: 'Applications', icon: User, path: '/company/applications' },
-        { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
-        { id: 'settings', label: 'Settings', icon: Settings, path: '/company/settings' },
-      ]
+      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/company/dashboard' },
+      { id: 'jobs', label: 'My Jobs', icon: Briefcase, path: '/company/jobs' },
+      { id: 'applications', label: 'Applications', icon: User, path: '/company/applications' },
+      { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
+      { id: 'settings', label: 'Settings', icon: Settings, path: '/company/settings' },
+    ]
     : [
-        { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/user/dashboard' },
-        { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
-        { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
-        { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
-        { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
-      ];
+      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/user/dashboard' },
+      { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
+      { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
+      { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
+      { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
+    ];
 
   const handleSidebarClick = (item: typeof sidebarItems[0]) => {
     if (item.path) {
@@ -108,13 +158,11 @@ export const SubscriptionPage = () => {
     }
   };
 
-  // Determine which plan is "most popular" (usually the middle one or Premium)
+  // Determine which plan is "most popular" - Premium is always most popular
   const getPopularPlanIndex = () => {
     if (plans.length === 0) return -1;
-    // If 3 plans, middle one is popular. If 2 plans, Premium is popular
-    if (plans.length === 3) return 1;
     const premiumIndex = plans.findIndex(p => p.name.toLowerCase() === 'premium');
-    return premiumIndex !== -1 ? premiumIndex : Math.floor(plans.length / 2);
+    return premiumIndex !== -1 ? premiumIndex : -1;
   };
 
   const popularPlanIndex = getPopularPlanIndex();
@@ -150,65 +198,36 @@ export const SubscriptionPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            {/* Hire Orbit Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
-            </div>
-            
-            {/* Company/User Info */}
-            {role === 'company' && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Company</span>
-                <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                  <Building2 className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">{company?.companyName || 'Company'}</span>
+      {role === 'company' ? (
+        <CompanyHeader company={company} onLogout={handleLogout} />
+      ) : (
+        <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              {/* Hire Orbit Logo */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">H</span>
                 </div>
+                <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
               </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Subscription Status Badge */}
-            {role === 'company' && <SubscriptionStatusBadge userType="company" />}
-            
-            {/* Post Job Button - Only for companies */}
-            {role === 'company' && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white"
-                  onClick={() => navigate(ROUTES.COMPANY_POST_JOB)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Post a job
-                </Button>
-              </div>
-            )}
-            
-            {/* Notification Bell */}
-            <div className="relative">
-              <Bell className="h-6 w-6 text-gray-600 hover:text-gray-900 cursor-pointer" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
             </div>
             
-            {/* Logout Button */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleLogout}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-4">
+              {/* Logout Button */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleLogout}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
@@ -250,10 +269,13 @@ export const SubscriptionPage = () => {
                 </button>
                 <button 
                   onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                  className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
                 >
-                  <CalendarIcon className="h-5 w-5" />
-                  Interview Management
+                  <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <span className="flex flex-col leading-tight">
+                    <span>Interview</span>
+                    <span>Management</span>
+                  </span>
                 </button>
                 <button 
                   onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
@@ -273,11 +295,19 @@ export const SubscriptionPage = () => {
               </div>
             </nav>
             
-            <div className="absolute bottom-6 left-6 right-6">
+            <div className="absolute bottom-3 left-6 right-6">
               <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                  <Building2 className="h-4 w-4 text-white" />
-                </div>
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
+                )}
                 <div>
                   <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
                   <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
@@ -343,41 +373,42 @@ export const SubscriptionPage = () => {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 p-8 pt-[84px] ml-64`}>
-          <div className="max-w-6xl mx-auto">
-            {/* Page Title and Description */}
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">Plans & Pricing</h1>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Choose the plan that fits your needs. All plans include essential features to get you started, 
-                with options to scale as you grow. No hidden fees and the flexibility to change anytime.
-              </p>
-            </div>
+        <main className="flex-1 pt-[84px] ml-64 h-[calc(100vh-68px)] overflow-y-auto">
+          <div className="h-full flex flex-col justify-center p-4 md:p-5">
+            <div className="w-full max-w-6xl mx-auto">
+              {/* Page Title and Description */}
+              <div className="text-center mb-3 md:mb-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Plans & Pricing</h1>
+                <p className="text-gray-600 max-w-2xl mx-auto text-xs md:text-sm">
+                  Choose the plan that fits your needs. All plans include essential features to get you started.
+                </p>
+              </div>
 
-            {/* Plans Grid */}
-            {plans.length > 0 ? (
-              <div className={`grid gap-6 ${
-                plans.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
-                plans.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
-                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-              }`}>
-                {plans.map((plan, index) => (
-                  <SubscriptionCard
-                    key={plan.id}
-                    plan={plan}
-                    currentPlan={currentPlanId || undefined}
-                    onSelect={handleSelectPlan}
-                    userType={userType}
-                    isPopular={index === popularPlanIndex}
-                    billingPeriod="monthly"
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-600">No plans available at the moment.</p>
-              </div>
-            )}
+              {/* Plans Grid */}
+              {plans.length > 0 ? (
+                <div className={`grid gap-4 w-full ${
+                  plans.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                    plans.length === 2 ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' :
+                      'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                }`}>
+                  {plans.map((plan, index) => (
+                    <SubscriptionCard
+                      key={plan.id}
+                      plan={plan}
+                      currentPlan={currentPlanId || undefined}
+                      onSelect={handleSelectPlan}
+                      userType={userType}
+                      isPopular={index === popularPlanIndex}
+                      billingPeriod="monthly"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No plans available at the moment.</p>
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>

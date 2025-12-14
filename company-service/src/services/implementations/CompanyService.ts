@@ -30,13 +30,14 @@ export class CompanyService implements ICompanyService {
     @inject(TYPES.RedisService) private _redisService: RedisService,
   ) { }
 
-  async register(email: string, password: string, companyName: string): Promise<CompanyResponse> {
+  async register(email: string, password: string, companyName: string, logo?: string): Promise<CompanyResponse> {
     const existingCompany = await this._companyRepository.findByEmail(email);
     if (existingCompany) throw new Error('Company already exists');
     const company = await this._companyRepository.create({
       email,
       password: password,
       companyName,
+      logo: logo || undefined,
     });
     return mapCompanyToResponse(company);
   }

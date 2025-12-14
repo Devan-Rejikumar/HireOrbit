@@ -23,6 +23,9 @@ export const Messages = {
     DUPLICATE_TITLE: 'Job with this title already exists for this company',
     ALREADY_REPORTED: 'You have already reported this job',
     JOB_NOT_FOUND: 'Job not found',
+    PERMISSION_DENIED: 'You do not have permission to modify this job',
+    SUBSCRIPTION_REQUIRED: 'Subscription required to list jobs',
+    LISTING_TOGGLED_SUCCESS: 'Job listing status updated successfully',
   },
 
   VALIDATION: {

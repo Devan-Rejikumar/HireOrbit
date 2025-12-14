@@ -103,7 +103,7 @@ const CompanyList = () => {
         company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.industry?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase())
+        company.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
     

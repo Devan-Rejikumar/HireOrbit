@@ -24,7 +24,7 @@ import {
   Mail,
   Phone,
   MapPin,
-  Globe
+  Globe,
 } from 'lucide-react';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
 import api from '@/api/axios';
@@ -43,6 +43,7 @@ interface Company {
   phone?: string;
   address?: string;
   description?: string;
+  logo?: string;
 }
 
 const CompanySettings = () => {
@@ -58,7 +59,11 @@ const CompanySettings = () => {
   const fetchCompanyProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/company/profile');
+      const response = await api.get<{ 
+        success?: boolean; 
+        data?: { company?: Company }; 
+        company?: Company;
+      }>('/company/profile');
       let companyData: Company | null = null;
       
       if (response.data && response.data.success && response.data.data && response.data.data.company) {
@@ -113,7 +118,15 @@ const CompanySettings = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Company</span>
               <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                <Building2 className="h-4 w-4 text-gray-500" />
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-6 h-6 rounded object-cover"
+                  />
+                ) : (
+                  <Building2 className="h-4 w-4 text-gray-500" />
+                )}
                 <span className="font-bold text-purple-700">{company?.companyName || 'Company'}</span>
               </div>
             </div>
@@ -144,10 +157,10 @@ const CompanySettings = () => {
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-gray-500 max-w-xs">
                     {!company?.profileCompleted 
-                      ? "Complete your profile to post jobs"
+                      ? 'Complete your profile to post jobs'
                       : !company?.isVerified 
-                      ? "Awaiting admin approval to post jobs"
-                      : "Complete profile and get approval to post jobs"
+                        ? 'Awaiting admin approval to post jobs'
+                        : 'Complete profile and get approval to post jobs'
                     }
                   </div>
                   <Button 
@@ -220,10 +233,13 @@ const CompanySettings = () => {
               </button>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
-                <CalendarIcon className="h-5 w-5" />
-                Interview Management
+                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="flex flex-col leading-tight">
+                  <span>Interview</span>
+                  <span>Management</span>
+                </span>
               </button>
               <button 
                 onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
@@ -249,9 +265,17 @@ const CompanySettings = () => {
           
           <div className="absolute bottom-6 left-6 right-6">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-purple-600" />
-              </div>
+              {company?.logo ? (
+                <img 
+                  src={company.logo} 
+                  alt={company.companyName || 'Company logo'} 
+                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-purple-600" />
+                </div>
+              )}
               <div>
                 <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
                 <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
@@ -279,13 +303,30 @@ const CompanySettings = () => {
               
               {/* Company Profile Section */}
               <Card>
-                <CardHeader>
+                  <CardHeader>
                   <CardTitle className="flex items-center gap-3">
                     <Building2 className="h-6 w-6 text-purple-600" />
                     Company Profile
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Company Logo Display */}
+                  {company?.logo && (
+                    <div className="mb-6 pb-6 border-b border-gray-200">
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Company Logo</label>
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src={company.logo} 
+                          alt={company.companyName || 'Company logo'} 
+                          className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200"
+                        />
+                        <div>
+                          <p className="text-sm text-gray-600">Your company logo is displayed across the platform</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Company Information */}
                     <div className="space-y-4">

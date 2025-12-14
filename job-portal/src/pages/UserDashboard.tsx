@@ -22,7 +22,7 @@ import {
   Clock,
   Eye,
   FileText,
-  Filter
+  Filter,
 } from 'lucide-react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
@@ -47,7 +47,7 @@ import {
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 
@@ -61,7 +61,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
 );
 
 type DateRange = '30days' | '3months' | '6months' | '1year' | 'all';
@@ -108,7 +108,7 @@ const UserDashboard = () => {
       // Load all stats in parallel
       await Promise.all([
         loadProfileCompletion(),
-        loadUpcomingInterviews()
+        loadUpcomingInterviews(),
       ]);
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
@@ -167,7 +167,7 @@ const UserDashboard = () => {
     try {
       await Promise.all([
         loadPremiumApplications(),
-        loadPremiumInterviews()
+        loadPremiumInterviews(),
       ]);
     } catch (error) {
       console.error('Error loading premium dashboard data:', error);
@@ -218,16 +218,16 @@ const UserDashboard = () => {
   const getFilterDate = (range: DateRange): Date | null => {
     const now = new Date();
     switch (range) {
-      case '30days':
-        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      case '3months':
-        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      case '6months':
-        return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-      case '1year':
-        return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      default:
-        return null;
+    case '30days':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    case '3months':
+      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    case '6months':
+      return new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    case '1year':
+      return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    default:
+      return null;
     }
   };
 
@@ -279,7 +279,7 @@ const UserDashboard = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(app => 
         app.jobTitle?.toLowerCase().includes(term) ||
-        app.companyName?.toLowerCase().includes(term)
+        app.companyName?.toLowerCase().includes(term),
       );
     }
     
@@ -294,7 +294,7 @@ const UserDashboard = () => {
     const rejected = filteredApplications.filter(a => a.status === 'REJECTED').length;
     const pending = filteredApplications.filter(a => a.status === 'PENDING' || a.status === 'REVIEWING').length;
     const scheduledInterviews = premiumInterviews.filter(i => 
-      i.status === 'PENDING' || i.status === 'CONFIRMED'
+      i.status === 'PENDING' || i.status === 'CONFIRMED',
     ).length;
     const successRate = total > 0 ? ((accepted / total) * 100).toFixed(1) : '0';
     
@@ -327,8 +327,8 @@ const UserDashboard = () => {
         data,
         backgroundColor: 'rgba(59, 130, 246, 0.5)',
         borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 1
-      }]
+        borderWidth: 1,
+      }],
     };
   }, [filteredApplications, dateRange]);
 
@@ -340,7 +340,7 @@ const UserDashboard = () => {
       SHORTLISTED: filteredApplications.filter(a => a.status === 'SHORTLISTED').length,
       ACCEPTED: filteredApplications.filter(a => a.status === 'ACCEPTED').length,
       REJECTED: filteredApplications.filter(a => a.status === 'REJECTED').length,
-      WITHDRAWN: filteredApplications.filter(a => a.status === 'WITHDRAWN').length
+      WITHDRAWN: filteredApplications.filter(a => a.status === 'WITHDRAWN').length,
     };
     
     return {
@@ -352,7 +352,7 @@ const UserDashboard = () => {
           statusCounts.SHORTLISTED,
           statusCounts.ACCEPTED,
           statusCounts.REJECTED,
-          statusCounts.WITHDRAWN
+          statusCounts.WITHDRAWN,
         ],
         backgroundColor: [
           'rgba(234, 179, 8, 0.7)',
@@ -360,7 +360,7 @@ const UserDashboard = () => {
           'rgba(168, 85, 247, 0.7)',
           'rgba(34, 197, 94, 0.7)',
           'rgba(239, 68, 68, 0.7)',
-          'rgba(156, 163, 175, 0.7)'
+          'rgba(156, 163, 175, 0.7)',
         ],
         borderColor: [
           'rgba(234, 179, 8, 1)',
@@ -368,22 +368,22 @@ const UserDashboard = () => {
           'rgba(168, 85, 247, 1)',
           'rgba(34, 197, 94, 1)',
           'rgba(239, 68, 68, 1)',
-          'rgba(156, 163, 175, 1)'
+          'rgba(156, 163, 175, 1)',
         ],
-        borderWidth: 2
-      }]
+        borderWidth: 2,
+      }],
     };
   }, [filteredApplications]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'REVIEWING': return 'bg-blue-100 text-blue-800';
-      case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
-      case 'ACCEPTED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      case 'WITHDRAWN': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+    case 'REVIEWING': return 'bg-blue-100 text-blue-800';
+    case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
+    case 'ACCEPTED': return 'bg-green-100 text-green-800';
+    case 'REJECTED': return 'bg-red-100 text-red-800';
+    case 'WITHDRAWN': return 'bg-gray-100 text-gray-800';
+    default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -722,7 +722,7 @@ const UserDashboard = () => {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: { legend: { display: false } },
-                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
                           }}
                         />
                       </div>
@@ -735,7 +735,7 @@ const UserDashboard = () => {
                           options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: { legend: { position: 'bottom' } }
+                            plugins: { legend: { position: 'bottom' } },
                           }}
                         />
                       </div>

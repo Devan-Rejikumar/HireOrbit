@@ -20,6 +20,7 @@ router.get(JOB_ROUTES.GET_JOBS_BY_COMPANY, authenticateToken, asyncHandler((req,
 router.get(JOB_ROUTES.GET_JOB_BY_ID, asyncHandler((req, res) => jobController.getJobById(req, res))); 
 router.put(JOB_ROUTES.UPDATE_JOB, authenticateToken, asyncHandler((req, res) => jobController.updateJob(req, res)));
 router.delete(JOB_ROUTES.DELETE_JOB, authenticateToken, asyncHandler((req, res) => jobController.deleteJob(req, res)));
+router.patch(JOB_ROUTES.TOGGLE_JOB_LISTING, authenticateToken, asyncHandler((req, res) => jobController.toggleJobListing(req, res)));
 router.post(JOB_ROUTES.REPORT_JOB, authenticateToken, asyncHandler((req, res) => jobReportController.reportJob(req, res)));
 router.get(JOB_ROUTES.GET_REPORTED_JOBS, authenticateToken, asyncHandler((req, res) => jobReportController.getReportedJobs(req, res)));
 router.get(JOB_ROUTES.GET_TOTAL_JOB_COUNT, asyncHandler((req, res) => jobController.getTotalJobCount(req, res)));

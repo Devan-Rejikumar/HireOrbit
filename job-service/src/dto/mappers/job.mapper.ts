@@ -18,6 +18,8 @@ export function mapJobToResponse(job: {
   createdAt: Date;
   updatedAt: Date;
   isActive?: boolean;
+  isListed?: boolean;
+  listedAt?: Date;
 }): JobResponse {
   return {
     id: job.id,
@@ -34,7 +36,9 @@ export function mapJobToResponse(job: {
     education: job.education,
     applicationDeadline: job.applicationDeadline,
     workLocation: job.workLocation,
-    isActive: job.isActive ?? true, 
+    isActive: job.isActive ?? true,
+    isListed: job.isListed ?? true,
+    listedAt: job.listedAt || job.createdAt,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   };
@@ -58,6 +62,8 @@ export function mapJobsToResponse(jobs: Array<{
   createdAt: Date;
   updatedAt: Date;
   isActive?: boolean;
+  isListed?: boolean;
+  listedAt?: Date;
 }>): JobResponse[] {
   return jobs.map(mapJobToResponse);
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Building2, MessageCircle } from 'lucide-react';
-import { ConversationResponse } from '@/api/_chatService';
+import { ConversationResponse } from '@/api/chatService';
 import { useCompanyConversations, useTotalUnreadCount } from '@/hooks/useChat';
 import api from '@/api/axios';
 import { formatDistanceToNow } from 'date-fns';
@@ -16,7 +16,7 @@ export const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
   companyId,
   isOpen,
   onClose,
-  onSelectConversation
+  onSelectConversation,
 }) => {
   const { data: totalUnread = 0 } = useTotalUnreadCount(companyId);
   // Use useCompanyConversations to get ALL conversations (not just unread) so they remain visible after marking as read
@@ -30,7 +30,7 @@ export const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
       
       for (const conversation of conversations) {
         try {
-          const response = await api.get(`/users/${conversation.userId}`);
+          const response = await api.get<{ data?: { user?: { username?: string; name?: string } } }>(`/users/${conversation.userId}`);
           const userName = response.data?.data?.user?.username ||
                           response.data?.data?.user?.name ||
                           'User';

@@ -7,25 +7,25 @@ const RegisterPage = () => {
   const getRoleContent = () => {
     if (selectedRole === 'jobseeker') {
       return {
-        title: "Find Your Dream Job",
-        subtitle: "Join thousands of job seekers who found their perfect career match",
+        title: 'Find Your Dream Job',
+        subtitle: 'Join thousands of job seekers who found their perfect career match',
         features: [
-          "Access to thousands of job opportunities",
-          "Connect with top companies and recruiters",
-          "Build your professional profile and network",
-          "Get personalized job recommendations"
-        ]
+          'Access to thousands of job opportunities',
+          'Connect with top companies and recruiters',
+          'Build your professional profile and network',
+          'Get personalized job recommendations',
+        ],
       };
     } else {
       return {
-        title: "Hire Top Talent",
-        subtitle: "Connect with skilled professionals and grow your team",
+        title: 'Hire Top Talent',
+        subtitle: 'Connect with skilled professionals and grow your team',
         features: [
-          "Post jobs and reach qualified candidates",
-          "Access a pool of verified professionals",
-          "Streamlined hiring process and tools",
-          "Track applications and manage interviews"
-        ]
+          'Post jobs and reach qualified candidates',
+          'Access a pool of verified professionals',
+          'Streamlined hiring process and tools',
+          'Track applications and manage interviews',
+        ],
       };
     }
   };

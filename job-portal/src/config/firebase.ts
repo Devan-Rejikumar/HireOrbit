@@ -1,13 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { ENV } from './env';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyBr4fx1mGnQr5vzvz1TEJcZLbtCHpWg4_I',
-  authDomain: 'hireorbit-d4744.firebaseapp.com',
-  projectId: 'hireorbit-d4744',
-  storageBucket: 'hireorbit-d4744.firebasestorage.app',
-  messagingSenderId: '1037206792006',
-  appId: '1:1037206792006:web:55c4b0d1e0a676fa28a747',
+  apiKey: ENV.FIREBASE_API_KEY,
+  authDomain: ENV.FIREBASE_AUTH_DOMAIN,
+  projectId: ENV.FIREBASE_PROJECT_ID,
+  storageBucket: ENV.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: ENV.FIREBASE_MESSAGING_SENDER_ID,
+  appId: ENV.FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

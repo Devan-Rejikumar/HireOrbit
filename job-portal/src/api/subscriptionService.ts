@@ -46,19 +46,19 @@ export const subscriptionService = {
   // Get available plans
   getPlans: async (userType: 'user' | 'company'): Promise<{ data: SubscriptionPlan[]; message: string }> => {
     const response = await api.get<{ success: boolean; data: { plans: SubscriptionPlan[] }; message: string }>(
-      `/subscriptions/plans?userType=${userType}`
+      `/subscriptions/plans?userType=${userType}`,
     );
     // Backend returns { success: true, data: { plans: [...] }, message: "..." }
     return {
       data: response.data.data?.plans || [],
-      message: response.data.message || ''
+      message: response.data.message || '',
     };
   },
 
   // Get subscription status
   getSubscriptionStatus: async (): Promise<{ data: SubscriptionStatusResponse; message: string }> => {
     const response = await api.get<{ data: SubscriptionStatusResponse; message: string }>(
-      '/subscriptions/status'
+      '/subscriptions/status',
     );
     return response.data;
   },
@@ -74,18 +74,18 @@ export const subscriptionService = {
       message: string 
     }>(
       '/subscriptions',
-      { planId, billingPeriod }
+      { planId, billingPeriod },
     );
     return {
       data: response.data.data,
-      message: response.data.message || ''
+      message: response.data.message || '',
     };
   },
 
   // Cancel subscription
   cancelSubscription: async (subscriptionId: string): Promise<{ data: Subscription; message: string }> => {
     const response = await api.post<{ data: Subscription; message: string }>(
-      `/subscriptions/${subscriptionId}/cancel`
+      `/subscriptions/${subscriptionId}/cancel`,
     );
     return response.data;
   },
@@ -94,7 +94,7 @@ export const subscriptionService = {
   upgradeSubscription: async (subscriptionId: string, newPlanId: string): Promise<{ data: Subscription; message: string }> => {
     const response = await api.post<{ data: Subscription; message: string }>(
       `/subscriptions/${subscriptionId}/upgrade`,
-      { newPlanId }
+      { newPlanId },
     );
     return response.data;
   },
@@ -102,7 +102,7 @@ export const subscriptionService = {
   // Check job posting limit (for companies)
   checkJobPostingLimit: async (): Promise<{ data: JobPostingLimit; message: string }> => {
     const response = await api.get<{ data: JobPostingLimit; message: string }>(
-      '/subscriptions/limits/job-posting'
+      '/subscriptions/limits/job-posting',
     );
     return response.data;
   },
@@ -110,7 +110,7 @@ export const subscriptionService = {
   // Check feature access
   checkFeatureAccess: async (featureName: string): Promise<{ data: { hasAccess: boolean; featureName: string }; message: string }> => {
     const response = await api.get<{ data: { hasAccess: boolean; featureName: string }; message: string }>(
-      `/subscriptions/features/${featureName}`
+      `/subscriptions/features/${featureName}`,
     );
     return response.data;
   },
@@ -118,24 +118,50 @@ export const subscriptionService = {
   // Admin methods
   admin: {
     // Get all plans
-    getAllPlans: async (): Promise<{ data: SubscriptionPlan[]; message: string }> => {
-      const response = await api.get<{ success: boolean; data: { plans: SubscriptionPlan[] }; message: string }>(
-        '/admin/subscriptions/plans'
-      );
+    getAllPlans: async (page: number = 1, limit: number = 10, userType?: string): Promise<{ 
+      data: SubscriptionPlan[]; 
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+      message: string;
+    }> => {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (userType) {
+        params.append('userType', userType);
+      }
+
+      const response = await api.get<{ 
+        success: boolean; 
+        data: { 
+          plans: SubscriptionPlan[];
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+        }; 
+        message: string;
+      }>(`/admin/subscriptions/plans?${params.toString()}`);
       return {
         data: response.data.data?.plans || [],
-        message: response.data.message || ''
+        total: response.data.data?.total || 0,
+        page: response.data.data?.page || 1,
+        limit: response.data.data?.limit || 10,
+        totalPages: response.data.data?.totalPages || 0,
+        message: response.data.message || '',
       };
     },
 
     // Get plan by ID
     getPlanById: async (id: string): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.get<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
-        `/admin/subscriptions/plans/${id}`
+        `/admin/subscriptions/plans/${id}`,
       );
       return {
         data: response.data.data?.plan,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
@@ -150,11 +176,11 @@ export const subscriptionService = {
     }): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.post<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
         '/admin/subscriptions/plans',
-        planData
+        planData,
       );
       return {
         data: response.data.data?.plan,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
@@ -168,11 +194,11 @@ export const subscriptionService = {
     }): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.put<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
         `/admin/subscriptions/plans/${id}`,
-        planData
+        planData,
       );
       return {
         data: response.data.data?.plan,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
@@ -183,21 +209,21 @@ export const subscriptionService = {
     }): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.patch<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
         `/admin/subscriptions/plans/${id}/price`,
-        prices
+        prices,
       );
       return {
         data: response.data.data?.plan,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
     // Delete plan
     deletePlan: async (id: string): Promise<{ message: string }> => {
       const response = await api.delete<{ success: boolean; message: string }>(
-        `/admin/subscriptions/plans/${id}`
+        `/admin/subscriptions/plans/${id}`,
       );
       return {
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
@@ -258,7 +284,7 @@ export const subscriptionService = {
       
       return {
         data: response.data.data,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
@@ -337,7 +363,7 @@ export const subscriptionService = {
       
       return {
         data: response.data.data,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
     },
 
@@ -368,8 +394,8 @@ export const subscriptionService = {
       
       return {
         data: response.data.data,
-        message: response.data.message || ''
+        message: response.data.message || '',
       };
-    }
-  }
+    },
+  },
 };

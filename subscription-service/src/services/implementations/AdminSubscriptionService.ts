@@ -1,6 +1,6 @@
 import { injectable, inject } from 'inversify';
 import TYPES from '../../config/types';
-import { IAdminSubscriptionService, CreatePlanInput, UpdatePlanInput, UpdatePlanPriceInput } from '../interfaces/IAdminSubscriptionService';
+import { IAdminSubscriptionService, CreatePlanInput, UpdatePlanInput, UpdatePlanPriceInput, PaginationResult } from '../interfaces/IAdminSubscriptionService';
 import { ISubscriptionPlanRepository } from '../../repositories/interfaces/ISubscriptionPlanRepository';
 import { IStripeService } from '../interfaces/IStripeService';
 import { SubscriptionPlan } from '@prisma/client';
@@ -17,8 +17,8 @@ export class AdminSubscriptionService implements IAdminSubscriptionService {
     private readonly _stripeService: IStripeService,
   ) {}
 
-  async getAllPlans(): Promise<SubscriptionPlan[]> {
-    return this._planRepository.findAll();
+  async getAllPlans(page: number = 1, limit: number = 10, userType?: string): Promise<PaginationResult<SubscriptionPlan>> {
+    return this._planRepository.findAllWithPagination(page, limit, userType);
   }
 
   async getPlanById(id: string): Promise<SubscriptionPlan | null> {

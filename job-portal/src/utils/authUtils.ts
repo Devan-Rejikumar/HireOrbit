@@ -48,7 +48,7 @@ export const getUserInfoFromToken = () => {
   return {
     userId,
     userEmail,
-    role
+    role,
   };
 };
 
@@ -58,6 +58,6 @@ export const getAuthHeaders = () => {
   return {
     'x-user-id': userId,
     'x-user-email': userEmail,
-    'x-user-role': role
+    'x-user-role': role,
   };
 };

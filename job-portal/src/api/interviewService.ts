@@ -77,8 +77,8 @@ export const _interviewService = {
   scheduleInterview: async (interviewData: CreateInterviewData): Promise<InterviewResponse> => {
     const response = await api.post<InterviewResponse>(INTERVIEWS_ENDPOINT, interviewData, {
       headers: {
-        'Content-Type': CONTENT_TYPE_JSON
-      }
+        'Content-Type': CONTENT_TYPE_JSON,
+      },
     });
     return response.data;
   },
@@ -91,8 +91,8 @@ export const _interviewService = {
   updateInterview: async (interviewId: string, updateData: UpdateInterviewData): Promise<InterviewResponse> => {
     const response = await api.put<InterviewResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}`, updateData, {
       headers: {
-        'Content-Type': CONTENT_TYPE_JSON
-      }
+        'Content-Type': CONTENT_TYPE_JSON,
+      },
     });
     return response.data;
   },
@@ -100,14 +100,14 @@ export const _interviewService = {
   cancelInterview: async (interviewId: string, reason?: string): Promise<InterviewResponse> => {
     const config = {
       headers: {
-        'Content-Type': CONTENT_TYPE_JSON
+        'Content-Type': CONTENT_TYPE_JSON,
       },
-      ...(reason && { data: { reason } })
+      ...(reason && { data: { reason } }),
     };
     
     const response = await api.delete<InterviewResponse>(
       `${INTERVIEWS_ENDPOINT}/${interviewId}`,
-      config
+      config,
     );
     return response.data;
   },
@@ -160,8 +160,8 @@ export const _interviewService = {
   makeInterviewDecision: async (interviewId: string, decisionData: InterviewDecisionData): Promise<InterviewResponse> => {
     const response = await api.post<InterviewResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}/decision`, decisionData, {
       headers: {
-        'Content-Type': CONTENT_TYPE_JSON
-      }
+        'Content-Type': CONTENT_TYPE_JSON,
+      },
     });
     return response.data;
   },
@@ -169,5 +169,5 @@ export const _interviewService = {
   getWebRTCConfig: async (interviewId: string): Promise<WebRTCConfigResponse> => {
     const response = await api.get<WebRTCConfigResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}/webrtc-config`);
     return response.data;
-  }
+  },
 };

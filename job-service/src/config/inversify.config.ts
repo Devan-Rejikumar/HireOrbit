@@ -11,6 +11,8 @@ import { JobReportRepository } from '../repositories/implementations/JobReportRe
 import { IJobReportRepository } from '../repositories/interfaces/IJobReportRepository';
 import { IJobReportService } from '../services/interfaces/IJobReportService';
 import { JobReportController } from '../controllers/JobReportController';
+import { SubscriptionValidationService } from '../services/implementations/SubscriptionValidationService';
+import { JobUnlistCronService } from '../services/implementations/JobUnlistCronService';
 
 const container = new Container();
 
@@ -20,5 +22,7 @@ container.bind<JobController>(TYPES.JobController).to(JobController);
 container.bind<IJobReportRepository>(TYPES.IJobReportRepository).to(JobReportRepository);
 container.bind<IJobReportService>(TYPES.IJobReportService).to(JobReportService);
 container.bind<JobReportController>(TYPES.JobReportController).to(JobReportController);
+container.bind<SubscriptionValidationService>(TYPES.SubscriptionValidationService).to(SubscriptionValidationService);
+container.bind<JobUnlistCronService>(TYPES.JobUnlistCronService).to(JobUnlistCronService);
 
 export default container;

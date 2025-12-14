@@ -27,7 +27,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
   applicationId,
   candidateName,
   jobTitle,
-  onSuccess
+  onSuccess,
 }) => {
   const [formData, setFormData] = useState<FormData>({
     scheduledAt: '',
@@ -35,7 +35,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
     type: 'ONLINE',
     location: '',
     meetingLink: '',
-    notes: ''
+    notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -176,7 +176,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
         type: formData.type,
         location: formData.type === 'OFFLINE' ? formData.location : undefined,
         meetingLink: formData.type === 'ONLINE' && formData.meetingLink.trim() ? formData.meetingLink : undefined,
-        notes: formData.notes || undefined
+        notes: formData.notes || undefined,
       };
 
       await _interviewService.scheduleInterview(interviewData);
@@ -191,7 +191,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
         type: 'ONLINE',
         location: '',
         meetingLink: '',
-        notes: ''
+        notes: '',
       });
       setSelectedDate(null);
       setSelectedTime('');
@@ -215,7 +215,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
         type: 'ONLINE',
         location: '',
         meetingLink: '',
-        notes: ''
+        notes: '',
       });
       setSelectedDate(null);
       setSelectedTime('');
@@ -352,7 +352,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                       {new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
                         hour: 'numeric',
                         minute: '2-digit',
-                        hour12: true
+                        hour12: true,
                       })}
                     </button>
                   ))}
@@ -374,7 +374,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                       weekday: 'long', 
                       year: 'numeric', 
                       month: 'long', 
-                      day: 'numeric' 
+                      day: 'numeric', 
                     })}
                   </div>
                   <div className="flex items-center">
@@ -382,7 +382,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                     {new Date(`2000-01-01T${selectedTime}`).toLocaleTimeString('en-US', {
                       hour: 'numeric',
                       minute: '2-digit',
-                      hour12: true
+                      hour12: true,
                     })}
                   </div>
                 </div>
@@ -399,7 +399,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                   { value: 30, label: '30 min' },
                   { value: 60, label: '1 hour' },
                   { value: 90, label: '1.5 hours' },
-                  { value: 120, label: '2 hours' }
+                  { value: 120, label: '2 hours' },
                 ].map(({ value, label }) => (
                   <button
                     key={value}
@@ -426,7 +426,7 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
                 {[
                   { value: 'ONLINE', label: 'Online Meeting', icon: Video, desc: 'Video call' },
                   { value: 'OFFLINE', label: 'In-Person', icon: MapPin, desc: 'Office visit' },
-                  { value: 'PHONE', label: 'Phone Call', icon: Phone, desc: 'Audio only' }
+                  { value: 'PHONE', label: 'Phone Call', icon: Phone, desc: 'Audio only' },
                 ].map(({ value, label, icon: Icon, desc }) => (
                   <button
                     key={value}

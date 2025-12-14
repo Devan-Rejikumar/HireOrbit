@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { subscriptionService, SubscriptionPlan } from '../api/subscriptionService';
+import { subscriptionService, SubscriptionPlan, SubscriptionFeature } from '../api/subscriptionService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { MESSAGES } from '@/constants/messages';
 import { 
   Home, 
   User, 
@@ -15,7 +16,7 @@ import {
   Search,
   CreditCard,
   Check,
-  ArrowLeft
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -38,12 +39,12 @@ export const CheckoutPage = () => {
 
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
-    role === 'jobseeker' ? user?.id || null : company?.id || null
+    role === 'jobseeker' ? user?.id || null : company?.id || null,
   );
 
   useEffect(() => {
     if (!planId) {
-      toast.error('Invalid plan selection');
+      toast.error(MESSAGES.ERROR.INVALID_PLAN_SELECTION);
       navigate(ROUTES.SUBSCRIPTIONS);
       return;
     }
@@ -57,7 +58,7 @@ export const CheckoutPage = () => {
       const selectedPlan = response.data.find(p => p.id === planId);
       
       if (!selectedPlan) {
-        toast.error('Plan not found');
+        toast.error(MESSAGES.ERROR.PLAN_NOT_FOUND);
         navigate(ROUTES.SUBSCRIPTIONS);
         return;
       }
@@ -65,7 +66,7 @@ export const CheckoutPage = () => {
       setPlan(selectedPlan);
     } catch (error) {
       console.error('Error loading plan:', error);
-      toast.error('Failed to load plan details');
+      toast.error(MESSAGES.ERROR.PLAN_DETAILS_LOAD_FAILED);
       navigate(ROUTES.SUBSCRIPTIONS);
     } finally {
       setLoading(false);
@@ -107,24 +108,29 @@ export const CheckoutPage = () => {
   // Sidebar items based on role
   const sidebarItems = role === 'company' 
     ? [
-        { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/company/dashboard' },
-        { id: 'jobs', label: 'My Jobs', icon: Briefcase, path: '/company/jobs' },
-        { id: 'applications', label: 'Applications', icon: User, path: '/company/applications' },
-        { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
-        { id: 'settings', label: 'Settings', icon: Settings, path: '/company/settings' },
-      ]
+      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/company/dashboard' },
+      { id: 'jobs', label: 'My Jobs', icon: Briefcase, path: '/company/jobs' },
+      { id: 'applications', label: 'Applications', icon: User, path: '/company/applications' },
+      { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
+      { id: 'settings', label: 'Settings', icon: Settings, path: '/company/settings' },
+    ]
     : [
-        { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/user/dashboard' },
-        { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
-        { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
-        { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
-        { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
-      ];
+      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/user/dashboard' },
+      { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
+      { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
+      { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
+      { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },
+    ];
 
   const handleSidebarClick = (item: typeof sidebarItems[0]) => {
     if (item.path) {
       navigate(item.path);
     }
+  };
+
+  // Helper function to extract feature name (handles both string and SubscriptionFeature)
+  const getFeatureName = (feature: string | SubscriptionFeature): string => {
+    return typeof feature === 'string' ? feature : feature.name;
   };
 
   // Get display features - for User Premium, add implicit features
@@ -133,37 +139,38 @@ export const CheckoutPage = () => {
       return [
         'ATS Score Checker - Optimize your resume for job applications',
         'Increased Visibility - Your profile highlighted to recruiters',
-        'Premium Badge - Shows Premium status on your profile'
+        'Premium Badge - Shows Premium status on your profile',
       ];
     }
     
     // For other plans, format the actual features
     return plan.features.map(feature => {
-      const formatted = feature
+      const featureName = getFeatureName(feature);
+      const formatted = featureName
         .replace(/_/g, ' ')
-        .replace(/\b\w/g, l => l.toUpperCase())
+        .replace(/\b\w/g, (l: string) => l.toUpperCase())
         .replace(/Ats/g, 'ATS');
       
       // Add descriptions for common features
-      if (feature === 'ats_checker') {
+      if (featureName === 'ats_checker') {
         return 'ATS Score Checker - Optimize your resume for job applications';
       }
-      if (feature === 'unlimited_jobs') {
+      if (featureName === 'unlimited_jobs') {
         return 'Unlimited job postings';
       }
-      if (feature === 'featured_jobs') {
+      if (featureName === 'featured_jobs') {
         return 'Featured job listings';
       }
-      if (feature === 'user_profile_search') {
+      if (featureName === 'user_profile_search') {
         return 'User profile search';
       }
-      if (feature === 'company_ats_filter') {
+      if (featureName === 'company_ats_filter') {
         return 'ATS-filtered resumes';
       }
-      if (feature === 'enhanced_analytics') {
+      if (featureName === 'enhanced_analytics') {
         return 'Enhanced analytics';
       }
-      if (feature === 'advanced_analytics') {
+      if (featureName === 'advanced_analytics') {
         return 'Advanced analytics';
       }
       return formatted;
@@ -338,8 +345,8 @@ export const CheckoutPage = () => {
                         {plan.name.toLowerCase() === 'free' 
                           ? 'Perfect for getting started'
                           : plan.name.toLowerCase() === 'basic'
-                          ? 'Ideal for small businesses'
-                          : 'For fast-growing businesses'}
+                            ? 'Ideal for small businesses'
+                            : 'For fast-growing businesses'}
                       </p>
                     </div>
                     <div className="text-right">

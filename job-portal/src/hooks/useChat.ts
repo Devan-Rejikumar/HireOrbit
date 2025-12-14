@@ -7,7 +7,7 @@ export const useUserConversations = (userId: string) => {
     queryKey: ['conversations', 'user', userId],
     queryFn: () => _chatService.getUserConversations(userId),
     enabled: !!userId,
-    refetchInterval: 30000
+    refetchInterval: 30000,
   });
 };
 
@@ -16,7 +16,7 @@ export const useCompanyConversations = (companyId: string) => {
     queryKey: ['conversations', 'company', companyId],
     queryFn: () => _chatService.getCompanyConversations(companyId),
     enabled: !!companyId,
-    refetchInterval: 30000
+    refetchInterval: 30000,
   });
 };
 
@@ -24,7 +24,7 @@ export const useConversation = (conversationId: string | null) => {
   return useQuery({
     queryKey: ['conversation', conversationId],
     queryFn: () => _chatService.getConversation(conversationId!),
-    enabled: !!conversationId
+    enabled: !!conversationId,
   });
 };
 
@@ -37,7 +37,7 @@ export const useConversationByApplication = (applicationId: string) => {
     },
     enabled: !!applicationId,
     retry: 2, // Retry 2 times (backend should auto-create on first attempt)
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 2000) // Exponential backoff: 1s, 2s
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 2000), // Exponential backoff: 1s, 2s
   });
 };
 
@@ -45,7 +45,7 @@ export const useMessages = (conversationId: string | null, limit?: number, skip?
   return useQuery({
     queryKey: ['messages', conversationId, limit, skip],
     queryFn: () => _chatService.getMessages(conversationId!, limit, skip),
-    enabled: !!conversationId
+    enabled: !!conversationId,
   });
 };
 
@@ -61,7 +61,7 @@ export const useMarkAsRead = () => {
       queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
       queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
       queryClient.invalidateQueries({ queryKey: ['unread-count'] });
-    }
+    },
   });
 };
 
@@ -92,7 +92,7 @@ export const useUnreadCount = (conversationId: string | null, userId: string | n
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
     staleTime: 30000, // Consider data fresh for 30s
     refetchOnWindowFocus: false,
-    refetchOnMount: true // Always refetch on mount to get latest data
+    refetchOnMount: true, // Always refetch on mount to get latest data
   });
 };
 
@@ -107,7 +107,7 @@ export const useTotalUnreadCount = (userId: string | null, isWebSocketConnected:
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
     staleTime: 30000, // Consider data fresh for 30s
     refetchOnWindowFocus: false,
-    refetchOnMount: true // Always refetch on mount to get latest data
+    refetchOnMount: true, // Always refetch on mount to get latest data
   });
 };
 
@@ -122,7 +122,7 @@ export const useConversationsWithUnread = (userId: string | null, isWebSocketCon
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
     staleTime: 30000, // Consider data fresh for 30s
     refetchOnWindowFocus: false,
-    refetchOnMount: true // Always refetch on mount to get latest data
+    refetchOnMount: true, // Always refetch on mount to get latest data
   });
 };
 

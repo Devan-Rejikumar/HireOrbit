@@ -37,7 +37,7 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({
   onToggleVideo,
   onEndCall,
   localUserName = 'You',
-  remoteUserName
+  remoteUserName,
 }) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -66,8 +66,8 @@ export const VideoCallRoom: React.FC<VideoCallRoomProps> = ({
             <h2 className="text-lg font-semibold">Video Interview</h2>
             <p className="text-sm text-gray-400">
               {isConnecting ? connectionStateDescription : 
-               isConnected ? `Connected - ${peerInfo ? `${remoteUserName || 'Peer'}` : 'Waiting for peer...'}` :
-               connectionStateDescription}
+                isConnected ? `Connected - ${peerInfo ? `${remoteUserName || 'Peer'}` : 'Waiting for peer...'}` :
+                  connectionStateDescription}
             </p>
           </div>
         </div>

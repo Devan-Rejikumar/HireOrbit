@@ -3,7 +3,7 @@ import { CompanyProfileData, CompanyProfileStepData } from '../../types/company'
 import { IBaseRepository, PaginationResult } from './IBaseRepository';
 export interface ICompanyRepository extends IBaseRepository<Company> {
   findByEmail(email: string): Promise<Company | null>;
-  createCompany(data: {email: string;password: string;companyName: string;}): Promise<Company>;
+  createCompany(data: {email: string;password: string;companyName: string;logo?: string;}): Promise<Company>;
   findById(id: string): Promise<Company | null>;
   saveOTP(email: string, otp: number): Promise<Otp>;
   findOTP(email: string): Promise<Otp | null>;

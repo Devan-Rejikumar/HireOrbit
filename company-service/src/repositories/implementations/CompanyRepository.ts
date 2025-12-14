@@ -17,7 +17,7 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
     return this.findOne({ email });
   }
 
-  async createCompany(data: { email: string; password: string; companyName: string }): Promise<Company> {
+  async createCompany(data: { email: string; password: string; companyName: string; logo?: string }): Promise<Company> {
     return this.create(data);
   }
 

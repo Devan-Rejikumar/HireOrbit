@@ -157,8 +157,15 @@ export class JobController {
         ValidationStatusCode.VALIDATION_ERROR,
       );
     }
+
+    // For non-admin users, only show listed jobs
+    // Admin users can see all jobs by explicitly setting isListed filter
+    const filters = { ...searchValidation.data };
+    if (req.user?.role !== 'admin' && filters.isListed === undefined) {
+      filters.isListed = true;
+    }
     
-    const { jobs, total } = await this._jobService.searchJobs(searchValidation.data);
+    const { jobs, total } = await this._jobService.searchJobs(filters);
     
     res.status(JobStatusCode.JOBS_SEARCHED).json(
       buildSuccessResponse({ jobs, total, page: searchValidation.data.page || 1, limit: searchValidation.data.limit || 10 }, Messages.JOB.SEARCHED_SUCCESS),
@@ -295,6 +302,39 @@ export class JobController {
     
     res.status(JobStatusCode.JOB_DELETED).json(
       buildSuccessResponse({}, Messages.JOB.DELETED_SUCCESS),
+    );
+  }
+
+  async toggleJobListing(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const companyId = req.user?.userId;
+    const { isListed } = req.body;
+
+    if (!id) {
+      throw new AppError(
+        Messages.VALIDATION.MISSING_JOB_ID,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
+      );
+    }
+
+    if (!companyId) {
+      throw new AppError(
+        Messages.VALIDATION.COMPANY_ID_REQUIRED,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
+      );
+    }
+
+    if (typeof isListed !== 'boolean') {
+      throw new AppError(
+        'isListed must be a boolean',
+        ValidationStatusCode.VALIDATION_ERROR,
+      );
+    }
+
+    const job = await this._jobService.toggleJobListing(id, companyId, isListed, req.headers.authorization);
+    
+    res.status(JobStatusCode.JOB_UPDATED).json(
+      buildSuccessResponse({ job }, Messages.JOB.LISTING_TOGGLED_SUCCESS),
     );
   }
 }

@@ -4,7 +4,7 @@ import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/compan
 import { PaginationResult } from '../../repositories/interfaces/IBaseRepository';
 
 export interface ICompanyService{
-    register(email:string,password:string,companyName:string):Promise<CompanyResponse>;
+    register(email:string,password:string,companyName:string,logo?:string):Promise<CompanyResponse>;
     login(email:string,password:string):Promise<CompanyAuthResponse>;
     refreshToken(refreshToken: string): Promise<{ accessToken: string }>;
     generateOTP(email:string):Promise<{message:string}>

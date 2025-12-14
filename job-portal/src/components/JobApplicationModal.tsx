@@ -6,6 +6,7 @@ import { FileUpload } from './ui/FileUpload';
 import { ExperienceSelector } from './ui/ExperienceSelector';
 import { _applicationService, ApplicationResponse } from '../api/applicationService';
 import { userService } from '../api/userService';
+import { MESSAGES } from '@/constants/messages';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -184,11 +185,16 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
         resumeUrl: result.data.resumeUrl || savedResume || undefined,
       });
       
-      toast.success('Application submitted successfully! 🎉');
+      toast.success(MESSAGES.SUCCESS.APPLICATION_SUBMITTED);
       onClose();
     } catch (error: unknown) {
       console.error('Application submission error:', error);
-      toast.error(error.message || 'Failed to submit application. Please try again.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : 'Failed to submit application. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }

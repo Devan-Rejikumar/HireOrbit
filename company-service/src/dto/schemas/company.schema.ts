@@ -3,6 +3,7 @@ export const CompanyRegisterSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
+  logo: z.string().optional(),
 });
 
 export const CompanyLoginSchema = z.object({
@@ -25,6 +26,7 @@ export const CompanyProfileSchema = z.object({
   contactPersonTitle: z.string().min(1, 'Contact person title is required').optional().or(z.literal('')),
   contactPersonEmail: z.string().email('Invalid contact person email').optional().or(z.literal('')),
   contactPersonPhone: z.string().max(20, 'Contact person phone too long').optional().or(z.literal('')),
+  logo: z.string().optional(),
 });
 
 export const CompanyProfileCompletionSchema = z.object({

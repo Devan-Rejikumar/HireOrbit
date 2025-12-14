@@ -19,5 +19,6 @@ export const JOB_ROUTES = {
   GET_TOTAL_JOB_COUNT: '/admin/statistics/total',
   GET_JOB_STATISTICS_TIME_SERIES: '/admin/statistics/time-series',
   GET_TOP_COMPANIES: '/admin/top-companies',
+  TOGGLE_JOB_LISTING: '/:id/toggle-listing',
 } as const;
 

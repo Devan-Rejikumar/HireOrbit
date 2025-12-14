@@ -442,7 +442,7 @@ const JobDetails = () => {
                             : applying || checkingStatus
                               ? 'bg-blue-400 text-white cursor-not-allowed'
                               : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg transform hover:-translate-y-0.5'
-                          }`}
+                        }`}
                       >
                         {applying ? (
                           <div className="flex items-center justify-center">

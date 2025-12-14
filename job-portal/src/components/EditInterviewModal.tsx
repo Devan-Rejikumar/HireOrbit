@@ -24,7 +24,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
   isOpen,
   onClose,
   interview,
-  onSuccess
+  onSuccess,
 }) => {
   const [formData, setFormData] = useState<FormData>({
     scheduledAt: '',
@@ -33,7 +33,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
     location: '',
     meetingLink: '',
     notes: '',
-    status: 'PENDING'
+    status: 'PENDING',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +50,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
         location: interview.location || '',
         meetingLink: interview.meetingLink || '',
         notes: interview.notes || '',
-        status: interview.status as FormData['status']
+        status: interview.status as FormData['status'],
       });
       setError('');
     }
@@ -103,7 +103,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
         location: formData.type === 'OFFLINE' ? formData.location : undefined,
         meetingLink: formData.type === 'ONLINE' ? formData.meetingLink : undefined,
         notes: formData.notes || undefined,
-        status: formData.status
+        status: formData.status,
       };
 
       await onSuccess(interview.id, updateData);
@@ -200,7 +200,7 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
                 {[
                   { value: 'ONLINE', icon: Video, label: 'Online' },
                   { value: 'OFFLINE', icon: MapPin, label: 'In-Person' },
-                  { value: 'PHONE', icon: Clock, label: 'Phone' }
+                  { value: 'PHONE', icon: Clock, label: 'Phone' },
                 ].map(({ value, icon: Icon, label }) => (
                   <label key={value} className="flex items-center">
                     <input

@@ -35,7 +35,7 @@ export function useWebRTC({
   config,
   userId,
   role,
-  enabled = true
+  enabled = true,
 }: UseWebRTCOptions): UseWebRTCReturn {
   console.log('🚀 useWebRTC Hook: Called with', { config, userId, role, enabled });
 
@@ -91,7 +91,7 @@ export function useWebRTC({
         const stream = await getUserMedia(true, true);
         console.log('✅ User media obtained:', {
           audioTracks: stream.getAudioTracks().length,
-          videoTracks: stream.getVideoTracks().length
+          videoTracks: stream.getVideoTracks().length,
         });
         if (!isMounted) {
           stopMediaStream(stream);
@@ -146,7 +146,7 @@ export function useWebRTC({
             console.log('🔷 ICE candidate generated, sending to:', remotePeerIdRef.current);
             signalingClientRef.current.sendIceCandidate(
               event.candidate.toJSON(),
-              remotePeerIdRef.current
+              remotePeerIdRef.current,
             );
           } else if (event.candidate === null) {
             console.log('🔷 ICE gathering complete');
@@ -158,13 +158,13 @@ export function useWebRTC({
           signalingServerUrl: config.signalingServerUrl,
           interviewId: config.interviewId,
           userId,
-          role
+          role,
         });
         const signalingClient = new WebRTCSignalingClient(
           config.signalingServerUrl,
           config.interviewId,
           userId,
-          role
+          role,
         );
         signalingClientRef.current = signalingClient;
 
@@ -214,8 +214,8 @@ export function useWebRTC({
             await peerConnection.setRemoteDescription(
               new RTCSessionDescription({
                 type: data.offer.type,
-                sdp: data.offer.sdp
-              })
+                sdp: data.offer.sdp,
+              }),
             );
             remoteDescriptionSetRef.current = true;
             console.log('🟢 Remote description set');
@@ -231,7 +231,7 @@ export function useWebRTC({
             // Convert RTCSessionDescription to JSON format
             const answerData: RTCSessionDescriptionInit = {
               type: answer.type,
-              sdp: answer.sdp || ''
+              sdp: answer.sdp || '',
             };
             signalingClient.sendAnswer(answerData, data.fromUserId);
           } catch (err) {
@@ -253,8 +253,8 @@ export function useWebRTC({
             await peerConnection.setRemoteDescription(
               new RTCSessionDescription({
                 type: data.answer.type,
-                sdp: data.answer.sdp
-              })
+                sdp: data.answer.sdp,
+              }),
             );
             remoteDescriptionSetRef.current = true;
             console.log('🟡 Remote description set from answer');
@@ -276,7 +276,7 @@ export function useWebRTC({
             for (const candidateData of iceCandidateQueueRef.current) {
               try {
                 await peerConnection.addIceCandidate(
-                  new RTCIceCandidate(candidateData)
+                  new RTCIceCandidate(candidateData),
                 );
                 console.log('🔷 Queued ICE candidate added');
               } catch (err) {
@@ -295,7 +295,7 @@ export function useWebRTC({
           const candidateData: RTCIceCandidateInit = {
             candidate: data.candidate.candidate,
             sdpMLineIndex: data.candidate.sdpMLineIndex ?? undefined,
-            sdpMid: data.candidate.sdpMid ?? undefined
+            sdpMid: data.candidate.sdpMid ?? undefined,
           };
 
           try {
@@ -345,7 +345,7 @@ export function useWebRTC({
   const createOffer = async (
     peerConnection: RTCPeerConnection,
     toUserId: string,
-    signalingClient: WebRTCSignalingClient
+    signalingClient: WebRTCSignalingClient,
   ) => {
     try {
       console.log('🟠 Creating offer for:', toUserId);
@@ -356,7 +356,7 @@ export function useWebRTC({
       // Convert RTCSessionDescription to JSON format
       const offerData: RTCSessionDescriptionInit = {
         type: offer.type,
-        sdp: offer.sdp || ''
+        sdp: offer.sdp || '',
       };
       signalingClient.sendOffer(offerData, toUserId);
       console.log('🟠 Offer sent successfully');
@@ -431,7 +431,7 @@ export function useWebRTC({
     isVideoEnabled,
     toggleAudio,
     toggleVideo,
-    endCall
+    endCall,
   };
 }
 

@@ -87,6 +87,8 @@ export class JobReportService implements IJobReportService {
         applicationDeadline: report.job.applicationDeadline,
         workLocation: report.job.workLocation,
         isActive: report.job.isActive,
+        isListed: report.job.isListed ?? true,
+        listedAt: report.job.listedAt || report.job.createdAt,
         createdAt: report.job.createdAt,
         updatedAt: report.job.updatedAt,
       };

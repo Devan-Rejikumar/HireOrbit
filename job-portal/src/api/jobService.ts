@@ -10,6 +10,8 @@ export interface Job {
   description: string;
   requirements: string;
   isActive: boolean;
+  isListed?: boolean;
+  listedAt?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -43,6 +45,10 @@ export const jobService = {
   },
   getJobDetails: async (jobId: string) => {
     const response = await api.get(`/jobs/${jobId}`);
+    return response.data;
+  },
+  toggleJobListing: async (jobId: string, isListed: boolean): Promise<{ data: { job: Job } }> => {
+    const response = await api.patch<{ data: { job: Job } }>(`/jobs/${jobId}/toggle-listing`, { isListed });
     return response.data;
   },
 };

@@ -45,7 +45,7 @@ export const InterviewVideoCall: React.FC = () => {
         setInterviewDetails({
           candidateName: interviewResponse.data.candidateName,
           companyName: interviewResponse.data.companyName,
-          jobTitle: interviewResponse.data.jobTitle
+          jobTitle: interviewResponse.data.jobTitle,
         });
 
         // Check if interview is ONLINE type
@@ -85,7 +85,7 @@ export const InterviewVideoCall: React.FC = () => {
     userId,
     userRole,
     enabled: !!webrtcConfig && !loading,
-    loading
+    loading,
   });
 
   const {
@@ -100,12 +100,12 @@ export const InterviewVideoCall: React.FC = () => {
     isVideoEnabled,
     toggleAudio,
     toggleVideo,
-    endCall
+    endCall,
   } = useWebRTC({
     config: webrtcConfig!,
     userId,
     role: userRole,
-    enabled: !!webrtcConfig && !loading
+    enabled: !!webrtcConfig && !loading,
   });
 
   // Handle end call - navigate back

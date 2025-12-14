@@ -16,7 +16,7 @@ export const NotificationBell: React.FC = () => {
     markAsRead,
     deleteNotification,
     markAllAsRead,
-    handleNotificationClick
+    handleNotificationClick,
   } = useNotificationContext();
 
   // Function to format notification message based on type
@@ -28,19 +28,19 @@ export const NotificationBell: React.FC = () => {
     
     // Fallback to formatting based on type and data
     switch (notification.type) {
-      case 'APPLICATION_RECEIVED':
-        return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;
-      case 'STATUS_UPDATED':
-        const jobTitle = notification.data.jobTitle || 'Application';
-        const newStatus = notification.data.newStatus || notification.data.status || 'unknown';
-        return `${jobTitle} status has been changed to ${newStatus}`;
-      case 'APPLICATION_WITHDRAWN':
-        return `${notification.data.applicantName || 'Someone'} withdrew their application`;
-      case 'INTERVIEW_CONFIRMED':
-        const interviewJobTitle = notification.data.jobTitle || 'the position';
-        return `Your interview for ${interviewJobTitle} has been confirmed`;
-      default:
-        return 'New notification';
+    case 'APPLICATION_RECEIVED':
+      return `${notification.data.applicantName || 'Someone'} applied for ${notification.data.jobTitle || 'a job'}`;
+    case 'STATUS_UPDATED':
+      const jobTitle = notification.data.jobTitle || 'Application';
+      const newStatus = notification.data.newStatus || 'unknown';
+      return `${jobTitle} status has been changed to ${newStatus}`;
+    case 'APPLICATION_WITHDRAWN':
+      return `${notification.data.applicantName || 'Someone'} withdrew their application`;
+    case 'INTERVIEW_CONFIRMED':
+      const interviewJobTitle = notification.data.jobTitle || 'the position';
+      return `Your interview for ${interviewJobTitle} has been confirmed`;
+    default:
+      return 'New notification';
     }
   };
 
@@ -128,7 +128,7 @@ export const NotificationBell: React.FC = () => {
             // Show list of notifications
             notifications.map((notification, index) => (
               <DropdownItem
-                key={notification.id || notification._id || `notification-${index}-${notification.createdAt}`}
+                key={notification.id || `notification-${index}-${notification.createdAt}`}
                 className={`flex flex-col items-start p-3 border-b border-gray-100 ${
                   !notification.read ? 'bg-blue-50' : ''
                 }`}

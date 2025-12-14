@@ -8,6 +8,7 @@ import { buildSuccessResponse } from 'shared-dto';
 import { AppError } from '../utils/errors/AppError';
 import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
+import cloudinary, { configureCloudinary } from '../config/cloudinary';
 
 @injectable()
 export class CompanyAuthController {
@@ -22,8 +23,47 @@ export class CompanyAuthController {
       throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
     }
     
-    const { email, password, companyName } = validationResult.data;
-    const company = await this._companyService.register(email, password, companyName);
+    const { email, password, companyName, logo } = validationResult.data;
+    
+    // Handle logo upload to Cloudinary if provided
+    let logoUrl: string | undefined = undefined;
+    if (logo && typeof logo === 'string' && logo.startsWith('data:image/')) {
+      console.log('[CompanyAuthController] Processing logo upload to Cloudinary during registration...');
+      try {
+        // Ensure Cloudinary is configured
+        if (!configureCloudinary()) {
+          console.error('[CompanyAuthController] Cloudinary configuration missing');
+          throw new AppError('Cloudinary configuration is missing. Please check environment variables.', HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        const result = await cloudinary.uploader.upload(logo, {
+          folder: 'company-logos',
+          transformation: [
+            { width: 500, height: 500, crop: 'limit' },
+            { quality: 'auto' }
+          ],
+          resource_type: 'image'
+        });
+        
+        if (!result || !result.secure_url) {
+          console.error('[CompanyAuthController] Cloudinary upload returned invalid result:', result);
+          throw new AppError('Invalid response from Cloudinary', HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
+        
+        logoUrl = result.secure_url;
+        console.log('[CompanyAuthController] Cloudinary upload successful:', result.secure_url);
+      } catch (cloudinaryError: unknown) {
+        console.error('[CompanyAuthController] Cloudinary upload error:', cloudinaryError);
+        const errorMessage = cloudinaryError instanceof Error 
+          ? cloudinaryError.message 
+          : typeof cloudinaryError === 'object' && cloudinaryError !== null && 'message' in cloudinaryError
+            ? String(cloudinaryError.message)
+            : 'Failed to upload company logo';
+        throw new AppError(errorMessage, HttpStatusCode.INTERNAL_SERVER_ERROR);
+      }
+    }
+    
+    const company = await this._companyService.register(email, password, companyName, logoUrl);
     res.status(AuthStatusCode.COMPANY_REGISTRATION_SUCCESS).json(
       buildSuccessResponse(company, Messages.COMPANY.REGISTRATION_SUCCESS),
     );

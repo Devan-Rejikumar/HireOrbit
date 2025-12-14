@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { subscriptionService, SubscriptionPlan } from '@/api/subscriptionService';
-import { FiEdit2, FiTrash2, FiPlus, FiX, FiUsers, FiBriefcase, FiEye } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiPlus, FiX, FiUsers, FiBriefcase, FiEye, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { MESSAGES } from '@/constants/messages';
 
 const AdminSubscriptionPlans: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -16,6 +17,10 @@ const AdminSubscriptionPlans: React.FC = () => {
   const [selectedPlanFeatures, setSelectedPlanFeatures] = useState<string[]>([]);
   const [selectedPlanName, setSelectedPlanName] = useState<string>('');
   const [filterUserType, setFilterUserType] = useState<'all' | 'user' | 'company'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const itemsPerPage = 5;
 
   // Form state
   const [name, setName] = useState('');
@@ -25,17 +30,22 @@ const AdminSubscriptionPlans: React.FC = () => {
   const [features, setFeatures] = useState<string>('');
   const [description, setDescription] = useState('');
 
-  const loadPlans = async () => {
+  const loadPlans = async (page?: number) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await subscriptionService.admin.getAllPlans();
+      const pageToLoad = page ?? currentPage;
+      const userTypeFilter = filterUserType !== 'all' ? filterUserType : undefined;
+      const response = await subscriptionService.admin.getAllPlans(pageToLoad, itemsPerPage, userTypeFilter);
       setPlans(response.data);
+      setTotal(response.total);
+      setTotalPages(response.totalPages);
+      setCurrentPage(response.page);
     } catch (err: unknown) {
       console.error('Failed to load plans', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
-      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to load subscription plans';
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || MESSAGES.ERROR.PLAN_LOAD_FAILED;
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -44,8 +54,15 @@ const AdminSubscriptionPlans: React.FC = () => {
   };
 
   useEffect(() => {
+    setCurrentPage(1);
+    loadPlans(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterUserType]);
+
+  useEffect(() => {
     loadPlans();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
   const resetForm = () => {
     setName('');
@@ -61,7 +78,7 @@ const AdminSubscriptionPlans: React.FC = () => {
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Plan name is required');
+      setError(MESSAGES.VALIDATION.PLAN_NAME_REQUIRED);
       return;
     }
 
@@ -86,7 +103,7 @@ const AdminSubscriptionPlans: React.FC = () => {
       if (priceMonthly.trim()) {
         const monthly = parseFloat(priceMonthly);
         if (isNaN(monthly) || monthly < 0) {
-          setError('Monthly price must be a valid non-negative number');
+          setError(MESSAGES.VALIDATION.INVALID_MONTHLY_PRICE);
           return;
         }
         planData.priceMonthly = monthly;
@@ -95,7 +112,7 @@ const AdminSubscriptionPlans: React.FC = () => {
       if (priceYearly.trim()) {
         const yearly = parseFloat(priceYearly);
         if (isNaN(yearly) || yearly < 0) {
-          setError('Yearly price must be a valid non-negative number');
+          setError(MESSAGES.VALIDATION.INVALID_YEARLY_PRICE);
           return;
         }
         planData.priceYearly = yearly;
@@ -110,10 +127,10 @@ const AdminSubscriptionPlans: React.FC = () => {
 
       if (editingPlan) {
         await subscriptionService.admin.updatePlan(editingPlan.id, planData);
-        toast.success('Subscription plan updated successfully');
+        toast.success(MESSAGES.SUCCESS.PLAN_UPDATED);
       } else {
         await subscriptionService.admin.createPlan(planData);
-        toast.success('Subscription plan created successfully');
+        toast.success(MESSAGES.SUCCESS.PLAN_CREATED);
       }
 
       resetForm();
@@ -122,7 +139,7 @@ const AdminSubscriptionPlans: React.FC = () => {
       console.error('Failed to save plan', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
-      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to save subscription plan';
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || MESSAGES.ERROR.PLAN_SAVE_FAILED;
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -160,14 +177,14 @@ const AdminSubscriptionPlans: React.FC = () => {
       setDeleteLoading(true);
       setError(null);
       await subscriptionService.admin.deletePlan(planToDelete.id);
-      toast.success('Subscription plan deleted successfully');
+      toast.success(MESSAGES.SUCCESS.PLAN_DELETED);
       await loadPlans();
       closeDeleteModal();
     } catch (err: unknown) {
       console.error('Failed to delete plan', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
-      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to delete subscription plan';
+      const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || MESSAGES.ERROR.PLAN_DELETE_FAILED;
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -180,10 +197,8 @@ const AdminSubscriptionPlans: React.FC = () => {
     return `₹${price.toFixed(2)}`;
   };
 
-  const filteredPlans = plans.filter(plan => {
-    if (filterUserType === 'all') return true;
-    return plan.userType === filterUserType;
-  });
+  // No need for client-side filtering since backend handles it
+  const filteredPlans = plans;
 
   const openFeaturesModal = (plan: SubscriptionPlan) => {
     const featureNames = plan.features?.map(f => typeof f === 'string' ? f : f.name) || [];
@@ -456,6 +471,64 @@ const AdminSubscriptionPlans: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700">
+            <div className="text-sm text-gray-400">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} plans
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                <FiChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      disabled={loading}
+                      className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-purple-600 text-white font-semibold'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || loading}
+                className="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                Next
+                <FiChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>
