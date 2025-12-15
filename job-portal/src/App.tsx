@@ -19,6 +19,8 @@ import JobDetails from './pages/JobDetails';
 import Companies from './pages/Companies';
 import NotFound from './pages/404Page';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import AboutPage from './pages/AboutPage';
+import HelpPage from './pages/HelpPage';
 
 // Lazy load heavy/less-frequently-used routes
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
@@ -43,7 +45,7 @@ const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage').then(modu
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
 const SubscriptionStatus = lazy(() => import('./components/subscription/SubscriptionStatus').then(module => ({ default: module.SubscriptionStatus })));
 const ManageSubscription = lazy(() => import('./components/subscription/ManageSubscription').then(module => ({ default: module.ManageSubscription })));
-const ATSCheckerPage = lazy(() => import('./pages/ATSCheckerPage').then(module => ({ default: module.ATSCheckerPage })));
+const ATSScoreChecker = lazy(() => import('./pages/ATSScoreChecker'));
 const InterviewVideoCall = lazy(() => import('./pages/InterviewVideoCall').then(module => ({ default: module.InterviewVideoCall })));
 
 // Loading fallback component
@@ -190,6 +192,10 @@ const AppContent = () => {
         <Route path={ROUTES.CHAT} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><Chat /></Suspense></ProtectedRoute>} />
         <Route path={ROUTES.BLOCKED} element={<Suspense fallback={<LoadingFallback />}><BlockedUser /></Suspense>} />
         
+        {/* Public content pages */}
+        <Route path={ROUTES.ABOUT} element={<PublicRoute><AboutPage /></PublicRoute>} />
+        <Route path={ROUTES.HELP} element={<PublicRoute><HelpPage /></PublicRoute>} />
+        
         {/* Subscription routes */}
         <Route path={ROUTES.SUBSCRIPTIONS} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SubscriptionPage /></Suspense></ProtectedRoute>} />
         <Route path={ROUTES.SUBSCRIPTIONS_CHECKOUT} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><CheckoutPage /></Suspense></ProtectedRoute>} />
@@ -197,7 +203,7 @@ const AppContent = () => {
         <Route path={ROUTES.SUBSCRIPTIONS_MANAGE} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><ManageSubscription /></Suspense></ProtectedRoute>} />
         
         {/* Premium features */}
-        <Route path={ROUTES.ATS_CHECKER} element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><ATSCheckerPage /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.ATS_CHECKER} element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><ATSScoreChecker /></Suspense></ProtectedRoute>} />
         
         {/* Test route for notifications */}
         <Route path={ROUTES.NOTIFICATION_TEST} element={<Suspense fallback={<LoadingFallback />}><NotificationTest /></Suspense>} />

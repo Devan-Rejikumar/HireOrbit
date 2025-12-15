@@ -18,6 +18,8 @@ const ComponentLoader = () => (
   </div>
 );
 
+import BannerCarousel from '@/components/BannerCarousel';
+
 const Index = () => {
   console.log('Rendering job portal landing page');
   
@@ -33,6 +35,11 @@ const Index = () => {
           <FeaturedJobs />
         </Suspense>
       </LazyComponent>
+      
+      {/* Banner Carousel - after Featured Jobs */}
+      <div className="container mx-auto px-4 py-8">
+        <BannerCarousel />
+      </div>
       
       {/* Lazy load CompanyShowcase when it comes into view */}
       <LazyComponent fallback={<ComponentLoader />}>

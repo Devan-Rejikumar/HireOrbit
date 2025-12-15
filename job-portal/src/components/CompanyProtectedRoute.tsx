@@ -5,8 +5,14 @@ import { useAuth } from '@/context/AuthContext';
 const CompanyProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, role } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [hasCompanyToken, setHasCompanyToken] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Check cookies directly for immediate authentication check
+    const cookies = document.cookie.split(';');
+    const hasToken = cookies.some(cookie => cookie.trim().startsWith('companyAccessToken='));
+    setHasCompanyToken(hasToken);
+    
     // Set loading to false after initial mount
     const timer = setTimeout(() => {
       setLoading(false);
@@ -20,8 +26,10 @@ const CompanyProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <div>Loading...</div>;
   }
   
-  // Check auth and redirect if needed
-  if (!isAuthenticated || role !== 'company') {
+  // Check auth: either from cookies (immediate) or from AuthContext (after load)
+  const isAuthorized = hasCompanyToken || (isAuthenticated && role === 'company');
+  
+  if (!isAuthorized) {
     return <Navigate to="/login" replace />;
   }
   

@@ -17,6 +17,7 @@ import { IUserServiceClient } from '../services/interfaces/IUserServiceClient';
 import { UserServiceClient } from '../services/implementations/UserServiceClient';
 import { IJobServiceClient } from '../services/interfaces/IJobServiceClient';
 import { JobServiceClient } from '../services/implementations/JobServiceClient';
+import { AtsController } from '../controllers/AtsController';
 import { TYPES } from './types';
 
 const container = new Container();
@@ -34,5 +35,6 @@ container.bind<IInterviewService>(TYPES.IInterviewService).to(InterviewService);
 container.bind<InterviewController>(TYPES.InterviewController).to(InterviewController);
 container.bind<IUserServiceClient>(TYPES.IUserServiceClient).to(UserServiceClient);
 container.bind<IJobServiceClient>(TYPES.IJobServiceClient).to(JobServiceClient);
+container.bind<AtsController>(TYPES.AtsController).to(AtsController);
 
 export { container };

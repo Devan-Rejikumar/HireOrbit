@@ -7,7 +7,8 @@ export const SERVICE_ROUTES = {
     INTERVIEWS: '/api/interviews',
     NOTIFICATIONS: '/api/notifications',
     CHAT: '/api/chat',
-    SUBSCRIPTIONS: '/api/subscriptions'
+    SUBSCRIPTIONS: '/api/subscriptions',
+    ATS: '/api/ats'
 } as const;
 
 export const ROUTES = {

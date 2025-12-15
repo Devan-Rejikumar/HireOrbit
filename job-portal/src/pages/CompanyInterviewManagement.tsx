@@ -138,10 +138,17 @@ const CompanyInterviewManagement = () => {
     }
   };
 
-  const filteredInterviews = interviews.filter(interview => {
-    if (statusFilter === 'ALL') return true;
-    return interview.status === statusFilter;
-  });
+  const filteredInterviews = interviews
+    .filter(interview => {
+      if (statusFilter === 'ALL') return true;
+      return interview.status === statusFilter;
+    })
+    .sort((a, b) => {
+      // Sort by scheduledAt date in descending order (most recent first)
+      const dateA = new Date(a.scheduledAt).getTime();
+      const dateB = new Date(b.scheduledAt).getTime();
+      return dateB - dateA;
+    });
 
   const handleEditInterview = (interview: InterviewWithDetails) => {
     setEditingInterview(interview);

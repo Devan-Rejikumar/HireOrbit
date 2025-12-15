@@ -4,7 +4,8 @@ import { container } from './config/inversify.config';
 import { IEventService } from './services/interfaces/IEventService';
 import applicationRoutes from './routes/ApplicationRoutes';
 import interviewRoutes from './routes/InterviewRoutes';
-import { APPLICATION_ROUTES, INTERVIEW_ROUTES } from './constants/routes';
+import atsRoutes from './routes/AtsRoutes';
+import { APPLICATION_ROUTES, INTERVIEW_ROUTES, ATS_ROUTES } from './constants/routes';
 import { TYPES } from './config/types';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
@@ -72,6 +73,7 @@ app.get('/health', (req, res) => {
 
 app.use(APPLICATION_ROUTES.API_BASE_PATH, applicationRoutes);
 app.use(INTERVIEW_ROUTES.API_BASE_PATH, interviewRoutes);
+app.use(ATS_ROUTES.API_BASE_PATH, atsRoutes);
 
 app.use(ErrorHandler);
 

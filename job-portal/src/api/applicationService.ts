@@ -12,6 +12,7 @@ export interface Application {
   experience?: string;
   resumeUrl?: string;
   appliedAt: string;
+  createdAt?: string;
   updatedAt: string;
   jobTitle?: string;
   companyName?: string;

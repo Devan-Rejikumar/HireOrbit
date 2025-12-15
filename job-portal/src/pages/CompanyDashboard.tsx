@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Briefcase, Plus, LogOut, UserCheck, MapPin, Edit, Trash2, ChevronLeft, ChevronRight, TrendingUp, Calendar, CheckCircle, AlertCircle, Settings, BarChart3, Eye, FileText, Star, Mail, Home, MessageSquare, User, GraduationCap, Clock, CreditCard, Bell, ChevronDown, ArrowRight, Calendar as CalendarIcon, RefreshCw, XCircle, Search, Lock } from 'lucide-react';
+import { settingsService } from '@/api/settingsService';
 import api from '@/api/axios';
 import EditJobModal from '@/components/EditJobModal';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
@@ -17,7 +18,8 @@ import { useTotalUnreadCount, useCompanyConversations, useMarkAsRead, useMessage
 import { ConversationResponse } from '@/api/chatService';
 import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
 import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
-import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
+import { SubscriptionStatusResponse } from '@/api/subscriptionService';
+import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 import { _applicationService, Application } from '@/api/applicationService';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
 import toast from 'react-hot-toast';
@@ -81,6 +83,12 @@ const CompanyDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profileStep, setProfileStep] = useState<ProfileStep | null>(null);
   const [jobCount, setJobCount] = useState<number>(0);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  
+  // Refs to prevent duplicate calls from React StrictMode
+  const hasFetchedInitialData = useRef(false);
+  const isFetchingPremiumData = useRef(false);
+  const hasFetchedJobs = useRef<string | null>(null);
   
   // New dashboard states
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -136,10 +144,19 @@ const CompanyDashboard = () => {
   const [jobUpdatesPage, setJobUpdatesPage] = useState(1);
   const jobUpdatesPageSize = 2;
 
-  // Premium dashboard states
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatusResponse | null>(null);
-  const [currentPlan, setCurrentPlan] = useState<'free' | 'basic' | 'premium'>('free');
-  const [isPremium, setIsPremium] = useState(false);
+  // Premium dashboard states - use React Query hook for subscription status
+  const { data: subscriptionStatus } = useSubscriptionStatus('company' as 'user' | 'company');
+  const currentPlan = useMemo(() => {
+    if (!subscriptionStatus) return 'free';
+    const plan = subscriptionStatus.plan;
+    const planName = plan?.name?.toLowerCase() || 'free';
+    const isActive = subscriptionStatus.isActive === true;
+    
+    if (planName === 'premium' && isActive) return 'premium';
+    if (planName === 'basic' && isActive) return 'basic';
+    return 'free';
+  }, [subscriptionStatus]);
+  const isPremium = currentPlan === 'premium';
   const [premiumApplications, setPremiumApplications] = useState<Application[]>([]);
   const [premiumInterviews, setPremiumInterviews] = useState<InterviewWithDetails[]>([]);
   const [dateRange, setDateRange] = useState<DateRange>('30days');
@@ -200,27 +217,51 @@ const CompanyDashboard = () => {
   }, [selectedConversation, role]);
 
   useEffect(() => {
+    // Prevent duplicate calls from React StrictMode
+    if (hasFetchedInitialData.current) return;
+    hasFetchedInitialData.current = true;
+    
     fetchCompanyProfile();
     fetchJobCount();
-    loadSubscriptionStatus();
+    // Subscription status is now loaded via useSubscriptionStatus hook
+    
+    // Fetch site logo
+    const fetchLogo = async () => {
+      try {
+        const response = await settingsService.getSettings();
+        if (response.data?.logoUrl) {
+          setLogoUrl(response.data.logoUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching logo:', error);
+      }
+    };
+    fetchLogo();
+    
+    // Refresh logo every 30 seconds
+    const interval = setInterval(fetchLogo, 30000);
+    return () => clearInterval(interval);
   }, []);
 
+  // Consolidated effect for premium data loading
   useEffect(() => {
     if (activeSection === 'overview' && company?.id) {
-      // Always load data for stats, but premium features are gated
-      loadPremiumDashboardData();
+      // Prevent duplicate calls
+      if (isFetchingPremiumData.current) return;
+      isFetchingPremiumData.current = true;
+      
+      loadPremiumDashboardData().finally(() => {
+        isFetchingPremiumData.current = false;
+      });
     }
-  }, [activeSection, company?.id, dateRange]);
-
-  // Load data when plan changes
-  useEffect(() => {
-    if (activeSection === 'overview' && company?.id && currentPlan !== 'free') {
-      loadPremiumDashboardData();
-    }
-  }, [currentPlan]);
+  }, [activeSection, company?.id, dateRange, currentPlan]);
 
   useEffect(() => {
     if (company?.companyName) {
+      // Prevent duplicate calls
+      if (hasFetchedJobs.current && hasFetchedJobs.current === company.companyName) return;
+      hasFetchedJobs.current = company.companyName;
+      
       fetchJobs();
       setSelectedCompany(company.companyName);
     }
@@ -235,13 +276,15 @@ const CompanyDashboard = () => {
       if (allApplications.length === 0 || allInterviews.length === 0) {
         try {
           // Load applications
-          const appsResponse = await api.get<{ data?: { applications?: Application[] } }>('/applications/company/applications');
-          allApplications = appsResponse.data?.data?.applications || appsResponse.data?.applications || [];
+          const appsResponse = await api.get<{
+            data?: { applications?: Application[] };
+            applications?: Application[];
+          }>('/applications/company/applications');
+          allApplications = appsResponse.data?.data?.applications || [];
           
           // Load interviews
           const interviewsResponse = await _interviewService.getCompanyInterviews();
-          allInterviews = interviewsResponse.data?.interviews || interviewsResponse.data || [];
-          allInterviews = Array.isArray(allInterviews) ? allInterviews : [];
+          allInterviews = Array.isArray(interviewsResponse.data) ? interviewsResponse.data : [];
         } catch (error) {
           console.error('Error loading dashboard data:', error);
         }
@@ -357,33 +400,7 @@ const CompanyDashboard = () => {
     }
   };
 
-  const loadSubscriptionStatus = async () => {
-    try {
-      const response = await subscriptionService.getSubscriptionStatus();
-      setSubscriptionStatus(response.data);
-      const plan = response.data?.plan;
-      const planName = plan?.name?.toLowerCase() || 'free';
-      const isActive = response.data?.isActive === true;
-      
-      if (planName === 'premium' && isActive) {
-        setCurrentPlan('premium');
-        setIsPremium(true);
-      } else if (planName === 'basic' && isActive) {
-        setCurrentPlan('basic');
-        setIsPremium(false);
-      } else {
-        setCurrentPlan('free');
-        setIsPremium(false);
-      }
-    } catch (error: unknown) {
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
-      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
-        setCurrentPlan('free');
-        setIsPremium(false);
-      }
-    }
-  };
+  // Subscription status is now loaded via useSubscriptionStatus hook
 
   const loadPremiumDashboardData = async () => {
     if (!company?.id) return;
@@ -415,8 +432,11 @@ const CompanyDashboard = () => {
 
   const loadPremiumApplications = async () => {
     try {
-      const response = await api.get<{ data?: { applications?: Application[] } }>('/applications/company/applications');
-      let apps: Application[] = response.data?.data?.applications || response.data?.applications || [];
+      const response = await api.get<{
+        data?: { applications?: Application[] };
+        applications?: Application[];
+      }>('/applications/company/applications');
+      let apps: Application[] = response.data?.data?.applications || [];
       
       // Filter by date range
       const filterDate = getFilterDate(dateRange);
@@ -437,8 +457,7 @@ const CompanyDashboard = () => {
   const loadPremiumInterviews = async () => {
     try {
       const response = await _interviewService.getCompanyInterviews();
-      const interviewsList = response.data?.interviews || response.data || [];
-      setPremiumInterviews(Array.isArray(interviewsList) ? interviewsList : []);
+      setPremiumInterviews(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error loading premium interviews:', error);
       setPremiumInterviews([]);
@@ -821,11 +840,32 @@ const CompanyDashboard = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             {/* Hire Orbit Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+              {logoUrl ? (
+                <>
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 p-0.5 shadow-lg">
+                      <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                        <img src={logoUrl} alt="HireOrbit" className="h-full w-full object-contain p-1.5" />
+                      </div>
+                    </div>
+                  </div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    HireOrbit
+                  </h1>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 p-0.5 shadow-lg">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                      <Briefcase className="h-6 w-6 text-blue-600" />
+                    </div>
+                  </div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    HireOrbit
+                  </h1>
+                </>
+              )}
             </div>
             
             {/* Company Info */}

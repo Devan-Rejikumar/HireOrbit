@@ -38,6 +38,14 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
   } else if (path.startsWith(SERVICE_ROUTES.INTERVIEWS)) {
     applicationServiceProxy(req, res, next);
     
+  } else if (path.startsWith(SERVICE_ROUTES.ATS)) {
+    const contentType = req.headers['content-type'];
+    if (contentType && contentType.includes('multipart/form-data')) {
+      applicationServiceMultipartProxy(req, res, next);
+    } else {
+      applicationServiceProxy(req, res, next);
+    }
+
   } else if (path.startsWith(SERVICE_ROUTES.NOTIFICATIONS)) {
     notificationServiceProxy(req, res, next);
     

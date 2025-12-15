@@ -103,3 +103,31 @@ model Skill {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 }
+
+model SiteSettings {
+  id        String   @id @default(uuid())
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  type      String   @default("promotion") // 'placement', 'testimonial', 'promotion', 'other'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContentPage {
+  id        String   @id @default(uuid())
+  slug      String   @unique // 'about', 'help'
+  title     String
+  content   String   @db.Text // HTML content
+  updatedAt DateTime @updatedAt
+  updatedBy String?  // Admin user ID who last updated
+}

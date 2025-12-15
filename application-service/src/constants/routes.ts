@@ -36,3 +36,9 @@ export const INTERVIEW_ROUTES = {
   GET_WEBRTC_CONFIG: '/:id/webrtc-config',
 } as const;
 
+export const ATS_ROUTES = {
+  API_BASE_PATH: '/api/ats',
+  ANALYZE: '/analyze',
+  ANALYZE_APPLICATION: '/analyze-application/:applicationId',
+} as const;
+

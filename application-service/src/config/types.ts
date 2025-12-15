@@ -10,4 +10,5 @@ export const TYPES = {
   InterviewController: Symbol.for('InterviewController'),
   IUserServiceClient: Symbol.for('IUserServiceClient'),
   IJobServiceClient: Symbol.for('IJobServiceClient'),
+  AtsController: Symbol.for('AtsController'),
 };

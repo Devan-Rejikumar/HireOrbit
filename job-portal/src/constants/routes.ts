@@ -49,5 +49,7 @@ export const ROUTES = {
   INTERVIEW_VIDEO: (interviewId: string) => `/interview/${interviewId}/video`,
   INTERVIEW_VIDEO_PATTERN: '/interview/:interviewId/video',
   NOTIFICATION_TEST: '/notification-test',
+  ABOUT: '/about',
+  HELP: '/help',
 } as const;
 

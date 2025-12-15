@@ -64,21 +64,35 @@ const CompanyShowcase = () => {
       .slice(0, 6);
   }, [jobs]);
 
+  // Create a stable string representation of topCompanies for comparison
+  const topCompaniesKey = useMemo(() => {
+    return topCompanies.map(c => `${c.name}-${c.companyId || ''}-${c.jobCount}`).join('|');
+  }, [topCompanies]);
+
   // Fetch company profiles when topCompanies changes
   useEffect(() => {
+    let isMounted = true;
+
     const fetchProfiles = async () => {
       if (topCompanies.length === 0) {
-        setCompanies([]);
-        setLoading(false);
+        if (isMounted) {
+          setCompanies([]);
+          setLoading(false);
+        }
         return;
       }
 
-      setLoading(true);
+      if (isMounted) {
+        setLoading(true);
+      }
+      
       const companiesWithProfiles: Company[] = [];
       
       // Fetch company profiles only for registered companies (those with companyId)
       // Add delays between requests to avoid rate limiting
       for (let i = 0; i < topCompanies.length; i++) {
+        if (!isMounted) break; // Stop if component unmounted
+        
         const company = { ...topCompanies[i] };
         if (!company.companyId) {
           companiesWithProfiles.push(company);
@@ -117,12 +131,18 @@ const CompanyShowcase = () => {
         companiesWithProfiles.push(company);
       }
       
-      setCompanies(companiesWithProfiles);
-      setLoading(false);
+      if (isMounted) {
+        setCompanies(companiesWithProfiles);
+        setLoading(false);
+      }
     };
 
     fetchProfiles();
-  }, [topCompanies]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [topCompaniesKey]);
 
   const handleCompanyClick = async (company: Company) => {
     setSelectedCompany(company);

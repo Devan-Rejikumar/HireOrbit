@@ -7,13 +7,14 @@ import AdminIndustryCategories from '@/components/admin/AdminIndustryCategories'
 import AdminStatistics from '@/components/admin/AdminStatistics';
 import AdminSubscriptionPlans from '@/components/admin/AdminSubscriptionPlans';
 import AdminRevenue from '@/components/admin/AdminRevenue';
+import AdminSiteSettings from '@/components/admin/AdminSiteSettings';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import api from '@/api/axios';
-import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase, FiLayers, FiCreditCard } from 'react-icons/fi';
+import { FiLogOut, FiUsers, FiHome, FiBarChart2, FiShield, FiBriefcase, FiLayers, FiCreditCard, FiSettings } from 'react-icons/fi';
 
 const AdminDashboard: React.FC = () => {
-  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management' | 'skills' | 'industries' | 'subscriptions' | 'revenue'>('dashboard');
+  const [selected, setSelected] = useState<'dashboard' | 'users' | 'company-list' | 'job-management' | 'skills' | 'industries' | 'subscriptions' | 'revenue' | 'settings'>('dashboard');
   const navigate = useNavigate();
 
   const handleLogout = async() =>{
@@ -135,6 +136,17 @@ const AdminDashboard: React.FC = () => {
               <span className="text-lg font-bold">₹</span>
               Revenue
             </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200 whitespace-nowrap ${
+                selected === 'settings' 
+                  ? 'bg-purple-600 text-white font-semibold shadow-lg border-l-4 border-purple-400' 
+                  : 'hover:bg-gray-700 text-gray-300 hover:text-white'
+              }`}
+              onClick={() => setSelected('settings')}
+            >
+              <FiSettings size={20} />
+              Site Settings
+            </button>
           </nav>
         </aside>
   
@@ -150,6 +162,7 @@ const AdminDashboard: React.FC = () => {
           {selected === 'industries' && <AdminIndustryCategories />}
           {selected === 'subscriptions' && <AdminSubscriptionPlans />}
           {selected === 'revenue' && <AdminRevenue />}
+          {selected === 'settings' && <AdminSiteSettings />}
         </main>
       </div>
     </div>

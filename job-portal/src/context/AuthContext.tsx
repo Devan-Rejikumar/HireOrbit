@@ -17,7 +17,7 @@ interface AdminMeResponse {
   admin: User;
 }
 
-interface User {
+export interface User {
   id: string;
   username: string;
   email: string;
@@ -75,9 +75,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<Role>(null);
 
   useEffect(() => {
+    // First, try to get role from localStorage
     const storedRole = localStorage.getItem('role') as Role | null;
     if (storedRole) {
       setRole(storedRole);
+      return;
+    }
+    
+    // If no role in localStorage, check cookies to determine role
+    const cookies = document.cookie.split(';');
+    const hasAdminToken = cookies.some(cookie => cookie.trim().startsWith('adminAccessToken='));
+    const hasCompanyToken = cookies.some(cookie => cookie.trim().startsWith('companyAccessToken='));
+    const hasUserToken = cookies.some(cookie => {
+      const trimmed = cookie.trim();
+      return trimmed.startsWith('accessToken=') || trimmed.startsWith('token=');
+    });
+    
+    // Set role based on which token exists
+    if (hasAdminToken) {
+      setRole('admin');
+      localStorage.setItem('role', 'admin');
+    } else if (hasCompanyToken) {
+      setRole('company');
+      localStorage.setItem('role', 'company');
+    } else if (hasUserToken) {
+      setRole('jobseeker');
+      localStorage.setItem('role', 'jobseeker');
     }
   }, []);
 

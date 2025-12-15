@@ -488,58 +488,60 @@ const UserDashboard = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
-          <nav className="p-6">
-            <div className="space-y-1 mb-8">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
-              {sidebarItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeSection === item.id;
-                
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSidebarClick(item)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left relative transition-colors ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-700 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge && item.badge > 0 && (
-                      <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
-                        {item.badge > 9 ? '9+' : item.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            
-            <div className="space-y-1">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Settings</h3>
-              <button 
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <Settings className="h-5 w-5" />
-                Settings
-              </button>
-            </div>
-          </nav>
-          
-          {/* User Info at Bottom */}
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-300">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
-                <span className="text-white font-semibold">
-                  {user?.username?.charAt(0).toUpperCase()}
-                </span>
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 md:sticky md:top-16 md:h-[calc(100vh-4rem)] self-start">
+          <div className="flex h-full flex-col">
+            <nav className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-1 mb-8">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeSection === item.id;
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleSidebarClick(item)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left relative transition-colors ${
+                        isActive
+                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge && item.badge > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
-                <div className="text-xs text-blue-600 truncate">{user?.email || 'email@example.com'}</div>
+              
+              <div className="space-y-1">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Settings</h3>
+                <button 
+                  className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                >
+                  <Settings className="h-5 w-5" />
+                  Settings
+                </button>
+              </div>
+            </nav>
+            
+            {/* User Info at Bottom */}
+            <div className="p-6 pt-0">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-300">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-white font-semibold">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
+                  <div className="text-xs text-blue-600 truncate">{user?.email || 'email@example.com'}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -901,4 +903,3 @@ const UserDashboard = () => {
 };
 
 export default UserDashboard;
-

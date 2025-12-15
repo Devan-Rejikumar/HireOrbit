@@ -1,67 +1,33 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { subscriptionService, SubscriptionStatusResponse, SubscriptionPlan } from '../../api/subscriptionService';
+import { subscriptionService, SubscriptionPlan } from '../../api/subscriptionService';
 import { CreditCard, Sparkles } from 'lucide-react';
+import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
+import { useQuery } from '@tanstack/react-query';
 
 interface SubscriptionBannerProps {
   userType: 'user' | 'company';
 }
 
 export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
-  const [status, setStatus] = useState<SubscriptionStatusResponse | null>(null);
-  const [premiumPlan, setPremiumPlan] = useState<SubscriptionPlan | null>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    loadSubscriptionData();
-  }, [userType]);
-
-  const loadSubscriptionData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load plans first (public endpoint)
-      let plansResponse;
-      try {
-        plansResponse = await subscriptionService.getPlans(userType);
-        // Find premium plan - only by name, not by price
-        const premium = plansResponse.data.find(plan => 
-          plan.name.toLowerCase() === 'premium',
-        );
-        setPremiumPlan(premium || null);
-      } catch (error) {
-        console.error('Error loading plans:', error);
-        // If plans fail, use default pricing
-        setPremiumPlan(null);
-      }
-
-      // Try to get subscription status (requires auth)
-      try {
-        const statusResponse = await subscriptionService.getSubscriptionStatus();
-        if (statusResponse?.data) {
-          setStatus(statusResponse.data);
-        }
-      } catch (error: unknown) {
-        // If 401/403, user is not authenticated or on free plan - that's okay
-        const isAxiosError = error && typeof error === 'object' && 'response' in error;
-        const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
-        if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
-          // User is not authenticated or doesn't have subscription - treat as free
-          setStatus(null);
-        } else {
-          console.error('Error loading subscription status:', error);
-          setStatus(null);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading subscription data:', error);
-      setStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: status } = useSubscriptionStatus(userType);
+  
+  // Load plans with React Query (cached and deduplicated)
+  const { data: plansData, isLoading: loadingPlans } = useQuery({
+    queryKey: ['subscription-plans', userType],
+    queryFn: async () => {
+      const response = await subscriptionService.getPlans(userType);
+      return response.data;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes - plans don't change often
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
+    retry: 1,
+  });
+  
+  const premiumPlan = plansData?.find(plan => plan.name.toLowerCase() === 'premium') || null;
+  const loading = loadingPlans;
 
   if (loading) {
     return null;

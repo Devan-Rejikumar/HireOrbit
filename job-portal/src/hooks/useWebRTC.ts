@@ -56,6 +56,7 @@ export function useWebRTC({
   const isInitiatorRef = useRef<boolean>(false);
   const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
   const remoteDescriptionSetRef = useRef<boolean>(false);
+  const isInitializingRef = useRef<boolean>(false);
 
   // Initialize WebRTC connection
   useEffect(() => {
@@ -78,9 +79,16 @@ export function useWebRTC({
       return;
     }
 
+    // Prevent multiple simultaneous initializations
+    if (isInitializingRef.current) {
+      console.warn('⚠️ useWebRTC: Initialization already in progress, skipping duplicate call');
+      return;
+    }
+
     let isMounted = true;
 
     const initializeWebRTC = async () => {
+      isInitializingRef.current = true;
       console.log('🎬 initializeWebRTC: Starting initialization...');
       try {
         setIsConnecting(true);
@@ -330,6 +338,8 @@ export function useWebRTC({
           setError(errorMessage);
           setIsConnecting(false);
         }
+      } finally {
+        isInitializingRef.current = false;
       }
     };
 
@@ -385,6 +395,7 @@ export function useWebRTC({
     remoteDescriptionSetRef.current = false;
     remotePeerIdRef.current = null;
     isInitiatorRef.current = false;
+    isInitializingRef.current = false;
     
     setLocalStream(null);
     setRemoteStream(null);

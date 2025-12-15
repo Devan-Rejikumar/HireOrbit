@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, Settings, ChevronLeft, ChevronRight, User, X, MessageCircle } from 'lucide-react';
+import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, Settings, ChevronLeft, ChevronRight, User, X, MessageCircle, FileCheck } from 'lucide-react';
 import { CompanyHeader } from '@/components/CompanyHeader';
 import { useTotalUnreadCount } from '@/hooks/useChat';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,8 @@ import api from '@/api/axios';
 import ScheduleInterviewModal from '@/components/ScheduleInterviewModal';
 import { _interviewService } from '@/api/interviewService';
 import { ChatButton } from '@/components/ChatButton';
+import { atsService } from '@/api/atsService';
+import toast from 'react-hot-toast';
 
 interface Application {
   id: string;
@@ -19,12 +21,14 @@ interface Application {
   userEmail: string;
   userPhone?: string;
   jobTitle: string;
+  jobId?: string;
   status: string;
   coverLetter: string;
   expectedSalary: string;
   experience: string;
   resumeUrl?: string;
   appliedAt: string;
+  atsScore?: number;
   userProfile?: unknown;
 }
 
@@ -45,6 +49,9 @@ const CompanyApplications = () => {
   const [company, setCompany] = useState<{ id?: string; companyName?: string; email?: string; profileCompleted?: boolean; isVerified?: boolean; logo?: string } | null>(null);
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [selectedAppForActions, setSelectedAppForActions] = useState<Application | null>(null);
+  const [atsScores, setAtsScores] = useState<Record<string, number>>({});
+  const [analyzingAppId, setAnalyzingAppId] = useState<string | null>(null);
+
 
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
@@ -59,8 +66,19 @@ const CompanyApplications = () => {
 
   const fetchCompanyProfile = async () => {
     try {
-      const response = await api.get('/company/profile');
-      setCompany(response.data?.data?.company || null);
+      const response = await api.get<{
+        data?: {
+          company?: {
+            id?: string;
+            companyName?: string;
+            email?: string;
+            profileCompleted?: boolean;
+            isVerified?: boolean;
+            logo?: string;
+          };
+        };
+      }>('/company/profile');
+      setCompany(response.data?.data?.company ?? null);
     } catch (error) {
       console.error('Error fetching company profile:', error);
     }
@@ -85,8 +103,7 @@ const CompanyApplications = () => {
     try {
       const response = await _interviewService.getCompanyInterviews();
       const interviews = response.data || [];
-      
-      // Create a set of application IDs that have interviews scheduled
+
       const appIdsWithInterviews = new Set(interviews.map(interview => interview.applicationId));
       setApplicationsWithInterviews(appIdsWithInterviews);
     } catch (error) {
@@ -110,6 +127,29 @@ const CompanyApplications = () => {
     }
   }, []);
 
+  const handleAnalyzeResume = useCallback(async (applicationId: string, resumeUrl?: string) => {
+    if (!resumeUrl) {
+      toast.error('Resume not available for this application');
+      return;
+    }
+
+    try {
+      setAnalyzingAppId(applicationId);
+      const result = await atsService.analyzeApplicationResume(applicationId);
+      setAtsScores(prev => ({
+        ...prev,
+        [applicationId]: result.score,
+      }));
+      toast.success(`ATS Score: ${result.score}%`);
+    } catch (error: any) {
+      console.error('Error analyzing resume:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to analyze resume';
+      toast.error(errorMessage);
+    } finally {
+      setAnalyzingAppId(null);
+    }
+  }, []);
+
   const handleStatusUpdate = useCallback(async (applicationId: string, newStatus: string) => {
     try {
       await api.put(`/applications/${applicationId}/status`, { 
@@ -126,7 +166,7 @@ const CompanyApplications = () => {
   const handleScheduleInterview = useCallback((app: Application) => {
     setSchedulingApp(app);
     setShowScheduleModal(true);
-    setShowActionsModal(false); // Close actions modal when opening schedule modal
+    setShowActionsModal(false);
   }, []);
 
   const handleOpenActionsModal = useCallback((app: Application) => {
@@ -448,10 +488,34 @@ const CompanyApplications = () => {
                             </div>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                              <span className="text-sm text-gray-900">4.5</span>
-                            </div>
+                            {analyzingAppId === app.id ? (
+                              <div className="flex items-center">
+                                <Loader2 className="h-4 w-4 animate-spin text-purple-600 mr-1" />
+                                <span className="text-sm text-gray-600">Analyzing...</span>
+                              </div>
+                            ) : atsScores[app.id] !== undefined ? (
+                              <div className="flex items-center">
+                                <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                                  atsScores[app.id] >= 80 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : atsScores[app.id] >= 50 
+                                      ? 'bg-yellow-100 text-yellow-700' 
+                                      : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {atsScores[app.id]}%
+                                </span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleAnalyzeResume(app.id, app.resumeUrl)}
+                                disabled={!app.resumeUrl}
+                                className="flex items-center gap-1 px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                                title={!app.resumeUrl ? 'Resume not available' : 'Analyze resume match'}
+                              >
+                                <FileCheck className="h-3 w-3" />
+                                Analyze
+                              </button>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <select

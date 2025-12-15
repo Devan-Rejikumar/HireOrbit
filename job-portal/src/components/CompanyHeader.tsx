@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Building2, Plus, Bell, LogOut } from 'lucide-react';
+import { Building2, Plus, Bell, LogOut, Briefcase } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { settingsService } from '@/api/settingsService';
 
 interface CompanyProfile {
   companyName?: string;
@@ -19,6 +20,25 @@ interface CompanyHeaderProps {
 
 export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onLogout }) => {
   const navigate = useNavigate();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const response = await settingsService.getSettings();
+        if (response.data?.logoUrl) {
+          setLogoUrl(response.data.logoUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching logo:', error);
+      }
+    };
+    fetchLogo();
+    
+    // Refresh logo every 30 seconds
+    const interval = setInterval(fetchLogo, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     if (onLogout) {
@@ -33,11 +53,32 @@ export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onLogout 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-8">
           {/* Hire Orbit Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">H</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+            {logoUrl ? (
+              <>
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 p-0.5 shadow-lg">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                      <img src={logoUrl} alt="HireOrbit" className="h-full w-full object-contain p-1.5" />
+                    </div>
+                  </div>
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  HireOrbit
+                </h1>
+              </>
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 p-0.5 shadow-lg">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                    <Briefcase className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  HireOrbit
+                </h1>
+              </>
+            )}
           </div>
           
           {/* Company Info */}

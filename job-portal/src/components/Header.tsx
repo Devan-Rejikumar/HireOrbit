@@ -1,15 +1,42 @@
 import { Button } from '@/components/ui/button';
 import { Menu, X, Search, LogOut, User, Briefcase } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from './NotificationBell';
 import { MessagesDropdown } from './MessagesDropdown';
+import { settingsService } from '@/api/settingsService';
+import { ROUTES } from '@/constants/routes';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout, isAuthenticated, role } = useAuth();
+  
+  // Public content pages should always show simple header (like landing page)
+  const publicContentPages = [ROUTES.ABOUT, ROUTES.HELP];
+  const isPublicContentPage = publicContentPages.includes(location.pathname);
+  const showSimpleHeader = isPublicContentPage;
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const response = await settingsService.getSettings();
+        if (response.data?.logoUrl) {
+          setLogoUrl(response.data.logoUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching logo:', error);
+      }
+    };
+    fetchLogo();
+    
+    // Refresh logo every 30 seconds to pick up changes
+    const interval = setInterval(fetchLogo, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -17,18 +44,37 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-200/50 shadow-sm z-50">
+    <header className="fixed top-0 w-full bg-white border-b border-gray-200 shadow-sm z-50">
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex items-center justify-between h-16">
 
           {/* Logo Section */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Briefcase className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              HireOrbit
-            </h1>
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
+            {logoUrl ? (
+              <>
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 p-0.5 shadow-lg">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                      <img src={logoUrl} alt="HireOrbit" className="h-full w-full object-contain p-1.5" />
+                    </div>
+                  </div>
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  HireOrbit
+                </h1>
+              </>
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 p-0.5 shadow-lg">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+                    <Briefcase className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                  HireOrbit
+                </h1>
+              </>
+            )}
           </div>
 
           {/* Desktop Navigation */}
@@ -51,17 +97,17 @@ const Header = () => {
             >
               Companies
             </button>
-            <a 
-              href="#" 
+            <button 
+              onClick={() => navigate('/about')}
               className="px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
             >
               About
-            </a>
+            </button>
           </nav>
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-3">
-            {isAuthenticated && user ? (
+            {isAuthenticated && user && !showSimpleHeader ? (
               <>
                 <button 
                   onClick={() => navigate('/jobs')} 
@@ -133,7 +179,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200/50 py-4 bg-white/95 backdrop-blur-md">
+          <div className="lg:hidden border-t border-gray-200 py-4 bg-white">
             <nav className="flex flex-col space-y-2">
               <button 
                 onClick={() => {navigate('/'); setIsMenuOpen(false);}} 
@@ -153,15 +199,15 @@ const Header = () => {
               >
                 Companies
               </button>
-              <a 
-                href="#" 
+              <button 
+                onClick={() => {navigate('/about'); setIsMenuOpen(false);}}
                 className="text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
               >
                 About
-              </a>
+              </button>
               
               <div className="pt-4 border-t border-gray-200/50">
-                {isAuthenticated && user ? (
+                {isAuthenticated && user && !showSimpleHeader ? (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-lg">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">

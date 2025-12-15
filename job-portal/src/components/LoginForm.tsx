@@ -34,24 +34,24 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
   const [resetLoading, setResetLoading] = useState(false);
 
 
-  // Disabled auto-navigation to allow error visibility during Google signin debugging
-  // useEffect(() => {
-  //   if (isAuthenticated && userRole) {
-  //     switch (userRole) {
-  //     case 'jobseeker':
-  //       navigate('/', { replace: true });
-  //       break;
-  //     case 'company':
-  //       navigate('/company/dashboard', { replace: true });
-  //       break;
-  //     case 'admin':
-  //       navigate('/admin/dashboard', { replace: true });
-  //       break;
-  //     default:
-  //       navigate('/', { replace: true });
-  //     }
-  //   }
-  // }, [isAuthenticated, userRole, navigate]);
+  // Auto-navigate if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated && userRole) {
+      switch (userRole) {
+      case 'jobseeker':
+        navigate('/', { replace: true });
+        break;
+      case 'company':
+        navigate('/company/dashboard', { replace: true });
+        break;
+      case 'admin':
+        navigate('/admin/dashboard', { replace: true });
+        break;
+      default:
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { subscriptionService, SubscriptionStatusResponse } from '../../api/subscriptionService';
 import { CreditCard, Crown } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { useSubscriptionStatus } from '@/hooks/useSubscriptionStatus';
 
 interface SubscriptionStatusBadgeProps {
   userType: 'user' | 'company';
@@ -10,36 +9,10 @@ interface SubscriptionStatusBadgeProps {
 }
 
 export const SubscriptionStatusBadge = ({ userType, className = '' }: SubscriptionStatusBadgeProps) => {
-  const [status, setStatus] = useState<SubscriptionStatusResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    loadSubscriptionStatus();
-  }, []);
-
-  const loadSubscriptionStatus = async () => {
-    try {
-      setLoading(true);
-      const response = await subscriptionService.getSubscriptionStatus();
-      setStatus(response.data);
-    } catch (error: unknown) {
-      // Check if it's an axios error (has response property)
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
-      
-      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
-        // User is not authenticated or doesn't have subscription - treat as free
-        setStatus({ subscription: null, isActive: false, plan: null, features: [] });
-      } else {
-        console.error('Error loading subscription status:', error);
-        setStatus({ subscription: null, isActive: false, plan: null, features: [] });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const { data: status, isLoading: loading } = useSubscriptionStatus(userType);
+  
+  // Handle loading state
   if (loading) {
     return (
       <div className={`px-3 py-1.5 bg-gray-100 rounded-full ${className}`}>
@@ -47,7 +20,8 @@ export const SubscriptionStatusBadge = ({ userType, className = '' }: Subscripti
       </div>
     );
   }
-
+  
+  // Handle case where status is undefined (error or no subscription)
   const currentPlan = status?.plan;
   const isPremium = currentPlan?.name?.toLowerCase() === 'premium' && status?.isActive;
   const isFree = !currentPlan || !status?.isActive || currentPlan.priceMonthly === 0 || currentPlan.priceMonthly === null;

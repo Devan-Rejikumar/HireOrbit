@@ -12,6 +12,11 @@ import { ICompanyApiRepository } from '../repositories/implementations/CompanyAp
 import { IJobApiRepository } from '../repositories/implementations/JobApiRepository';
 import { IApplicationApiRepository } from '../repositories/implementations/ApplicationApiRepository';
 import { ISkillRepository } from '../repositories/interfaces/ISkillRepository';
+import {
+  ISiteSettingsRepository,
+  IBannerRepository,
+  IContentPageRepository,
+} from '../repositories/interfaces/ISiteSettingsRepository';
 
 import { UserRepository } from '../repositories/implementations/UserRepository';
 import { AdminRepository } from '../repositories/implementations/AdminRepository';
@@ -23,6 +28,9 @@ import { CompanyApiRepository } from '../repositories/implementations/CompanyApi
 import { JobApiRepository } from '../repositories/implementations/JobApiRepository';
 import { ApplicationApiRepository } from '../repositories/implementations/ApplicationApiRepository';
 import { SkillRepository } from '../repositories/implementations/SkillRepository';
+import { SiteSettingsRepository } from '../repositories/implementations/SiteSettingsRepository';
+import { BannerRepository } from '../repositories/implementations/BannerRepository';
+import { ContentPageRepository } from '../repositories/implementations/ContentPageRepository';
 
 import { IUserService } from '../services/interfaces/IUserService';
 import { IAdminService } from '../services/interfaces/IAdminService';
@@ -38,6 +46,8 @@ import { ResumeService } from '../services/implementations/ResumeService';
 import { CertificationService } from '../services/implementations/CertificationService';
 import { AchievementService } from '../services/implementations/AchievementService';
 import { SkillService } from '../services/implementations/SkillService';
+import { SiteSettingsService } from '../services/implementations/SiteSettingsService';
+import { ISiteSettingsService } from '../services/interfaces/ISiteSettingsService';
 import { RedisService } from '../services/implementations/RedisService';
 import { EmailService } from '../services/implementations/EmailService';
 import { JWTService } from '../services/implementations/JWTService';
@@ -51,6 +61,7 @@ import { ResumeController } from '../controllers/ResumeController';
 import { CertificationController } from '../controllers/CertificationController';
 import { AchievementController } from '../controllers/AchievementController';
 import { SkillController } from '../controllers/SkillController';
+import { SiteSettingsController } from '../controllers/SiteSettingsController';
 
 
 const container = new Container();
@@ -87,4 +98,10 @@ container.bind<ISkillRepository>(TYPES.ISkillRepository).to(SkillRepository);
 container.bind<SkillService>(TYPES.SkillService).to(SkillService);
 container.bind<ISkillService>(TYPES.ISkillService).to(SkillService);
 container.bind<SkillController>(TYPES.SkillController).to(SkillController);
+container.bind<ISiteSettingsRepository>(TYPES.ISiteSettingsRepository).to(SiteSettingsRepository);
+container.bind<IBannerRepository>(TYPES.IBannerRepository).to(BannerRepository);
+container.bind<IContentPageRepository>(TYPES.IContentPageRepository).to(ContentPageRepository);
+container.bind<SiteSettingsService>(TYPES.SiteSettingsService).to(SiteSettingsService);
+container.bind<ISiteSettingsService>(TYPES.ISiteSettingsService).to(SiteSettingsService);
+container.bind<SiteSettingsController>(TYPES.SiteSettingsController).to(SiteSettingsController);
 export default container;

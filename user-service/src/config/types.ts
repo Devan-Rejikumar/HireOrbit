@@ -43,6 +43,15 @@ const TYPES = {
   IJobApiRepository: Symbol.for('IJobApiRepository'),
   ApplicationApiRepository: Symbol.for('ApplicationApiRepository'),
   IApplicationApiRepository: Symbol.for('IApplicationApiRepository'),
+  SiteSettingsRepository: Symbol.for('SiteSettingsRepository'),
+  ISiteSettingsRepository: Symbol.for('ISiteSettingsRepository'),
+  BannerRepository: Symbol.for('BannerRepository'),
+  IBannerRepository: Symbol.for('IBannerRepository'),
+  ContentPageRepository: Symbol.for('ContentPageRepository'),
+  IContentPageRepository: Symbol.for('IContentPageRepository'),
+  SiteSettingsService: Symbol.for('SiteSettingsService'),
+  ISiteSettingsService: Symbol.for('ISiteSettingsService'),
+  SiteSettingsController: Symbol.for('SiteSettingsController'),
 };
 
 export default TYPES;
