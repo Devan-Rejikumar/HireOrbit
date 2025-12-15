@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/table';
 import { CheckCircle, XCircle, User, Shield, ShieldOff, ChevronLeft, ChevronRight, Search, Filter, RefreshCw, Users, TrendingUp, AlertCircle, Clock, Eye, Mail, MapPin } from 'lucide-react';
 import api from '@/api/axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import toast from 'react-hot-toast';
 
 type User = {
   id: string;
@@ -71,7 +70,7 @@ const UserList = () => {
         setLoading(true);
       }
       // Fetch all users without pagination to get complete dataset
-      const res = await api.get<UsersResponse>(`/users/admin/users?page=1&limit=1000`);
+      const res = await api.get<UsersResponse>('/users/admin/users?page=1&limit=1000');
       console.log('API Response:', res.data); 
       
       const responseData = res.data as UsersResponse;
@@ -96,15 +95,18 @@ const UserList = () => {
         setTotalPages(1);
         toast.error('Invalid response format from server');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching users:', error);
       setUsers([]);
       setTotalUsers(0);
       setTotalPages(1);
       
-      if (error.response?.status === 401) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      
+      if (axiosError?.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
-      } else if (error.response?.status === 403) {
+      } else if (axiosError?.response?.status === 403) {
         toast.error('Access denied. Admin privileges required.');
       } else {
         toast.error('Failed to fetch users');
@@ -123,26 +125,26 @@ const UserList = () => {
       filtered = filtered.filter(user =>
         (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.role.toLowerCase().includes(searchTerm.toLowerCase())
+        user.role.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     // Apply status filter
     switch (statusFilter) {
-      case 'verified':
-        filtered = filtered.filter(u => u.isVerified);
-        break;
-      case 'unverified':
-        filtered = filtered.filter(u => !u.isVerified);
-        break;
-      case 'blocked':
-        filtered = filtered.filter(u => u.isBlocked);
-        break;
-      case 'active':
-        filtered = filtered.filter(u => !u.isBlocked);
-        break;
-      default:
-        break;
+    case 'verified':
+      filtered = filtered.filter(u => u.isVerified);
+      break;
+    case 'unverified':
+      filtered = filtered.filter(u => !u.isVerified);
+      break;
+    case 'blocked':
+      filtered = filtered.filter(u => u.isBlocked);
+      break;
+    case 'active':
+      filtered = filtered.filter(u => !u.isBlocked);
+      break;
+    default:
+      break;
     }
 
     setFilteredUsers(filtered);
@@ -164,8 +166,10 @@ const UserList = () => {
         users.map(u => u.id === id ? { ...u, isBlocked: !currentBlocked } : u),
       );
       toast.success(`${userName} has been ${currentBlocked ? 'unblocked' : 'blocked'} successfully`);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { status?: number } }) : null;
+      if (axiosError?.response?.status === 401) {
         toast.error('Authentication failed. Please login again.');
       } else {
         toast.error(`Failed to ${action} user`);
@@ -431,7 +435,7 @@ const UserList = () => {
                     {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
-                      day: 'numeric'
+                      day: 'numeric',
                     }) : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -635,7 +639,7 @@ const UserList = () => {
                             month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           }) : 'Not available'}
                         </p>
                       </div>
@@ -647,7 +651,7 @@ const UserList = () => {
                             month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           }) : 'Never logged in'}
                         </p>
                       </div>

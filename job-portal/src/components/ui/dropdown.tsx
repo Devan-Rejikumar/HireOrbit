@@ -12,7 +12,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   children,
   align = 'right',
   className = '',
-  onOpen
+  onOpen,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -41,13 +41,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
   const getAlignmentClasses = () => {
     switch (align) {
-      case 'left':
-        return 'left-0';
-      case 'center':
-        return 'left-1/2 transform -translate-x-1/2';
-      case 'right':
-      default:
-        return 'right-0';
+    case 'left':
+      return 'left-0';
+    case 'center':
+      return 'left-1/2 transform -translate-x-1/2';
+    case 'right':
+    default:
+      return 'right-0';
     }
   };
 
@@ -74,7 +74,7 @@ interface DropdownContentProps {
 }
 export const DropdownContent: React.FC<DropdownContentProps> = ({
   children,
-  className = ''
+  className = '',
 }) => {
   return (
     <div className={`bg-white border border-gray-200 rounded-lg shadow-lg ${className}`}>
@@ -92,7 +92,7 @@ interface DropdownItemProps {
 export const DropdownItem: React.FC<DropdownItemProps> = ({
   children,
   onClick,
-  className = ''
+  className = '',
 }) => {
   return (
     <div
@@ -111,7 +111,7 @@ interface DropdownHeaderProps {
 
 export const DropdownHeader: React.FC<DropdownHeaderProps> = ({
   children,
-  className = ''
+  className = '',
 }) => {
   return (
     <div className={`border-b border-gray-200 ${className}`}>

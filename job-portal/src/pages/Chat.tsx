@@ -90,7 +90,7 @@ export const Chat = () => {
             }
             
             const appResponse = await api.get<ApplicationResponse>(`/applications/${selectedConversation.applicationId}`);
-            console.log(`📋 [Chat] Application response:`, appResponse.data);
+            console.log('📋 [Chat] Application response:', appResponse.data);
             
             // Try multiple possible response structures
             const responseData = appResponse.data;
@@ -107,7 +107,7 @@ export const Chat = () => {
                             : null) ||
                         null;
             
-            console.log(`📋 [Chat] Extracted company name:`, companyName);
+            console.log('📋 [Chat] Extracted company name:', companyName);
             
             // If still not found, try fetching from job service using jobId as fallback
             if ((!companyName || companyName === 'Company Name' || companyName === 'Unknown Company') && applicationData?.jobId) {
@@ -135,17 +135,25 @@ export const Chat = () => {
                 const jobData = responseData?.data?.job || responseData?.job || responseData?.data || responseData;
                 
                 // Extract company name - company is a string in job response, not an object
+                interface JobData {
+                  company?: {
+                    companyName?: string;
+                    name?: string;
+                  } | string;
+                  companyName?: string;
+                }
                 if (jobData && typeof jobData === 'object') {
-                  companyName = (jobData as any)?.company?.companyName ||
-                              (jobData as any)?.companyName ||
-                              (jobData as any)?.company?.name ||
-                              (typeof (jobData as any)?.company === 'string' ? (jobData as any)?.company : null) ||
+                  const typedJobData = jobData as JobData;
+                  companyName = (typeof typedJobData?.company === 'object' ? typedJobData.company?.companyName : null) ||
+                              typedJobData?.companyName ||
+                              (typeof typedJobData?.company === 'object' ? typedJobData.company?.name : null) ||
+                              (typeof typedJobData?.company === 'string' ? typedJobData.company : null) ||
                               null;
                 }
                 
-                console.log(`📋 [Chat] Company name from job service:`, companyName);
-              } catch (jobError: any) {
-                console.error(`❌ [Chat] Error fetching job details:`, jobError);
+                console.log('📋 [Chat] Company name from job service:', companyName);
+              } catch (jobError: unknown) {
+                console.error('❌ [Chat] Error fetching job details:', jobError);
               }
             }
             
@@ -154,15 +162,17 @@ export const Chat = () => {
               console.log(`✅ [Chat] Company name set: ${companyName}`);
               return;
             } else {
-              console.warn(`⚠️ [Chat] Company name not found or invalid in application response`);
+              console.warn('⚠️ [Chat] Company name not found or invalid in application response');
             }
-          } catch (appError: any) {
-            console.error(`❌ [Chat] Error fetching application details:`, appError);
-            console.error(`❌ [Chat] Error response:`, appError.response?.data);
+          } catch (appError: unknown) {
+            console.error('❌ [Chat] Error fetching application details:', appError);
+            const isAxiosError = appError && typeof appError === 'object' && 'response' in appError;
+            const axiosError = isAxiosError ? (appError as { response?: { data?: unknown } }) : null;
+            console.error('❌ [Chat] Error response:', axiosError?.response?.data);
           }
           
           // Final fallback
-          console.warn(`⚠️ [Chat] Using fallback 'Company' name`);
+          console.warn('⚠️ [Chat] Using fallback \'Company\' name');
           setOtherParticipantName('Company');
         } else {
           // Fetch user name
@@ -252,12 +262,12 @@ export const Chat = () => {
   
   const {
     data: userConversations = [],
-    isLoading: userLoading
+    isLoading: userLoading,
   } = useUserConversations(user?.id || '');
 
   const {
     data: companyConversations = [],
-    isLoading: companyLoading
+    isLoading: companyLoading,
   } = useCompanyConversations(company?.id || '');
 
   const conversations = role === 'jobseeker' ? userConversations : companyConversations;
@@ -265,7 +275,7 @@ export const Chat = () => {
 
   const {
     data: messages = [],
-    isLoading: messagesLoading
+    isLoading: messagesLoading,
   } = useMessages(selectedConversation?.id || null);
 
   const markAsReadMutation = useMarkAsRead();
@@ -275,7 +285,7 @@ export const Chat = () => {
     if (currentUserId) {
       markAsReadMutation.mutate({
         conversationId: conversation.id,
-        userId: currentUserId
+        userId: currentUserId,
       });
     }
   };

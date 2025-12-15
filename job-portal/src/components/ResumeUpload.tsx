@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, FileText, X, CheckCircle, Eye, X as CloseIcon } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface ResumeUploadProps {
   onUpload: (file: File) => Promise<void>;
@@ -13,7 +13,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
   onUpload,
   onDelete,
   currentResume,
-  isLoading = false
+  isLoading = false,
 }) => {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -92,13 +92,13 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
     return 'resume.pdf';
   };
 
-const handleViewClick = (e: React.MouseEvent) => {
-  e.preventDefault();
-  if (currentResume) {
-    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(currentResume)}&embedded=true`;
-    window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
-  }
-};
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (currentResume) {
+      const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(currentResume)}&embedded=true`;
+      window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   return (
     <div className="space-y-4">

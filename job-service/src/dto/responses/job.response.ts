@@ -13,7 +13,9 @@ export interface JobResponse {
   education: string;
   applicationDeadline: Date;
   workLocation: string;
-  isActive: boolean; 
+  isActive: boolean;
+  isListed: boolean;
+  listedAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }

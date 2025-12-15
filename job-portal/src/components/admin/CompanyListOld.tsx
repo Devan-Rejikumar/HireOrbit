@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check, Search, Filter, Download, RefreshCw, Building2, Users, TrendingUp, AlertCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '@/api/axios';
 
 type Company = {
@@ -81,12 +81,6 @@ const CompanyList = () => {
         setLoading(true);
       }
       const response = await api.get<CompaniesResponse>('/company/admin/all');
-      //    console.log("API Response:", response.data);
-      // console.log("Response structure:", {
-      //   data: response.data,
-      //   companies: response.data.companies,
-      //   companiesLength: response.data.companies?.length
-      // });
       const companiesData = response.data.data?.companies || [];
       setCompanies(Array.isArray(companiesData) ? companiesData : []);
       setTotalCompanies(Array.isArray(companiesData) ? companiesData.length : 0);
@@ -103,28 +97,30 @@ const CompanyList = () => {
   const filterCompanies = () => {
     let filtered = companies;
 
-    // Apply search filter
+    // Apply search filter first
     if (searchTerm) {
       filtered = filtered.filter(company =>
         company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.industry?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase())
+        company.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
     
+    // Then apply status filter to the already filtered results
     switch (statusFilter) {
     case 'pending':
-      filtered = companies.filter(c => c.profileCompleted && !c.isVerified && !c.rejectionReason);
+      filtered = filtered.filter(c => c.profileCompleted && !c.isVerified && !c.rejectionReason);
       break;
     case 'approved':
-      filtered = companies.filter(c => c.isVerified);
+      filtered = filtered.filter(c => c.isVerified);
       break;
     case 'rejected':
-      filtered = companies.filter(c => c.rejectionReason);
+      filtered = filtered.filter(c => c.rejectionReason);
       break;
     default:
-      filtered = companies;
+      // Keep filtered as is (already has search applied)
+      break;
     }
     
     setFilteredCompanies(filtered);
@@ -144,8 +140,11 @@ const CompanyList = () => {
         ),
       );
       toast.success('Company approved successfully! Approval email sent.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to approve company');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        : undefined;
+      toast.error(errorMessage || 'Failed to approve company');
     } finally {
       setActionLoading(null);
     }
@@ -172,8 +171,11 @@ const CompanyList = () => {
       setShowModal(false);
       setRejectionReason('');
       toast.success('Company rejected successfully! Rejection email sent.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to reject company');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        : undefined;
+      toast.error(errorMessage || 'Failed to reject company');
     } finally {
       setActionLoading(null);
     }
@@ -204,9 +206,12 @@ const CompanyList = () => {
         console.log('🔍 Full response structure:', JSON.stringify(response.data, null, 2));
         toast.error('No company data received');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching company details:', error);
-      toast.error(error.response?.data?.error || 'Failed to fetch company details');
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
+        : undefined;
+      toast.error(errorMessage || 'Failed to fetch company details');
     } finally {
       setDetailsLoading(false);
     }
@@ -410,8 +415,20 @@ const CompanyList = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((company) => (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCompanies.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((company) => (
                   <tr key={company.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>

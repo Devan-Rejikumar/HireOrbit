@@ -1,11 +1,11 @@
-import { IEventService } from '../interface/IEventService';
+import { IEventService } from '../interfaces/IEventService';
 import { producer, consumer } from '../../config/kafka.config';
 
 export class KafkaEventService implements IEventService {
   async publish<T>(event: string, data: T): Promise<void> {
     await producer.send({
       topic: event,
-      messages: [{ value: JSON.stringify(data) }]
+      messages: [{ value: JSON.stringify(data) }],
     });
   }
 
@@ -15,7 +15,7 @@ export class KafkaEventService implements IEventService {
       eachMessage: async ({ message }) => {
         const data = JSON.parse(message.value?.toString() || '{}') as T;
         await handler(data);
-      }
+      },
     });
   }
 

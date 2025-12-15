@@ -13,7 +13,7 @@ interface LazyComponentProps {
 export const LazyComponent: React.FC<LazyComponentProps> = ({ 
   children, 
   fallback = null,
-  rootMargin = '100px' // Start loading 100px before component is visible
+  rootMargin = '100px', // Start loading 100px before component is visible
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +29,7 @@ export const LazyComponent: React.FC<LazyComponentProps> = ({
           }
         }
       },
-      { rootMargin }
+      { rootMargin },
     );
 
     if (ref.current) {

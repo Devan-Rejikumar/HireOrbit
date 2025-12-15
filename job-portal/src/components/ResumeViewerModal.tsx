@@ -38,7 +38,7 @@ const ResumeViewerModal = ({ isOpen, onClose, resumeUrl, applicantName }: Resume
       
       // Fetch PDF with authentication
       const response = await api.get<Blob>(resumeUrl, {
-        responseType: 'blob'
+        responseType: 'blob',
       });
       
       // Create blob URL

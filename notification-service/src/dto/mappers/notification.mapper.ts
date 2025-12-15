@@ -1,4 +1,3 @@
-import { INotificationDocument } from '../../models/NotificationModel';
 import { CreateNotificationInput, NotificationType } from '../../types/notifications';
 export interface ApplicationReceivedInput {
   companyId: string;
@@ -59,8 +58,8 @@ export class NotificationMapper {
         applicationId: input.applicationId,
         jobId: input.jobId,
         applicantName: input.applicantName,
-        jobTitle: input.jobTitle
-      }
+        jobTitle: input.jobTitle,
+      },
     };
   }
 
@@ -75,8 +74,8 @@ export class NotificationMapper {
         jobId: input.jobId,
         jobTitle: jobTitle,
         oldStatus: input.oldStatus,
-        newStatus: input.newStatus
-      }
+        newStatus: input.newStatus,
+      },
     };
   }
 
@@ -90,8 +89,8 @@ export class NotificationMapper {
         applicationId: input.applicationId,
         jobId: input.jobId,
         applicantName: input.applicantName,
-        jobTitle: input.jobTitle
-      }
+        jobTitle: input.jobTitle,
+      },
     };
   }
 
@@ -109,8 +108,8 @@ export class NotificationMapper {
         scheduledAt: typeof input.scheduledAt === 'string' ? input.scheduledAt : input.scheduledAt.toISOString(),
         type: input.type,
         location: input.location,
-        meetingLink: input.meetingLink
-      }
+        meetingLink: input.meetingLink,
+      },
     };
   }
 
@@ -130,8 +129,8 @@ export class NotificationMapper {
         interviewId: input.interviewId,
         decision: input.decision,
         decisionReason: input.decisionReason,
-        feedback: input.feedback
-      }
+        feedback: input.feedback,
+      },
     };
   }
 }

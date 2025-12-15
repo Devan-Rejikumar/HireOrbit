@@ -10,21 +10,21 @@ export const CreateApplicationSchema = z.object({
   experience: z.string().min(1, 'Experience is required'),
   resumeUrl: z.string().url('Invalid resume URL').optional(),
   resumeBase64: z.string().optional(),
-  resumeFileName: z.string().optional()
+  resumeFileName: z.string().optional(),
 });
 
 export const UpdateApplicationStatusSchema = z.object({
   status: z.enum(['PENDING', 'REVIEWING', 'SHORTLISTED', 'REJECTED', 'ACCEPTED', 'WITHDRAWN']),
-  reason: z.string().optional()
+  reason: z.string().optional(),
 });
 
 export const AddApplicationNoteSchema = z.object({
   note: z.string().min(1, 'Note is required'),
-  addedBy: z.string().uuid('Invalid user ID format')
+  addedBy: z.string().uuid('Invalid user ID format'),
 });
 
 export const WithdrawApplicationSchema = z.object({
-  reason: z.string().optional()
+  reason: z.string().optional(),
 });
 
 export const GetApplicationsQuerySchema = z.object({
@@ -34,7 +34,7 @@ export const GetApplicationsQuerySchema = z.object({
   jobId: z.string().optional(),
   search: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(10)
+  limit: z.coerce.number().min(1).max(100).default(10),
 });
 
 export type CreateApplicationInput = z.infer<typeof CreateApplicationSchema>;

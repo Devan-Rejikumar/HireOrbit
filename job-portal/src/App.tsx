@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 import { NotificationProvider } from './context/NotificationContext';
 import { GlobalChatProvider } from './context/GlobalChatContext';
 import { useAuth } from './context/AuthContext';
@@ -9,6 +8,7 @@ import PublicRoute from './components/PublicRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import CompanyProtectedRoute from './components/CompanyProtectedRoute';
 import AdminAuthProtected from './components/AdminAuthProtected';
+import { ROUTES } from './constants/routes';
 
 // Keep critical routes non-lazy for faster initial load
 import RegisterPage from './pages/RegisterPage';
@@ -39,6 +39,12 @@ const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const BlockedUser = lazy(() => import('./pages/BlockedUser'));
 const Chat = lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
 const NotificationTest = lazy(() => import('./pages/NotificationTest'));
+const SubscriptionPage = lazy(() => import('./pages/SubscriptionPage').then(module => ({ default: module.SubscriptionPage })));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(module => ({ default: module.CheckoutPage })));
+const SubscriptionStatus = lazy(() => import('./components/subscription/SubscriptionStatus').then(module => ({ default: module.SubscriptionStatus })));
+const ManageSubscription = lazy(() => import('./components/subscription/ManageSubscription').then(module => ({ default: module.ManageSubscription })));
+const ATSCheckerPage = lazy(() => import('./pages/ATSCheckerPage').then(module => ({ default: module.ATSCheckerPage })));
+const InterviewVideoCall = lazy(() => import('./pages/InterviewVideoCall').then(module => ({ default: module.InterviewVideoCall })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -70,16 +76,16 @@ const AppContent = () => {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route
-          path="/register"
+          path={ROUTES.REGISTER}
           element={
             <PublicRoute>
               <RegisterPage />
             </PublicRoute>
           }
         />
-        <Route path="/login" element={<ProtectedRoute redirectIfAuthenticated={true}><LoginPage /></ProtectedRoute>} />
+        <Route path={ROUTES.LOGIN} element={<ProtectedRoute redirectIfAuthenticated={true}><LoginPage /></ProtectedRoute>} />
         <Route
-          path="/forgot-password"
+          path={ROUTES.FORGOT_PASSWORD}
           element={
             <PublicRoute>
               <ForgotPasswordPage />
@@ -87,7 +93,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/"
+          path={ROUTES.HOME}
           element={
             <PublicRoute>
               <Index />
@@ -95,7 +101,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/company/dashboard"
+          path={ROUTES.COMPANY_DASHBOARD}
           element={
             <CompanyProtectedRoute>
               <Suspense fallback={<LoadingFallback />}>
@@ -104,10 +110,10 @@ const AppContent = () => {
             </CompanyProtectedRoute>
           }
         />
-        <Route path="/admin/register" element={<AdminAuthProtected><Suspense fallback={<LoadingFallback />}><AdminAuth /></Suspense></AdminAuthProtected>} />
-        <Route path="/admin/login" element={<AdminAuthProtected><Suspense fallback={<LoadingFallback />}><AdminAuth /></Suspense></AdminAuthProtected>} />
+        <Route path={ROUTES.ADMIN_REGISTER} element={<AdminAuthProtected><Suspense fallback={<LoadingFallback />}><AdminAuth /></Suspense></AdminAuthProtected>} />
+        <Route path={ROUTES.ADMIN_LOGIN} element={<AdminAuthProtected><Suspense fallback={<LoadingFallback />}><AdminAuth /></Suspense></AdminAuthProtected>} />
         <Route
-          path="/admin/dashboard"
+          path={ROUTES.ADMIN_DASHBOARD}
           element={
             <ProtectedRoute>
               <Suspense fallback={<LoadingFallback />}>
@@ -116,15 +122,15 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="/jobs" element={<JobListings />} />
-        <Route path="/companies" element={<Companies />} />
-        <Route path="/profile" element={
+        <Route path={ROUTES.JOBS} element={<JobListings />} />
+        <Route path={ROUTES.COMPANIES} element={<Companies />} />
+        <Route path={ROUTES.PROFILE} element={
           <Suspense fallback={<LoadingFallback />}>
             <UserProfile />
           </Suspense>
         } />
         <Route
-          path="/user/dashboard"
+          path={ROUTES.USER_DASHBOARD}
           element={
             <ProtectedRoute>
               <Suspense fallback={<LoadingFallback />}>
@@ -134,7 +140,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/applied-jobs"
+          path={ROUTES.APPLIED_JOBS}
           element={
             <ProtectedRoute requireAuth allowedRoles={['jobseeker']}>
               <Suspense fallback={<LoadingFallback />}>
@@ -144,7 +150,7 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/company/profile-setup"
+          path={ROUTES.COMPANY_PROFILE_SETUP}
           element={
             <Suspense fallback={<LoadingFallback />}>
               <CompanyProfileSetup />
@@ -152,26 +158,27 @@ const AppContent = () => {
           }
         />
         <Route
-          path="/company/review-status"
+          path={ROUTES.COMPANY_REVIEW_STATUS}
           element={
             <Suspense fallback={<LoadingFallback />}>
               <CompanyReviewStatus />
             </Suspense>
           }
         />
-        <Route path="/company/post-job" element={
+        <Route path={ROUTES.COMPANY_POST_JOB} element={
           <Suspense fallback={<LoadingFallback />}>
             <PostJob />
           </Suspense>
         } />
-        <Route path="/company/jobs" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyJobListing /></Suspense></CompanyProtectedRoute>} />
-        <Route path="/company/settings" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanySettings /></Suspense></CompanyProtectedRoute>} />
-        <Route path="/jobs/:id" element={<JobDetails />} />
-        <Route path="/company/applications" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyApplications /></Suspense></CompanyProtectedRoute>} />
-        <Route path="/company/interviews" element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyInterviewManagement /></Suspense></CompanyProtectedRoute>} />
-        <Route path="/schedule" element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><MySchedule /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.COMPANY_JOBS} element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyJobListing /></Suspense></CompanyProtectedRoute>} />
+        <Route path={ROUTES.COMPANY_SETTINGS} element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanySettings /></Suspense></CompanyProtectedRoute>} />
+        <Route path={ROUTES.JOB_DETAILS_PATTERN} element={<JobDetails />} />
+        <Route path={ROUTES.COMPANY_APPLICATIONS} element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyApplications /></Suspense></CompanyProtectedRoute>} />
+        <Route path={ROUTES.COMPANY_INTERVIEWS} element={<CompanyProtectedRoute><Suspense fallback={<LoadingFallback />}><CompanyInterviewManagement /></Suspense></CompanyProtectedRoute>} />
+        <Route path={ROUTES.INTERVIEW_VIDEO_PATTERN} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><InterviewVideoCall /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.SCHEDULE} element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><MySchedule /></Suspense></ProtectedRoute>} />
         <Route
-          path="/messages"
+          path={ROUTES.MESSAGES}
           element={
             <ProtectedRoute requireAuth allowedRoles={['jobseeker']}>
               <Suspense fallback={<LoadingFallback />}>
@@ -180,11 +187,20 @@ const AppContent = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="/chat" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><Chat /></Suspense></ProtectedRoute>} />
-        <Route path="/blocked" element={<Suspense fallback={<LoadingFallback />}><BlockedUser /></Suspense>} />
+        <Route path={ROUTES.CHAT} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><Chat /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.BLOCKED} element={<Suspense fallback={<LoadingFallback />}><BlockedUser /></Suspense>} />
+        
+        {/* Subscription routes */}
+        <Route path={ROUTES.SUBSCRIPTIONS} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SubscriptionPage /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.SUBSCRIPTIONS_CHECKOUT} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><CheckoutPage /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.SUBSCRIPTIONS_STATUS} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SubscriptionStatus /></Suspense></ProtectedRoute>} />
+        <Route path={ROUTES.SUBSCRIPTIONS_MANAGE} element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><ManageSubscription /></Suspense></ProtectedRoute>} />
+        
+        {/* Premium features */}
+        <Route path={ROUTES.ATS_CHECKER} element={<ProtectedRoute requireAuth allowedRoles={['jobseeker']}><Suspense fallback={<LoadingFallback />}><ATSCheckerPage /></Suspense></ProtectedRoute>} />
         
         {/* Test route for notifications */}
-        <Route path="/notification-test" element={<Suspense fallback={<LoadingFallback />}><NotificationTest /></Suspense>} />
+        <Route path={ROUTES.NOTIFICATION_TEST} element={<Suspense fallback={<LoadingFallback />}><NotificationTest /></Suspense>} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -196,7 +212,30 @@ function App() {
   return (
     <Router>
       <AppWithNotifications />
-      <ToastContainer />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
     </Router>
   );
 }

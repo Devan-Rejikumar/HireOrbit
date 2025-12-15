@@ -23,8 +23,8 @@ module.exports = [
       'semi': ['error', 'always'],
       'quotes': ['error', 'single'],
       'indent': ['error', 2],
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
       'no-multiple-empty-lines': ['error', { 'max': 1 }],
       'comma-dangle': ['error', 'always-multiline'],
       'object-curly-spacing': ['error', 'always']

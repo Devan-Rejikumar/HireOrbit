@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ const NotFound = () => {
         transition={{
           duration: 6,
           repeat: Infinity,
-          ease: "easeInOut",
+          ease: 'easeInOut',
         }}
       />
 
@@ -49,7 +49,7 @@ const NotFound = () => {
             Go Back
           </button>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate('/')}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400"
           >
             Home

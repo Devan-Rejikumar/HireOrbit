@@ -45,7 +45,7 @@ export const useUnreadCount = (recipientId: string, isWebSocketConnected: boolea
     refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
     staleTime: 30000, // Consider data fresh for 30s
     refetchOnWindowFocus: false,
-    refetchOnMount: true // Always refetch on mount to get latest data
+    refetchOnMount: true, // Always refetch on mount to get latest data
   });
 };
 

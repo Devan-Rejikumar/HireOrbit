@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, MapPin, Briefcase, Filter, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useLocation, Link } from 'react-router-dom';
 import AutocompleteInput from '../components/AutocompleteInput';
 import Header from '@/components/Header';
 import JobApplicationModal from '../components/JobApplicationModal';
+import type { ApplicationData } from '@/api/applicationService';
 
 interface Job {
   id: string;
@@ -71,11 +72,16 @@ const JobListings = () => {
       if (searchFilters.location) params.append('location', searchFilters.location);
       if (searchFilters.jobType) params.append('jobType', searchFilters.jobType);
       const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
-      const jobsData = (response.data as any).data?.jobs || [];
+      interface JobsResponseData {
+        data?: {
+          jobs?: Job[];
+        };
+      }
+      const jobsData = (response.data as JobsResponseData).data?.jobs || [];
 
       setAllJobs(jobsData);
       setCurrentPage(1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching jobs:', error);
       setSearchError('Failed to fetch jobs. Please try again.');
       setAllJobs([]);
@@ -93,7 +99,7 @@ const JobListings = () => {
             'entry': ['entry level'],
             'mid': ['mid level'],
             'senior': ['senior level'],
-            'executive': ['executive', 'lead/principal']
+            'executive': ['executive', 'lead/principal'],
           };
           return levelMapping[level]?.some(match => jobExperienceLevel.includes(match)) || false;
         });
@@ -109,7 +115,7 @@ const JobListings = () => {
             'bachelor': ['bachelor\'s degree', 'bachelor'],
             'master': ['master\'s degree', 'master'],
             'phd': ['phd'],
-            'none': ['no degree required']
+            'none': ['no degree required'],
           };
           return eduMapping[edu]?.some(match => jobEducation.includes(match)) || false;
         });
@@ -123,7 +129,7 @@ const JobListings = () => {
           const locationMapping: { [key: string]: string[] } = {
             'onsite': ['on-site'],
             'remote': ['remote'],
-            'hybrid': ['hybrid']
+            'hybrid': ['hybrid'],
           };
           return locationMapping[location]?.some(match => jobWorkLocation.includes(match)) || false;
         });
@@ -182,7 +188,7 @@ const JobListings = () => {
     setSearchFilters(prev => ({
       ...prev,
       title,
-      location: locationParam
+      location: locationParam,
     }));
   }, [location.search]);
   useEffect(() => {
@@ -212,16 +218,16 @@ const JobListings = () => {
     setShowApplicationModal(true);
   }, []);
 
-  const handleApplicationSubmit = useCallback((applicationData: any) => {
+  const handleApplicationSubmit = useCallback((applicationData: ApplicationData) => {
     if (selectedJob) {
       setAllJobs(prevJobs => 
         prevJobs.map(job => 
-          job.id === selectedJob.id ? { ...job, hasApplied: true } : job
-        )
+          job.id === selectedJob.id ? { ...job, hasApplied: true } : job,
+        ),
       );
     }
-
-    toast.success('Job applied successfully! All the best! 🎉');
+    setShowApplicationModal(false);
+    // Toast message is handled in JobApplicationModal component
   }, [selectedJob]);
 
   return (
@@ -330,7 +336,7 @@ const JobListings = () => {
                       { value: 'full-time', label: 'Full Time' },
                       { value: 'part-time', label: 'Part Time' },
                       { value: 'contract', label: 'Contract' },
-                      { value: 'internship', label: 'Internship' }
+                      { value: 'internship', label: 'Internship' },
                     ].map((type) => (
                       <label key={type.value} className="flex items-center">
                         <input
@@ -339,7 +345,7 @@ const JobListings = () => {
                           checked={searchFilters.jobType === type.value}
                           onChange={(e) => setSearchFilters(prev => ({ 
                             ...prev, 
-                            jobType: e.target.checked ? e.target.value : '' 
+                            jobType: e.target.checked ? e.target.value : '', 
                           }))}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
@@ -357,7 +363,7 @@ const JobListings = () => {
                       { value: 'entry', label: 'Entry Level (0-2 years)' },
                       { value: 'mid', label: 'Mid Level (3-5 years)' },
                       { value: 'senior', label: 'Senior Level (6-10 years)' },
-                      { value: 'executive', label: 'Executive (10+ years)' }
+                      { value: 'executive', label: 'Executive (10+ years)' },
                     ].map((level) => (
                       <label key={level.value} className="flex items-center">
                         <input
@@ -370,7 +376,7 @@ const JobListings = () => {
                               ...prev,
                               experienceLevel: e.target.checked
                                 ? [...prev.experienceLevel, value]
-                                : prev.experienceLevel.filter(item => item !== value)
+                                : prev.experienceLevel.filter(item => item !== value),
                             }));
                           }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -388,7 +394,7 @@ const JobListings = () => {
                     {[
                       { value: 'remote', label: 'Remote' },
                       { value: 'hybrid', label: 'Hybrid' },
-                      { value: 'onsite', label: 'On-site' }
+                      { value: 'onsite', label: 'On-site' },
                     ].map((type) => (
                       <label key={type.value} className="flex items-center">
                         <input
@@ -401,7 +407,7 @@ const JobListings = () => {
                               ...prev,
                               workLocation: e.target.checked
                                 ? [...prev.workLocation, value]
-                                : prev.workLocation.filter(item => item !== value)
+                                : prev.workLocation.filter(item => item !== value),
                             }));
                           }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -426,142 +432,142 @@ const JobListings = () => {
           {/* Job Listings */}
           <div className="lg:w-3/4">
             <div className="space-y-4">
-          {loading ? (
-            <div className="text-center py-8">Loading jobs...</div>
-          ) : paginatedJobs.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {searchFilters.title || searchFilters.company || searchFilters.location || searchFilters.jobType 
-                ? 'No jobs found matching your search criteria' 
-                : 'Enter search criteria to find jobs'}
-            </div>
-          ) : (
-            paginatedJobs.map((job) => (
-              <div key={job.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
-                      {job.title}
-                    </h3>
-                    <div className="flex items-center text-gray-600 mb-3">
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      <span className="font-medium mr-4">{job.company}</span>
-                      <MapPin className="h-4 w-4 mr-2" />
-                      <span>{job.location}</span>
-                    </div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {job.jobType}
-                      </span>
-                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {job.experienceLevel}
-                      </span>
-                      <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {job.education}
-                      </span>
-                      <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
-                        {job.workLocation}
-                      </span>
-                      {job.salary && (
-                        <span className="text-green-600 font-semibold">₹ {job.salary.toLocaleString()}</span>
-                      )}
-                      <span className="text-gray-500 text-sm">
-                        {new Date(job.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
-                    
-                    <div className="mb-4">
-                      <span className="text-sm text-gray-600">
-                        <strong>Application Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}
-                      </span>
-                    </div>
-                    
-                    {job.requirements.length > 0 && (
-                      <div className="mb-6">
-                        <div className="flex flex-wrap gap-2">
-                          {job.requirements.slice(0, 4).map((req, index) => (
-                            <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                              {req}
-                            </span>
-                          ))}
-                          {job.requirements.length > 4 && (
-                            <span className="text-gray-500 text-sm px-3 py-1">
-                              +{job.requirements.length - 4} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="ml-6 flex flex-col space-y-3">
-                    <Link 
-                      to={`/jobs/${job.id}`}
-                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </Link>
-                    <button
-                      onClick={() => handleApply(job)}
-                      className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Apply Now
-                    </button>
-                  </div>
+              {loading ? (
+                <div className="text-center py-8">Loading jobs...</div>
+              ) : paginatedJobs.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  {searchFilters.title || searchFilters.company || searchFilters.location || searchFilters.jobType 
+                    ? 'No jobs found matching your search criteria' 
+                    : 'Enter search criteria to find jobs'}
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ) : (
+                paginatedJobs.map((job) => (
+                  <div key={job.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                          {job.title}
+                        </h3>
+                        <div className="flex items-center text-gray-600 mb-3">
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          <span className="font-medium mr-4">{job.company}</span>
+                          <MapPin className="h-4 w-4 mr-2" />
+                          <span>{job.location}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {job.jobType}
+                          </span>
+                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {job.experienceLevel}
+                          </span>
+                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {job.education}
+                          </span>
+                          <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {job.workLocation}
+                          </span>
+                          {job.salary && (
+                            <span className="text-green-600 font-semibold">₹ {job.salary.toLocaleString()}</span>
+                          )}
+                          <span className="text-gray-500 text-sm">
+                            {new Date(job.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
+                    
+                        <div className="mb-4">
+                          <span className="text-sm text-gray-600">
+                            <strong>Application Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}
+                          </span>
+                        </div>
+                    
+                        {job.requirements.length > 0 && (
+                          <div className="mb-6">
+                            <div className="flex flex-wrap gap-2">
+                              {job.requirements.slice(0, 4).map((req, index) => (
+                                <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                                  {req}
+                                </span>
+                              ))}
+                              {job.requirements.length > 4 && (
+                                <span className="text-gray-500 text-sm px-3 py-1">
+                              +{job.requirements.length - 4} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                  
+                      <div className="ml-6 flex flex-col space-y-3">
+                        <Link 
+                          to={`/jobs/${job.id}`}
+                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                        </Link>
+                        <button
+                          onClick={() => handleApply(job)}
+                          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        >
+                      Apply Now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="mt-8 flex justify-center">
-            <nav className="flex items-center space-x-2">
-              <button
-                onClick={handlePreviousPage}
-                disabled={!hasPreviousPage}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </button>
-              
-              <div className="flex space-x-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <nav className="flex items-center space-x-2">
                   <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                      page === currentPage
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    onClick={handlePreviousPage}
+                    disabled={!hasPreviousPage}
+                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
-                    {page}
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
                   </button>
-                ))}
-              </div>
               
-              <button
-                onClick={handleNextPage}
-                disabled={!hasNextPage}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
+                  <div className="flex space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                          page === currentPage
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+              
+                  <button
+                    onClick={handleNextPage}
+                    disabled={!hasNextPage}
+                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
                 Next
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </button>
-            </nav>
-          </div>
-        )}
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </button>
+                </nav>
+              </div>
+            )}
 
-        {/* Results Summary */}
-        {allJobs.length > 0 && (
-          <div className="mt-4 text-center text-gray-600 text-sm">
+            {/* Results Summary */}
+            {allJobs.length > 0 && (
+              <div className="mt-4 text-center text-gray-600 text-sm">
             Showing {Math.min((currentPage - 1) * jobsPerPage + 1, allJobs.length)}-{Math.min(currentPage * jobsPerPage, allJobs.length)} of {allJobs.length} jobs
-          </div>
-        )}
+              </div>
+            )}
           </div>
         </div>
       </div>

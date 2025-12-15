@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { FormField } from './ui/FormField';
 import { FileUpload } from './ui/FileUpload';
 import { ExperienceSelector } from './ui/ExperienceSelector';
 import { _applicationService, ApplicationResponse } from '../api/applicationService';
 import { userService } from '../api/userService';
+import { MESSAGES } from '@/constants/messages';
 
 interface JobApplicationModalProps {
   isOpen: boolean;
@@ -141,7 +142,18 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
     try {
       setSubmitting(true);
 
-      const applicationData: any = {
+      interface ApplicationData {
+        jobId: string;
+        companyId?: string;
+        coverLetter: string;
+        expectedSalary?: string;
+        availability?: string;
+        experience?: string;
+        resumeUrl?: string;
+        resumeBase64?: string;
+        resumeFileName?: string;
+      }
+      const applicationData: ApplicationData = {
         jobId,
         companyId: companyId || companyName, // Use companyId if available, fallback to companyName
         coverLetter: formData.coverLetter,
@@ -173,11 +185,16 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
         resumeUrl: result.data.resumeUrl || savedResume || undefined,
       });
       
-      toast.success('Application submitted successfully! 🎉');
+      toast.success(MESSAGES.SUCCESS.APPLICATION_SUBMITTED);
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Application submission error:', error);
-      toast.error(error.message || 'Failed to submit application. Please try again.');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : 'Failed to submit application. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }

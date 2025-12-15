@@ -50,7 +50,7 @@ const EditJobModal: React.FC<EditJobModalProps> = ({
   isOpen,
   onClose,
   job,
-  onJobUpdated
+  onJobUpdated,
 }) => {
   const [formData, setFormData] = useState<UpdateJobData>({
     title: '',
@@ -182,7 +182,7 @@ const EditJobModal: React.FC<EditJobModalProps> = ({
   };
 
   const jobTypes = [
-    'Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote'
+    'Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship', 'Remote',
   ];
 
   const experienceLevels = [

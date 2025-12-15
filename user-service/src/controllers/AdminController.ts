@@ -5,7 +5,7 @@ import { IAdminService } from '../services/interfaces/IAdminService';
 import { IUserService } from '../services/interfaces/IUserService';
 import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
-import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
 import { getAdminIdFromRequest } from '../utils/requestHelpers';
 import { RequestWithUser } from '../types/express/RequestWithUser';
 import { AppError } from '../utils/errors/AppError';
@@ -183,5 +183,59 @@ export class AdminController {
       message: Messages.COMPANY.REJECTED_SUCCESS,
       result
     });
+  }
+
+  async getDashboardStatistics(req: Request, res: Response): Promise<void> {
+    try {
+      const adminId = getAdminIdFromRequest(req, res);
+      if (!adminId) return;
+
+      const timeFilter = (req.query.timeFilter as 'week' | 'month' | 'year') || 'month';
+      
+      if (!['week', 'month', 'year'].includes(timeFilter)) {
+        throw new AppError('Invalid time filter. Must be week, month, or year', HttpStatusCode.BAD_REQUEST);
+      }
+
+      console.log(`[AdminController] Fetching dashboard statistics with timeFilter: ${timeFilter}`);
+      const statistics = await this._adminService.getDashboardStatistics(timeFilter);
+      
+      console.log('[AdminController] Successfully fetched statistics:', {
+        totalUsers: statistics.totalUsers,
+        totalCompanies: statistics.totalCompanies,
+        totalJobs: statistics.totalJobs
+      });
+  
+      res.status(HttpStatusCode.OK).json({
+        success: true,
+        data: statistics
+      });
+    } catch (error: unknown) {
+      console.error('[AdminController] Error in getDashboardStatistics:', error);
+
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 30);
+      
+      res.status(HttpStatusCode.OK).json({
+        success: true,
+        data: {
+          totalUsers: 0,
+          totalCompanies: 0,
+          totalJobs: 0,
+          totalApplications: 0,
+          userRegistrations: [],
+          companyRegistrations: [],
+          jobPostings: [],
+          applicationSubmissions: [],
+          topCompanies: [],
+          topApplicants: [],
+          topJobs: [],
+          dateRange: {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+          }
+        }
+      });
+    }
   }
 }

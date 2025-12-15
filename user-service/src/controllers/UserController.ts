@@ -8,16 +8,14 @@ import { CookieConfig } from '../constants/CookieConfig';
 import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import path from 'path';
-import { HttpStatusCode, AuthStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
+import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
 import { UserRole } from '../enums/UserRole';
 import { GOOGLE_AUTH_TOKEN_EXPIRY } from '../constants/TimeConstants';
-import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, RefreshTokenSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
-import { buildSuccessResponse, buildErrorResponse } from 'shared-dto';
-import multer from 'multer';
+import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
+import { buildSuccessResponse } from 'shared-dto';
 import { v2 as cloudinary } from 'cloudinary';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { AppError } from '../utils/errors/AppError';
-import { AppConfig } from '../config/app.config';
 import { logger } from '../utils/logger';
 
 if (!admin.apps.length) {
@@ -36,22 +34,6 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const storage = multer.memoryStorage();
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: AppConfig.MAX_FILE_SIZE_BYTES,
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'));
-    }
-  }
 });
 
 @injectable()
@@ -268,40 +250,81 @@ export class UserController {
   }
 
   async googleAuth(req: Request, res: Response): Promise<void> {
-    const validationResult = GoogleAuthSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
-    }
-    const { idToken, email, name, photoURL } = validationResult.data;
-  
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-  
-    if (decodedToken.email !== email) {
-      throw new AppError(Messages.AUTH.INVALID_TOKEN, HttpStatusCode.BAD_REQUEST);
-    }
-  
-    let user = await this._userService.findByEmail(email);
-    let isNewUser = false;
-  
-    if (!user) {
-      user = await this._userService.createGoogleUser({
-        email,
-        fullName: name || email.split('@')[0],
-        profilePicture: photoURL,
+    try {
+      console.log('[UserController] Google auth request received');
+      const validationResult = GoogleAuthSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        console.error('[UserController] Validation failed:', validationResult.error.message);
+        throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
+      }
+      const { idToken, email, name, photoURL } = validationResult.data;
+      console.log('[UserController] Validated data:', { email, hasName: !!name, hasPhoto: !!photoURL });
+
+      console.log('[UserController] Verifying Firebase token...');
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      console.log('[UserController] Token verified successfully:', { email: decodedToken.email });
+
+      if (decodedToken.email !== email) {
+        console.error('[UserController] Email mismatch:', { tokenEmail: decodedToken.email, providedEmail: email });
+        throw new AppError(Messages.AUTH.INVALID_TOKEN, HttpStatusCode.BAD_REQUEST);
+      }
+
+      console.log('[UserController] Checking if user exists...');
+      let user = await this._userService.findByEmail(email);
+      let isNewUser = false;
+
+      if (!user) {
+        console.log('[UserController] User not found, creating new Google user:', { email, name });
+        user = await this._userService.createGoogleUser({
+          email,
+          fullName: name || email.split('@')[0],
+          profilePicture: photoURL,
+        });
+        isNewUser = true;
+        console.log('[UserController] Google user created successfully:', { userId: user.id });
+      } else {
+        console.log('[UserController] Existing user found:', { userId: user.id, email: user.email });
+      }
+
+      console.log('[UserController] Generating JWT token...');
+      const token = jwt.sign(
+        { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
+        process.env.JWT_SECRET!,
+        { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
+      );
+      console.log('[UserController] Token generated successfully');
+
+      console.log('[UserController] Setting token in cookie...');
+      this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);
+      console.log('[UserController] Token set in cookie, sending response');
+
+      res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
+        .json(buildSuccessResponse({ user, token, isNewUser }, 
+          isNewUser ? Messages.AUTH.GOOGLE_REGISTRATION_SUCCESS : Messages.AUTH.GOOGLE_LOGIN_SUCCESS));
+    } catch (error: unknown) {
+      const err = error as { message?: string; stack?: string; code?: string; name?: string; response?: { data?: unknown } };
+      console.error('[UserController] Google auth error:', {
+        message: err.message,
+        stack: err.stack,
+        code: err.code,
+        response: err.response?.data,
+        name: err.name
       });
-      isNewUser = true;
+      
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // Check if it's a Firebase Admin error
+      if (err.code === 'auth/invalid-argument' || err.code === 'auth/id-token-expired') {
+        throw new AppError('Invalid or expired Google token', HttpStatusCode.UNAUTHORIZED);
+      }
+      
+      throw new AppError(
+        err.message || Messages.AUTH.GOOGLE_AUTH_FAILED,
+        HttpStatusCode.INTERNAL_SERVER_ERROR
+      );
     }
-  
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
-      process.env.JWT_SECRET!,
-      { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
-    );
-  
-    this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);
-    res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
-      .json(buildSuccessResponse({ user, token, isNewUser }, 
-        isNewUser ? Messages.AUTH.GOOGLE_REGISTRATION_SUCCESS : Messages.AUTH.GOOGLE_LOGIN_SUCCESS));
   }
 
   async changePassword(req: Request, res: Response): Promise<void> {

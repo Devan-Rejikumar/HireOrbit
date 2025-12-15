@@ -9,14 +9,14 @@ export enum HttpStatusCode {
     INTERNAL_SERVER_ERROR = 500
   }
   
-  export enum ApplicationStatusCode {
+export enum ApplicationStatusCode {
     APPLICATIONS_RETRIEVED = HttpStatusCode.OK,
     APPLICATION_RETRIEVED = HttpStatusCode.OK,
     APPLICATION_STATUS_UPDATED = HttpStatusCode.OK,
     APPLICATION_NOTE_ADDED = HttpStatusCode.CREATED
   }
   
-  export enum ValidationStatusCode {
+export enum ValidationStatusCode {
     VALIDATION_ERROR = HttpStatusCode.BAD_REQUEST,
     MISSING_REQUIRED_FIELDS = HttpStatusCode.BAD_REQUEST,
     INVALID_UUID_FORMAT = HttpStatusCode.UNPROCESSABLE_ENTITY

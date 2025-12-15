@@ -18,7 +18,7 @@ module.exports = [
     rules: {
       // Development friendly rules
       'no-console': 'off',                    // Allows console.log for testing
-      '@typescript-eslint/no-explicit-any': 'warn',  // Warning instead of error
+      '@typescript-eslint/no-explicit-any': 'error',
 
       // Naming conventions - private/protected members must use underscore prefix
       '@typescript-eslint/naming-convention': [

@@ -9,6 +9,8 @@ import { AuthRequest } from '../types/express';
 
 const router = Router();
 const applicationController = container.get<ApplicationController>(TYPES.ApplicationController);
+router.get(APPLICATION_ROUTES.GET_TOP_APPLICANTS, asyncHandler((req: AuthRequest, res) => applicationController.getTopApplicants(req, res)));
+router.get(APPLICATION_ROUTES.GET_TOP_JOBS, asyncHandler((req: AuthRequest, res) => applicationController.getTopJobs(req, res)));
 
 router.use(authenticateToken);
 

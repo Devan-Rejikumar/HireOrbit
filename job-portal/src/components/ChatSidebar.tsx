@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ConversationResponse } from '@/api/_chatService';
+import { ConversationResponse } from '@/api/chatService';
 import { formatDistanceToNow } from 'date-fns';
 import { User, Building2, MessageCircle } from 'lucide-react';
 import api from '@/api/axios';
@@ -18,7 +18,7 @@ export const ChatSidebar = ({
   selectedConversationId,
   currentUserId,
   onSelectConversation,
-  role
+  role,
 }: ChatSidebarProps) => {
   const [participantNames, setParticipantNames] = useState<Record<string, string>>({});
   const fetchedRef = useRef<Set<string>>(new Set());
@@ -109,13 +109,19 @@ export const ChatSidebar = ({
                   const jobData = jobResponseData?.data?.job || jobResponseData?.job || jobResponseData?.data || jobResponseData;
                   
                   if (jobData && typeof jobData === 'object') {
-                    companyName = (jobData as any)?.company?.companyName ||
-                                (jobData as any)?.companyName ||
-                                (jobData as any)?.company?.name ||
-                                (typeof (jobData as any)?.company === 'string' ? (jobData as any)?.company : null) ||
-                                null;
+                    const jobObj = jobData as {
+                      company?: string | { companyName?: string; name?: string };
+                      companyName?: string;
+                    };
+                    companyName = (typeof jobObj.company === 'object' 
+                      ? jobObj.company?.companyName || jobObj.company?.name 
+                      : typeof jobObj.company === 'string' 
+                        ? jobObj.company 
+                        : null) ||
+                      jobObj.companyName ||
+                      null;
                   }
-                } catch (jobError: any) {
+                } catch (jobError: unknown) {
                   // Silent fail - continue with null
                 }
               }
@@ -125,17 +131,30 @@ export const ChatSidebar = ({
               } else {
                 names[conv.id] = 'Company';
               }
-            } catch (appError: any) {
+            } catch (appError: unknown) {
               names[conv.id] = 'Company';
             }
           } else {
-            const userRes = await api.get(`/users/${conv.userId}`);
+            interface UserResponse {
+              data?: {
+                user?: {
+                  username?: string;
+                  name?: string;
+                };
+              };
+              user?: {
+                username?: string;
+                name?: string;
+              };
+            }
+            
+            const userRes = await api.get<UserResponse>(`/users/${conv.userId}`);
             const userData = userRes.data?.data?.user || userRes.data?.user;
             const userName = userData?.username || userData?.name || 'User';
             names[conv.id] = userName;
           }
           fetchedRef.current.add(conv.id);
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Silent fail - use default name
           names[conv.id] = role === 'jobseeker' ? 'Company' : 'User';
           fetchedRef.current.add(conv.id);

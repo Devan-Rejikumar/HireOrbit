@@ -109,13 +109,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(null);
         }
         console.log('🔍 AuthContext - Authentication successful!');
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.log('🔍 AuthContext - Authentication check failed:', error);
-        console.log('🔍 AuthContext - Error status:', error?.response?.status);
-        console.log('🔍 AuthContext - Error data:', error?.response?.data);
+        const isAxiosError = error && typeof error === 'object' && 'response' in error;
+        const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
+        console.log('🔍 AuthContext - Error status:', axiosError?.response?.status);
+        console.log('🔍 AuthContext - Error data:', axiosError?.response?.data);
         
         // Only logout if it's a 401 (unauthorized) or 403 (forbidden) error
-        if (error?.response?.status === 401 || error?.response?.status === 403) {
+        if (axiosError?.response?.status === 401 || axiosError?.response?.status === 403) {
           console.log('🔍 AuthContext - Token invalid (401/403), logging out user');
           setUser(null);
           setCompany(null);

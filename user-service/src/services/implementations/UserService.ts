@@ -4,10 +4,10 @@ import { IUserRepository } from '../../repositories/interfaces/IUserRepository';
 import { EmailService } from './EmailService';
 import { RedisService } from './RedisService';
 import bcrypt from 'bcryptjs';
-import { User } from '@prisma/client';
+// import { User } from '@prisma/client';
 import { IUserService } from '../interfaces/IUserService';
 import { JWTService } from './JWTService';
-import { TokenPair } from '../../types/auth';
+// import { TokenPair } from '../../types/auth';
 import { mapUsersToResponse, mapUserToAuthResponse, mapUserToResponse } from '../../dto/mappers/user.mapper';
 import { AuthResponse, UserResponse } from '../../dto/responses/user.response';
 import { UserType } from '../../enums/UserType';
@@ -26,7 +26,7 @@ export class UserService implements IUserService {
     @inject(TYPES.JWTService) private _jwtService: JWTService
   ) { }
 
-  async register(email: string, password: string, name: string, role?: string): Promise<UserResponse> {
+  async register(email: string, password: string, name: string): Promise<UserResponse> {
     const existingUser = await this._userRepository.findByEmail(email);
     if (existingUser) {
       if (existingUser.isVerified) {
@@ -39,7 +39,7 @@ export class UserService implements IUserService {
       email,
       password: hashed,
       name
-    })
+    });
     return mapUserToResponse(user);
   }
 
@@ -61,12 +61,12 @@ export class UserService implements IUserService {
         user.id,
         refreshTokenPayload.tokenId,
         tokens.refreshToken
-      )
+      );
     } catch (redisError) {
       logger.warn('UserService Redis error (non-critical):', redisError);
     }
     logger.info('User Login successfully');
-    return mapUserToAuthResponse(user, tokens)
+    return mapUserToAuthResponse(user, tokens);
   }
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
@@ -76,7 +76,7 @@ export class UserService implements IUserService {
       const refreshTokenPayload = this._jwtService.verifyRefreshToken(refreshToken);
       logger.info('UserService - Refresh token verified:', refreshTokenPayload);
       
-      // Check if user is blocked before generating new token
+   
       const user = await this._userRepository.findById(refreshTokenPayload.userId);
       if (user?.isBlocked) {
         throw new AppError('Account blocked', HttpStatusCode.FORBIDDEN);
@@ -100,7 +100,7 @@ export class UserService implements IUserService {
       return { accessToken: newAccessToken };
     } catch (error) {
       logger.error('UserService - Refresh token error:', error);
-      // Preserve "Account blocked" error message
+     
       if (error instanceof AppError && error.message === 'Account blocked') {
         throw error;
       }
@@ -252,8 +252,9 @@ export class UserService implements IUserService {
   }): Promise<UserResponse> {
     const user = await this._userRepository.createUser({
       email: userData.email,
-      password: '',
+      password: '', // Google users don't need a password
       name: userData.fullName,
+      isGoogleUser: true, // Mark as Google user
     });
     return mapUserToResponse(user);
   }
@@ -270,7 +271,7 @@ export class UserService implements IUserService {
     try {
       const refreshTokenPayload = this._jwtService.verifyRefreshToken(refreshToken);
       await this.logout(refreshTokenPayload.userId, refreshTokenPayload.tokenId);
-    } catch (error) {
+    } catch {
       logger.warn('Invalid refresh token during logout');
     }
   }

@@ -9,7 +9,7 @@ const AdminAuthProtected = ({ children }: { children: React.ReactNode }) => {
   // Check for adminAccessToken cookie
   const cookies = document.cookie.split(';');
   const hasAdminToken = cookies.some(cookie => 
-    cookie.trim().startsWith('adminAccessToken=')
+    cookie.trim().startsWith('adminAccessToken='),
   );
   
   // If admin token exists, redirect to dashboard

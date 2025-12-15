@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { userService } from '../api/userService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -173,7 +173,7 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
                   disabled={isSendingOtp}
                   className="text-sm text-blue-600 hover:text-blue-700 underline"
                 >
-                  {isSendingOtp ? 'Resending...' : "Didn't receive code? Resend"}
+                  {isSendingOtp ? 'Resending...' : 'Didn\'t receive code? Resend'}
                 </button>
               </div>
             </div>

@@ -8,7 +8,7 @@ const NotificationTest = () => {
     isConnected,
     isLoading,
     isError,
-    error
+    error,
   } = useNotificationContext();
 
   return (

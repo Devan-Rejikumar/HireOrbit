@@ -1,8 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, HelpCircle, Settings, ChevronLeft, ChevronRight, User, Bell, LogOut, Plus } from 'lucide-react';
+import { Users, Download, Eye, ArrowLeft, Loader2, Search, Filter, Star, MoreHorizontal, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, Settings, ChevronLeft, ChevronRight, User, X, MessageCircle } from 'lucide-react';
+import { CompanyHeader } from '@/components/CompanyHeader';
+import { useTotalUnreadCount } from '@/hooks/useChat';
+import { useAuth } from '@/context/AuthContext';
 import api from '@/api/axios';
 import ScheduleInterviewModal from '@/components/ScheduleInterviewModal';
 import { _interviewService } from '@/api/interviewService';
@@ -26,6 +30,7 @@ interface Application {
 
 const CompanyApplications = () => {
   const navigate = useNavigate();
+  const { company: authCompany } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -37,12 +42,19 @@ const CompanyApplications = () => {
   const [schedulingApp, setSchedulingApp] = useState<Application | null>(null);
   const [applicationsWithInterviews, setApplicationsWithInterviews] = useState<Set<string>>(new Set());
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [company, setCompany] = useState<{ companyName?: string; email?: string; profileCompleted?: boolean; isVerified?: boolean } | null>(null);
+  const [company, setCompany] = useState<{ id?: string; companyName?: string; email?: string; profileCompleted?: boolean; isVerified?: boolean; logo?: string } | null>(null);
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [selectedAppForActions, setSelectedAppForActions] = useState<Application | null>(null);
+
+  // Get total unread message count
+  const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
+    authCompany?.id || null
+  );
 
   useEffect(() => {
-      fetchApplications();
-      fetchInterviewsForApplications();
-      fetchCompanyProfile();
+    fetchApplications();
+    fetchInterviewsForApplications();
+    fetchCompanyProfile();
   }, []);
 
   const fetchCompanyProfile = async () => {
@@ -54,9 +66,6 @@ const CompanyApplications = () => {
     }
   };
 
-  const handleLogout = async () => {
-    navigate('/login', { replace: true });
-  };
 
   const fetchApplications = async () => {
     try {
@@ -105,18 +114,29 @@ const CompanyApplications = () => {
     try {
       await api.put(`/applications/${applicationId}/status`, { 
         status: newStatus,
-        reason: `Status updated to ${newStatus}` 
+        reason: `Status updated to ${newStatus}`, 
       });
       fetchApplications(); 
     } catch (error) {
       console.error(' Error updating status:', error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const handleScheduleInterview = useCallback((app: Application) => {
     setSchedulingApp(app);
     setShowScheduleModal(true);
+    setShowActionsModal(false); // Close actions modal when opening schedule modal
+  }, []);
+
+  const handleOpenActionsModal = useCallback((app: Application) => {
+    setSelectedAppForActions(app);
+    setShowActionsModal(true);
+  }, []);
+
+  const handleCloseActionsModal = useCallback(() => {
+    setShowActionsModal(false);
+    setSelectedAppForActions(null);
   }, []);
 
   const handleInterviewScheduled = useCallback(() => {
@@ -124,7 +144,7 @@ const CompanyApplications = () => {
     setSchedulingApp(null);
     fetchApplications(); 
     fetchInterviewsForApplications(); 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const handleSort = useCallback((field: string) => {
@@ -142,12 +162,12 @@ const CompanyApplications = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'REVIEWING': return 'bg-blue-100 text-blue-800';
-      case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
-      case 'ACCEPTED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+    case 'REVIEWING': return 'bg-blue-100 text-blue-800';
+    case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
+    case 'ACCEPTED': return 'bg-green-100 text-green-800';
+    case 'REJECTED': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -159,7 +179,7 @@ const CompanyApplications = () => {
         searchTerm === '' || 
         app.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.userEmail.toLowerCase().includes(searchTerm.toLowerCase())
+        app.userEmail.toLowerCase().includes(searchTerm.toLowerCase()),
       )
       .sort((a, b) => {
         let aValue = a[sortField as keyof Application];
@@ -198,148 +218,58 @@ const CompanyApplications = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            {/* Hire Orbit Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
-            </div>
-            
-            {/* Company Info */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Company</span>
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                <Building2 className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">{company?.companyName || 'Company'}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Post Job Button */}
-            <div className="flex items-center gap-2">
-              <Button 
-                className={`px-4 py-2 ${
-                  company?.profileCompleted && company?.isVerified
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                }`}
-                onClick={() => {
-                  if (company?.profileCompleted && company?.isVerified) {
-                    navigate('/company/post-job');
-                  }
-                }}
-                disabled={!company?.profileCompleted || !company?.isVerified}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Post a job
-              </Button>
-              
-              {/* Notification message when button is disabled */}
-              {(!company?.profileCompleted || !company?.isVerified) && (
-                <div className="flex items-center gap-2">
-                  <div className="text-xs text-gray-500 max-w-xs">
-                    {!company?.profileCompleted 
-                      ? "Complete your profile to post jobs"
-                      : !company?.isVerified 
-                      ? "Awaiting admin approval to post jobs"
-                      : "Complete profile and get approval to post jobs"
-                    }
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/company/review-status')}
-                    className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
-                  >
-                    Check Status
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            {/* Notification Bell */}
-            <div className="relative">
-              <Bell className="h-6 w-6 text-gray-600 hover:text-gray-900 cursor-pointer" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-            </div>
-            
-            {/* Logout Button */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleLogout}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <CompanyHeader company={company} />
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 relative`}>
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto transition-all duration-300 z-10">
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
-                type="button"
-                onClick={() => navigate('/company/dashboard')}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Home className="h-5 w-5" />
                 Dashboard
               </button>
               <button 
-                type="button"
-                onClick={() => navigate('/chat')}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
+                onClick={() => navigate(ROUTES.CHAT)}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left relative"
               >
                 <MessageSquare className="h-5 w-5" />
-                Messages
+                <span className="flex-1">Messages</span>
+                {totalUnreadMessages > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                    {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+                  </span>
+                )}
               </button>
-              <button 
-                type="button"
-                onClick={() => navigate('/company/dashboard')}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-              >
+              <button onClick={() => navigate('/company/dashboard')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <Building2 className="h-5 w-5" />
                 Company Profile
               </button>
-              <button 
-                type="button"
-                className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium w-full text-left whitespace-nowrap"
-                disabled
-              >
+              <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left">
                 <User className="h-5 w-5" />
                 All Applicants
               </button>
-              <button 
-                type="button"
-                onClick={() => navigate('/company/jobs')}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-              >
+              <button onClick={() => navigate(ROUTES.COMPANY_JOBS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <Briefcase className="h-5 w-5" />
                 Job Listing
               </button>
               <button 
-                type="button"
-                onClick={() => navigate('/company/interviews')}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
+                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
+                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
-                <CalendarIcon className="h-6 w-6" />
-                Interview Management
+                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="flex flex-col leading-tight">
+                  <span>Interview</span>
+                  <span>Management</span>
+                </span>
               </button>
               <button 
-                type="button"
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-                disabled
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
+                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing
@@ -348,33 +278,29 @@ const CompanyApplications = () => {
             
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button 
-                type="button"
-                onClick={() => navigate('/company/settings')} 
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-              >
+              <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <Settings className="h-5 w-5" />
                 Settings
-              </button>
-              <button 
-                type="button"
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left whitespace-nowrap"
-                disabled
-              >
-                <HelpCircle className="h-5 w-5" />
-                Help Center
               </button>
             </div>
           </nav>
           
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-purple-600" />
-              </div>
+          <div className="absolute bottom-3 left-6 right-6">
+            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
+              {company?.logo ? (
+                <img 
+                  src={company.logo} 
+                  alt={company.companyName || 'Company logo'} 
+                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                  <Building2 className="h-4 w-4 text-white" />
+                </div>
+              )}
               <div>
-                <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
-                <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
+                <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
+                <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
               </div>
             </div>
           </div>
@@ -396,7 +322,7 @@ const CompanyApplications = () => {
         </button>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 pt-[84px] ml-64">
           <div className="mb-6">
             <div className="flex justify-between items-center">
               <div>
@@ -406,312 +332,299 @@ const CompanyApplications = () => {
             </div>
           </div>
 
-      {/* Search and Filter Bar */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Search Applicants"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-          />
-        </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
+          {/* Search and Filter Bar */}
+          <div className="flex gap-4 mb-6">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search Applicants"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="h-4 w-4" />
           Filter
-        </Button>
-      </div>
+            </Button>
+          </div>
 
-      {/* Status Filter Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {['ALL', 'PENDING', 'REVIEWING', 'SHORTLISTED', 'ACCEPTED', 'REJECTED'].map(status => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-              statusFilter === status 
-                ? 'bg-purple-600 text-white shadow-lg' 
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
-            }`}
-          >
-            {status} ({applications.filter(a => status === 'ALL' || a.status === status).length})
-          </button>
-        ))}
-      </div>
+          {/* Status Filter Tabs */}
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            {['ALL', 'PENDING', 'REVIEWING', 'SHORTLISTED', 'ACCEPTED', 'REJECTED'].map(status => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                  statusFilter === status 
+                    ? 'bg-purple-600 text-white shadow-lg' 
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                {status} ({applications.filter(a => status === 'ALL' || a.status === status).length})
+              </button>
+            ))}
+          </div>
 
 
-      {/* Applications Table */}
-      <Card>
-        <CardContent className="p-0">
-          {filteredApps.length === 0 ? (
-            <div className="p-12 text-center">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No applications found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('userName')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Full Name
-                        {sortField === 'userName' && (
-                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Score
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Hiring Stage
-                        {sortField === 'status' && (
-                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('appliedAt')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Applied Date
-                        {sortField === 'appliedAt' && (
-                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('jobTitle')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Job Role
-                        {sortField === 'jobTitle' && (
-                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredApps.map(app => (
-                    <tr key={app.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                            <Users className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{app.userName}</div>
-                            <div className="text-sm text-gray-500">{app.userEmail}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                          <span className="text-sm text-gray-900">4.5</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={app.status}
-                          onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
-                          className={`px-2 py-1 text-xs font-semibold rounded-full border-0 focus:ring-2 focus:ring-purple-500 ${getStatusColor(app.status)}`}
+          {/* Applications Table */}
+          <Card>
+            <CardContent className="p-0">
+              {filteredApps.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No applications found</p>
+                </div>
+              ) : (
+                <div className={filteredApps.length > 10 ? 'overflow-y-auto max-h-[600px]' : ''}>
+                  <table className="w-full table-fixed">
+                    <thead className="bg-gray-50 border-b sticky top-0 z-10">
+                      <tr>
+                        <th 
+                          className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-[22%]"
+                          onClick={() => handleSort('userName')}
                         >
-                          <option value="PENDING">PENDING</option>
-                          <option value="REVIEWING">REVIEWING</option>
-                          <option value="SHORTLISTED">SHORTLISTED</option>
-                          <option value="ACCEPTED">ACCEPTED</option>
-                          <option value="REJECTED">REJECTED</option>
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(app.appliedAt).toLocaleDateString('en-US', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {app.jobTitle}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => setSelectedApp(app)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            See Application
-                          </Button>
-                          {app.status === 'SHORTLISTED' && !applicationsWithInterviews.has(app.id) && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleScheduleInterview(app)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
+                          <div className="flex items-center gap-1">
+                        Full Name
+                            {sortField === 'userName' && (
+                              sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                      Score
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-[18%]"
+                          onClick={() => handleSort('status')}
+                        >
+                          <div className="flex items-center gap-1">
+                        Hiring Stage
+                            {sortField === 'status' && (
+                              sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-[18%]"
+                          onClick={() => handleSort('appliedAt')}
+                        >
+                          <div className="flex items-center gap-1">
+                        Applied Date
+                            {sortField === 'appliedAt' && (
+                              sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-[22%]"
+                          onClick={() => handleSort('jobTitle')}
+                        >
+                          <div className="flex items-center gap-1">
+                        Job Role
+                            {sortField === 'jobTitle' && (
+                              sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider w-[10%]">
+                      Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredApps.map(app => (
+                        <tr key={app.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center min-w-0">
+                              <div className="w-9 h-9 bg-purple-100 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                                <Users className="h-5 w-5 text-purple-600" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium text-gray-900 truncate">{app.userName}</div>
+                                <div className="text-xs text-gray-500 truncate">{app.userEmail}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                              <span className="text-sm text-gray-900">4.5</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={app.status}
+                              onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
+                              className={`px-2 py-1 text-sm font-semibold rounded-full border-0 focus:ring-2 focus:ring-purple-500 ${getStatusColor(app.status)}`}
                             >
-                              <Calendar className="h-4 w-4 mr-1" />
-                              Schedule
-                            </Button>
-                          )}
-                          {app.status === 'SHORTLISTED' && (
-                            <ChatButton applicationId={app.id} size="sm" />
-                          )}
-                          <button className="text-gray-400 hover:text-gray-600">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      {filteredApps.length > 0 && (
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-700">
-            View 10 Applicants per page
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
-              <ChevronUp className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="bg-purple-600 text-white border-purple-600">
-              1
-            </Button>
-            <Button variant="outline" size="sm">
-              2
-            </Button>
-            <Button variant="outline" size="sm">
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Detail Modal */}
-      {selectedApp && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              {/* Modal Header */}
-              <div className="flex justify-between items-start mb-6">
-              <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedApp.userName}</h2>
-                  <p className="text-purple-600 font-medium">{selectedApp.jobTitle}</p>
+                              <option value="PENDING">PENDING</option>
+                              <option value="REVIEWING">REVIEWING</option>
+                              <option value="SHORTLISTED">SHORTLISTED</option>
+                              <option value="ACCEPTED">ACCEPTED</option>
+                              <option value="REJECTED">REJECTED</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {new Date(app.appliedAt).toLocaleDateString('en-US', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              year: 'numeric', 
+                            })}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 truncate" title={app.jobTitle}>
+                            {app.jobTitle}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium">
+                            <button
+                              onClick={() => {
+                                setSelectedAppForActions(app);
+                                setShowActionsModal(true);
+                              }}
+                              className="text-gray-600 hover:text-gray-900 p-2 rounded hover:bg-gray-100 transition-colors"
+                              title="Actions"
+                            >
+                              <Settings className="h-5 w-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <button 
-                  onClick={() => setSelectedApp(null)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ✕
-                </button>
-              </div>
+              )}
+            </CardContent>
+          </Card>
 
-              {/* Modal Content */}
-              <div className="space-y-6">
-                {/* Contact Info */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-3">Contact Information</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <p className="flex items-center gap-2">📧 <span>{selectedApp.userEmail}</span></p>
-                    {selectedApp.userPhone && <p className="flex items-center gap-2">📞 <span>{selectedApp.userPhone}</span></p>}
-                  </div>
+          {/* Pagination */}
+          {filteredApps.length > 10 && (
+            <div className="mt-6 flex items-center justify-end">
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-700">
+                  View 10 Applicants per page
                 </div>
-
-                {/* Application Details */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-3">Application Details</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <p>💰 Expected Salary: <strong>{selectedApp.expectedSalary}</strong></p>
-                    <p>💼 Experience: <strong>{selectedApp.experience}</strong></p>
-                    <p>📅 Applied: <strong>{new Date(selectedApp.appliedAt).toLocaleDateString()}</strong></p>
-                    <div className="flex items-center gap-2">
-                      <span>📊 Status:</span>
-                      <select
-                        value={selectedApp.status}
-                        onChange={(e) => {
-                          handleStatusUpdate(selectedApp.id, e.target.value);
-                          setSelectedApp({...selectedApp, status: e.target.value});
-                        }}
-                        className="px-3 py-1 border border-gray-300 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                      >
-                        <option value="PENDING">PENDING</option>
-                        <option value="REVIEWING">REVIEWING</option>
-                        <option value="SHORTLISTED">SHORTLISTED</option>
-                        <option value="ACCEPTED">ACCEPTED</option>
-                        <option value="REJECTED">REJECTED</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cover Letter */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-3">Cover Letter</h3>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-gray-700 whitespace-pre-wrap">{selectedApp.coverLetter}</p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t">
-                  {selectedApp.resumeUrl && (
-                    <>
-                      <Button 
-                        onClick={() => handleViewResume(selectedApp.userName, selectedApp.resumeUrl, selectedApp.id)}
-                        className="bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Resume
-                      </Button>
-                      <Button 
-                        onClick={() => handleDownloadResume(selectedApp.resumeUrl)}
-                        variant="outline"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Resume
-                      </Button>
-                    </>
-                  )}
-                  {selectedApp.status === 'SHORTLISTED' && !applicationsWithInterviews.has(selectedApp.id) && (
-                    <Button 
-                      onClick={() => handleScheduleInterview(selectedApp)}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Schedule Interview
-                    </Button>
-                  )}
-                  <Button variant="outline" onClick={() => setSelectedApp(null)}>
-                    Close
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled>
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" className="bg-purple-600 text-white border-purple-600">
+                    1
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    2
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          {/* Detail Modal */}
+          {selectedApp && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  {/* Modal Header */}
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">{selectedApp.userName}</h2>
+                      <p className="text-purple-600 font-medium">{selectedApp.jobTitle}</p>
+                    </div>
+                    <button 
+                      onClick={() => setSelectedApp(null)}
+                      className="text-gray-500 hover:text-gray-700 text-2xl"
+                    >
+                  ✕
+                    </button>
+                  </div>
+
+                  {/* Modal Content */}
+                  <div className="space-y-6">
+                    {/* Contact Info */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Contact Information</h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <p className="flex items-center gap-2">📧 <span>{selectedApp.userEmail}</span></p>
+                        {selectedApp.userPhone && <p className="flex items-center gap-2">📞 <span>{selectedApp.userPhone}</span></p>}
+                      </div>
+                    </div>
+
+                    {/* Application Details */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Application Details</h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <p>💰 Expected Salary: <strong>{selectedApp.expectedSalary}</strong></p>
+                        <p>💼 Experience: <strong>{selectedApp.experience}</strong></p>
+                        <p>📅 Applied: <strong>{new Date(selectedApp.appliedAt).toLocaleDateString()}</strong></p>
+                        <div className="flex items-center gap-2">
+                          <span>📊 Status:</span>
+                          <select
+                            value={selectedApp.status}
+                            onChange={(e) => {
+                              handleStatusUpdate(selectedApp.id, e.target.value);
+                              setSelectedApp({ ...selectedApp, status: e.target.value });
+                            }}
+                            className="px-3 py-1 border border-gray-300 rounded-lg bg-white text-sm font-medium focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          >
+                            <option value="PENDING">PENDING</option>
+                            <option value="REVIEWING">REVIEWING</option>
+                            <option value="SHORTLISTED">SHORTLISTED</option>
+                            <option value="ACCEPTED">ACCEPTED</option>
+                            <option value="REJECTED">REJECTED</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cover Letter */}
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Cover Letter</h3>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedApp.coverLetter}</p>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-4 border-t">
+                      {selectedApp.resumeUrl && (
+                        <>
+                          <Button 
+                            onClick={() => handleViewResume(selectedApp.userName, selectedApp.resumeUrl, selectedApp.id)}
+                            className="bg-purple-600 hover:bg-purple-700"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                        View Resume
+                          </Button>
+                          <Button 
+                            onClick={() => handleDownloadResume(selectedApp.resumeUrl)}
+                            variant="outline"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                        Download Resume
+                          </Button>
+                        </>
+                      )}
+                      {selectedApp.status === 'SHORTLISTED' && !applicationsWithInterviews.has(selectedApp.id) && (
+                        <Button 
+                          onClick={() => handleScheduleInterview(selectedApp)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <Calendar className="h-4 w-4 mr-2" />
+                      Schedule Interview
+                        </Button>
+                      )}
+                      <Button variant="outline" onClick={() => setSelectedApp(null)}>
+                    Close
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </main>
       </div>
@@ -729,6 +642,62 @@ const CompanyApplications = () => {
           jobTitle={schedulingApp.jobTitle}
           onSuccess={handleInterviewScheduled}
         />
+      )}
+
+      {/* Actions Modal */}
+      {showActionsModal && selectedAppForActions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseActionsModal}>
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Actions</h3>
+                <button
+                  onClick={handleCloseActionsModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={() => {
+                    navigate(`/chat?applicationId=${selectedAppForActions.id}`);
+                    handleCloseActionsModal();
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 py-3"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  Chat
+                </Button>
+                
+                {selectedAppForActions.status === 'SHORTLISTED' && !applicationsWithInterviews.has(selectedAppForActions.id) && (
+                  <Button
+                    onClick={() => {
+                      handleScheduleInterview(selectedAppForActions);
+                      handleCloseActionsModal();
+                    }}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 py-3"
+                  >
+                    <Calendar className="h-5 w-5" />
+                    Schedule Interview
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={() => {
+                    setSelectedApp(selectedAppForActions);
+                    handleCloseActionsModal();
+                  }}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-2 py-3"
+                >
+                  <Eye className="h-5 w-5" />
+                  See Application
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

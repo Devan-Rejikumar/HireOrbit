@@ -2,7 +2,7 @@
  * Time-related constants used across the user service
  */
 
-import { AppConfig } from "../config/app.config";
+import { AppConfig } from '../config/app.config';
 
 export const OTP_EXPIRY_SECONDS = 300;
 export const PASSWORD_RESET_OTP_EXPIRY_SECONDS = 900; 

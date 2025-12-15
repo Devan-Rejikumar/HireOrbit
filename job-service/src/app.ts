@@ -6,18 +6,19 @@ import jobRoutes from './routes/JobRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { ErrorHandler } from './middleware/error-handler.middleware';
+import { JOB_ROUTES } from './constants/routes';
+import { AppConfig } from './config/app.config';
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+  origin: AppConfig.FRONTEND_URL, 
   credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
-
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -25,7 +26,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -33,7 +34,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);
@@ -59,7 +60,7 @@ app.get('/health', (req, res) => {
   res.json({ message: 'Job Service is running!' });
 });
 
-app.use('/api/jobs', jobRoutes);
+app.use(JOB_ROUTES.API_BASE_PATH, jobRoutes);
 
 app.use(ErrorHandler);
 

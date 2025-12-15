@@ -1,19 +1,20 @@
 import { injectable } from 'inversify';
-import { IJobServiceClient } from '../interface/IJobServiceClient';
+import { IJobServiceClient } from '../interfaces/IJobServiceClient';
 import { JobApiResponse } from '../../types/external-api.types';
 import { logger } from '../../utils/logger';
+import { AppConfig } from '../../config/app.config';
 
 @injectable()
 export class JobServiceClient implements IJobServiceClient {
   private readonly baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.JOB_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3002';
+    this.baseUrl = AppConfig.JOB_SERVICE_URL;
   }
 
   async getJobById(jobId: string): Promise<JobApiResponse> {
     try {
-      const timeout = 5000; 
+      const timeout = AppConfig.HTTP_CLIENT_TIMEOUT; 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -33,8 +34,9 @@ export class JobServiceClient implements IJobServiceClient {
 
       const data = await response.json() as JobApiResponse;
       return data;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error: unknown) {
+      const err = error as { name?: string };
+      if (err.name === 'AbortError') {
         logger.error(`JobServiceClient: Request timeout for job ${jobId}`);
       } else {
         logger.error(`JobServiceClient: Error fetching job ${jobId}:`, error);

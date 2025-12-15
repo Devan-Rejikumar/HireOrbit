@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -23,7 +24,7 @@ import {
   Mail,
   Phone,
   MapPin,
-  Globe
+  Globe,
 } from 'lucide-react';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
 import api from '@/api/axios';
@@ -42,6 +43,7 @@ interface Company {
   phone?: string;
   address?: string;
   description?: string;
+  logo?: string;
 }
 
 const CompanySettings = () => {
@@ -57,7 +59,11 @@ const CompanySettings = () => {
   const fetchCompanyProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/company/profile');
+      const response = await api.get<{ 
+        success?: boolean; 
+        data?: { company?: Company }; 
+        company?: Company;
+      }>('/company/profile');
       let companyData: Company | null = null;
       
       if (response.data && response.data.success && response.data.data && response.data.data.company) {
@@ -79,7 +85,7 @@ const CompanySettings = () => {
   };
 
   const handleLogout = async () => {
-    navigate('/login', { replace: true });
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   if (loading) {
@@ -112,7 +118,15 @@ const CompanySettings = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Company</span>
               <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                <Building2 className="h-4 w-4 text-gray-500" />
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-6 h-6 rounded object-cover"
+                  />
+                ) : (
+                  <Building2 className="h-4 w-4 text-gray-500" />
+                )}
                 <span className="font-bold text-purple-700">{company?.companyName || 'Company'}</span>
               </div>
             </div>
@@ -129,7 +143,7 @@ const CompanySettings = () => {
                 }`}
                 onClick={() => {
                   if (company?.profileCompleted && company?.isVerified) {
-                    navigate('/company/post-job');
+                    navigate(ROUTES.COMPANY_POST_JOB);
                   }
                 }}
                 disabled={!company?.profileCompleted || !company?.isVerified}
@@ -143,16 +157,16 @@ const CompanySettings = () => {
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-gray-500 max-w-xs">
                     {!company?.profileCompleted 
-                      ? "Complete your profile to post jobs"
+                      ? 'Complete your profile to post jobs'
                       : !company?.isVerified 
-                      ? "Awaiting admin approval to post jobs"
-                      : "Complete profile and get approval to post jobs"
+                        ? 'Awaiting admin approval to post jobs'
+                        : 'Complete profile and get approval to post jobs'
                     }
                   </div>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate('/company/review-status')}
+                    onClick={() => navigate(ROUTES.COMPANY_REVIEW_STATUS)}
                     className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
                   >
                     Check Status
@@ -189,7 +203,7 @@ const CompanySettings = () => {
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Home className="h-5 w-5" />
@@ -200,7 +214,7 @@ const CompanySettings = () => {
                 Messages
               </button>
               <button 
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <Building2 className="h-5 w-5" />
@@ -211,20 +225,26 @@ const CompanySettings = () => {
                 All Applicants
               </button>
               <button 
-                onClick={() => navigate('/company/jobs')}
+                onClick={() => navigate(ROUTES.COMPANY_JOBS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
                 <GraduationCap className="h-5 w-5" />
                 Job Listing
               </button>
               <button 
-                onClick={() => navigate('/company/interviews')}
+                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
+                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+              >
+                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                <span className="flex flex-col leading-tight">
+                  <span>Interview</span>
+                  <span>Management</span>
+                </span>
+              </button>
+              <button 
+                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
                 className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
               >
-                <CalendarIcon className="h-5 w-5" />
-                Interview Management
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing
               </button>
@@ -245,9 +265,17 @@ const CompanySettings = () => {
           
           <div className="absolute bottom-6 left-6 right-6">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-purple-600" />
-              </div>
+              {company?.logo ? (
+                <img 
+                  src={company.logo} 
+                  alt={company.companyName || 'Company logo'} 
+                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-purple-600" />
+                </div>
+              )}
               <div>
                 <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
                 <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
@@ -275,13 +303,30 @@ const CompanySettings = () => {
               
               {/* Company Profile Section */}
               <Card>
-                <CardHeader>
+                  <CardHeader>
                   <CardTitle className="flex items-center gap-3">
                     <Building2 className="h-6 w-6 text-purple-600" />
                     Company Profile
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Company Logo Display */}
+                  {company?.logo && (
+                    <div className="mb-6 pb-6 border-b border-gray-200">
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">Company Logo</label>
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src={company.logo} 
+                          alt={company.companyName || 'Company logo'} 
+                          className="w-24 h-24 rounded-lg object-cover border-2 border-gray-200"
+                        />
+                        <div>
+                          <p className="text-sm text-gray-600">Your company logo is displayed across the platform</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Company Information */}
                     <div className="space-y-4">
@@ -423,31 +468,11 @@ const CompanySettings = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                        <p className="text-sm text-gray-600">Receive email notifications for job applications and updates.</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                      </label>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-1">Save Your Preferences</h4>
+                      <p className="text-sm text-gray-600">Save your company settings and preferences.</p>
                     </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900">SMS Notifications</h4>
-                        <p className="text-sm text-gray-600">Receive SMS notifications for urgent updates.</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-gray-200">
                     <Button className="bg-purple-600 hover:bg-purple-700">
                       <Save className="h-4 w-4 mr-2" />
                       Save Preferences

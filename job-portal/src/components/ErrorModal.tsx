@@ -14,7 +14,7 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
   onClose,
   title,
   message,
-  buttonText = 'Try Again'
+  buttonText = 'Try Again',
 }) => {
   if (!isOpen) return null;
 

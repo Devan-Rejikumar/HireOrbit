@@ -21,5 +21,6 @@ router.patch(ADMIN_ROUTES.BLOCK_USER, authenticateToken, asyncHandler((req, res)
 router.patch(ADMIN_ROUTES.UNBLOCK_USER, authenticateToken, asyncHandler((req, res) => adminController.unblockUser(req, res)));
 router.post(ADMIN_ROUTES.LOGOUT, authenticateToken, asyncHandler((req, res) => adminController.logout(req, res)));
 router.get(ADMIN_ROUTES.GET_ME, authenticateToken, asyncHandler((req, res) => adminController.me(req, res)));
+router.get(ADMIN_ROUTES.GET_DASHBOARD_STATISTICS, authenticateToken, asyncHandler((req, res) => adminController.getDashboardStatistics(req, res)));
 
 export default router;

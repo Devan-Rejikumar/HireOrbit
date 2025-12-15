@@ -1,10 +1,11 @@
 import { Kafka } from 'kafkajs';
+import { AppConfig } from './app.config';
 
 export const kafka = new Kafka({
-    clientId: 'chat-service',
-    brokers: [process.env.KAFKA_BROKERS || 'localhost:9092']
+  clientId: 'chat-service',
+  brokers: [AppConfig.KAFKA_BROKERS],
 });
 
 export const consumer = kafka.consumer({
-    groupId: 'chat-group'
+  groupId: 'chat-group',
 });

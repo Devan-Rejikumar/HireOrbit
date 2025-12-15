@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Clock, MapPin, Video, Phone, Loader2, CheckCircle, XCircle, User, MessageSquare, Lock, LogOut, Home, Search, Briefcase, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount } from '@/hooks/useChat';
@@ -27,7 +28,7 @@ const MySchedule = () => {
 
   useEffect(() => {
     if (role !== 'jobseeker') {
-      navigate('/');
+      navigate(ROUTES.HOME);
       return;
     }
   }, [role, navigate]);
@@ -50,9 +51,11 @@ const MySchedule = () => {
       setInterviews(interviewsList);
       setTotalInterviews(response.data?.pagination?.total || interviewsList.length);
       setTotalPages(response.data?.pagination?.totalPages || 1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch interviews:', err);
-      setError(err.response?.data?.message || 'Failed to load interviews');
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
+      setError(axiosError?.response?.data?.message || 'Failed to load interviews');
       toast.error('Failed to load interviews');
     } finally {
       setLoading(false);
@@ -66,32 +69,32 @@ const MySchedule = () => {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       }),
       time: date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true
-      })
+        hour12: true,
+      }),
     };
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
-      case 'CONFIRMED': return 'bg-green-100 text-green-800';
-      case 'COMPLETED': return 'bg-blue-100 text-blue-800';
-      case 'CANCELLED': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+    case 'CONFIRMED': return 'bg-green-100 text-green-800';
+    case 'COMPLETED': return 'bg-blue-100 text-blue-800';
+    case 'CANCELLED': return 'bg-red-100 text-red-800';
+    default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'ONLINE': return <Video className="w-5 h-5" />;
-      case 'OFFLINE': return <MapPin className="w-5 h-5" />;
-      case 'PHONE': return <Phone className="w-5 h-5" />;
-      default: return <Clock className="w-5 h-5" />;
+    case 'ONLINE': return <Video className="w-5 h-5" />;
+    case 'OFFLINE': return <MapPin className="w-5 h-5" />;
+    case 'PHONE': return <Phone className="w-5 h-5" />;
+    default: return <Clock className="w-5 h-5" />;
     }
   };
 
@@ -133,7 +136,7 @@ const MySchedule = () => {
         (interview) =>
           interview.jobTitle?.toLowerCase().includes(searchLower) ||
           interview.companyName?.toLowerCase().includes(searchLower) ||
-          interview.status.toLowerCase().includes(searchLower)
+          interview.status.toLowerCase().includes(searchLower),
       );
     }
     
@@ -143,13 +146,13 @@ const MySchedule = () => {
   const upcomingInterviews = filteredInterviews.filter(interview => 
     new Date(interview.scheduledAt) > new Date() && 
     interview.status !== 'CANCELLED' && 
-    interview.status !== 'COMPLETED'
+    interview.status !== 'COMPLETED',
   );
 
   const pastInterviews = filteredInterviews.filter(interview => 
     new Date(interview.scheduledAt) <= new Date() || 
     interview.status === 'CANCELLED' || 
-    interview.status === 'COMPLETED'
+    interview.status === 'COMPLETED',
   );
 
   if (loading) {
@@ -179,7 +182,7 @@ const MySchedule = () => {
             
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => navigate('/jobs')} 
+                onClick={() => navigate(ROUTES.JOBS)} 
                 className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                 title="Search Jobs"
               >
@@ -307,319 +310,344 @@ const MySchedule = () => {
             </div>
           </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-red-600">{error}</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={fetchInterviews}
-            className="mt-2"
-          >
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600">{error}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchInterviews}
+                className="mt-2"
+              >
             Try Again
-          </Button>
-        </div>
-      )}
+              </Button>
+            </div>
+          )}
 
-      {/* Upcoming Interviews */}
-      {upcomingInterviews.length > 0 && (
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Calendar className="w-6 h-6 mr-2 text-blue-600" />
+          {/* Upcoming Interviews */}
+          {upcomingInterviews.length > 0 && (
+            <Card className="mb-6">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-6 h-6 mr-2 text-blue-600" />
               Upcoming Interviews ({upcomingInterviews.length})
-            </h2>
-            <div className="space-y-4">
-              {upcomingInterviews.map((interview) => {
-                const { date, time } = formatDateTime(interview.scheduledAt);
-                return (
-                  <div key={interview.id} className="border border-gray-200 rounded-lg p-4 bg-white">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {interview.jobTitle}
-                          </h3>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(interview.status)}`}>
-                            {interview.status}
-                          </span>
-                        </div>
-                        <p className="text-gray-600 mb-2">at {interview.companyName}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{date}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {getTypeIcon(interview.type)}
-                            <span className="capitalize">{interview.type.toLowerCase()}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{interview.duration} minutes</span>
-                          </div>
-                        </div>
-                        {interview.location && (
-                          <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>{interview.location}</span>
-                          </div>
-                        )}
-                        {interview.meetingLink && (
-                          <div className="mt-2">
-                            <a
-                              href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm underline"
-                            >
-                              <Video className="w-4 h-4" />
-                              Join Meeting
-                            </a>
-                          </div>
-                        )}
-                        {interview.notes && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                            <p className="text-sm text-gray-700">
-                              <strong>Notes:</strong> {interview.notes}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Interview Decision Info for Upcoming */}
-                        {(interview.status === 'SELECTED' || interview.status === 'REJECTED') && (
-                          <div className={`mt-3 p-3 rounded-md border-l-4 ${
-                            interview.status === 'SELECTED' 
-                              ? 'bg-green-50 border-green-400' 
-                              : 'bg-red-50 border-red-400'
-                          }`}>
-                            <div className="flex items-start gap-2">
-                              {interview.status === 'SELECTED' ? (
-                                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                              ) : (
-                                <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                              )}
-                              <div className="flex-1">
-                                <div className={`font-medium text-sm ${
-                                  interview.status === 'SELECTED' ? 'text-green-800' : 'text-red-800'
-                                }`}>
-                                  Interview Result: <span className="capitalize">{interview.status.toLowerCase()}</span>
-                                </div>
-                                {interview.decisionReason && (
-                                  <div className="mt-1 text-sm text-gray-700">
-                                    <strong>Reason:</strong> {interview.decisionReason}
-                                  </div>
-                                )}
-                                {interview.feedback && (
-                                  <div className="mt-1 text-sm text-gray-700">
-                                    <strong>Feedback:</strong> {interview.feedback}
-                                  </div>
-                                )}
-                                {interview.decidedAt && (
-                                  <div className="mt-1 text-xs text-gray-500">
-                                    Decision made: {new Date(interview.decidedAt).toLocaleDateString()}
-                                  </div>
-                                )}
+                </h2>
+                <div className="space-y-4">
+                  {upcomingInterviews.map((interview) => {
+                    const { date, time } = formatDateTime(interview.scheduledAt);
+                    return (
+                      <div key={interview.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900">
+                                {interview.jobTitle}
+                              </h3>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(interview.status)}`}>
+                                {interview.status}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 mb-2">at {interview.companyName}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>{date}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{time}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {getTypeIcon(interview.type)}
+                                <span className="capitalize">{interview.type.toLowerCase()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{interview.duration} minutes</span>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                            {interview.location && (
+                              <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
+                                <MapPin className="w-4 h-4" />
+                                <span>{interview.location}</span>
+                              </div>
+                            )}
+                            {/* Show both WebRTC Join Call and External Meeting Link (if provided) */}
+                            {interview.type === 'ONLINE' && interview.status === 'CONFIRMED' && (
+                              <div className="mt-3 flex items-center gap-3">
+                                <Button
+                                  size="sm"
+                                  onClick={() => navigate(`/interview/${interview.id}/video`)}
+                                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                                >
+                                  <Video className="w-4 h-4" />
+                              Join Call
+                                </Button>
+                                {interview.meetingLink && (
+                                  <a
+                                    href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm underline"
+                                    title="Use external meeting link as fallback"
+                                  >
+                                    <Video className="w-4 h-4" />
+                                Join External Meeting
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                            {interview.meetingLink && interview.type !== 'ONLINE' && (
+                              <div className="mt-2">
+                                <a
+                                  href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm underline"
+                                >
+                                  <Video className="w-4 h-4" />
+                              Join Meeting
+                                </a>
+                              </div>
+                            )}
+                            {interview.notes && (
+                              <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Notes:</strong> {interview.notes}
+                                </p>
+                              </div>
+                            )}
 
-      {/* Past Interviews */}
-      {pastInterviews.length > 0 && (
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Clock className="w-6 h-6 mr-2 text-gray-600" />
+                            {/* Interview Decision Info for Upcoming */}
+                            {(interview.status === 'SELECTED' || interview.status === 'REJECTED') && (
+                              <div className={`mt-3 p-3 rounded-md border-l-4 ${
+                                interview.status === 'SELECTED' 
+                                  ? 'bg-green-50 border-green-400' 
+                                  : 'bg-red-50 border-red-400'
+                              }`}>
+                                <div className="flex items-start gap-2">
+                                  {interview.status === 'SELECTED' ? (
+                                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                                  ) : (
+                                    <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                                  )}
+                                  <div className="flex-1">
+                                    <div className={`font-medium text-sm ${
+                                      interview.status === 'SELECTED' ? 'text-green-800' : 'text-red-800'
+                                    }`}>
+                                  Interview Result: <span className="capitalize">{interview.status.toLowerCase()}</span>
+                                    </div>
+                                    {interview.decisionReason && (
+                                      <div className="mt-1 text-sm text-gray-700">
+                                        <strong>Reason:</strong> {interview.decisionReason}
+                                      </div>
+                                    )}
+                                    {interview.feedback && (
+                                      <div className="mt-1 text-sm text-gray-700">
+                                        <strong>Feedback:</strong> {interview.feedback}
+                                      </div>
+                                    )}
+                                    {interview.decidedAt && (
+                                      <div className="mt-1 text-xs text-gray-500">
+                                    Decision made: {new Date(interview.decidedAt).toLocaleDateString()}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Past Interviews */}
+          {pastInterviews.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <Clock className="w-6 h-6 mr-2 text-gray-600" />
               Past Interviews ({pastInterviews.length})
-            </h2>
-            <div className="space-y-4">
-              {pastInterviews.map((interview) => {
-                const { date, time } = formatDateTime(interview.scheduledAt);
-                return (
-                  <div key={interview.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-700">
-                            {interview.jobTitle}
-                          </h3>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(interview.status)}`}>
-                            {interview.status}
-                          </span>
-                        </div>
-                        <p className="text-gray-600 mb-2">at {interview.companyName}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{date}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{time}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {getTypeIcon(interview.type)}
-                            <span className="capitalize">{interview.type.toLowerCase()}</span>
-                          </div>
-                        </div>
-                        {interview.location && (
-                          <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span>{interview.location}</span>
-                          </div>
-                        )}
-                        {interview.meetingLink && (
-                          <div className="mt-2">
-                            <a
-                              href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm underline"
-                            >
-                              <Video className="w-4 h-4" />
-                              Join Meeting
-                            </a>
-                          </div>
-                        )}
-                        {interview.notes && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                            <p className="text-sm text-gray-700">
-                              <strong>Notes:</strong> {interview.notes}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Interview Decision Info */}
-                        {(interview.status === 'SELECTED' || interview.status === 'REJECTED') && (
-                          <div className={`mt-3 p-3 rounded-md border-l-4 ${
-                            interview.status === 'SELECTED' 
-                              ? 'bg-green-50 border-green-400' 
-                              : 'bg-red-50 border-red-400'
-                          }`}>
-                            <div className="flex items-start gap-2">
-                              {interview.status === 'SELECTED' ? (
-                                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                              ) : (
-                                <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                              )}
-                              <div className="flex-1">
-                                <div className={`font-medium text-sm ${
-                                  interview.status === 'SELECTED' ? 'text-green-800' : 'text-red-800'
-                                }`}>
-                                  Interview Result: <span className="capitalize">{interview.status.toLowerCase()}</span>
-                                </div>
-                                {interview.decisionReason && (
-                                  <div className="mt-1 text-sm text-gray-700">
-                                    <strong>Reason:</strong> {interview.decisionReason}
-                                  </div>
-                                )}
-                                {interview.feedback && (
-                                  <div className="mt-1 text-sm text-gray-700">
-                                    <strong>Feedback:</strong> {interview.feedback}
-                                  </div>
-                                )}
-                                {interview.decidedAt && (
-                                  <div className="mt-1 text-xs text-gray-500">
-                                    Decision made: {new Date(interview.decidedAt).toLocaleDateString()}
-                                  </div>
-                                )}
+                </h2>
+                <div className="space-y-4">
+                  {pastInterviews.map((interview) => {
+                    const { date, time } = formatDateTime(interview.scheduledAt);
+                    return (
+                      <div key={interview.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-700">
+                                {interview.jobTitle}
+                              </h3>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(interview.status)}`}>
+                                {interview.status}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 mb-2">at {interview.companyName}</p>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>{date}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{time}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {getTypeIcon(interview.type)}
+                                <span className="capitalize">{interview.type.toLowerCase()}</span>
                               </div>
                             </div>
+                            {interview.location && (
+                              <div className="flex items-center gap-1 mt-2 text-sm text-gray-600">
+                                <MapPin className="w-4 h-4" />
+                                <span>{interview.location}</span>
+                              </div>
+                            )}
+                            {interview.meetingLink && (
+                              <div className="mt-2">
+                                <a
+                                  href={interview.meetingLink.startsWith('http') ? interview.meetingLink : `https://${interview.meetingLink}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm underline"
+                                >
+                                  <Video className="w-4 h-4" />
+                              Join Meeting
+                                </a>
+                              </div>
+                            )}
+                            {interview.notes && (
+                              <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Notes:</strong> {interview.notes}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Interview Decision Info */}
+                            {(interview.status === 'SELECTED' || interview.status === 'REJECTED') && (
+                              <div className={`mt-3 p-3 rounded-md border-l-4 ${
+                                interview.status === 'SELECTED' 
+                                  ? 'bg-green-50 border-green-400' 
+                                  : 'bg-red-50 border-red-400'
+                              }`}>
+                                <div className="flex items-start gap-2">
+                                  {interview.status === 'SELECTED' ? (
+                                    <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                                  ) : (
+                                    <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                                  )}
+                                  <div className="flex-1">
+                                    <div className={`font-medium text-sm ${
+                                      interview.status === 'SELECTED' ? 'text-green-800' : 'text-red-800'
+                                    }`}>
+                                  Interview Result: <span className="capitalize">{interview.status.toLowerCase()}</span>
+                                    </div>
+                                    {interview.decisionReason && (
+                                      <div className="mt-1 text-sm text-gray-700">
+                                        <strong>Reason:</strong> {interview.decisionReason}
+                                      </div>
+                                    )}
+                                    {interview.feedback && (
+                                      <div className="mt-1 text-sm text-gray-700">
+                                        <strong>Feedback:</strong> {interview.feedback}
+                                      </div>
+                                    )}
+                                    {interview.decidedAt && (
+                                      <div className="mt-1 text-xs text-gray-500">
+                                    Decision made: {new Date(interview.decidedAt).toLocaleDateString()}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Empty State */}
-      {filteredInterviews.length === 0 && !loading && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No interviews scheduled</h3>
-            <p className="text-gray-600">
+          {/* Empty State */}
+          {filteredInterviews.length === 0 && !loading && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No interviews scheduled</h3>
+                <p className="text-gray-600">
               You don't have any interviews scheduled yet. Keep applying to jobs to get interview opportunities!
-            </p>
-          </CardContent>
-        </Card>
-      )}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Pagination */}
-      {!loading && filteredInterviews.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-          <div className="text-sm text-gray-600">
+          {/* Pagination */}
+          {!loading && filteredInterviews.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalInterviews)} of {totalInterviews} interviews
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <ChevronLeft className="h-4 w-4" />
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
               Previous
-            </button>
+                </button>
             
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum: number;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
                 
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-2 rounded-lg transition-colors ${
-                      currentPage === pageNum
-                        ? 'bg-blue-600 text-white font-semibold'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 rounded-lg transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white font-semibold'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
               Next
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

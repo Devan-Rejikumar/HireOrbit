@@ -11,11 +11,11 @@ export class AchievementService implements IAchievementService {
     @inject(TYPES.IAchievementRepository) private _achievementRepository: IAchievementRepository
   ) { }
 
-  private validateAndCleanAchievementData(data: CreateAchievementRequest): CreateAchievementRequest {
+  private _validateAndCleanAchievementData(data: CreateAchievementRequest): CreateAchievementRequest {
     return CreateAchievementSchema.parse(data);
   }
 
-  private async checkDuplicateAchievement(userId: string, data: CreateAchievementRequest): Promise<void> {
+  private async _checkDuplicateAchievement(userId: string, data: CreateAchievementRequest): Promise<void> {
     const existingAchievements = await this._achievementRepository.getAchievements(userId);
 
     const isDuplicate = existingAchievements.some(achievement =>
@@ -30,8 +30,8 @@ export class AchievementService implements IAchievementService {
   }
 
   async addAchievement(userId: string, achievementData: CreateAchievementRequest): Promise<Achievement> {
-    const validatedData = this.validateAndCleanAchievementData(achievementData);
-    await this.checkDuplicateAchievement(userId, validatedData);
+    const validatedData = this._validateAndCleanAchievementData(achievementData);
+    await this._checkDuplicateAchievement(userId, validatedData);
     return this._achievementRepository.addAchievement(userId, validatedData);
   }
 

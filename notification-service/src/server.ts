@@ -14,12 +14,14 @@ import notificationRoutes from './routes/NotificationRoutes';
 import { EventService } from './services/implementations/EventService';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { AppConfig } from './config/app.config';
+import { NOTIFICATION_ROUTES } from './constants/routes';
+import { ErrorHandler } from './middleware/error-handler.middleware';
 import {
   ApplicationCreatedEventData,
   StatusUpdatedEventData,
   InterviewConfirmedEventData,
   InterviewDecisionEventData,
-  ApplicationWithdrawnEventData
 } from './types/events';
 
 dotenv.config();
@@ -28,18 +30,18 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+    origin: AppConfig.FRONTEND_URL,
+    methods: ['GET', 'POST'],
+  },
 });
 
 app.use(helmet());
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: AppConfig.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role'],
 }));
 app.use(morgan('combined'));
 app.use(express.json());
@@ -50,7 +52,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -58,7 +60,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);
@@ -80,10 +82,12 @@ app.get('/metrics', async (req, res) => {
   }
 });
 
-app.use('/api/notifications', notificationRoutes);
+app.use(NOTIFICATION_ROUTES.API_BASE_PATH, notificationRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'notification-service' });
 });
+
+app.use(ErrorHandler);
 io.on('connection', (socket) => {
   logger.info('User connected:', { socketId: socket.id });
   socket.on('join-room', (roomId: string) => {
@@ -134,8 +138,9 @@ async function initializeServices(): Promise<void> {
 
     logger.info('Event service (Kafka) initialized successfully');
 
-  } catch (error: any) {
-    logger.error('Failed to initialize services:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Failed to initialize services:', errorMessage);
     process.exit(1);
   }
 }

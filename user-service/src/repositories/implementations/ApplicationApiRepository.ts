@@ -1,0 +1,62 @@
+import { injectable } from 'inversify';
+import axios from 'axios';
+import { AppConfig } from '../../config/app.config';
+import { TopApplicant, TopJob } from '../../types/admin';
+
+export interface IApplicationApiRepository {
+  getTopApplicantsByApplicationCount(limit: number): Promise<TopApplicant[]>;
+  getTopJobsByApplicationCount(limit: number): Promise<TopJob[]>;
+}
+
+@injectable()
+export class ApplicationApiRepository implements IApplicationApiRepository {
+  private readonly _baseUrl = AppConfig.APPLICATION_SERVICE_URL;
+
+  async getTopApplicantsByApplicationCount(limit: number): Promise<TopApplicant[]> {
+    try {
+      const url = `${this._baseUrl}/api/applications/admin/top-applicants`;
+      console.log(`[ApplicationApiRepository] Fetching top applicants from: ${url}`);
+      const response = await axios.get<{ data?: { applicants: TopApplicant[] }; applicants?: TopApplicant[] }>(url, {
+        params: { limit },
+        timeout: 5000
+      });
+      return response.data.data?.applicants || response.data.applicants || [];
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+        console.error(`[ApplicationApiRepository] Cannot connect to application service at ${this._baseUrl}. Is it running?`);
+      } else {
+        console.error('[ApplicationApiRepository] Error fetching top applicants:', err.message);
+      }
+      return [];
+    }
+  }
+
+  async getTopJobsByApplicationCount(limit: number): Promise<TopJob[]> {
+    try {
+      const url = `${this._baseUrl}/api/applications/admin/top-jobs`;
+      console.log(`[ApplicationApiRepository] Fetching top jobs from: ${url} with limit=${limit}`);
+      const response = await axios.get<{ success?: boolean; data?: { jobs: TopJob[] }; jobs?: TopJob[] }>(url, {
+        params: { limit },
+        timeout: 5000
+      });
+      
+      const jobs = response.data.data?.jobs || response.data.jobs || [];
+      console.log(`[ApplicationApiRepository] Extracted ${jobs.length} jobs`);
+      
+      return jobs;
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string; response?: { data?: unknown } };
+      if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+        console.error(`[ApplicationApiRepository] Cannot connect to application service at ${this._baseUrl}. Is it running?`);
+      } else {
+        console.error('[ApplicationApiRepository] Error fetching top jobs:', err.message);
+        if (err.response) {
+          console.error('[ApplicationApiRepository] Error response:', err.response.data);
+        }
+      }
+      return [];
+    }
+  }
+}
+

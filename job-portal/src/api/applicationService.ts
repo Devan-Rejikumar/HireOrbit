@@ -40,16 +40,28 @@ export interface ApplicationResponse {
   message: string;
 }
 
+export interface ApplicationData {
+  jobId: string;
+  companyId?: string;
+  coverLetter?: string;
+  expectedSalary?: string;
+  availability?: string;
+  experience?: string;
+  resumeUrl?: string;
+  resumeBase64?: string;
+  resumeFileName?: string;
+}
+
 const CONTENT_TYPE_JSON = 'application/json';
 
 export const _applicationService = {
-  applyForJob: async (applicationData: any): Promise<ApplicationResponse> => {
+  applyForJob: async (applicationData: ApplicationData): Promise<ApplicationResponse> => {
     console.log('[ApplicationService] Sending application with axios');
     
     const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
       headers: {
-        'Content-Type': CONTENT_TYPE_JSON
-      }
+        'Content-Type': CONTENT_TYPE_JSON,
+      },
     });
     
     return response.data;
@@ -102,7 +114,7 @@ export const _applicationService = {
       data: Application;
     }>(`/applications/${applicationId}/status`, {
       status,
-      reason
+      reason,
     });
     return response.data;
   },
@@ -112,7 +124,7 @@ export const _applicationService = {
       data: ApplicationNotes;
     }>(`/applications/${applicationId}/notes`, {
       note,
-      addedBy
+      addedBy,
     });
     return response.data;
   },
@@ -122,5 +134,5 @@ export const _applicationService = {
       data: ApplicationStatusHistory[];
     }>(`/applications/${applicationId}/history`);
     return response.data;
-  }
+  },
 };

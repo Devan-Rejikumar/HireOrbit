@@ -4,6 +4,9 @@
  */
 
 export const CHAT_ROUTES = {
+  // Base API path
+  API_BASE_PATH: '/api/chat',
+  
   // User conversation routes
   GET_USER_CONVERSATIONS: '/users/:userId/conversations',
   GET_USER_TOTAL_UNREAD_COUNT: '/users/:userId/total-unread-count',

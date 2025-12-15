@@ -48,23 +48,23 @@ export class ChatResponseMapper {
         senderId: conversation.lastMessage.senderId,
         timestamp: conversation.lastMessage.timestamp 
           ? (conversation.lastMessage.timestamp instanceof Date 
-              ? conversation.lastMessage.timestamp.toISOString()
-              : new Date(conversation.lastMessage.timestamp).toISOString())
-          : new Date().toISOString()
+            ? conversation.lastMessage.timestamp.toISOString()
+            : new Date(conversation.lastMessage.timestamp).toISOString())
+          : new Date().toISOString(),
       } : undefined,
       unreadCount: conversation.unreadCount instanceof Map 
         ? Object.fromEntries(conversation.unreadCount)
         : (conversation.unreadCount as Record<string, number>),
       createdAt: conversation.createdAt 
         ? (conversation.createdAt instanceof Date 
-            ? conversation.createdAt.toISOString()
-            : new Date(conversation.createdAt).toISOString())
+          ? conversation.createdAt.toISOString()
+          : new Date(conversation.createdAt).toISOString())
         : new Date().toISOString(),
       updatedAt: conversation.updatedAt 
         ? (conversation.updatedAt instanceof Date 
-            ? conversation.updatedAt.toISOString()
-            : new Date(conversation.updatedAt).toISOString())
-        : new Date().toISOString()
+          ? conversation.updatedAt.toISOString()
+          : new Date(conversation.updatedAt).toISOString())
+        : new Date().toISOString(),
     };
   }
 
@@ -78,26 +78,26 @@ export class ChatResponseMapper {
       readBy: message.readBy,
       createdAt: message.createdAt 
         ? (message.createdAt instanceof Date 
-            ? message.createdAt.toISOString()
-            : new Date(message.createdAt).toISOString())
+          ? message.createdAt.toISOString()
+          : new Date(message.createdAt).toISOString())
         : new Date().toISOString(),
       updatedAt: message.updatedAt 
         ? (message.updatedAt instanceof Date 
-            ? message.updatedAt.toISOString()
-            : new Date(message.updatedAt).toISOString())
-        : new Date().toISOString()
+          ? message.updatedAt.toISOString()
+          : new Date(message.updatedAt).toISOString())
+        : new Date().toISOString(),
     };
   }
 
   static toConversationListResponse(conversations: IConversationDocument[]): ConversationListResponse {
     return {
-      conversations: conversations.map(conv => this.toConversationResponse(conv))
+      conversations: conversations.map(conv => this.toConversationResponse(conv)),
     };
   }
 
   static toMessageListResponse(messages: IMessageDocument[]): MessageListResponse {
     return {
-      messages: messages.map(msg => this.toMessageResponse(msg))
+      messages: messages.map(msg => this.toMessageResponse(msg)),
     };
   }
 }

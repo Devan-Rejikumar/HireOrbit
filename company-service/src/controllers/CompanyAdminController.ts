@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import TYPES from '../config/types';
-import { ICompanyService } from '../services/interface/ICompanyService';
+import { ICompanyService } from '../services/interfaces/ICompanyService';
 import { HttpStatusCode, CompanyStatusCode } from '../enums/StatusCodes';
 import { RejectCompanySchema } from '../dto/schemas/company.schema';
 import { buildSuccessResponse } from 'shared-dto';
@@ -12,13 +12,13 @@ import { Messages } from '../constants/Messages';
 @injectable()
 export class CompanyAdminController {
   constructor(
-    @inject(TYPES.ICompanyService) private _companyService: ICompanyService
+    @inject(TYPES.ICompanyService) private _companyService: ICompanyService,
   ) {}
 
   async getAllCompanies(req: Request, res: Response): Promise<void> {
     const companies = await this._companyService.getAllCompanies();
     res.status(CompanyStatusCode.COMPANIES_RETRIEVED).json(
-      buildSuccessResponse({ companies }, Messages.COMPANY.COMPANIES_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ companies }, Messages.COMPANY.COMPANIES_RETRIEVED_SUCCESS),
     );
   }
 
@@ -30,7 +30,7 @@ export class CompanyAdminController {
 
     await this._companyService.blockCompany(id);
     res.status(CompanyStatusCode.COMPANY_BLOCKED).json(
-      buildSuccessResponse(null, Messages.COMPANY.BLOCKED_SUCCESS)
+      buildSuccessResponse(null, Messages.COMPANY.BLOCKED_SUCCESS),
     );
   }
 
@@ -42,14 +42,14 @@ export class CompanyAdminController {
 
     await this._companyService.unblockCompany(id);
     res.status(CompanyStatusCode.COMPANY_UNBLOCKED).json(
-      buildSuccessResponse(null, Messages.COMPANY.UNBLOCKED_SUCCESS)
+      buildSuccessResponse(null, Messages.COMPANY.UNBLOCKED_SUCCESS),
     );
   }
 
   async getPendingCompanies(req: Request, res: Response): Promise<void> {
     const companies = await this._companyService.getPendingCompanies();
     res.status(CompanyStatusCode.PENDING_COMPANIES_RETRIEVED).json(
-      buildSuccessResponse({ companies }, Messages.COMPANY.PENDING_COMPANIES_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ companies }, Messages.COMPANY.PENDING_COMPANIES_RETRIEVED_SUCCESS),
     );
   }
 
@@ -66,8 +66,8 @@ export class CompanyAdminController {
     res.status(CompanyStatusCode.COMPANY_APPROVED).json(
       buildSuccessResponse(
         { company, message: Messages.COMPANY.APPROVED_SUCCESS },
-        Messages.COMPANY.APPROVED_SUCCESS
-      )
+        Messages.COMPANY.APPROVED_SUCCESS,
+      ),
     );
   }
 
@@ -85,14 +85,14 @@ export class CompanyAdminController {
     
     const company = await this._companyService.rejectCompany(companyId, reason, adminId);
     res.status(CompanyStatusCode.COMPANY_REJECTED).json(
-      buildSuccessResponse({ company }, Messages.COMPANY.REJECTED_SUCCESS)
+      buildSuccessResponse({ company }, Messages.COMPANY.REJECTED_SUCCESS),
     );
   }
 
   async getAllCompaniesForAdmin(req: Request, res: Response): Promise<void> {
     const companies = await this._companyService.getAllCompaniesForAdmin();
     res.status(CompanyStatusCode.COMPANIES_RETRIEVED).json(
-      buildSuccessResponse({ companies }, Messages.COMPANY.COMPANIES_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ companies }, Messages.COMPANY.COMPANIES_RETRIEVED_SUCCESS),
     );
   }
 
@@ -107,7 +107,7 @@ export class CompanyAdminController {
 
     const company = await this._companyService.getCompanyDetailsForAdmin(companyId);
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ company }, Messages.COMPANY.DETAILS_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ company }, Messages.COMPANY.DETAILS_RETRIEVED_SUCCESS),
     );
   }
 
@@ -137,12 +137,58 @@ export class CompanyAdminController {
       email: company.contactPersonEmail,
       phone: company.phone,
       socialMedia: {
-        linkedin: company.linkedinUrl
-      }
+        linkedin: company.linkedinUrl,
+      },
     };
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ company: publicProfile }, Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS)
+      buildSuccessResponse({ company: publicProfile }, Messages.COMPANY.PROFILE_RETRIEVED_SUCCESS),
+    );
+  }
+
+  async getTotalCompanyCount(req: Request, res: Response): Promise<void> {
+    const total = await this._companyService.getTotalCompanyCount();
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ total }, 'Total company count retrieved successfully'),
+    );
+  }
+
+  async getCompanyStatisticsByTimePeriod(req: Request, res: Response): Promise<void> {
+    const { startDate, endDate, groupBy } = req.query;
+    
+    if (!startDate || !endDate || !groupBy) {
+      throw new AppError('startDate, endDate, and groupBy are required', HttpStatusCode.BAD_REQUEST);
+    }
+
+    if (!['day', 'week', 'month', 'year'].includes(groupBy as string)) {
+      throw new AppError('groupBy must be day, week, month, or year', HttpStatusCode.BAD_REQUEST);
+    }
+    const start = new Date(startDate as string);
+    const end = new Date(endDate as string);
+    
+    console.log('[CompanyAdminController] Received date range:', {
+      startDate: startDate,
+      endDate: endDate,
+      startParsed: start.toISOString(),
+      endParsed: end.toISOString(),
+      startLocal: start.toLocaleString(),
+      endLocal: end.toLocaleString(),
+      groupBy,
+    });
+    
+    const statistics = await this._companyService.getCompanyStatisticsByTimePeriod(
+      start, 
+      end, 
+      groupBy as 'day' | 'week' | 'month' | 'year',
+    );
+    
+    console.log('[CompanyAdminController] Returning statistics:', {
+      count: statistics.length,
+      statistics: statistics.slice(0, 5), 
+    });
+
+    res.status(HttpStatusCode.OK).json(
+      buildSuccessResponse({ statistics }, 'Company statistics retrieved successfully'),
     );
   }
 }

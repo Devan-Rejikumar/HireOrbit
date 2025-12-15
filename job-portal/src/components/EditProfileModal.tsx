@@ -1,11 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { X, User, Camera, Upload } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
+
+interface ProfileUpdateData {
+  headline?: string;
+  about?: string;
+  location?: string;
+  phone?: string;
+  profilePicture?: string;
+}
 
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: ProfileUpdateData) => void;
   currentProfile: {
     headline?: string;
     about?: string;
@@ -104,12 +112,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       };
 
       await onSave(submitData);
+      toast.success('Profile updated successfully!');
       
       // Close modal; let cleanup happen in handleClose
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Save error:', error);
-      toast.error(error.message || 'Failed to save profile');
+      const errorMessage = error && typeof error === 'object' && 'message' in error
+        ? (error as { message?: string }).message
+        : undefined;
+      toast.error(errorMessage || 'Failed to save profile');
     } finally {
       setIsUploading(false);
     }

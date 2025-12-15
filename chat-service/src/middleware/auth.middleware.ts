@@ -4,7 +4,7 @@ import { AuthenticatedRequest } from '../types/request';
 export const extractUserFromHeaders = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const authReq = req as AuthenticatedRequest;
   const headerUserId = req.headers['x-user-id'] as string;
@@ -16,7 +16,7 @@ export const extractUserFromHeaders = (
     authReq.user = {
       userId: isCompany ? undefined : headerUserId,
       companyId: isCompany ? headerUserId : undefined,
-      role: userRole
+      role: userRole,
     };
     
     console.log('AuthMiddleware] User extracted from headers:', {
@@ -24,7 +24,7 @@ export const extractUserFromHeaders = (
       userId: isCompany ? undefined : headerUserId,
       companyId: isCompany ? headerUserId : undefined,
       role: userRole,
-      email: userEmail
+      email: userEmail,
     });
   }
   

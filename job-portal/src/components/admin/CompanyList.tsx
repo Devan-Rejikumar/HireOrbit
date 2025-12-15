@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check, Search, Filter } from 'lucide-react';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import api from '@/api/axios';
 
 type Company = {
@@ -119,7 +119,7 @@ const CompanyList = () => {
         company.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         company.contactPersonEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.industry?.toLowerCase().includes(searchTerm.toLowerCase())
+        company.industry?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
     
@@ -140,8 +140,10 @@ const CompanyList = () => {
         ),
       );
       toast.success('Company approved successfully! Approval email sent.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to approve company');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to approve company');
     } finally {
       setActionLoading(null);
     }
@@ -168,8 +170,10 @@ const CompanyList = () => {
       setShowModal(false);
       setRejectionReason('');
       toast.success('Company rejected successfully! Rejection email sent.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to reject company');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to reject company');
     } finally {
       setActionLoading(null);
     }
@@ -200,9 +204,11 @@ const CompanyList = () => {
         console.log('🔍 Full response structure:', JSON.stringify(response.data, null, 2));
         toast.error('No company data received');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching company details:', error);
-      toast.error(error.response?.data?.error || 'Failed to fetch company details');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to fetch company details');
     } finally {
       setDetailsLoading(false);
     }
@@ -316,17 +322,17 @@ const CompanyList = () => {
           <CheckCircle className="w-16 h-16 text-purple-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">
             {searchTerm ? 'No companies found matching your search.' : 
-             statusFilter === 'pending' ? 'No Pending Applications!' :
-             statusFilter === 'approved' ? 'No Approved Companies' :
-             statusFilter === 'rejected' ? 'No Rejected Companies' :
-             'No Companies Found'}
+              statusFilter === 'pending' ? 'No Pending Applications!' :
+                statusFilter === 'approved' ? 'No Approved Companies' :
+                  statusFilter === 'rejected' ? 'No Rejected Companies' :
+                    'No Companies Found'}
           </h3>
           <p className="text-gray-300">
             {searchTerm ? 'Try adjusting your search terms.' :
-             statusFilter === 'pending' ? 'All company applications have been processed.' :
-             statusFilter === 'approved' ? 'No companies have been approved yet.' :
-             statusFilter === 'rejected' ? 'No companies have been rejected yet.' :
-             'No company registrations found in the system.'}
+              statusFilter === 'pending' ? 'All company applications have been processed.' :
+                statusFilter === 'approved' ? 'No companies have been approved yet.' :
+                  statusFilter === 'rejected' ? 'No companies have been rejected yet.' :
+                    'No company registrations found in the system.'}
           </p>
         </div>
       ) : (
