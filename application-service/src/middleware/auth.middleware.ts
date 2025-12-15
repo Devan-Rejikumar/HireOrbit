@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
+import { RequestWithUser } from '../types/express/RequestWithUser';
 
 const USER_ID_HEADER = 'x-user-id';
 const USER_EMAIL_HEADER = 'x-user-email';
@@ -28,7 +29,7 @@ const extractUserFromHeaders = (req: Request): { userId: string; email: string; 
 const createUnauthorizedResponse = (message: string) => ({
   success: false,
   error: Messages.VALIDATION.AUTHENTICATION_REQUIRED,
-  message
+  message,
 });
 
 /**
@@ -43,17 +44,17 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
   const userInfo = extractUserFromHeaders(req);
   if (!userInfo) {
     res.status(HttpStatusCode.UNAUTHORIZED).json(
-      createUnauthorizedResponse('User identification required. Request must go through API Gateway.')
+      createUnauthorizedResponse('User identification required. Request must go through API Gateway.'),
     );
     return;
   }
 
   const { userId, email, role } = userInfo;
-  (req as any).user = {
+  (req as RequestWithUser).user = {
     userId,
     email,
     role,
-    userType: role
+    userType: role,
   };
 
   next();

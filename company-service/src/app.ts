@@ -4,10 +4,15 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
 import companyRoutes from './routes/CompanyRoutes';
+import industryCategoryRoutes from './routes/IndustryCategoryRoutes';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { ErrorHandler } from './middleware/error-handler.middleware';
 import { AppConfig } from './config/app.config';
+import container from './config/inversify.config';
+import TYPES from './config/types';
+import { IndustryCategoryController } from './controllers/IndustryCategoryController';
+import { asyncHandler } from './utils/asyncHandler';
 
 dotenv.config();
 
@@ -33,7 +38,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -41,7 +46,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);
@@ -67,7 +72,13 @@ app.get('/health', (req, res) => {
   res.json({ message: 'Company Service is running!' });
 });
 
+// Mount industryCategoryRoutes FIRST so /admin/industries matches before /admin/:id
+app.use('/api/company', industryCategoryRoutes); // Admin routes: /api/company/admin/industries
 app.use('/api/company', companyRoutes);
+
+// Public route for industries (for company registration)
+const industryCategoryController = container.get<IndustryCategoryController>(TYPES.IndustryCategoryController);
+app.get('/api/industries', asyncHandler((req, res) => industryCategoryController.getActiveCategories(req, res)));
 
 // Global error handler (must be last)
 app.use(ErrorHandler);

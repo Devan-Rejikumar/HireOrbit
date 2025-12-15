@@ -8,7 +8,7 @@ import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount, useUserConversations, useMessages, useMarkAsRead } from '@/hooks/useChat';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
-import { ConversationResponse } from '@/api/_chatService';
+import { ConversationResponse } from '@/api/chatService';
 import api from '@/api/axios';
 
 const MessagesPage = () => {
@@ -42,7 +42,7 @@ const MessagesPage = () => {
   
   // Get messages for selected conversation
   const { data: messages = [], isLoading: messagesLoading } = useMessages(
-    selectedConversation?.id || null
+    selectedConversation?.id || null,
   );
   
   const markAsReadMutation = useMarkAsRead();
@@ -113,13 +113,21 @@ const MessagesPage = () => {
               const jobData = jobResponseData?.data?.job || jobResponseData?.job || jobResponseData?.data || jobResponseData;
               
               if (jobData && typeof jobData === 'object') {
-                companyName = (jobData as any)?.company?.companyName ||
-                            (jobData as any)?.companyName ||
-                            (jobData as any)?.company?.name ||
-                            (typeof (jobData as any)?.company === 'string' ? (jobData as any)?.company : null) ||
+                interface JobData {
+                  company?: {
+                    companyName?: string;
+                    name?: string;
+                  } | string;
+                  companyName?: string;
+                }
+                const typedJobData = jobData as JobData;
+                companyName = (typeof typedJobData?.company === 'object' ? typedJobData.company?.companyName : null) ||
+                            typedJobData?.companyName ||
+                            (typeof typedJobData?.company === 'object' ? typedJobData.company?.name : null) ||
+                            (typeof typedJobData?.company === 'string' ? typedJobData.company : null) ||
                             null;
               }
-            } catch (jobError: any) {
+            } catch (jobError: unknown) {
               // Silent fail
             }
           }
@@ -128,7 +136,7 @@ const MessagesPage = () => {
             setOtherParticipantName(companyName);
             return;
           }
-        } catch (appError: any) {
+        } catch (appError: unknown) {
           // Silent fail
         }
         
@@ -147,7 +155,7 @@ const MessagesPage = () => {
     if (currentUserId) {
       markAsReadMutation.mutate({
         conversationId: conversation.id,
-        userId: currentUserId
+        userId: currentUserId,
       });
     }
   };

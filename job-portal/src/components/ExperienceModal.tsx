@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Save, Calendar } from 'lucide-react';
 import api from '../api/axios';
 import ConfirmationModal from './ConfirmationModal';
+import toast from 'react-hot-toast';
 
 interface ExperienceModalProps {
   isOpen: boolean;
@@ -138,14 +139,20 @@ const ExperienceModal: React.FC<ExperienceModalProps> = ({
 
       if (isEdit && experience) {
         await api.put(`/profile/experience/${experience.id}`, experienceData);
+        toast.success('Experience updated successfully!');
       } else {
         await api.post('/profile/experience', experienceData);
+        toast.success('Experience added successfully!');
       }
 
       onSave();
       onClose();
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to save experience');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to save experience';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -161,11 +168,16 @@ const ExperienceModal: React.FC<ExperienceModalProps> = ({
 
     try {
       await api.delete(`/profile/experience/${experience.id}`);
+      toast.success('Experience deleted successfully!');
       onSave();
       onClose();
       setShowDeleteConfirm(false);
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to delete experience');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to delete experience';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

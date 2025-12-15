@@ -12,6 +12,7 @@ interface EnvConfig {
   APPLICATION_SERVICE_URL: string;
   NOTIFICATION_SERVICE_URL: string;
   CHAT_SERVICE_URL: string;
+  SUBSCRIPTION_SERVICE_URL: string;
   RATE_LIMIT_WINDOW_MS: number;
   RATE_LIMIT_MAX_REQUESTS: number;
   CORS_ORIGIN: string;
@@ -28,7 +29,8 @@ function getEnvConfig(): EnvConfig {
     'JOB_SERVICE_URL',
     'APPLICATION_SERVICE_URL',
     'NOTIFICATION_SERVICE_URL',
-    'CHAT_SERVICE_URL'
+    'CHAT_SERVICE_URL',
+    'SUBSCRIPTION_SERVICE_URL'
   ];
 
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
@@ -49,6 +51,7 @@ function getEnvConfig(): EnvConfig {
     APPLICATION_SERVICE_URL: process.env.APPLICATION_SERVICE_URL!,
     NOTIFICATION_SERVICE_URL: process.env.NOTIFICATION_SERVICE_URL!,
     CHAT_SERVICE_URL: process.env.CHAT_SERVICE_URL!,
+    SUBSCRIPTION_SERVICE_URL: process.env.SUBSCRIPTION_SERVICE_URL!,
     RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
     RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
     CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
@@ -72,6 +75,7 @@ export const {
   APPLICATION_SERVICE_URL,
   NOTIFICATION_SERVICE_URL,
   CHAT_SERVICE_URL,
+  SUBSCRIPTION_SERVICE_URL,
   RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX_REQUESTS,
   CORS_ORIGIN,

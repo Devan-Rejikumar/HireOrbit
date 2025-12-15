@@ -29,13 +29,13 @@ const NotificationSchema = new Schema<INotificationDocument>({
     jobId: String,
     status: String,
     applicantName: String,
-    jobTitle: String
+    jobTitle: String,
   },
   read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
-  readAt: Date
+  readAt: Date,
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
 export const NotificationModel = mongoose.model<INotificationDocument>('Notification', NotificationSchema);

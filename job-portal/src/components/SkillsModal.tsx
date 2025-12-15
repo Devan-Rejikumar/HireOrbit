@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import api from '../api/axios';
+import toast from 'react-hot-toast';
 
 interface SkillsModalProps {
   isOpen: boolean;
@@ -19,6 +20,36 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
   const [newSkill, setNewSkill] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchSkills = async () => {
+      try {
+        setLoadingSuggestions(true);
+        interface SkillsResponse {
+          success: boolean;
+          data: {
+            skills: Array<{ name: string }>;
+          };
+          message?: string;
+        }
+        const response = await api.get<SkillsResponse>('/skills');
+        const apiSkills: string[] =
+          response.data?.data?.skills?.map((s) => s.name) || [];
+        setAvailableSkills(apiSkills);
+      } catch (err: unknown) {
+        // silently ignore, user can still type custom skills
+        console.error('Failed to load skills suggestions', err);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+
+    fetchSkills();
+  }, [isOpen]);
 
   const addSkill = () => {
     const trimmedSkill = newSkill.trim();
@@ -39,6 +70,12 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
     }
   };
 
+  const addSuggestedSkill = (skillName: string) => {
+    if (!skills.includes(skillName)) {
+      setSkills([...skills, skillName]);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -46,10 +83,15 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
 
     try {
       await api.put('/profile', { skills });
+      toast.success('Skills updated successfully!');
       onSave();
       onClose();
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to update skills');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to update skills';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -79,7 +121,41 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
             </div>
           )}
 
-          {/* Add New Skill */}
+          {/* Suggested Skills from Admin */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Suggested Skills (from admin)
+              </label>
+              {loadingSuggestions && (
+                <span className="text-xs text-gray-400">Loading...</span>
+              )}
+            </div>
+            {availableSkills.length === 0 ? (
+              <p className="text-xs text-gray-400">
+                No suggested skills yet. You can still type your own skills below.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
+                {availableSkills.map((skill) => (
+                  <button
+                    type="button"
+                    key={skill}
+                    onClick={() => addSuggestedSkill(skill)}
+                    className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+                      skills.includes(skill)
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Add New Skill (custom or from suggestions) */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Add New Skill

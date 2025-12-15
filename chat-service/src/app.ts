@@ -7,15 +7,18 @@ import { HttpStatusCode } from './enums/StatusCodes';
 import { extractUserFromHeaders } from './middleware/auth.middleware';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
+import { AppConfig } from './config/app.config';
+import { CHAT_ROUTES } from './constants/routes';
+import { ErrorHandler } from './middleware/error-handler.middleware';
 
 const app = express();
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: AppConfig.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role'],
 }));
 app.use(morgan('combined'));
 app.use(express.json());
@@ -25,7 +28,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    contentType: req.headers['content-type']
+    contentType: req.headers['content-type'],
   });
   
   res.on('finish', () => {
@@ -33,7 +36,7 @@ app.use((req, res, next) => {
     const labels = {
       method: req.method,
       route: req.route?.path || req.path,
-      status: res.statusCode
+      status: res.statusCode,
     };
     
     httpRequestDuration.observe(labels, duration);
@@ -49,17 +52,20 @@ app.get('/metrics', async (req, res) => {
   try {
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
-  } catch (error) {
-    logger.error('Error generating metrics:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error generating metrics:', errorMessage);
     res.status(500).end('Error generating metrics');
   }
 });
-app.use('/api/chat', extractUserFromHeaders);
+app.use(CHAT_ROUTES.API_BASE_PATH, extractUserFromHeaders);
 
-app.use('/api/chat', chatRoutes);
+app.use(CHAT_ROUTES.API_BASE_PATH, chatRoutes);
 
 app.get('/health', (req, res) => {
   res.status(HttpStatusCode.OK).json({ status: 'OK', service: 'chat-service' });
 });
+
+app.use(ErrorHandler);
 
 export default app;

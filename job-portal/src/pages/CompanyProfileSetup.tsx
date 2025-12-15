@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,13 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 import api from '@/api/axios';
 
 interface CompanyData {
@@ -82,6 +77,26 @@ const CompanyProfileSetup = () => {
     contactPersonEmail: '',
     contactPersonPhone: '',
   });
+  const [industryCategories, setIndustryCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  useEffect(() => {
+    // Fetch industry categories
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const response = await api.get<{ data: { categories: Array<{ id: string; name: string }> } }>('/industries');
+        setIndustryCategories(response.data?.data?.categories || []);
+      } catch (err) {
+        console.error('Failed to load industry categories', err);
+        // Fallback to empty array if API fails
+        setIndustryCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -148,7 +163,7 @@ const CompanyProfileSetup = () => {
         if (step.profileCompleted) {
           console.log('Profile completed, redirecting to review status');
           setIsNavigating(true);
-          navigate('/company/review-status', { replace: true });
+          navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else {
           console.log('Profile not completed, setting to step 2');
@@ -159,17 +174,17 @@ const CompanyProfileSetup = () => {
         if (step === 'approved') {
           console.log('Redirecting to dashboard...');
           setIsNavigating(true);
-          navigate('/company/dashboard', { replace: true });
+          navigate(ROUTES.COMPANY_DASHBOARD, { replace: true });
           return;
         } else if (step === 'rejected') {
           console.log('Redirecting to review status...');
           setIsNavigating(true);
-          navigate('/company/review-status', { replace: true });
+          navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else if (step === 'completed') {
           console.log('Redirecting to review status...');
           setIsNavigating(true);
-          navigate('/company/review-status', { replace: true });
+          navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else if (step === 'step3') {
           setCurrentStep(3);
@@ -177,11 +192,13 @@ const CompanyProfileSetup = () => {
           setCurrentStep(2);
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('=== Frontend Error ===');
-      console.error('Error details:', error.response?.data);
-      console.error('Status:', error.response?.status);
-      console.error('Headers:', error.response?.headers);
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: unknown; status?: number; headers?: unknown } }) : null;
+      console.error('Error details:', axiosError?.response?.data);
+      console.error('Status:', axiosError?.response?.status);
+      console.error('Headers:', axiosError?.response?.headers);
     }
   };
 
@@ -221,8 +238,10 @@ const CompanyProfileSetup = () => {
         setCurrentStep(3);
         setSuccess('');
       }, 1000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save profile data');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Failed to save profile data');
     } finally {
       setLoading(false);
     }
@@ -244,10 +263,12 @@ const CompanyProfileSetup = () => {
       await api.post<{ success: boolean; message: string }>('/company/profile/step3', step3Data);
       setSuccess('Profile completed! Redirecting to review status...');
       setTimeout(() => {
-        navigate('/company/review-status');
+        navigate(ROUTES.COMPANY_REVIEW_STATUS);
       }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to complete profile');
+    } catch (err: unknown) {
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string } } }) : null;
+      setError(axiosError?.response?.data?.error || 'Failed to complete profile');
     } finally {
       setLoading(false);
     }
@@ -259,21 +280,20 @@ const CompanyProfileSetup = () => {
         {/* Industry */}
         <div className="space-y-2">
           <Label htmlFor="industry">Industry *</Label>
-          
-          <Select
+          <select
+            id="industry"
             value={formData.industry}
             onChange={(e) => handleInputChange('industry', e.target.value)}
+            disabled={loadingCategories}
+            className="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="">Select industry</option>
-            <option value="technology">Technology</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="finance">Finance</option>
-            <option value="education">Education</option>
-            <option value="retail">Retail</option>
-            <option value="manufacturing">Manufacturing</option>
-            <option value="consulting">Consulting</option>
-            <option value="other">Other</option>
-          </Select>
+            <option value="">{loadingCategories ? 'Loading categories...' : 'Select industry'}</option>
+            {industryCategories.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Company Size */}

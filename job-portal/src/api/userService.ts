@@ -1,4 +1,5 @@
 import api from './axios';
+import { ENV } from '../config/env';
 
 export interface ResumeResponse {
   success: boolean;
@@ -22,7 +23,7 @@ export const userService = {
     });
     
     const response = await api.post<ResumeResponse>('/profile/resume', {
-      resume: base64
+      resume: base64,
     });
     return response.data;
   },
@@ -45,7 +46,7 @@ export const userService = {
     });
     
     const response = await api.put<ResumeResponse>('/profile/resume', {
-      resume: base64
+      resume: base64,
     });
     return response.data;
   },
@@ -56,34 +57,36 @@ export const userService = {
   },
 
   changePassword: async (currentPassword: string, newPassword: string) => {
-  console.log('🔍 [UserService] Calling change password API...');
-  console.log('🔍 [UserService] API base URL:', api.defaults.baseURL);
+    console.log('🔍 [UserService] Calling change password API...');
+    console.log('🔍 [UserService] API base URL:', api.defaults.baseURL);
   
-  // Call user service directly since API gateway might not be running
-  const response = await fetch('http://localhost:3000/api/users/change-password', {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include', // This sends HttpOnly cookies
-    body: JSON.stringify({
-      currentPassword,
-      newPassword
-    })
-  });
+
+
+    // Call user service directly since API gateway might not be running
+    const response = await fetch(`${ENV.USER_SERVICE_URL}/users/change-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // This sends HttpOnly cookies
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    });
   
-  console.log('🔍 [UserService] Change password response status:', response.status);
+    console.log('🔍 [UserService] Change password response status:', response.status);
   
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ [UserService] Change password error:', errorText);
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [UserService] Change password error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
   
-  const data = await response.json();
-  console.log('🔍 [UserService] Change password response:', data);
-  return data;
-},
+    const data = await response.json();
+    console.log('🔍 [UserService] Change password response:', data);
+    return data;
+  },
 
   sendOTP: async (email: string) => {
     console.log('🔍 [UserService] Sending OTP to:', email);
@@ -99,9 +102,9 @@ export const userService = {
     return response.data;
   },
   sendVerificationOTP: async (email: string) => {
-  console.log('🔍 [UserService] Sending verification OTP to:', email);
-  const response = await api.post('/users/generate-verification-otp', { email });
-  console.log('🔍 [UserService] Send verification OTP response:', response.data);
-  return response.data;
-},
+    console.log('🔍 [UserService] Sending verification OTP to:', email);
+    const response = await api.post('/users/generate-verification-otp', { email });
+    console.log('🔍 [UserService] Send verification OTP response:', response.data);
+    return response.data;
+  },
 };

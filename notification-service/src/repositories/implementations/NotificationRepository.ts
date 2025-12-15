@@ -1,4 +1,3 @@
-import { Model } from 'mongoose';
 import { BaseRepository } from './BaseRepository';
 import { INotificationRepository } from '../interfaces/INotificationRepository';
 import { INotificationDocument, NotificationModel } from '../../models/NotificationModel';
@@ -36,7 +35,7 @@ export class NotificationRepository extends BaseRepository<INotificationDocument
   async markAllAsRead(recipientId: string): Promise<void> {
     await this.model.updateMany(
       { recipientId, read: false },
-      { read: true, readAt: new Date() }
+      { read: true, readAt: new Date() },
     );
   }
 

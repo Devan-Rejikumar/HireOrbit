@@ -11,7 +11,7 @@ export class ChatRepository implements IChatRepository {
       userId,
       companyId,
       participants: [userId, companyId],
-      unreadCount: {}
+      unreadCount: {},
     });
     return await conversation.save();
   }
@@ -22,7 +22,7 @@ export class ChatRepository implements IChatRepository {
   
   async findConversationByUserAndCompany(userId: string, companyId: string): Promise<IConversationDocument | null> {
     return await ConversationModel.findOne({
-      participants: { $all: [userId, companyId] }
+      participants: { $all: [userId, companyId] },
     });
   }
   
@@ -43,7 +43,7 @@ export class ChatRepository implements IChatRepository {
   async updateConversationLastMessage(conversationId: string,message: { content: string; senderId: string; timestamp: Date } ): Promise<void> {
     await ConversationModel.findByIdAndUpdate(conversationId, {
       lastMessage: message,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
   }
   
@@ -65,7 +65,6 @@ export class ChatRepository implements IChatRepository {
       await conversation.save();
     }
   }
-  
 
   async createMessage(conversationId: string,senderId: string,content: string,messageType: 'text' | 'image' | 'file' = 'text'): Promise<IMessageDocument> {
     const message = new MessageModel({
@@ -73,7 +72,7 @@ export class ChatRepository implements IChatRepository {
       senderId,
       content,
       messageType,
-      readBy: []
+      readBy: [],
     });
     return await message.save();
   }
@@ -90,9 +89,9 @@ export class ChatRepository implements IChatRepository {
       { 
         conversationId,
         senderId: { $ne: userId }, 
-        readBy: { $ne: userId }    
+        readBy: { $ne: userId },    
       },
-      { $addToSet: { readBy: userId } }
+      { $addToSet: { readBy: userId } },
     );
   }
   
@@ -100,13 +99,13 @@ export class ChatRepository implements IChatRepository {
     return await MessageModel.countDocuments({
       conversationId,
       senderId: { $ne: userId },
-      readBy: { $ne: userId }
+      readBy: { $ne: userId },
     });
   }
 
   async getTotalUnreadCount(userId: string): Promise<number> {
     const conversations = await ConversationModel.find({
-      participants: userId
+      participants: userId,
     });
     
     if (conversations.length === 0) return 0;
@@ -115,7 +114,7 @@ export class ChatRepository implements IChatRepository {
     const totalUnread = await MessageModel.countDocuments({
       conversationId: { $in: conversationIds },
       senderId: { $ne: userId },
-      readBy: { $ne: userId }
+      readBy: { $ne: userId },
     });
     
     return totalUnread;
@@ -123,7 +122,7 @@ export class ChatRepository implements IChatRepository {
 
   async getConversationsWithUnread(userId: string): Promise<IConversationDocument[]> {
     const conversations = await ConversationModel.find({
-      participants: userId
+      participants: userId,
     });
     
     if (conversations.length === 0) return [];
@@ -133,13 +132,13 @@ export class ChatRepository implements IChatRepository {
       const unreadCount = await MessageModel.countDocuments({
         conversationId: conversation._id,
         senderId: { $ne: userId },
-        readBy: { $ne: userId }
+        readBy: { $ne: userId },
       });
       
       if (unreadCount > 0) {
         const unreadCountObj = conversation.unreadCount as Record<string, number> || {};
         unreadCountObj[userId] = unreadCount;
-        conversation.unreadCount = unreadCountObj as any;
+        conversation.unreadCount = unreadCountObj as { [userId: string]: number };
         conversationsWithUnread.push(conversation);
       }
     }

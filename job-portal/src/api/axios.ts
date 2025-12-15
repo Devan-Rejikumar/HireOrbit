@@ -1,8 +1,11 @@
-
 import axios from 'axios';
+import { ROUTES } from '../constants/routes';
+import { ENV } from '../config/env';
+import { HTTP_STATUS } from '../constants/statusCodes';
+import { MESSAGES } from '../constants/messages';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api',
+  baseURL: ENV.API_BASE_URL,
   withCredentials: true,
 });
 
@@ -17,7 +20,14 @@ const getAccessToken = (): string | null => {
     cookieName = 'companyAccessToken';
   }
   
-  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
+  // First try the role-specific cookie
+  let tokenCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
+  
+  // If not found and role is jobseeker, also check for 'token' cookie (used by Google auth)
+  if (!tokenCookie && role === 'jobseeker') {
+    tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+  }
+  
   return tokenCookie ? tokenCookie.split('=')[1] : null;
 };
 
@@ -27,11 +37,14 @@ api.interceptors.request.use(
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[axios] Token found, Authorization header set for:', config.url);
+    } else {
+      console.warn('[axios] No token found for request:', config.url);
     }
     
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
@@ -40,7 +53,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     // Check if user is blocked (403 with "Account blocked" message)
-    const isBlockedUser = error.response?.status === 403 && 
+    const isBlockedUser = error.response?.status === HTTP_STATUS.FORBIDDEN && 
                          (error.response?.data?.error === 'Account blocked' || 
                           error.response?.data?.message === 'Account blocked' ||
                           error.response?.data?.data?.error === 'Account blocked');
@@ -49,18 +62,18 @@ api.interceptors.response.use(
       // Clear user data and redirect to blocked page
       localStorage.removeItem('role');
       // Clear all cookies
-      document.cookie.split(";").forEach((c) => {
+      document.cookie.split(';').forEach((c) => {
         document.cookie = c
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+          .replace(/^ +/, '')
+          .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
       });
-      window.location.href = '/blocked';
+      window.location.href = ROUTES.BLOCKED;
       return Promise.reject(error);
     }
     
     // Suppress console errors for 404s on company search endpoints (expected behavior)
     // These are handled gracefully in companyService
-    const isCompanySearch404 = error.response?.status === 404 && 
+    const isCompanySearch404 = error.response?.status === HTTP_STATUS.NOT_FOUND && 
                                originalRequest.url?.includes('/company/search');
     
     if (isCompanySearch404) {
@@ -68,7 +81,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
     
-    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+    if ((error.response?.status === HTTP_STATUS.UNAUTHORIZED || error.response?.status === HTTP_STATUS.FORBIDDEN) && !originalRequest._retry) {
       originalRequest._retry = true;
       const isAuthEndpoint = originalRequest.url?.includes('/login') || 
                             originalRequest.url?.includes('/register') ||
@@ -91,24 +104,25 @@ api.interceptors.response.use(
         }
         
         console.log('🔄 Calling refresh endpoint:', refreshEndpoint);
+        const baseUrl = ENV.API_BASE_URL.replace('/api', '');
         const response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:4000'}${refreshEndpoint}`,
+          `${baseUrl}${refreshEndpoint}`,
           {},
-          { withCredentials: true }
+          { withCredentials: true },
         );
-        if (response.status === 200) {
+        if (response.status === HTTP_STATUS.OK) {
           console.log('✅ Token refresh successful, retrying original request');
           return api(originalRequest);
         }
       } catch (refreshError) {
         console.error('❌ Token refresh failed:', refreshError);
         localStorage.removeItem('role');
-        window.location.href = '/login';
+        window.location.href = ROUTES.LOGIN;
       }
     }
     
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

@@ -148,14 +148,14 @@ const Companies = () => {
         (company) =>
           company.name.toLowerCase().includes(query) ||
           company.industry?.toLowerCase().includes(query) ||
-          company.description?.toLowerCase().includes(query)
+          company.description?.toLowerCase().includes(query),
       );
     }
     
     if (locationQuery.trim()) {
       const location = locationQuery.toLowerCase();
       filtered = filtered.filter(
-        (company) => company.location?.toLowerCase().includes(location)
+        (company) => company.location?.toLowerCase().includes(location),
       );
     }
     

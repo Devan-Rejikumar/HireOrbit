@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Briefcase, CheckCircle, AlertCircle, Plus, X, Building2, MapPin, DollarSign, Calendar, GraduationCap, Users, Clock, Target, Star } from 'lucide-react';
+import { ArrowLeft, Briefcase, CheckCircle, AlertCircle, Plus, X, Building2, MapPin, DollarSign, Calendar, GraduationCap, Users, Clock, Target, Star, CreditCard } from 'lucide-react';
 import api from '@/api/axios';
 
 interface JobFormData {
@@ -30,6 +31,8 @@ const PostJob = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitError, setLimitError] = useState('');
   
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
@@ -122,14 +125,24 @@ const PostJob = () => {
       
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        navigate('/company/dashboard');
+        navigate(ROUTES.COMPANY_DASHBOARD);
       }, 2000);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error posting job:', err);
-      console.error('Error response:', err.response?.data);
+      const isAxiosError = err && typeof err === 'object' && 'response' in err;
+      const axiosError = isAxiosError ? (err as { response?: { data?: unknown } }) : null;
+      console.error('Error response:', axiosError?.response?.data);
       console.error('Form data that failed:', formData);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to post job');
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to post job';
+      
+      // Check if it's a job posting limit error
+      if (errorMessage.toLowerCase().includes('job posting limit') || errorMessage.toLowerCase().includes('limit reached')) {
+        setLimitError(errorMessage);
+        setShowLimitModal(true);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -567,6 +580,94 @@ const PostJob = () => {
           </Card>
         </div>
       </div>
+
+      {/* Job Posting Limit Modal - Slides in from right */}
+      {showLimitModal && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity duration-300"
+            onClick={() => setShowLimitModal(false)}
+          />
+          
+          {/* Modal - Slides in from right */}
+          <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+            showLimitModal ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-red-50 to-orange-50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <AlertCircle className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Job Posting Limit Reached</h2>
+                </div>
+                <button
+                  onClick={() => setShowLimitModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 p-6 overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-gray-700 leading-relaxed">
+                      {limitError}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-900">Upgrade your plan to post more jobs:</h3>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Star className="h-4 w-4 text-blue-600" />
+                          <span className="font-semibold text-blue-900">Basic Plan</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Post up to 10 jobs</p>
+                      </div>
+                      <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Star className="h-4 w-4 text-purple-600" />
+                          <span className="font-semibold text-purple-900">Premium Plan</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Unlimited job postings</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-gray-200 bg-gray-50 space-y-3">
+                <Button
+                  onClick={() => {
+                    setShowLimitModal(false);
+                    navigate(ROUTES.SUBSCRIPTIONS);
+                  }}
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Upgrade Plan
+                  </div>
+                </Button>
+                <Button
+                  onClick={() => setShowLimitModal(false)}
+                  variant="outline"
+                  className="w-full h-12 rounded-xl border-gray-300 hover:bg-gray-100 transition-all duration-200"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

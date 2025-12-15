@@ -1,20 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { logger } from '../utils/logger';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: string;
-        userType: string;
-      };
-    }
-  }
-}
-
+import '../types/express'; // Import Express type extensions
 const USER_ID_HEADER = 'x-user-id';
 const USER_EMAIL_HEADER = 'x-user-email';
 const USER_ROLE_HEADER = 'x-user-role';
@@ -36,7 +23,7 @@ const determineUserType = (role: string): string => {
 };
 
 const createUnauthorizedResponse = () => ({
-  error: 'User not authenticated. Request must go through API Gateway.'
+  error: 'User not authenticated. Request must go through API Gateway.',
 });
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
@@ -53,7 +40,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     userId,
     email,
     role,
-    userType: determineUserType(role)
+    userType: determineUserType(role),
   };
 
   logger.info('User context set from API Gateway headers', { userId, email, role });

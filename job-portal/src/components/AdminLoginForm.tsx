@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { toast, ToastContainer } from 'react-toastify';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import 'react-toastify/dist/ReactToastify.css';
+import { ROUTES } from '@/constants/routes';
 
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
@@ -31,10 +31,12 @@ const LoginForm: React.FC = () => {
       
       setIsLoading(false);
       toast.success('Welcome back, Admin!');
-      navigate('/admin/dashboard');
-    } catch (error: any) {
+      navigate(ROUTES.ADMIN_DASHBOARD);
+    } catch (error: unknown) {
       setIsLoading(false);
-      toast.error(error.response?.data?.error || 'Login failed');
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Login failed');
     }
   };
 
@@ -98,7 +100,6 @@ const LoginForm: React.FC = () => {
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
-      <ToastContainer />
     </>
   );
 };

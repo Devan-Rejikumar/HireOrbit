@@ -12,7 +12,7 @@ const TestModal = () => {
       title: 'Test Confirmation',
       message: 'This is a test confirmation dialog. Do you want to proceed?',
       confirmText: 'Yes, Test',
-      cancelText: 'No, Cancel'
+      cancelText: 'No, Cancel',
     });
 
     if (confirmed) {

@@ -5,7 +5,7 @@ import {
   StatusUpdatedInput, 
   ApplicationWithdrawnInput,
   InterviewConfirmedInput,
-  InterviewDecisionInput
+  InterviewDecisionInput,
 } from '../../dto/mappers/notification.mapper';
 
 export interface INotificationService {

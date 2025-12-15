@@ -1,4 +1,4 @@
-import { IConversationDocument, IMessageDocument } from "../../models/ChatModel";
+import { IConversationDocument, IMessageDocument } from '../../models/ChatModel';
 
 export interface IChatRepository {
     createConversation(applicationId: string, userId: string, companyId: string): Promise<IConversationDocument>;

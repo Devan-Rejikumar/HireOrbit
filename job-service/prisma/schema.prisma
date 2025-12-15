@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Job {
-  id                  String           @id @default(uuid())
+  id                  String      @id @default(uuid())
   title               String
   description         String
   company             String
@@ -18,13 +18,26 @@ model Job {
   jobType             String
   requirements        String[]
   benefits            String[]
-  isActive            Boolean          @default(true)
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  isActive            Boolean     @default(true)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
   experienceLevel     String
   education           String
   applicationDeadline DateTime
   workLocation        String
-  
+  isListed            Boolean     @default(true)
+  listedAt            DateTime    @default(now())
+  reports             JobReport[]
 }
 
+model JobReport {
+  id        String   @id @default(uuid())
+  jobId     String
+  userId    String
+  reason    String
+  createdAt DateTime @default(now())
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([userId])
+}

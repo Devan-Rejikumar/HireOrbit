@@ -34,27 +34,27 @@ const MessageSchema = new Schema<IMessageDocument>({
     type: Schema.Types.ObjectId, 
     ref: 'Conversation', 
     required: true, 
-    index: true 
+    index: true, 
   },
   senderId: { 
     type: String, 
     required: true, 
-    index: true 
+    index: true, 
   },
   content: { 
     type: String, 
-    required: true 
+    required: true, 
   },
   messageType: { 
     type: String, 
     enum: ['text', 'image', 'file'], 
-    default: 'text' 
+    default: 'text', 
   },
   readBy: [{ 
-    type: String 
+    type: String, 
   }],
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
 const ConversationSchema = new Schema<IConversationDocument>({
@@ -62,32 +62,32 @@ const ConversationSchema = new Schema<IConversationDocument>({
     type: String, 
     required: true, 
     unique: true, 
-    index: true 
+    index: true, 
   },
   userId: { 
     type: String, 
-    required: true 
+    required: true, 
   },
   companyId: { 
     type: String, 
-    required: true 
+    required: true, 
   },
   participants: [{ 
     type: String, 
-    required: true
+    required: true,
   }],
   lastMessage: {
     content: String,
     senderId: String,
-    timestamp: Date
+    timestamp: Date,
   },
   unreadCount: {
     type: Map,
     of: Number,
-    default: {}
+    default: {},
   },
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
 ConversationSchema.index({ participants: 1 });

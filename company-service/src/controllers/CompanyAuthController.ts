@@ -1,19 +1,20 @@
 import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import TYPES from '../config/types';
-import { ICompanyService } from '../services/interface/ICompanyService';
+import { ICompanyService } from '../services/interfaces/ICompanyService';
 import { HttpStatusCode, AuthStatusCode, OTPStatusCode } from '../enums/StatusCodes';
 import { CompanyGenerateOTPSchema, CompanyLoginSchema, CompanyRegisterSchema, CompanyVerifyOTPSchema } from '../dto/schemas/company.schema';
 import { buildSuccessResponse } from 'shared-dto';
 import { AppError } from '../utils/errors/AppError';
-import { CookieService } from '../services/implementation/CookieService';
+import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
+import cloudinary, { configureCloudinary } from '../config/cloudinary';
 
 @injectable()
 export class CompanyAuthController {
   constructor(
     @inject(TYPES.ICompanyService) private _companyService: ICompanyService,
-    @inject(TYPES.CookieService) private _cookieService: CookieService
+    @inject(TYPES.CookieService) private _cookieService: CookieService,
   ) {}
 
   async register(req: Request, res: Response): Promise<void> {
@@ -22,10 +23,49 @@ export class CompanyAuthController {
       throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
     }
     
-    const { email, password, companyName } = validationResult.data;
-    const company = await this._companyService.register(email, password, companyName);
+    const { email, password, companyName, logo } = validationResult.data;
+    
+    // Handle logo upload to Cloudinary if provided
+    let logoUrl: string | undefined = undefined;
+    if (logo && typeof logo === 'string' && logo.startsWith('data:image/')) {
+      console.log('[CompanyAuthController] Processing logo upload to Cloudinary during registration...');
+      try {
+        // Ensure Cloudinary is configured
+        if (!configureCloudinary()) {
+          console.error('[CompanyAuthController] Cloudinary configuration missing');
+          throw new AppError('Cloudinary configuration is missing. Please check environment variables.', HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
+
+        const result = await cloudinary.uploader.upload(logo, {
+          folder: 'company-logos',
+          transformation: [
+            { width: 500, height: 500, crop: 'limit' },
+            { quality: 'auto' }
+          ],
+          resource_type: 'image'
+        });
+        
+        if (!result || !result.secure_url) {
+          console.error('[CompanyAuthController] Cloudinary upload returned invalid result:', result);
+          throw new AppError('Invalid response from Cloudinary', HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
+        
+        logoUrl = result.secure_url;
+        console.log('[CompanyAuthController] Cloudinary upload successful:', result.secure_url);
+      } catch (cloudinaryError: unknown) {
+        console.error('[CompanyAuthController] Cloudinary upload error:', cloudinaryError);
+        const errorMessage = cloudinaryError instanceof Error 
+          ? cloudinaryError.message 
+          : typeof cloudinaryError === 'object' && cloudinaryError !== null && 'message' in cloudinaryError
+            ? String(cloudinaryError.message)
+            : 'Failed to upload company logo';
+        throw new AppError(errorMessage, HttpStatusCode.INTERNAL_SERVER_ERROR);
+      }
+    }
+    
+    const company = await this._companyService.register(email, password, companyName, logoUrl);
     res.status(AuthStatusCode.COMPANY_REGISTRATION_SUCCESS).json(
-      buildSuccessResponse(company, Messages.COMPANY.REGISTRATION_SUCCESS)
+      buildSuccessResponse(company, Messages.COMPANY.REGISTRATION_SUCCESS),
     );
   }
 
@@ -42,7 +82,7 @@ export class CompanyAuthController {
     this._cookieService.setCompanyRefreshToken(res, result.tokens.refreshToken);
     
     res.status(AuthStatusCode.COMPANY_LOGIN_SUCCESS).json(
-      buildSuccessResponse({ company: result.company }, Messages.COMPANY.LOGIN_SUCCESS)
+      buildSuccessResponse({ company: result.company }, Messages.COMPANY.LOGIN_SUCCESS),
     );
   }
 
@@ -57,7 +97,7 @@ export class CompanyAuthController {
     this._cookieService.setCompanyAccessToken(res, result.accessToken);
 
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, Messages.AUTH.TOKEN_REFRESH_SUCCESS)
+      buildSuccessResponse(null, Messages.AUTH.TOKEN_REFRESH_SUCCESS),
     );
   }
 
@@ -70,7 +110,7 @@ export class CompanyAuthController {
     const { email } = validationResult.data;
     const result = await this._companyService.generateOTP(email);
     res.status(OTPStatusCode.OTP_GENERATED).json(
-      buildSuccessResponse(result, Messages.OTP.GENERATED_SUCCESS)
+      buildSuccessResponse(result, Messages.OTP.GENERATED_SUCCESS),
     );
   }
 
@@ -83,7 +123,7 @@ export class CompanyAuthController {
     const { email, otp } = validationResult.data;
     const result = await this._companyService.verifyOTP(email, parseInt(otp));
     res.status(OTPStatusCode.OTP_VERIFIED).json(
-      buildSuccessResponse(result, Messages.OTP.VERIFIED_SUCCESS)
+      buildSuccessResponse(result, Messages.OTP.VERIFIED_SUCCESS),
     );
   }
 
@@ -96,7 +136,7 @@ export class CompanyAuthController {
     const { email } = validationResult.data;
     const result = await this._companyService.resendOTP(email);
     res.status(OTPStatusCode.OTP_RESENT).json(
-      buildSuccessResponse(result, Messages.OTP.RESENT_SUCCESS)
+      buildSuccessResponse(result, Messages.OTP.RESENT_SUCCESS),
     );
   }
 
@@ -111,7 +151,7 @@ export class CompanyAuthController {
     this._cookieService.clearCompanyRefreshToken(res);
     
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse(null, Messages.AUTH.LOGOUT_SUCCESS)
+      buildSuccessResponse(null, Messages.AUTH.LOGOUT_SUCCESS),
     );
   }
 }

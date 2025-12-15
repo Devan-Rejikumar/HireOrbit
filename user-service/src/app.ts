@@ -6,12 +6,10 @@ import { AppConfig } from './config/app.config';
 import userRoutes from './routes/UserRoutes';
 import adminRoutes from './routes/AdminRoutes';
 import profileRoutes from './routes/ProfileRoutes';
-import { authenticateToken } from './middleware/auth.middleware';
+import skillRoutes from './routes/SkillRoutes';
 import {logger} from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { HttpStatusCode } from './enums/StatusCodes';
-import { Request, Response, NextFunction } from 'express';
-import { Messages } from './constants/Messages';
 import { ErrorHandler } from './middleware/error-handler.middleware';
 
 const app = express();
@@ -32,10 +30,10 @@ app.use((req, res, next) => {
 
 app.use(express.json({ 
   limit: `${AppConfig.JSON_BODY_SIZE_LIMIT_MB}mb`,
-  verify: (req, res, buf, encoding) => {
+  verify: (req, res, buf) => {
     try {
       JSON.parse(buf.toString());
-    } catch (e) {
+    } catch {
       logger.error('Invalid JSON received');
       throw new Error('Invalid JSON');
     }
@@ -106,12 +104,14 @@ app.get('/metrics', async (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/users/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api', skillRoutes);
 
 
 logger.info('=== ROUTES REGISTERED ===');
 logger.info('User routes: /api/users');
 logger.info('Admin routes: /api/users/admin');
 logger.info('Profile routes: /api/profile');
+logger.info('Skill routes: /api (public /skills, admin /users/admin/skills*)');
 logger.info('========================');
 
 

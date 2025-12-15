@@ -7,5 +7,5 @@ export const TYPES = {
   MessageModel: Symbol.for('MessageModel'),
   MongoDB: Symbol.for('MongoDB'),
   Kafka: Symbol.for('Kafka'),
-  WebSocket: Symbol.for('WebSocket')
+  WebSocket: Symbol.for('WebSocket'),
 };

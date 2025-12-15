@@ -1,4 +1,5 @@
 import api from './axios';
+import { ENV } from '../config/env';
 
 export interface CompanyReapplication {
   companyId: string;
@@ -28,7 +29,7 @@ export const companyService = {
   getReapplicationStatus: async (companyId: string) => {
     const response = await api.get<{
       data: { status: string };
-    }>(`http://localhost:3002/api/companies/${companyId}/reapplication-status`);
+    }>(`${ENV.COMPANY_SERVICE_URL}/companies/${companyId}/reapplication-status`);
     return response.data;
   },
   
@@ -48,7 +49,7 @@ export const companyService = {
 
     const response = await api.post<{
       data: CompanyReapplication;
-    }>(`http://localhost:3002/api/companies/${reapplicationData.companyId}/reapply`, formData);
+    }>(`${ENV.COMPANY_SERVICE_URL}/companies/${reapplicationData.companyId}/reapply`, formData);
     return response.data;
   },
 
@@ -60,11 +61,13 @@ export const companyService = {
         message: string;
       }>(`/company/search?name=${encodeURIComponent(companyName)}`);
       return response.data;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      if (axiosError?.response?.status === 404) {
         return { success: false, data: null, message: 'Company not found' };
       }
       throw error;
     }
-  }
+  },
 };

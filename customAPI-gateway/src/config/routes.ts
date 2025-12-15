@@ -1,4 +1,4 @@
-// Service route path constants
+
 export const SERVICE_ROUTES = {
     USERS: '/api/users',
     COMPANY: '/api/company',
@@ -6,7 +6,8 @@ export const SERVICE_ROUTES = {
     APPLICATIONS: '/api/applications',
     INTERVIEWS: '/api/interviews',
     NOTIFICATIONS: '/api/notifications',
-    CHAT: '/api/chat'
+    CHAT: '/api/chat',
+    SUBSCRIPTIONS: '/api/subscriptions'
 } as const;
 
 export const ROUTES = {
@@ -28,6 +29,7 @@ export const ROUTES = {
         '/api/users/logout',
         '/api/users/change-password',
         '/api/users/update-name',
+        '/api/users/admin/dashboard/statistics',
         '/api/profile/full',
         '/api/profile',
         '/api/company/profile', 
@@ -36,12 +38,30 @@ export const ROUTES = {
         '/api/jobs/update',
         '/api/jobs/delete',
         '/api/jobs/company',
+        '/api/jobs/admin/reported', 
+        '/api/jobs/:jobId/report',
         '/api/applications/create',
         '/api/applications/update',
         '/api/applications/delete',
         '/api/applications/company/applications',
         '/api/applications/company/statistics',
-        '/api/interviews'
+        '/api/interviews',
+        '/api/company/admin/industries',
+        '/api/subscriptions', 
+        '/api/subscriptions/status', 
+        '/api/subscriptions/:subscriptionId/cancel', 
+        '/api/subscriptions/:subscriptionId/upgrade', 
+        '/api/subscriptions/limits/job-posting', 
+        '/api/subscriptions/features/:featureName',
+        '/api/admin/subscriptions/plans',
+        '/api/admin/subscriptions/plans/:id',
+        '/api/admin/subscriptions/plans/:id/price',
+        '/api/admin/subscriptions/discounts',
+        '/api/admin/subscriptions/discounts/:id',
+        '/api/admin/subscriptions/discounts/plan/:planId',
+        '/api/admin/subscriptions/revenue',
+        '/api/admin/subscriptions/transactions',
+        '/api/admin/subscriptions/transactions/sync'
     ],
     
     public: [
@@ -62,6 +82,8 @@ export const ROUTES = {
         '/api/company/generate-otp',
         '/api/company/verify-otp',
         '/api/company/forgot-password',
-        '/api/company/reset-password'
+        '/api/company/reset-password',
+        '/api/industries',
+        '/api/subscriptions/plans',
     ]
 };

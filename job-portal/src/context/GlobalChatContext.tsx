@@ -3,7 +3,8 @@ import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { useUserConversations, useCompanyConversations } from '@/hooks/useChat';
-import { MessageResponse } from '@/api/_chatService';
+import { MessageResponse } from '@/api/chatService';
+import { ENV } from '../config/env';
 
 interface GlobalChatContextType {
   isConnected: boolean;
@@ -42,7 +43,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
     }
 
     // Connect to chat service WebSocket
-    const chatServiceUrl = import.meta.env.VITE_CHAT_SERVICE_URL?.replace('/api/chat', '') || 'http://localhost:4007';
+    const chatServiceUrl = ENV.CHAT_SERVICE_URL;
     
     // Only create socket if it doesn't exist
     if (!socketRef.current) {
@@ -51,7 +52,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         autoConnect: true,
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: 5
+        reconnectionAttempts: 5,
       });
 
       newSocket.on('connect', () => {

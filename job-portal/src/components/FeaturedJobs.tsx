@@ -3,10 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate, Link } from 'react-router-dom';
-import { useFeaturedJobs } from '@/hooks/useJobs';
+import { useFeaturedJobs, type Job } from '@/hooks/useJobs';
+import { ROUTES } from '@/constants/routes';
 
 const FeaturedJobs = () => {
-  const { data: jobs = [], isLoading: loading } = useFeaturedJobs();
+  const { data: jobsData, isLoading: loading } = useFeaturedJobs();
+  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
   const navigate = useNavigate();
 
   const getTimeAgo = (dateString: string) => {
@@ -47,7 +49,7 @@ const FeaturedJobs = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Link 
-                        to={`/jobs/${job.id}`}
+                        to={ROUTES.JOB_DETAILS(job.id)}
                         className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors hover:underline"
                       >
                         {job.title}
@@ -85,13 +87,13 @@ const FeaturedJobs = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Posted {getTimeAgo(job.createdAt)}</span>
                   <div className="flex gap-2">
-                    <Link to={`/jobs/${job.id}`}>
+                    <Link to={ROUTES.JOB_DETAILS(job.id)}>
                       <Button variant="outline" size="sm" className="hover:bg-gray-50">
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
                       </Button>
                     </Link>
-                    <Link to={`/jobs/${job.id}`}>
+                    <Link to={ROUTES.JOB_DETAILS(job.id)}>
                       <Button 
                         size="sm" 
                         className="bg-blue-600 hover:bg-blue-700"
@@ -111,7 +113,7 @@ const FeaturedJobs = () => {
             size="lg" 
             variant="outline" 
             className="px-8"
-            onClick={() => navigate('/jobs')}
+            onClick={() => navigate(ROUTES.JOBS)}
           >
             View All Jobs
           </Button>

@@ -8,7 +8,7 @@ import {
   StatusUpdatedInput, 
   ApplicationWithdrawnInput,
   InterviewConfirmedInput,
-  InterviewDecisionInput
+  InterviewDecisionInput,
 } from '../../dto/mappers/notification.mapper';
 
 interface ApplicationCreatedEventData {
@@ -67,11 +67,11 @@ interface InterviewDecisionEventData {
 export class EventService implements IEventService {
   private isConnected = false;
   private isRunning = false;
-  private handlers: Map<string, (data: any) => Promise<void>> = new Map();
+  private handlers: Map<string, (data: unknown) => Promise<void>> = new Map();
   private topics: string[] = [];
 
   constructor(
-    @inject(TYPES.INotificationService) private _notificationService: INotificationService
+    @inject(TYPES.INotificationService) private _notificationService: INotificationService,
   ) {}
 
   async start(): Promise<void> {
@@ -98,7 +98,8 @@ export class EventService implements IEventService {
       throw new Error('Cannot subscribe to topics after consumer has started running');
     }
     
-    this.handlers.set(eventType, handler);
+    // Type assertion is safe because T extends unknown, and handler will receive unknown from JSON.parse
+    this.handlers.set(eventType, handler as (data: unknown) => Promise<void>);
     
     if (!this.topics.includes(eventType)) {
       this.topics.push(eventType);
@@ -132,7 +133,7 @@ export class EventService implements IEventService {
         } catch (error) {
           console.error(`Error processing ${topic} event:`, error);
         }
-      }
+      },
     });
   }
 
@@ -142,7 +143,7 @@ export class EventService implements IEventService {
       applicationId: data.applicationId,
       jobId: data.jobId,
       applicantName: data.applicantName || 'Unknown',
-      jobTitle: data.jobTitle || 'Unknown Job'
+      jobTitle: data.jobTitle || 'Unknown Job',
     };
     
     await this._notificationService.sendApplicationReceivedNotification(input);
@@ -154,7 +155,7 @@ export class EventService implements IEventService {
       applicationId: data.applicationId,
       jobId: data.jobId,
       oldStatus: data.oldStatus,
-      newStatus: data.newStatus
+      newStatus: data.newStatus,
     };
     
     await this._notificationService.sendStatusUpdatedNotification(input);
@@ -166,7 +167,7 @@ export class EventService implements IEventService {
       applicationId: data.applicationId,
       jobId: data.jobId,
       applicantName: data.applicantName || 'Unknown',
-      jobTitle: data.jobTitle || 'Unknown Job'
+      jobTitle: data.jobTitle || 'Unknown Job',
     };
     
     await this._notificationService.sendApplicationWithdrawnNotification(input);
@@ -183,7 +184,7 @@ export class EventService implements IEventService {
       scheduledAt: data.scheduledAt,
       type: data.type,
       location: data.location,
-      meetingLink: data.meetingLink
+      meetingLink: data.meetingLink,
     };
     
     await this._notificationService.sendInterviewConfirmedNotification(input);
@@ -198,7 +199,7 @@ export class EventService implements IEventService {
       jobTitle: data.jobTitle,
       decision: data.decision,
       decisionReason: data.decisionReason,
-      feedback: data.feedback
+      feedback: data.feedback,
     };
     
     await this._notificationService.sendInterviewDecisionNotification(input);

@@ -26,9 +26,9 @@ interface JobsApiResponse {
 
 // Hook to fetch all jobs
 export const useJobs = () => {
-  return useQuery({
+  return useQuery<Job[]>({
     queryKey: ['jobs'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Job[]> => {
       const response = await api.get<JobsApiResponse>('/jobs');
       if (response.data.success && response.data.data?.jobs) {
         return response.data.data.jobs;
@@ -36,16 +36,17 @@ export const useJobs = () => {
       return [];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes - jobs don't change frequently
-    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (formerly cacheTime)
   });
 };
 
 // Hook to fetch featured jobs (first 4)
 export const useFeaturedJobs = () => {
-  const { data: allJobs = [], ...rest } = useJobs();
+  const { data: allJobsData, ...rest } = useJobs();
+  const allJobs: Job[] = Array.isArray(allJobsData) ? allJobsData : [];
   return {
     data: allJobs.slice(0, 4),
-    ...rest
+    ...rest,
   };
 };
 

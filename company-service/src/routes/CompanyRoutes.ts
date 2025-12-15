@@ -13,7 +13,6 @@ const companyAuthController = container.get<CompanyAuthController>(TYPES.Company
 const companyProfileController = container.get<CompanyProfileController>(TYPES.CompanyProfileController);
 const companyAdminController = container.get<CompanyAdminController>(TYPES.CompanyAdminController);
 
-// Auth routes
 router.post(COMPANY_ROUTES.REGISTER, asyncHandler((req, res) => companyAuthController.register(req, res)));
 router.post(COMPANY_ROUTES.LOGIN, asyncHandler((req, res) => companyAuthController.login(req, res)));
 router.post(COMPANY_ROUTES.REFRESH_TOKEN, asyncHandler((req, res) => companyAuthController.refreshToken(req, res)));
@@ -21,8 +20,6 @@ router.post(COMPANY_ROUTES.GENERATE_OTP, asyncHandler((req, res) => companyAuthC
 router.post(COMPANY_ROUTES.VERIFY_OTP, asyncHandler((req, res) => companyAuthController.verifyOTP(req, res)));
 router.post(COMPANY_ROUTES.RESEND_OTP, asyncHandler((req, res) => companyAuthController.resendOTP(req, res)));
 router.post(COMPANY_ROUTES.LOGOUT, authenticateCompany, asyncHandler((req, res) => companyAuthController.logout(req, res)));
-
-// Profile routes (protected)
 router.get(COMPANY_ROUTES.GET_ME, authenticateCompany, asyncHandler((req, res) => companyProfileController.getMe(req, res)));
 router.get(COMPANY_ROUTES.GET_PROFILE, authenticateCompany, asyncHandler((req, res) => companyProfileController.getCompanyProfile(req, res)));
 router.put(COMPANY_ROUTES.UPDATE_PROFILE, authenticateCompany, asyncHandler((req, res) => companyProfileController.updateCompanyProfile(req, res)));
@@ -32,8 +29,6 @@ router.post(COMPANY_ROUTES.COMPLETE_STEP_3, authenticateCompany, asyncHandler((r
 router.get(COMPANY_ROUTES.GET_JOB_COUNT, authenticateCompany, asyncHandler((req, res) => companyProfileController.getCompanyJobCount(req, res)));
 router.post(COMPANY_ROUTES.REAPPLY, authenticateCompany, asyncHandler((req, res) => companyProfileController.reapplyCompany(req, res)));
 router.get(COMPANY_ROUTES.GET_REAPPLY_STATUS, authenticateCompany, asyncHandler((req, res) => companyProfileController.getReapplyStatus(req, res)));
-
-// Admin routes (protected)
 router.get(COMPANY_ROUTES.GET_ALL_COMPANIES, authenticateCompany, asyncHandler((req, res) => companyAdminController.getAllCompanies(req, res)));
 router.patch(COMPANY_ROUTES.BLOCK_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.blockCompany(req, res)));
 router.patch(COMPANY_ROUTES.UNBLOCK_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.unblockCompany(req, res)));
@@ -42,8 +37,8 @@ router.get(COMPANY_ROUTES.GET_ALL_COMPANIES_FOR_ADMIN, authenticateCompany, asyn
 router.get(COMPANY_ROUTES.GET_COMPANY_DETAILS_FOR_ADMIN, authenticateCompany, asyncHandler((req, res) => companyAdminController.getCompanyDetailsForAdmin(req, res)));
 router.post(COMPANY_ROUTES.APPROVE_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.approveCompany(req, res)));
 router.post(COMPANY_ROUTES.REJECT_COMPANY, authenticateCompany, asyncHandler((req, res) => companyAdminController.rejectCompany(req, res)));
-
-// Public routes
 router.get(COMPANY_ROUTES.SEARCH_COMPANY, asyncHandler((req, res) => companyAdminController.searchCompanyByName(req, res)));
+router.get(COMPANY_ROUTES.GET_TOTAL_COMPANY_COUNT, asyncHandler((req, res) => companyAdminController.getTotalCompanyCount(req, res)));
+router.get(COMPANY_ROUTES.GET_COMPANY_STATISTICS_TIME_SERIES, asyncHandler((req, res) => companyAdminController.getCompanyStatisticsByTimePeriod(req, res)));
 
 export default router;

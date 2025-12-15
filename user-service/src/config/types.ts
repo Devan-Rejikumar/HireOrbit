@@ -34,6 +34,15 @@ const TYPES = {
   RedisService: Symbol.for('RedisService'),
   JWTService: Symbol.for('JWTService'),
   CookieService: Symbol.for('CookieService'),
+  SkillRepository: Symbol.for('SkillRepository'),
+  ISkillRepository: Symbol.for('ISkillRepository'),
+  SkillService: Symbol.for('SkillService'),
+  ISkillService: Symbol.for('ISkillService'),
+  SkillController: Symbol.for('SkillController'),
+  JobApiRepository: Symbol.for('JobApiRepository'),
+  IJobApiRepository: Symbol.for('IJobApiRepository'),
+  ApplicationApiRepository: Symbol.for('ApplicationApiRepository'),
+  IApplicationApiRepository: Symbol.for('IApplicationApiRepository'),
 };
 
 export default TYPES;

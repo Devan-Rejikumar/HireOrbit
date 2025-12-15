@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Save, Calendar } from 'lucide-react';
 import api from '../api/axios';
 import ConfirmationModal from './ConfirmationModal';
+import toast from 'react-hot-toast';
 
 interface EducationModalProps {
   isOpen: boolean;
@@ -123,14 +124,20 @@ const EducationModal: React.FC<EducationModalProps> = ({
 
       if (isEdit && education) {
         await api.put(`/profile/education/${education.id}`, educationData);
+        toast.success('Education updated successfully!');
       } else {
         await api.post('/profile/education', educationData);
+        toast.success('Education added successfully!');
       }
 
       onSave();
       onClose();
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to save education');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to save education';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -146,11 +153,16 @@ const EducationModal: React.FC<EducationModalProps> = ({
 
     try {
       await api.delete(`/profile/education/${education.id}`);
+      toast.success('Education deleted successfully!');
       onSave();
       onClose();
       setShowDeleteConfirm(false);
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to delete education');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      const errorMessage = axiosError?.response?.data?.error || 'Failed to delete education';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -8,25 +8,25 @@ const LoginPage: React.FC = () => {
   const getRoleContent = () => {
     if (selectedRole === 'jobseeker') {
       return {
-        title: "Welcome Back",
-        subtitle: "Continue your career journey and discover amazing opportunities",
+        title: 'Welcome Back',
+        subtitle: 'Continue your career journey and discover amazing opportunities',
         features: [
-          "Access your personalized job recommendations",
-          "Track your application status",
-          "Connect with recruiters and hiring managers",
-          "Update your profile and skills"
-        ]
+          'Access your personalized job recommendations',
+          'Track your application status',
+          'Connect with recruiters and hiring managers',
+          'Update your profile and skills',
+        ],
       };
     } else {
       return {
-        title: "Company Dashboard",
-        subtitle: "Manage your hiring process and find the best talent",
+        title: 'Company Dashboard',
+        subtitle: 'Manage your hiring process and find the best talent',
         features: [
-          "View and manage job postings",
-          "Review candidate applications",
-          "Schedule and conduct interviews",
-          "Track hiring metrics and analytics"
-        ]
+          'View and manage job postings',
+          'Review candidate applications',
+          'Schedule and conduct interviews',
+          'Track hiring metrics and analytics',
+        ],
       };
     }
   };
@@ -81,23 +81,23 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
-    {/* Right Column - Login Form */}
-    <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-      <div className="w-full max-w-md py-4">
-        {/* Mobile Logo */}
-        <div className="lg:hidden flex justify-center items-center mb-8">
-          <div className="flex items-center justify-center space-x-1">
-            <div className="w-8 h-3 bg-blue-800 rounded-full"></div>
-            <div className="w-6 h-3 bg-blue-800 rounded-full"></div>
-            <div className="w-4 h-3 bg-blue-800 rounded-full"></div>
-            <div className="w-3 h-3 bg-teal-400 rounded-full ml-2"></div>
-            <span className="ml-2 text-xl font-bold text-gray-800">HireOrbit</span>
+      {/* Right Column - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="w-full max-w-md py-4">
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex justify-center items-center mb-8">
+            <div className="flex items-center justify-center space-x-1">
+              <div className="w-8 h-3 bg-blue-800 rounded-full"></div>
+              <div className="w-6 h-3 bg-blue-800 rounded-full"></div>
+              <div className="w-4 h-3 bg-blue-800 rounded-full"></div>
+              <div className="w-3 h-3 bg-teal-400 rounded-full ml-2"></div>
+              <span className="ml-2 text-xl font-bold text-gray-800">HireOrbit</span>
+            </div>
           </div>
+          <LoginForm onRoleChange={setSelectedRole} />
         </div>
-        <LoginForm onRoleChange={setSelectedRole} />
       </div>
     </div>
-  </div>
   );
 };
 
