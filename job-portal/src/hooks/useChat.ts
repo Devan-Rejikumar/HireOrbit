@@ -7,7 +7,10 @@ export const useUserConversations = (userId: string) => {
     queryKey: ['conversations', 'user', userId],
     queryFn: () => _chatService.getUserConversations(userId),
     enabled: !!userId,
-    refetchInterval: 30000,
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchInterval: 60000, // Refetch every 60 seconds (reduced from 30s)
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -16,7 +19,10 @@ export const useCompanyConversations = (companyId: string) => {
     queryKey: ['conversations', 'company', companyId],
     queryFn: () => _chatService.getCompanyConversations(companyId),
     enabled: !!companyId,
-    refetchInterval: 30000,
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchInterval: 60000, // Refetch every 60 seconds (reduced from 30s)
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -46,6 +52,10 @@ export const useMessages = (conversationId: string | null, limit?: number, skip?
     queryKey: ['messages', conversationId, limit, skip],
     queryFn: () => _chatService.getMessages(conversationId!, limit, skip),
     enabled: !!conversationId,
+    staleTime: 1 * 60 * 1000, // Consider data fresh for 1 minute
+    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Don't refetch if data exists in cache
   });
 };
 
@@ -89,10 +99,11 @@ export const useUnreadCount = (conversationId: string | null, userId: string | n
     queryFn: () => _chatService.getUnreadCount(conversationId!, userId!),
     enabled: !!conversationId && !!userId,
     // Only poll when WebSocket is disconnected AND tab is visible (as fallback)
-    refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
-    staleTime: 30000, // Consider data fresh for 30s
+    refetchInterval: (!isWebSocketConnected && isVisible) ? 120000 : false, // Increased to 2 minutes
+    staleTime: 60000, // Consider data fresh for 1 minute (increased from 30s)
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Always refetch on mount to get latest data
+    refetchOnMount: false, // Use cached data if available
   });
 };
 
@@ -104,10 +115,11 @@ export const useTotalUnreadCount = (userId: string | null, isWebSocketConnected:
     queryFn: () => _chatService.getTotalUnreadCount(userId!),
     enabled: !!userId,
     // Only poll when WebSocket is disconnected AND tab is visible (as fallback)
-    refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
-    staleTime: 30000, // Consider data fresh for 30s
+    refetchInterval: (!isWebSocketConnected && isVisible) ? 120000 : false, // Increased to 2 minutes
+    staleTime: 60000, // Consider data fresh for 1 minute (increased from 30s)
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Always refetch on mount to get latest data
+    refetchOnMount: false, // Use cached data if available
   });
 };
 
@@ -119,10 +131,11 @@ export const useConversationsWithUnread = (userId: string | null, isWebSocketCon
     queryFn: () => _chatService.getConversationsWithUnread(userId!),
     enabled: !!userId,
     // Only poll when WebSocket is disconnected AND tab is visible (as fallback)
-    refetchInterval: (!isWebSocketConnected && isVisible) ? 60000 : false,
-    staleTime: 30000, // Consider data fresh for 30s
+    refetchInterval: (!isWebSocketConnected && isVisible) ? 120000 : false, // Increased to 2 minutes
+    staleTime: 60000, // Consider data fresh for 1 minute (increased from 30s)
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Always refetch on mount to get latest data
+    refetchOnMount: false, // Use cached data if available
   });
 };
 

@@ -9,8 +9,8 @@ datasource db {
 
 model SubscriptionPlan {
   id            String         @id @default(uuid())
-  name          String         // "Free", "Basic", "Premium"
-  userType      String         // "user" or "company"
+  name          String         
+  userType      String         
   priceMonthly  Float?
   priceYearly   Float?
   stripePriceIdMonthly String?

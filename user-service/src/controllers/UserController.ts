@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { injectable, inject } from 'inversify';
 import TYPES from '../config/types';
 import { IUserService } from '../services/interfaces/IUserService';
+import { IProfileService } from '../services/interfaces/IProfileService';
 import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
 import { CookieConfig } from '../constants/CookieConfig';
@@ -40,7 +41,8 @@ cloudinary.config({
 export class UserController {
   constructor(
     @inject(TYPES.IUserService) private _userService: IUserService,
-    @inject(TYPES.CookieService) private _cookieService: CookieService
+    @inject(TYPES.CookieService) private _cookieService: CookieService,
+    @inject(TYPES.IProfileService) private _profileService: IProfileService
   ) {}
 
   async register(req: Request, res: Response): Promise<void> {
@@ -174,8 +176,35 @@ export class UserController {
       throw new AppError(Messages.USER.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
+    // Include profile data (especially profilePicture) if available
+    let profileData = null;
+    try {
+      const profile = await this._profileService.getProfile(id);
+      if (profile) {
+        profileData = {
+          profilePicture: profile.profilePicture,
+          headline: profile.headline,
+          location: profile.location,
+        };
+        console.log(`✅ [UserController] Profile found for user ${id}, profilePicture:`, profile.profilePicture);
+      } else {
+        console.log(`ℹ️ [UserController] No profile found for user ${id}`);
+      }
+    } catch (error) {
+      // Profile might not exist, which is okay - just continue without it
+      // This allows the endpoint to work even if user hasn't created a profile yet
+      console.log(`ℹ️ [UserController] Profile fetch failed for user ${id}:`, error instanceof Error ? error.message : 'Unknown error');
+    }
+
+    const responseData: { user: typeof user; profile?: typeof profileData } = { user };
+    if (profileData) {
+      responseData.profile = profileData;
+    }
+
+    console.log(`📤 [UserController] Sending response for user ${id}, has profile:`, !!profileData);
+
     res.status(HttpStatusCode.OK).json(
-      buildSuccessResponse({ user}, Messages.USER.RETRIEVED_SUCCESS)
+      buildSuccessResponse(responseData, Messages.USER.RETRIEVED_SUCCESS)
     );
   }
 

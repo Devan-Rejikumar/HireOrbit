@@ -101,10 +101,16 @@ export class JobRepository implements IJobRepository {
     if (filters.company) where.company = { contains: filters.company, mode: 'insensitive' };
     if (filters.companyId) where.companyId = filters.companyId;
     if (filters.location) where.location = { contains: filters.location, mode: 'insensitive' };
-    if (filters.jobType) where.jobType = filters.jobType;
-    if (filters.experienceLevel) where.experienceLevel = filters.experienceLevel;
-    if (filters.education) where.education = filters.education;
-    if (filters.workLocation) where.workLocation = filters.workLocation;
+    // Case-insensitive jobType matching to handle format variations (Full-time, full-time, Full Time, etc.)
+    if (filters.jobType) {
+      where.jobType = { 
+        equals: filters.jobType, 
+        mode: 'insensitive' 
+      };
+    }
+    if (filters.experienceLevel) where.experienceLevel = { contains: filters.experienceLevel, mode: 'insensitive' };
+    if (filters.education) where.education = { contains: filters.education, mode: 'insensitive' };
+    if (filters.workLocation) where.workLocation = { contains: filters.workLocation, mode: 'insensitive' };
     
     if (filters.minSalary || filters.maxSalary) {
       where.salary = {};

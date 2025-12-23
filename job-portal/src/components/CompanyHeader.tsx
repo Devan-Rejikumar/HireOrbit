@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Building2, Plus, Bell, LogOut } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { Logo } from './Logo';
 
 interface CompanyProfile {
   companyName?: string;
@@ -19,6 +20,7 @@ interface CompanyHeaderProps {
 
 export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onLogout }) => {
   const navigate = useNavigate();
+  const { settings } = useBranding();
 
   const handleLogout = () => {
     if (onLogout) {
@@ -32,13 +34,8 @@ export const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onLogout 
     <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-8">
-          {/* Hire Orbit Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">H</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
-          </div>
+          {/* Company Logo */}
+          <Logo size="md" textClassName="text-gray-900" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
           
           {/* Company Info */}
           <div className="flex items-center gap-2">

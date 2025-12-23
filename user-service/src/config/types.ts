@@ -43,6 +43,11 @@ const TYPES = {
   IJobApiRepository: Symbol.for('IJobApiRepository'),
   ApplicationApiRepository: Symbol.for('ApplicationApiRepository'),
   IApplicationApiRepository: Symbol.for('IApplicationApiRepository'),
+  SettingsRepository: Symbol.for('SettingsRepository'),
+  ISettingsRepository: Symbol.for('ISettingsRepository'),
+  SettingsService: Symbol.for('SettingsService'),
+  ISettingsService: Symbol.for('ISettingsService'),
+  SettingsController: Symbol.for('SettingsController'),
 };
 
 export default TYPES;

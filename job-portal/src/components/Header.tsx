@@ -1,10 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { Menu, X, Search, LogOut, User, Briefcase } from 'lucide-react';
+import { Menu, X, Search, LogOut, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from './NotificationBell';
 import { MessagesDropdown } from './MessagesDropdown';
+import { Logo } from './Logo';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,14 +23,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo Section */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Briefcase className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              HireOrbit
-            </h1>
-          </div>
+          <Logo size="md" textClassName="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent" />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1">

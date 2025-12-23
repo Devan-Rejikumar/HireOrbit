@@ -14,7 +14,9 @@ import { MessagesSidebar } from '@/components/MessagesSidebar';
 import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
 import { useTotalUnreadCount, useCompanyConversations, useMarkAsRead, useMessages } from '@/hooks/useChat';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { ConversationResponse } from '@/api/chatService';
+import { Logo } from '@/components/Logo';
 import { SubscriptionBanner } from '@/components/subscription/SubscriptionBanner';
 import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
 import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
@@ -160,44 +162,19 @@ const CompanyDashboard = () => {
   );
   const markAsReadMutation = useMarkAsRead();
 
-  // Fetch participant name when conversation is selected
+  // Use cached user profile hook to get participant name
+  const otherParticipantId = selectedConversation?.userId;
+  const { data: userProfile } = useUserProfile(role === 'company' ? otherParticipantId : null);
+  
+  // Update participant name when user profile is loaded
   useEffect(() => {
-    const fetchOtherParticipantName = async () => {
-      if (!selectedConversation || role !== 'company') {
-        setOtherParticipantName('');
-        return;
-      }
-
-      try {
-        // For company role, fetch the user name
-        const otherParticipantId = selectedConversation.userId;
-        
-        interface UserData {
-          username?: string;
-          name?: string;
-          id: string;
-        }
-
-        interface UserApiResponse {
-          success: boolean;
-          data: {
-            user: UserData;
-          };
-        }
-
-        const response = await api.get<UserApiResponse>(`/users/${otherParticipantId}`);
-        const userName = response.data?.data?.user?.username || 
-                        response.data?.data?.user?.name || 
-                        'User';
-        setOtherParticipantName(userName);
-      } catch (error) {
-        console.error('Error fetching participant name:', error);
-        setOtherParticipantName('User');
-      }
-    };
-
-    fetchOtherParticipantName();
-  }, [selectedConversation, role]);
+    if (role === 'company' && userProfile) {
+      const userName = userProfile.username || userProfile.name || 'User';
+      setOtherParticipantName(userName);
+    } else if (!selectedConversation || role !== 'company') {
+      setOtherParticipantName('');
+    }
+  }, [userProfile, selectedConversation, role]);
 
   useEffect(() => {
     fetchCompanyProfile();
@@ -820,13 +797,8 @@ const CompanyDashboard = () => {
       <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            {/* Hire Orbit Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
-            </div>
+            {/* Company Logo */}
+            <Logo size="md" textClassName="text-gray-900" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
             
             {/* Company Info */}
             <div className="flex items-center gap-2">
@@ -1061,6 +1033,7 @@ const CompanyDashboard = () => {
                     isLoading={messagesLoading}
                     onSendMessage={handleSendMessage}
                     otherParticipantName={otherParticipantName}
+                    otherParticipantId={selectedConversation.userId}
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-50">

@@ -31,6 +31,9 @@ interface JobsResponse {
   success: boolean;
   data: {
     jobs: Job[];
+    total?: number;
+    page?: number;
+    limit?: number;
   };
   message: string;
 }
@@ -39,6 +42,7 @@ interface JobsResponse {
 const JobListings = () => {
   const location = useLocation();
   const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [searchFilters, setSearchFilters] = useState({
@@ -60,6 +64,23 @@ const JobListings = () => {
   const jobsPerPage = 5;
 
 
+  // Map frontend jobType values to database format
+  const mapJobTypeToDatabase = (jobType: string): string => {
+    const mapping: { [key: string]: string } = {
+      'full-time': 'Full-time',
+      'part-time': 'Part-time',
+      'contract': 'Contract',
+      'internship': 'Internship',
+      'freelance': 'Freelance',
+    };
+    return mapping[jobType.toLowerCase()] || jobType;
+  };
+
+  // Check if multi-select filters are active (require client-side filtering)
+  const hasMultiSelectFilters = searchFilters.experienceLevel.length > 0 || 
+                                 searchFilters.education.length > 0 || 
+                                 searchFilters.workLocation.length > 0;
+
   // Fetch jobs
   const fetchJobs = async () => {
     try {
@@ -70,26 +91,42 @@ const JobListings = () => {
       if (searchFilters.title) params.append('title', searchFilters.title);
       if (searchFilters.company) params.append('company', searchFilters.company);
       if (searchFilters.location) params.append('location', searchFilters.location);
-      if (searchFilters.jobType) params.append('jobType', searchFilters.jobType);
-      const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
-      interface JobsResponseData {
-        data?: {
-          jobs?: Job[];
-        };
+      if (searchFilters.jobType) {
+        // Map frontend format to database format
+        const dbJobType = mapJobTypeToDatabase(searchFilters.jobType);
+        params.append('jobType', dbJobType);
       }
-      const jobsData = (response.data as JobsResponseData).data?.jobs || [];
+      
+      // If multi-select filters are active, fetch a large batch for client-side filtering
+      // Otherwise, use backend pagination
+      if (hasMultiSelectFilters) {
+        // Fetch a large batch (100 jobs) to allow client-side filtering and pagination
+        params.append('page', '1');
+        params.append('limit', '100');
+      } else {
+        // Use backend pagination
+        params.append('page', currentPage.toString());
+        params.append('limit', jobsPerPage.toString());
+      }
+      
+      const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
+      const jobsData = response.data?.data?.jobs || [];
+      const total = response.data?.data?.total || 0;
 
       setAllJobs(jobsData);
-      setCurrentPage(1);
+      setTotalJobs(total);
     } catch (error: unknown) {
       console.error('Error fetching jobs:', error);
       setSearchError('Failed to fetch jobs. Please try again.');
       setAllJobs([]);
+      setTotalJobs(0);
     } finally {
       setLoading(false);
     }
   };
 
+  // Apply client-side filters for experienceLevel, education, and workLocation
+  // (These are multi-select filters, so we filter client-side)
   const filteredJobs = useMemo(() => {
     return allJobs.filter(job => {
       if (searchFilters.experienceLevel.length > 0) {
@@ -122,7 +159,6 @@ const JobListings = () => {
         if (!hasMatchingEducation) return false;
       }
 
-   
       if (searchFilters.workLocation.length > 0) {
         const jobWorkLocation = job.workLocation.toLowerCase();
         const hasMatchingLocation = searchFilters.workLocation.some(location => {
@@ -140,13 +176,24 @@ const JobListings = () => {
     });
   }, [allJobs, searchFilters.experienceLevel, searchFilters.education, searchFilters.workLocation]);
 
+  // Pagination logic:
+  // - If multi-select filters are active: use client-side pagination on filtered results
+  // - Otherwise: jobs are already paginated from backend
   const paginatedJobs = useMemo(() => {
-    const startIndex = (currentPage - 1) * jobsPerPage;
-    const endIndex = startIndex + jobsPerPage;
-    return filteredJobs.slice(startIndex, endIndex);
-  }, [filteredJobs, currentPage, jobsPerPage]);
+    if (hasMultiSelectFilters) {
+      // Client-side pagination for multi-select filters
+      const startIndex = (currentPage - 1) * jobsPerPage;
+      const endIndex = startIndex + jobsPerPage;
+      return filteredJobs.slice(startIndex, endIndex);
+    } else {
+      // Backend pagination - jobs are already paginated
+      return filteredJobs;
+    }
+  }, [filteredJobs, currentPage, jobsPerPage, hasMultiSelectFilters]);
 
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  // Calculate total pages
+  const effectiveTotal = hasMultiSelectFilters ? filteredJobs.length : totalJobs;
+  const totalPages = Math.ceil(effectiveTotal / jobsPerPage);
   const hasNextPage = currentPage < totalPages;
   const hasPreviousPage = currentPage > 1;
 
@@ -191,16 +238,19 @@ const JobListings = () => {
       location: locationParam,
     }));
   }, [location.search]);
+  // Reset to page 1 when filters change (except pagination)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchFilters.title, searchFilters.company, searchFilters.location, searchFilters.jobType, searchFilters.experienceLevel, searchFilters.education, searchFilters.workLocation]);
+
+  // Fetch jobs when filters or page changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchJobs();
     }, 500); 
 
     return () => clearTimeout(timeoutId);
-  }, [searchFilters.title, searchFilters.company, searchFilters.location, searchFilters.jobType, searchFilters.experienceLevel, searchFilters.education, searchFilters.workLocation]);
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchFilters]);
+  }, [searchFilters.title, searchFilters.company, searchFilters.location, searchFilters.jobType, searchFilters.experienceLevel, searchFilters.education, searchFilters.workLocation, currentPage]);
 
   const handleSearch = useCallback(() => {
     if (!searchFilters.title && !searchFilters.company && !searchFilters.location && !searchFilters.jobType && !searchFilters.experienceLevel && !searchFilters.education && !searchFilters.workLocation) {
