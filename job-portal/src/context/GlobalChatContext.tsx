@@ -58,6 +58,12 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
       newSocket.on('connect', () => {
         console.log('✅ Global chat WebSocket connected');
         setIsConnected(true);
+        
+        // Register user as online
+        if (currentUserId) {
+          newSocket.emit('register-user', { userId: currentUserId });
+          console.log(`✅ Registered user ${currentUserId} as online`);
+        }
       });
 
       newSocket.on('disconnect', () => {
@@ -74,16 +80,21 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
       newSocket.on('new-message', (message: MessageResponse) => {
         console.log('📨 New message received globally:', message);
         
-        // Update React Query cache for messages
-        queryClient.invalidateQueries({ queryKey: ['messages', message.conversationId] });
+        // Optimize: Update messages cache directly instead of invalidating
+        queryClient.setQueryData(['messages', message.conversationId], (oldData: MessageResponse[] | undefined) => {
+          if (!oldData) return [message];
+          // Check if message already exists to prevent duplicates
+          const exists = oldData.some(m => m.id === message.id);
+          return exists ? oldData : [...oldData, message];
+        });
         
-        // Update conversations list
+        // Update conversations list (needed for last message update)
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
         
-        // Update unread counts
+        // Only invalidate unread counts (these are lightweight queries)
         queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
         queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
-        queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+        queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId] });
       });
 
       socketRef.current = newSocket;

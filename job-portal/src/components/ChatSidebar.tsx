@@ -21,6 +21,9 @@ export const ChatSidebar = ({
   role,
 }: ChatSidebarProps) => {
   const [participantNames, setParticipantNames] = useState<Record<string, string>>({});
+  const [companyLogos, setCompanyLogos] = useState<Record<string, string | null>>({});
+  const [userAvatars, setUserAvatars] = useState<Record<string, string | null>>({});
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const fetchedRef = useRef<Set<string>>(new Set());
   const fetchingRef = useRef(false);
   
@@ -34,6 +37,7 @@ export const ChatSidebar = ({
     const fetchNames = async () => {
       fetchingRef.current = true;
       const names: Record<string, string> = {};
+      const logos: Record<string, string | null> = {};
       const toFetch = conversations.filter(c => !fetchedRef.current.has(c.id));
 
       for (let i = 0; i < toFetch.length; i++) {
@@ -128,18 +132,50 @@ export const ChatSidebar = ({
               
               if (companyName && companyName !== 'Company Name' && companyName !== 'Unknown Company') {
                 names[conv.id] = companyName;
+                
+                // Try to fetch company logo
+                try {
+                  interface CompanyResponse {
+                    success?: boolean;
+                    data?: {
+                      company?: {
+                        logo?: string;
+                      };
+                    };
+                    company?: {
+                      logo?: string;
+                    };
+                  }
+                  
+                  const companyResponse = await api.get<CompanyResponse>(`/company/search?name=${encodeURIComponent(companyName)}`);
+                  const companyData = companyResponse.data?.data?.company || companyResponse.data?.company;
+                  if (companyData?.logo) {
+                    logos[conv.id] = companyData.logo;
+                  } else {
+                    logos[conv.id] = null;
+                  }
+                } catch (logoError) {
+                  // Silent fail - use default
+                  logos[conv.id] = null;
+                }
               } else {
                 names[conv.id] = 'Company';
+                logos[conv.id] = null;
               }
             } catch (appError: unknown) {
               names[conv.id] = 'Company';
             }
           } else {
+            // For company role, fetch user name and profile picture
             interface UserResponse {
+              success?: boolean;
               data?: {
                 user?: {
                   username?: string;
                   name?: string;
+                };
+                profile?: {
+                  profilePicture?: string | null;
                 };
               };
               user?: {
@@ -149,9 +185,18 @@ export const ChatSidebar = ({
             }
             
             const userRes = await api.get<UserResponse>(`/users/${conv.userId}`);
-            const userData = userRes.data?.data?.user || userRes.data?.user;
+            const responseData = userRes.data?.data || userRes.data;
+            const userData = responseData?.user;
             const userName = userData?.username || userData?.name || 'User';
             names[conv.id] = userName;
+            
+            // Extract profile picture from response
+            const profilePicture = responseData?.profile?.profilePicture || null;
+            if (profilePicture) {
+              userAvatars[conv.id] = profilePicture;
+            } else {
+              userAvatars[conv.id] = null;
+            }
           }
           fetchedRef.current.add(conv.id);
         } catch (error: unknown) {
@@ -162,6 +207,8 @@ export const ChatSidebar = ({
       }
 
       setParticipantNames(prev => ({ ...prev, ...names }));
+      setCompanyLogos(prev => ({ ...prev, ...logos }));
+      setUserAvatars(prev => ({ ...prev, ...userAvatars }));
       fetchingRef.current = false;
     };
 
@@ -199,7 +246,7 @@ export const ChatSidebar = ({
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto hide-scrollbar">
         {conversations.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             <p>No conversations yet</p>
@@ -209,6 +256,8 @@ export const ChatSidebar = ({
             {conversations.map((conversation) => {
               const unreadCount = getUnreadCount(conversation);
               const isSelected = selectedConversationId === conversation.id;
+              const companyLogo = companyLogos[conversation.id];
+              const userAvatar = userAvatars[conversation.id];
 
               return (
                 <button
@@ -219,12 +268,32 @@ export const ChatSidebar = ({
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    {/* Avatar with icon */}
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
-                      {role === 'jobseeker' ? (
-                        <Building2 className="w-6 h-6 text-gray-600" />
+                    {/* Avatar with company logo or user profile image */}
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden">
+                      {role === 'jobseeker' && companyLogo && !imageErrors.has(conversation.id) ? (
+                        <img 
+                          src={companyLogo} 
+                          alt={participantNames[conversation.id] || 'Company'} 
+                          className="w-full h-full object-cover"
+                          onError={() => {
+                            setImageErrors(prev => new Set(prev).add(conversation.id));
+                          }}
+                        />
+                      ) : role === 'company' && userAvatar && !imageErrors.has(conversation.id) ? (
+                        <img 
+                          src={userAvatar} 
+                          alt={participantNames[conversation.id] || 'User'} 
+                          className="w-full h-full object-cover"
+                          onError={() => {
+                            setImageErrors(prev => new Set(prev).add(conversation.id));
+                          }}
+                        />
                       ) : (
-                        <User className="w-6 h-6 text-gray-600" />
+                        role === 'jobseeker' ? (
+                          <Building2 className="w-6 h-6 text-gray-600" />
+                        ) : (
+                          <User className="w-6 h-6 text-gray-600" />
+                        )
                       )}
                     </div>
 

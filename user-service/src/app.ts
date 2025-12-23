@@ -7,6 +7,7 @@ import userRoutes from './routes/UserRoutes';
 import adminRoutes from './routes/AdminRoutes';
 import profileRoutes from './routes/ProfileRoutes';
 import skillRoutes from './routes/SkillRoutes';
+import settingsRoutes from './routes/SettingsRoutes';
 import {logger} from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
 import { HttpStatusCode } from './enums/StatusCodes';
@@ -105,6 +106,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/users/admin', adminRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api', skillRoutes);
+app.use('/api/settings', settingsRoutes);
 
 
 logger.info('=== ROUTES REGISTERED ===');
@@ -112,6 +114,7 @@ logger.info('User routes: /api/users');
 logger.info('Admin routes: /api/users/admin');
 logger.info('Profile routes: /api/profile');
 logger.info('Skill routes: /api (public /skills, admin /users/admin/skills*)');
+logger.info('Settings routes: /api/settings');
 logger.info('========================');
 
 

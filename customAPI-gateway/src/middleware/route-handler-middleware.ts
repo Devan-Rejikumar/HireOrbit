@@ -79,6 +79,12 @@ const isProtectedRoute = (path: string, method: string): boolean =>{
         return true;
     }
     
+    // Settings PUT routes require authentication
+    if (clean.startsWith('/api/settings') && method !== 'GET') {
+        console.log(' Matched settings update route:', clean);
+        return true;
+    }
+    
     return false;
 }
 
@@ -90,6 +96,11 @@ const isPublicRoute = (path: string, method: string): boolean =>{
     
 
     if (clean.match(/^\/api\/jobs\/[a-zA-Z0-9_-]+$/) && method === 'GET') {
+        return true;
+    }
+    
+    // Settings GET is public
+    if (clean === '/api/settings' && method === 'GET') {
         return true;
     }
     

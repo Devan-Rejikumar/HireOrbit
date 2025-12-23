@@ -9,15 +9,23 @@ export interface TypingData {
   isTyping: boolean;
 }
 
-export const useChatSocket = (conversationId: string | null) => {
+export interface OnlineStatus {
+  [userId: string]: boolean;
+}
+
+export const useChatSocket = (conversationId: string | null, currentUserId?: string) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+  const [onlineUsers, setOnlineUsers] = useState<OnlineStatus>({});
   const socketRef = useRef<Socket | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    // Clear messages when conversation changes
+    setMessages([]);
+    
     if (!conversationId) return;
 
     const chatServiceUrl = ENV.CHAT_SERVICE_URL;
@@ -28,6 +36,12 @@ export const useChatSocket = (conversationId: string | null) => {
 
     newSocket.on('connect', () => {
       setIsConnected(true);
+      
+      // Register user as online
+      if (currentUserId) {
+        newSocket.emit('register-user', { userId: currentUserId });
+      }
+      
       newSocket.emit('join-conversation', conversationId);
     });
 
@@ -37,10 +51,33 @@ export const useChatSocket = (conversationId: string | null) => {
 
     newSocket.on('new-message', (message: MessageResponse) => {
       setMessages(prev => [...prev, message]);
-      queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+      
+      // Clear typing indicator when a new message arrives from the sender
+      if (message.senderId !== currentUserId) {
+        setTypingUsers(prev => {
+          const updated = new Set(prev);
+          updated.delete(message.senderId);
+          return updated;
+        });
+      }
+      
+      // Optimize invalidations: only invalidate what's necessary
+      // Update messages cache directly instead of invalidating
+      queryClient.setQueryData(['messages', conversationId], (oldData: MessageResponse[] | undefined) => {
+        if (!oldData) return [message];
+        // Check if message already exists to prevent duplicates
+        const exists = oldData.some(m => m.id === message.id);
+        return exists ? oldData : [...oldData, message];
+      });
+      
+      // Invalidate conversations list (needed for last message update)
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
-      queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
+      
+      // Only invalidate unread counts if message is not from current user
+      if (message.senderId !== currentUserId) {
+        queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
+        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
+      }
     });
 
     newSocket.on('user-typing', (data: TypingData) => {
@@ -53,6 +90,21 @@ export const useChatSocket = (conversationId: string | null) => {
         }
         return updated;
       });
+    });
+
+    // Online status events
+    newSocket.on('user-online', (data: { userId: string }) => {
+      setOnlineUsers(prev => ({
+        ...prev,
+        [data.userId]: true,
+      }));
+    });
+
+    newSocket.on('user-offline', (data: { userId: string }) => {
+      setOnlineUsers(prev => ({
+        ...prev,
+        [data.userId]: false,
+      }));
     });
 
     newSocket.on('message-error', (error: { error: string; details?: string }) => {
@@ -68,7 +120,7 @@ export const useChatSocket = (conversationId: string | null) => {
       }
       newSocket.close();
     };
-  }, [conversationId, queryClient]);
+  }, [conversationId, currentUserId, queryClient]);
 
   const sendMessage = (
     senderId: string,
@@ -108,7 +160,9 @@ export const useChatSocket = (conversationId: string | null) => {
     socket,
     isConnected,
     messages,
+    messages,
     typingUsers,
+    onlineUsers,
     sendMessage,
     sendTyping,
     markAsRead,

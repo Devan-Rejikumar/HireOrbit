@@ -325,6 +325,7 @@ export const Chat = () => {
             isLoading={messagesLoading}
             onSendMessage={handleSendMessage}
             otherParticipantName={otherParticipantName}
+            otherParticipantId={role === 'jobseeker' ? selectedConversation.companyId : selectedConversation.userId}
           />
         ) : (
           <div className="h-full flex items-center justify-center bg-gray-50">

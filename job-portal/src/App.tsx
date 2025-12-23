@@ -3,11 +3,14 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { NotificationProvider } from './context/NotificationContext';
 import { GlobalChatProvider } from './context/GlobalChatContext';
+import { BrandingProvider } from './context/BrandingContext';
 import { useAuth } from './context/AuthContext';
 import PublicRoute from './components/PublicRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import CompanyProtectedRoute from './components/CompanyProtectedRoute';
 import AdminAuthProtected from './components/AdminAuthProtected';
+import LoadingScreen from './components/LoadingScreen';
+import { useLoadingState } from './hooks/useLoadingState';
 import { ROUTES } from './constants/routes';
 
 // Keep critical routes non-lazy for faster initial load
@@ -56,17 +59,31 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Component that uses loading state (must be inside BrandingProvider)
+const AppWithLoading = () => {
+  const isLoading = useLoadingState();
+  
+  return (
+    <>
+      <LoadingScreen isVisible={isLoading} />
+      <AppContent />
+    </>
+  );
+};
+
 // Component to wrap routes with notification and chat context
 const AppWithNotifications = () => {
   const { user, company, role } = useAuth();
   const recipientId = role === 'jobseeker' ? user?.id : company?.id;
   
   return (
-    <GlobalChatProvider>
-      <NotificationProvider recipientId={recipientId || ''}>
-        <AppContent />
-      </NotificationProvider>
-    </GlobalChatProvider>
+    <BrandingProvider>
+      <GlobalChatProvider>
+        <NotificationProvider recipientId={recipientId || ''}>
+          <AppWithLoading />
+        </NotificationProvider>
+      </GlobalChatProvider>
+    </BrandingProvider>
   );
 };
 

@@ -61,10 +61,14 @@ export const ROUTES = {
         '/api/admin/subscriptions/discounts/plan/:planId',
         '/api/admin/subscriptions/revenue',
         '/api/admin/subscriptions/transactions',
-        '/api/admin/subscriptions/transactions/sync'
+        '/api/admin/subscriptions/transactions/sync',
+        '/api/settings/logo',
+        '/api/settings/company-name',
+        '/api/settings/about-page'
     ],
     
     public: [
+    '/api/settings', // GET settings is public
         '/api/jobs', 
         '/api/jobs/list',
         '/api/jobs/search',

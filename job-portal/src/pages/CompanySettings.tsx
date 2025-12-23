@@ -27,6 +27,7 @@ import {
   Globe,
 } from 'lucide-react';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
+import { Logo } from '@/components/Logo';
 import api from '@/api/axios';
 
 interface Company {
@@ -106,13 +107,8 @@ const CompanySettings = () => {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            {/* Hire Orbit Logo */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">H</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Hire Orbit</span>
-            </div>
+            {/* Company Logo */}
+            <Logo size="md" textClassName="text-gray-900" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
             
             {/* Company Info */}
             <div className="flex items-center gap-2">

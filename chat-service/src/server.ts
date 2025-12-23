@@ -38,11 +38,41 @@ const io = new Server(server, {
 
 const webrtcRooms = new Map<string, WebRTCRoom>();
 
+// Online users tracking: userId -> Set of socketIds (for multiple tabs/devices)
+const onlineUsers = new Map<string, Set<string>>();
+// Socket to userId mapping
+const socketToUserId = new Map<string, string>();
+
 io.on('connection', (socket) => {
   console.log('🔌 [SERVER] ========== NEW SOCKET CONNECTION ==========');
   console.log('🔌 [SERVER] Socket ID:', socket.id);
   console.log('🔌 [SERVER] Socket transport:', socket.conn.transport.name);
   console.log('🔌 [SERVER] Socket connected:', socket.connected);
+  
+  // Register user as online when they connect with userId
+  socket.on('register-user', (data: { userId: string }) => {
+    const { userId } = data;
+    if (!userId) return;
+    
+    // Track this socket for this user
+    if (!onlineUsers.has(userId)) {
+      onlineUsers.set(userId, new Set());
+    }
+    onlineUsers.get(userId)!.add(socket.id);
+    socketToUserId.set(socket.id, userId);
+    
+    console.log(`✅ [SERVER] User ${userId} registered as online (socket: ${socket.id})`);
+    
+    // Notify all conversations this user is part of that they're online
+    socket.rooms.forEach(roomId => {
+      if (roomId !== socket.id) { // socket.id is the default room
+        socket.to(roomId).emit('user-online', { userId });
+      }
+    });
+    
+    // Broadcast to all sockets that this user is online
+    socket.broadcast.emit('user-online', { userId });
+  });
   
   // Test handler to verify socket is working
   socket.on('test-event', (data: unknown) => {
@@ -53,6 +83,12 @@ io.on('connection', (socket) => {
   socket.on('join-conversation', (conversationId: string) => {
     socket.join(conversationId);
     console.log(`User ${socket.id} joined conversation: ${conversationId}`);
+    
+    // If user is registered, notify others in this conversation that they're online
+    const userId = socketToUserId.get(socket.id);
+    if (userId) {
+      socket.to(conversationId).emit('user-online', { userId });
+    }
   });
   
   socket.on('leave-conversation', (conversationId: string) => {
@@ -71,6 +107,12 @@ io.on('connection', (socket) => {
         });
         return;
       }
+
+      // Stop typing indicator when message is sent
+      socket.to(validationResult.data.conversationId).emit('user-typing', {
+        userId: validationResult.data.senderId,
+        isTyping: false,
+      });
 
       const _chatService = container.get<IChatService>(TYPES.IChatService);
       const message = await _chatService.sendMessage(
@@ -391,6 +433,35 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`${Messages.WEBRTC.USER_DISCONNECTED}: ${socket.id}`);
 
+    // Handle online status cleanup
+    const userId = socketToUserId.get(socket.id);
+    if (userId) {
+      const userSockets = onlineUsers.get(userId);
+      if (userSockets) {
+        userSockets.delete(socket.id);
+        
+        // If user has no more active sockets, mark as offline
+        if (userSockets.size === 0) {
+          onlineUsers.delete(userId);
+          console.log(`❌ [SERVER] User ${userId} went offline`);
+          
+          // Notify all conversations this user is part of that they're offline
+          socket.rooms.forEach(roomId => {
+            if (roomId !== socket.id) {
+              socket.to(roomId).emit('user-offline', { userId });
+            }
+          });
+          
+          // Broadcast to all sockets that this user is offline
+          socket.broadcast.emit('user-offline', { userId });
+        } else {
+          console.log(`ℹ️ [SERVER] User ${userId} still online (${userSockets.size} active connection(s))`);
+        }
+      }
+      socketToUserId.delete(socket.id);
+    }
+
+    // Handle WebRTC cleanup
     for (const [interviewId, room] of webrtcRooms.entries()) {
       const participant = room.participants.get(socket.id);
       if (participant) {
