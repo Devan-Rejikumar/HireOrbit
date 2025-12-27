@@ -15,19 +15,8 @@ COPY . .
 # Build TypeScript → JavaScript
 RUN npm run build
 
-
-# ------------------ Runtime ------------------
-FROM node:20-alpine
-
-WORKDIR /app
-
 ENV NODE_ENV=production
-
-# Copy only runtime artifacts
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY package.json ./
 
 EXPOSE 4005
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "dist/index.js"]
