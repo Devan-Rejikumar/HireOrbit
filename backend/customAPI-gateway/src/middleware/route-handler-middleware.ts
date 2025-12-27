@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { ROUTES } from "@/config/routes";
+import { ROUTES } from "../config/routes";
 import { Authenticate } from "./auth-middleware";
-import { createProxy } from "@/proxy/loadBalancer"; 
+import { createProxy } from "../proxy/loadBalancer"; 
 
 interface AuthRequest extends Request {
     user?: {

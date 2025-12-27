@@ -1,21 +1,33 @@
-FROM node:18-alpine
+# ------------------ Builder ------------------
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy dependency manifests
+COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm install
+# Deterministic install
+RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build TypeScript → JavaScript
 RUN npm run build
 
-# Expose port
+
+# ------------------ Runtime ------------------
+FROM node:20-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only runtime artifacts
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY package.json ./
+
 EXPOSE 4005
 
-# Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]

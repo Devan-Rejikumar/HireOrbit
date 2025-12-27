@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { HttpStatusCode } from '@/enums/HttpStatusCode';
-import { CommonMessages } from '@/constants/CommonMessages';
+import { HttpStatusCode } from '../enums/HttpStatusCode';
+import { CommonMessages } from '../constants/CommonMessages';
 
 export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction): void => {
   console.error('API Gateway Error:', {

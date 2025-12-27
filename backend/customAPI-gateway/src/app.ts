@@ -1,11 +1,11 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { Authenticate, RequireUser, RequireCompany, RequireAdmin } from '@/middleware/auth-middleware';
-import { corsMiddleware } from '@/middleware/cors-middleware';
-import { rateLimiterMiddleware } from '@/middleware/rate-limiter-middleware';
-import { errorHandler } from '@/middleware/error-handler-middleware';
-import { createProxy } from '@/proxy/loadBalancer';
-import { healthCheck } from '@/monitoring/healthCheck';
+import { Authenticate, RequireUser, RequireCompany, RequireAdmin } from './middleware/auth-middleware';
+import { corsMiddleware } from './middleware/cors-middleware';
+import { rateLimiterMiddleware } from './middleware/rate-limiter-middleware';
+import { errorHandler } from './middleware/error-handler-middleware';
+import { createProxy } from './proxy/loadBalancer';
+import { healthCheck } from './monitoring/healthCheck';
 import { routeHandler } from './middleware/route-handler-middleware';
 import { logger } from './utils/logger';
 import { register, httpRequestDuration, httpRequestCount } from './utils/metrics';
@@ -57,16 +57,10 @@ app.get('/metrics', async (req, res) => {
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).end('Error generating metrics');
   }
 });
-app.use('/api/*', (req, res, next) => {
-    logger.info('API Gateway Request', {
-      method: req.method,
-      path: req.path,
-      url: req.url,
-      originalUrl: req.originalUrl,
-      baseUrl: req.baseUrl
-    });
-    routeHandler(req, res, next);
+app.use('/api', (req, res, next) => {
+  routeHandler(req, res, next);
 });
+
 app.use(errorHandler);
 
 export default app;

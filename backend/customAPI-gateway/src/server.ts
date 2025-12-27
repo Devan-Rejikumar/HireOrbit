@@ -1,5 +1,5 @@
 import app from './app';
-import { PORT, NODE_ENV } from '@/config';
+import { PORT, NODE_ENV } from './config';
 import { logger } from './utils/logger';
 
 const server = app.listen(PORT, () => {

@@ -1,48 +1,94 @@
 services:
-  # ==================== Infrastructure Services ====================
-  
+  # ==================== DATABASES ====================
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: job-portal-postgres
+    environment:
+      POSTGRES_USER: job_portal_user
+      POSTGRES_PASSWORD: devan
+      POSTGRES_DB: job_portal
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U job_portal_user -d job_portal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+
   redis:
     image: redis:7-alpine
     container_name: job-portal-redis
-    restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
       - backend
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  postgres:
-    image: postgres:15-alpine
-    hostname: postgres-db
-    container_name: job-portal-postgres
-    restart: unless-stopped
-    env_file:
-      - .env
+  # ==================== ADMIN TOOLS ====================
+
+  pgadmin:
+    image: dpage/pgadmin4:7
+    container_name: pgadmin
+    restart: always
     ports:
-      - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres
     networks:
       - backend
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
+  # ==================== OBSERVABILITY ====================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+    networks:
+      - backend
+
+  # ==================== MESSAGING ====================
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: job-portal-zookeeper
-    restart: always
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
     networks:
@@ -51,152 +97,73 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: job-portal-kafka
-    restart: always
     depends_on:
       - zookeeper
     ports:
       - "9092:9092"
-      - "9002:9002"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_JMX_PORT: 9002
-      KAFKA_JMX_HOSTNAME: localhost
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  loki:
-    image: grafana/loki:latest
-    container_name: job-portal-loki
-    restart: always
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki-config.yml:/etc/loki/local-config.yaml
-      - loki_data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - backend
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: job-portal-prometheus
-    restart: always
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - backend
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: job-portal-grafana
-    restart: always
-    ports:
-      - "3030:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-      - loki
-    networks:
-      - backend
-
-  # ==================== Backend Services ====================
+  # ==================== BACKEND SERVICES ====================
 
   user-service:
-   container_name: user-service
-   build:
-    context: .  
-    dockerfile: ./user-service/Dockerfile
-   restart: unless-stopped
-   env_file:
-    - .env
-    - ./user-service/.env.docker
-   expose:
-    - "3000"
-   depends_on:
-    postgres:
-      condition: service_healthy
-    redis:
-      condition: service_healthy
-   networks:
-    - backend
-   command: sh -c "npx prisma generate && npm run dev"
-
-
+    container_name: user-service
+    build: ./user-service
+    env_file:
+      - .env
+      - ./user-service/.env.docker
+    environment:
+      - DATABASE_URL=postgresql://user_service_user:user_pass@postgres:5432/user_service_db
   company-service:
     container_name: company-service
     build: ./company-service
-    restart: unless-stopped
     env_file:
       - .env
       - ./company-service/.env.docker
-    expose:
-      - "3001"
+    environment:
+      - DATABASE_URL=postgresql://company_service_user:company_pass@postgres:5432/company_service_db
+    ports:
+      - "3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
+        condition: service_started
     networks:
       - backend
-    volumes:
-      - ./company-service:/app
-      - /app/node_modules
-    command: sh -c "npx prisma generate && npm run dev"
 
   job-service:
     container_name: job-service
     build: ./job-service
-    restart: unless-stopped
     env_file:
       - .env
       - ./job-service/.env.docker
-    expose:
-      - "3002"
+    environment:
+      - DATABASE_URL=postgresql://job_service_user:job_pass@postgres:5432/job_service_db
+    ports:
+      - "3002:3002"
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - backend
-    volumes:
-      - ./job-service:/app
-      - /app/node_modules
-    command: sh -c "npx prisma generate && npm run dev"
 
   subscription-service:
     container_name: subscription-service
     build: ./subscription-service
-    restart: unless-stopped
     env_file:
       - .env
       - ./subscription-service/.env.docker
-    expose:
-      - "3005"
+    environment:
+      - DATABASE_URL=postgresql://subscription_service_user:subscription_pass@postgres:5432/subscription_service_db
+    ports:
+      - "3005:3005"
     depends_on:
       postgres:
         condition: service_healthy
@@ -204,20 +171,17 @@ services:
         condition: service_started
     networks:
       - backend
-    volumes:
-      - ./subscription-service:/app
-      - /app/node_modules
-    command: sh -c "npx prisma generate && npm run dev"
 
   application-service:
     container_name: application-service
     build: ./application-service
-    restart: unless-stopped
     env_file:
       - .env
       - ./application-service/.env.docker
-    expose:
-      - "3004"
+    environment:
+      - DATABASE_URL=postgresql://application_service_user:application_pass@postgres:5432/application_service_db
+    ports:
+      - "3004:3004"
     depends_on:
       postgres:
         condition: service_healthy
@@ -225,18 +189,16 @@ services:
         condition: service_started
     networks:
       - backend
-    volumes:
-      - ./application-service:/app
-      - /app/node_modules
-    command: sh -c "npx prisma generate && npm run dev"
 
   notification-service:
     container_name: notification-service
     build: ./notification-service
-    restart: unless-stopped
     env_file:
       - .env
       - ./notification-service/.env.docker
+    environment:
+      - MONGODB_URI=mongodb+srv://devanrejikumar007_db_user:devan@cluster0.r3yinx6.mongodb.net/notification_db?retryWrites=true&w=majority
+      - KAFKA_BROKERS=kafka:29092
     ports:
       - "4005:4005"
     depends_on:
@@ -244,17 +206,15 @@ services:
         condition: service_started
     networks:
       - backend
-    volumes:
-      - ./notification-service:/app
-      - /app/node_modules
 
   chat-service:
     container_name: chat-service
     build: ./chat-service
-    restart: unless-stopped
     env_file:
       - .env
       - ./chat-service/.env.docker
+    environment:
+      - MONGODB_URI=mongodb+srv://devanrejikumar007_db_user:devan@cluster0.r3yinx6.mongodb.net/
     ports:
       - "4007:4007"
     depends_on:
@@ -262,19 +222,23 @@ services:
         condition: service_started
     networks:
       - backend
-    volumes:
-      - ./chat-service:/app
-      - /app/node_modules
 
   api-gateway:
     container_name: api-gateway
     build: ./customAPI-gateway
-    restart: unless-stopped
     env_file:
       - .env
       - ./customAPI-gateway/.env.docker
+    environment:
+    - NOTIFICATION_SERVICE_URL=http://notification-service:4005
+    - CHAT_SERVICE_URL=http://chat-service:4007
+    - USER_SERVICE_URL=http://user-service:3009
+    - COMPANY_SERVICE_URL=http://company-service:3001
+    - JOB_SERVICE_URL=http://job-service:3002
+    - APPLICATION_SERVICE_URL=http://application-service:3004
+    - SUBSCRIPTION_SERVICE_URL=http://subscription-service:3005
     ports:
-      - "4001:4000"
+      - "4000:4000"
     depends_on:
       - user-service
       - company-service
@@ -285,9 +249,8 @@ services:
       - chat-service
     networks:
       - backend
-    volumes:
-      - ./customAPI-gateway:/app
-      - /app/node_modules
+
+# ==================== NETWORKS & VOLUMES ====================
 
 networks:
   backend:
@@ -296,6 +259,3 @@ networks:
 volumes:
   pg_data:
   redis_data:
-  loki_data:
-  prometheus_data:
-  grafana_data:

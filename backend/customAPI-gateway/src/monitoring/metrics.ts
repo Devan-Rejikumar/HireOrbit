@@ -1,4 +1,4 @@
-import { HttpStatusCode } from '@/enums/HttpStatusCode';
+import { HttpStatusCode } from '../enums/HttpStatusCode';
 import { Request, Response, NextFunction } from 'express';
 let metricsData = {
   requests: 0,

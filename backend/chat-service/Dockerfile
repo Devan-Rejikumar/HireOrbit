@@ -1,21 +1,33 @@
+# ------------------ Builder ------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Dependency manifests
+COPY package.json package-lock.json ./
+
+# Install all deps (needed to build)
+RUN npm ci
+
+# Copy source
+COPY . .
+
+# Build TypeScript
+RUN npm run build
+
+
+# ------------------ Runtime ------------------
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+ENV NODE_ENV=production
 
-# Install dependencies
-RUN npm ci
+# Copy only runtime artifacts
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY package.json ./
 
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Expose port
 EXPOSE 4007
 
-# Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

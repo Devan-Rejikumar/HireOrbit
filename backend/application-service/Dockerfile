@@ -1,28 +1,41 @@
-FROM node:18-alpine
+# ------------------ Builder ------------------
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy dependency manifests
+COPY package.json package-lock.json ./
 
-# Install dependencies
+# Install all deps (needed for build + prisma)
 RUN npm ci
 
-# Copy Prisma schema first (needed for client generation)
-COPY prisma ./prisma/
-
-# Generate Prisma client
+# Copy prisma schema and generate client
+COPY prisma ./prisma
 RUN npx prisma generate
 
-# Copy all source code
+# Copy source
 COPY . .
 
-# Create uploads directory
+# Build TypeScript → dist
+RUN npm run build
+
+
+# ------------------ Runtime ------------------
+FROM node:20-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=docker
+
+# Copy only runtime artifacts
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY package.json ./
+
+# Upload directory (runtime)
 RUN mkdir -p uploads
 
-# Expose port 3004
 EXPOSE 3004
 
-# Start the application
-CMD ["npm", "start"]
-
+CMD ["node", "dist/index.js"]

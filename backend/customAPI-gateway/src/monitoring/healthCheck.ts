@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { env } from '@/config/env';
-import { HttpStatusCode } from '@/enums/HttpStatusCode';
-import { CommonMessages } from '@/constants/CommonMessages';
+import { env } from '../config/env';
+import { HttpStatusCode } from '../enums/HttpStatusCode';
+import { CommonMessages } from '../constants/CommonMessages';
 
 export const healthCheck = (req: Request, res: Response, next: NextFunction): void => {
   const health = {

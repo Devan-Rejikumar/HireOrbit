@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 import LokiTransport from 'winston-loki';
-import { env } from '@/config/env';
+import { env } from '../config/env';
 
 const { combine, timestamp, printf, colorize, json } = format;
 const serviceName = 'api-gateway';

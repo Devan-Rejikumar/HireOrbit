@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+
+  - job_name: "api-gateway"
+    static_configs:
+      - targets: ["api-gateway:4000"]
+
+  - job_name: "user-service"
+    static_configs:
+      - targets: ["user-service:3000"]
+
+  - job_name: "company-service"
+    static_configs:
+      - targets: ["company-service:3001"]
+
+  - job_name: "job-service"
+    static_configs:
+      - targets: ["job-service:3002"]
+
+  - job_name: "application-service"
+    static_configs:
+      - targets: ["application-service:3004"]
+
+  - job_name: "subscription-service"
+    static_configs:
+      - targets: ["subscription-service:3005"]
+
+  - job_name: "notification-service"
+    static_configs:
+      - targets: ["notification-service:4005"]
+
+  - job_name: "chat-service"
+    static_configs:
+      - targets: ["chat-service:4007"]

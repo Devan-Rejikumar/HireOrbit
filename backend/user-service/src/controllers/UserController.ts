@@ -6,7 +6,6 @@ import { IProfileService } from '../services/interfaces/IProfileService';
 import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
 import { CookieConfig } from '../constants/CookieConfig';
-import admin from 'firebase-admin';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
@@ -18,18 +17,9 @@ import { v2 as cloudinary } from 'cloudinary';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { AppError } from '../utils/errors/AppError';
 import { logger } from '../utils/logger';
+import admin from '../config/firebase';
 
-if (!admin.apps.length) {
-  const serviceAccountPath = path.join(
-    __dirname,
-    '../../firebase-service-account.json'
-  );
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath),
-    projectId: process.env.FIREBASE_PROJECT_ID!,
-  });
-}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
