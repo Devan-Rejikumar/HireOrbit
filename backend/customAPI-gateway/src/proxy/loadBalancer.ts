@@ -6,7 +6,7 @@ import { applicationServiceProxy, applicationServiceMultipartProxy } from './app
 import { notificationServiceProxy } from './notificationService';
 import { chatServiceProxy } from './chatService';
 import { subscriptionServiceProxy } from './subscriptionService';
-import { SERVICE_ROUTES } from '@/config/routes';
+import { SERVICE_ROUTES } from '../config/routes';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
   const path = req.originalUrl;

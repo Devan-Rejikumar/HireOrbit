@@ -1,7 +1,7 @@
 import proxy from 'express-http-proxy';
 import { Request, Response, NextFunction } from 'express';
-import { HttpStatusCode } from '@/enums/HttpStatusCode';
-import { CommonMessages } from '@/constants/CommonMessages';
+import { HttpStatusCode } from '../enums/HttpStatusCode';
+import { CommonMessages } from '../constants/CommonMessages';
 
 export interface ProxyConfig {
   serviceUrl: string;

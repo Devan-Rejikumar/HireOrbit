@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=docker tsx watch src/server.ts",
     "local": "cross-env NODE_ENV=local tsx watch src/server.ts",
-    "start": "cross-env NODE_ENV=docker node dist/server.js",
+    "start": "node dist/server.js",
     "build": "tsc",
     "watch": "tsc -w",
     "clean": "rimraf dist"

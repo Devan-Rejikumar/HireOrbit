@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=docker tsx watch src/server.ts",
     "local": "cross-env NODE_ENV=local tsx watch src/server.ts",
-    "start": "cross-env NODE_ENV=docker node dist/server.js",
+    "start": "node dist/server.js",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
@@ -37,7 +37,6 @@
     "prisma": "^6.11.1",
     "prom-client": "^15.1.3",
     "reflect-metadata": "^0.2.2",
-    "shared-dto": "file:../shared-dto",
     "winston": "^3.18.3",
     "winston-loki": "^6.1.3",
     "zod": "^4.1.1"
