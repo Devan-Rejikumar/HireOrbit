@@ -121,7 +121,6 @@ const Companies = () => {
           }
         } catch (error) {
           // Silently fail - we'll use default values
-          console.log(`Could not fetch details for ${company.name}`);
         }
       }
       
@@ -131,7 +130,6 @@ const Companies = () => {
       
       setCompanies(companiesList);
     } catch (error) {
-      console.error('Error fetching companies:', error);
       setCompanies([]);
     } finally {
       setLoading(false);
@@ -187,7 +185,7 @@ const Companies = () => {
           });
         }
       } catch (error) {
-        console.error('Error fetching company details:', error);
+        // Silently handle error
       } finally {
         setLoadingDetails(false);
       }

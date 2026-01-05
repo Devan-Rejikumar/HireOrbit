@@ -137,7 +137,7 @@ export class TransactionRepository implements ITransactionRepository {
 
   async getTotalRevenue(filters?: Omit<TransactionFilters, 'limit' | 'offset'>): Promise<number> {
     const where: Prisma.TransactionWhereInput = {
-      status: 'succeeded', // Only count successful payments
+      status: 'succeeded', 
     };
 
     if (filters?.userId) {

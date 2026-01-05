@@ -74,7 +74,7 @@ export const ROUTES = {
     ],
     
     public: [
-    '/api/settings', // GET settings is public
+    '/api/settings', 
         '/api/jobs', 
         '/api/jobs/list',
         '/api/jobs/search',

@@ -38,7 +38,6 @@ export const BrandingProvider: React.FC<{ children: ReactNode }> = ({ children }
         });
       }
     } catch (error) {
-      console.error('Error fetching branding settings:', error);
       // Set defaults on error
       setSettings({
         logoUrl: null,

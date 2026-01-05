@@ -8,8 +8,6 @@ import { authenticateCompany } from '../middleware/auth.middleware';
 
 const router = Router();
 const industryCategoryController = container.get<IndustryCategoryController>(TYPES.IndustryCategoryController);
-
-// Admin routes (protected)
 router.post(
   COMPANY_ROUTES.INDUSTRIES_BASE,
   authenticateCompany,

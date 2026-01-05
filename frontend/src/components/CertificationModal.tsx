@@ -78,12 +78,6 @@ const CertificationModal: React.FC<CertificationModalProps> = ({
       };
 
       await onSave(cleanedData);
-      // Success toast is handled in UserProfile.tsx, but we can add one here too for immediate feedback
-      if (isEditing) {
-        toast.success('Certification updated successfully!');
-      } else {
-        toast.success('Certification added successfully!');
-      }
       onClose();
     } catch (error) {
       toast.error('Failed to save certification');

@@ -19,13 +19,12 @@ export class JobReportService implements IJobReportService {
   ) {}
 
   async reportJob(jobId: string, userId: string, reason: string): Promise<JobReportResponse> {
-    // Check if job exists
     const job = await this._jobRepository.findById(jobId);
     if (!job) {
       throw new AppError(Messages.JOB.JOB_NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    console.log('🔍 [DEBUG] Checking for duplicate report:', {
+    console.log('[DEBUG] Checking for duplicate report:', {
       jobId: jobId,
       userId: userId,
       jobIdType: typeof jobId,
@@ -35,16 +34,14 @@ export class JobReportService implements IJobReportService {
     });
 
     const existingReport = await this._jobReportRepository.findByJobIdAndUserId(jobId,userId);
-    console.log('🔍 [DEBUG] Existing report result:', {
+    console.log('[DEBUG] Existing report result:', {
       found: !!existingReport,
       existingReport: existingReport ? {
         id: existingReport.id,
         jobId: existingReport.jobId,
         userId: existingReport.userId,
-        // Check if values match exactly
         jobIdMatches: existingReport.jobId === jobId,
         userIdMatches: existingReport.userId === userId,
-        // Check string comparison
         jobIdStrictEqual: existingReport.jobId === jobId,
         userIdStrictEqual: existingReport.userId === userId,
       } : null,
@@ -66,8 +63,6 @@ export class JobReportService implements IJobReportService {
 
   async getAllReportedJobs(): Promise<ReportedJobResponse[]> {
     const allReports = await this._jobReportRepository.findAll();
-
-    // Group reports by jobId
     const reportsByJob = new Map<string, JobReportResponse[]>();
 
     for (const report of allReports) {
@@ -108,7 +103,6 @@ export class JobReportService implements IJobReportService {
       reportsByJob.get(report.jobId)!.push(reportResponse);
     }
 
-    // Convert to ReportedJobResponse array
     const reportedJobs: ReportedJobResponse[] = [];
     for (const [_jobId, reports] of reportsByJob.entries()) {
       const firstReport = reports[0];
@@ -121,7 +115,6 @@ export class JobReportService implements IJobReportService {
       }
     }
 
-    // Sort by most reported first, then by most recent report
     reportedJobs.sort((a, b) => {
       if (b.reportCount !== a.reportCount) {
         return b.reportCount - a.reportCount;

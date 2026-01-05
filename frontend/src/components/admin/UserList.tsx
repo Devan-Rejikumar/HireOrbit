@@ -1,17 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '../ui/switch';
-import { Label } from '@/components/ui/label';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import React, { useEffect, useState, useCallback } from 'react';
 import { CheckCircle, XCircle, User, Shield, ShieldOff, ChevronLeft, ChevronRight, Search, Filter, RefreshCw, Users, TrendingUp, AlertCircle, Clock, Eye, Mail, MapPin } from 'lucide-react';
 import api from '@/api/axios';
 import toast from 'react-hot-toast';
@@ -45,79 +32,16 @@ const UserList = () => {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize] = useState(10);
+  const [_totalPages, _setTotalPages] = useState(1);
+  const [_totalUsers, _setTotalUsers] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<UserStatus>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, statusFilter]);
-
-  const fetchUsers = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      // Fetch all users without pagination to get complete dataset
-      const res = await api.get<UsersResponse>('/users/admin/users?page=1&limit=1000');
-      console.log('API Response:', res.data); 
-      
-      const responseData = res.data as UsersResponse;
-      
-      
-      if (responseData && responseData.users && responseData.pagination) {
-        setUsers(responseData.users);
-        setTotalPages(responseData.pagination.totalPages);
-        setTotalUsers(responseData.pagination.totalUsers);
-      } else if (responseData && Array.isArray(responseData.users)) {
-        setUsers(responseData.users);
-        setTotalUsers(responseData.users.length);
-        setTotalPages(1);
-      } else if (Array.isArray(responseData)) {
-        setUsers(responseData);
-        setTotalUsers(responseData.length);
-        setTotalPages(1);
-      } else {
-        console.error('Invalid response format:', responseData);
-        setUsers([]);
-        setTotalUsers(0);
-        setTotalPages(1);
-        toast.error('Invalid response format from server');
-      }
-    } catch (error: unknown) {
-      console.error('Error fetching users:', error);
-      setUsers([]);
-      setTotalUsers(0);
-      setTotalPages(1);
-      
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
-      
-      if (axiosError?.response?.status === 401) {
-        toast.error('Authentication failed. Please login again.');
-      } else if (axiosError?.response?.status === 403) {
-        toast.error('Access denied. Admin privileges required.');
-      } else {
-        toast.error('Failed to fetch users');
-      }
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  const filterUsers = () => {
+  const filterUsers = useCallback(() => {
     let filtered = users;
 
     // Apply search filter
@@ -149,8 +73,73 @@ const UserList = () => {
 
     setFilteredUsers(filtered);
     setCurrentPage(1);
-    setTotalPages(Math.ceil(filtered.length / pageSize));
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    _setTotalPages(totalPages);
+  }, [users, searchTerm, statusFilter, pageSize]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    filterUsers();
+  }, [filterUsers]);
+
+  const fetchUsers = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      // Fetch all users without pagination to get complete dataset
+      const res = await api.get<UsersResponse>('/users/admin/users?page=1&limit=1000');
+      // API Response logged 
+      
+      const responseData = res.data as UsersResponse;
+      
+      
+      if (responseData && responseData.users && responseData.pagination) {
+        setUsers(responseData.users);
+        _setTotalPages(responseData.pagination.totalPages);
+        _setTotalUsers(responseData.pagination.totalUsers);
+      } else if (responseData && Array.isArray(responseData.users)) {
+        setUsers(responseData.users);
+        _setTotalUsers(responseData.users.length);
+        _setTotalPages(1);
+      } else if (Array.isArray(responseData)) {
+        setUsers(responseData);
+        _setTotalUsers(responseData.length);
+        _setTotalPages(1);
+      } else {
+        // Invalid response format
+        setUsers([]);
+        _setTotalUsers(0);
+        _setTotalPages(1);
+        toast.error('Invalid response format from server');
+      }
+    } catch (error: unknown) {
+      // Error fetching users
+      setUsers([]);
+      _setTotalUsers(0);
+      _setTotalPages(1);
+      
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
+      
+      if (axiosError?.response?.status === 401) {
+        toast.error('Authentication failed. Please login again.');
+      } else if (axiosError?.response?.status === 403) {
+        toast.error('Access denied. Admin privileges required.');
+      } else {
+        toast.error('Failed to fetch users');
+      }
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
   };
+
 
   // Calculate pagination for current filtered data
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -244,7 +233,7 @@ const UserList = () => {
           </div>
           <div className="mt-4 flex items-center">
             <TrendingUp className="h-4 w-4 text-green-400 mr-1" />
-            <span className="text-sm text-green-400">+8% from last month</span>
+            <span className="text-sm text-green-400">Growing steadily</span>
           </div>
         </div>
 

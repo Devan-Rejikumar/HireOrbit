@@ -122,7 +122,6 @@ const CreateOfferModal: React.FC<CreateOfferModalProps> = ({
         offerExpiryDate: '',
       });
     } catch (err: unknown) {
-      console.error('Failed to create offer:', err);
       const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create offer letter';
       setError(errorMessage);
       toast.error(errorMessage);

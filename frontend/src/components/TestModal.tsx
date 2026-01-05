@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SlideModal } from './ui/slide-modal';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import { Button } from './ui/button';
+import toast from 'react-hot-toast';
 
 const TestModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,9 +17,9 @@ const TestModal = () => {
     });
 
     if (confirmed) {
-      alert('Confirmed!');
+      toast.success('Confirmed!');
     } else {
-      alert('Cancelled!');
+      toast.info('Cancelled!');
     }
   };
 

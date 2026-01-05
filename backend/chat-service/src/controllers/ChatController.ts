@@ -67,7 +67,6 @@ export class ChatController {
     }
     if (req.headers.cookie) {
       authHeaders['Cookie'] = req.headers.cookie as string;
-      console.log('ChatController] Forwarding cookies to application service');
     }
     const applicationDetails = await this._chatService.getApplicationDetails(
       applicationId,
@@ -79,13 +78,12 @@ export class ChatController {
     );
 
     if (conversation) {
-      console.log('[ChatController] Found existing conversation between user and company:', conversation.id);
       res.status(HttpStatusCode.OK).json(
         buildSuccessResponse(conversation, Messages.CHAT.CONVERSATION_RETRIEVED),
       );
       return;
     }
-    console.log('ChatController] No existing conversation found, creating new one...');
+
     conversation = await this._chatService.createConversationFromApplication(
       applicationId,
       applicationDetails.userId,
@@ -120,13 +118,11 @@ export class ChatController {
     let userId = req.user?.userId || req.user?.companyId;
     if (!userId && req.body?.userId) {
       userId = req.body.userId;
-      console.log('[ChatController] Using userId from request body:', userId);
     }
     if (!userId) {
       const headerUserId = req.headers['x-user-id'] as string;
       if (headerUserId) {
         userId = headerUserId;
-        console.log('[ChatController] Using userId from headers:', userId);
       }
     }
     

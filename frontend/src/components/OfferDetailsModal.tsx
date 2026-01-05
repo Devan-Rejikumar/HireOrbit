@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, FileText, DollarSign, Calendar, MapPin, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { X, FileText, Calendar, MapPin, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Offer, offerService } from '@/api/offerService';
 import toast from 'react-hot-toast';
 
@@ -76,7 +76,6 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
       window.URL.revokeObjectURL(url);
       toast.success('Offer letter downloaded');
     } catch (error) {
-      console.error('Failed to download PDF:', error);
       toast.error('Failed to download offer letter');
     }
   };
@@ -92,7 +91,6 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
       onUpdate();
       onClose();
     } catch (error: unknown) {
-      console.error('Failed to accept offer:', error);
       const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to accept offer';
       toast.error(errorMessage);
     } finally {
@@ -112,7 +110,6 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
       onUpdate();
       onClose();
     } catch (error: unknown) {
-      console.error('Failed to reject offer:', error);
       const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to reject offer';
       toast.error(errorMessage);
     } finally {
@@ -164,7 +161,7 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               {/* CTC */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center space-x-2 text-sm text-gray-600 mb-1">
-                  <DollarSign className="w-4 h-4" />
+                  <span className="text-lg font-semibold">₹</span>
                   <span>CTC (Cost to Company)</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(offer.ctc)}</p>

@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors/AppError';
-// Logger removed - using console.log instead
 import { buildErrorResponse } from 'hireorbit-shared-dto';
 
 export const ErrorHandler = (err: Error, req: Request, res: Response, _next: NextFunction): void => {

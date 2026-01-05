@@ -64,12 +64,9 @@ export const InterviewVideoCall: React.FC = () => {
 
         // Fetch WebRTC config
         const configResponse = await _interviewService.getWebRTCConfig(interviewId);
-        console.log('WebRTC Config received:', configResponse.data);
-        console.log('Signaling Server URL:', configResponse.data.signalingServerUrl);
         setWebrtcConfig(configResponse.data);
         setError(null);
       } catch (err) {
-        console.error('Error fetching interview data:', err);
         setError(err instanceof Error ? err.message : 'Failed to load interview');
       } finally {
         setLoading(false);
@@ -80,14 +77,6 @@ export const InterviewVideoCall: React.FC = () => {
   }, [interviewId, userId]);
 
   // Initialize WebRTC
-  console.log('🎬 InterviewVideoCall: Initializing WebRTC', {
-    webrtcConfig,
-    userId,
-    userRole,
-    enabled: !!webrtcConfig && !loading,
-    loading,
-  });
-
   const {
     localStream,
     remoteStream,

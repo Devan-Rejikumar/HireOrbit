@@ -1,4 +1,4 @@
-import admin from "firebase-admin";
+import admin from 'firebase-admin';
 
 const validateFirebaseEnv = () => {
   const required = [
@@ -31,7 +31,7 @@ if (!admin.apps.length) {
       privateKey = process.env.FIREBASE_PRIVATE_KEY!;
     }
 
-    privateKey = privateKey.replace(/\\n/g, "\n");
+    privateKey = privateKey.replace(/\\n/g, '\n');
     
     const serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID!,

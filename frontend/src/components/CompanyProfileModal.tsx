@@ -43,7 +43,6 @@ const CompanyProfileModal: React.FC<CompanyProfileModalProps> = ({
         setError('Company not found');
       }
     } catch (err: unknown) {
-      console.error('Error fetching company profile:', err);
       setError('Failed to load company details');
     } finally {
       setLoading(false);

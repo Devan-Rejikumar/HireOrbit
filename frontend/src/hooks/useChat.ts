@@ -10,8 +10,8 @@ export const useUserConversations = (userId: string) => {
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     // No polling - rely on WebSocket for real-time updates
     refetchInterval: false,
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent reloads during chat/video calls
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data on mount
   });
 };
@@ -25,8 +25,8 @@ export const useCompanyConversations = (companyId: string) => {
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     // No polling - rely on WebSocket for real-time updates
     refetchInterval: false,
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent reloads during chat/video calls
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data on mount
   });
 };
@@ -36,6 +36,10 @@ export const useConversation = (conversationId: string | null) => {
     queryKey: ['conversation', conversationId],
     queryFn: () => _chatService.getConversation(conversationId!),
     enabled: !!conversationId,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Use cached data when switching conversations
+    placeholderData: (previousData) => previousData, // Prevent loading state when switching
   });
 };
 
@@ -57,13 +61,15 @@ export const useMessages = (conversationId: string | null, limit?: number, skip?
     queryKey: ['messages', conversationId, limit, skip],
     queryFn: () => _chatService.getMessages(conversationId!, limit, skip),
     enabled: !!conversationId,
-    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes (increased from 2)
     gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
     // No polling - rely on WebSocket for real-time message updates
     refetchInterval: false,
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent reloads during chat/video calls
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't refetch if data exists in cache
+    // Use placeholder data to prevent loading state when switching conversations
+    placeholderData: (previousData) => previousData,
   });
 };
 
@@ -74,11 +80,12 @@ export const useMarkAsRead = () => {
     mutationFn: ({ conversationId, userId }: { conversationId: string; userId: string }) =>
       _chatService.markAsRead(conversationId, userId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId] });
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
-      queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
-      queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+      // Use refetchType: 'none' to prevent refetches during active chat/video calls
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['unread-count'], refetchType: 'none' });
     },
   });
 };
@@ -93,8 +100,8 @@ export const useUnreadCount = (conversationId: string | null, userId: string | n
     refetchInterval: false,
     staleTime: 120000, // Consider data fresh for 2 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent reloads during chat/video calls
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data if available
   });
 };
@@ -108,8 +115,8 @@ export const useTotalUnreadCount = (userId: string | null) => {
     refetchInterval: false,
     staleTime: 180000, // Consider data fresh for 3 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent reloads during chat/video calls
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data if available
   });
 };
@@ -123,8 +130,8 @@ export const useConversationsWithUnread = (userId: string | null) => {
     refetchInterval: false,
     staleTime: 120000, // Consider data fresh for 2 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent reloads during chat/video calls
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data if available
   });
 };

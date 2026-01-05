@@ -22,13 +22,11 @@ export class IndustryCategoryService implements IIndustryCategoryService {
     const existing = await this._industryCategoryRepository.findByName(name);
 
     if (existing) {
-      // If category exists but is inactive, just reactivate it
       if (!existing.isActive) {
         return this._industryCategoryRepository.update(existing.id, {
           isActive: true,
         });
       }
-      // If it's already active, show clear error message
       throw new AppError('This industry category already exists', HttpStatusCode.BAD_REQUEST);
     }
 
@@ -48,6 +46,13 @@ export class IndustryCategoryService implements IIndustryCategoryService {
   }
 
   async updateCategory(id: string, data: IndustryCategoryUpdateInput): Promise<IndustryCategory> {
+    if(data.name){
+      const name = data.name.trim();
+      const existing = await this._industryCategoryRepository.findByName(name);
+      if(existing && existing.id !== id){
+        throw new AppError('An industry category with this name already exists',HttpStatusCode.BAD_REQUEST);
+      }
+    }
     return this._industryCategoryRepository.update(id, data);
   }
 

@@ -72,7 +72,7 @@ export const offerTemplateService = {
     const response = await api.post('/offers/template/preview', sampleData, {
       responseType: 'blob',
     });
-    return response.data;
+    return response.data as Blob;
   },
 };
 

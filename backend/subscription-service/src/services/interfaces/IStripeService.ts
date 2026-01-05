@@ -19,8 +19,6 @@ export interface IStripeService {
   getSubscription(subscriptionId: string): Promise<Stripe.Subscription>;
   getCustomer(customerId: string): Promise<Stripe.Customer>;
   constructWebhookEvent(payload: string | Buffer, signature: string): Stripe.Event;
-  
-  // Product and Price management methods
   createProduct(name: string, description?: string, metadata?: Record<string, string>): Promise<Stripe.Product>;
   createPrice(productId: string, amount: number, currency?: string, interval?: 'month' | 'year', metadata?: Record<string, string>): Promise<Stripe.Price>;
   updatePrice(priceId: string, metadata?: Record<string, string>, active?: boolean): Promise<Stripe.Price>;

@@ -73,12 +73,6 @@ const AchievementModal: React.FC<AchievementModalProps> = ({
       };
 
       await onSave(cleanedData);
-      // Success toast is handled in UserProfile.tsx, but we can add one here too for immediate feedback
-      if (isEditing) {
-        toast.success('Achievement updated successfully!');
-      } else {
-        toast.success('Achievement added successfully!');
-      }
       onClose();
     } catch (error) {
       toast.error('Failed to save achievement');

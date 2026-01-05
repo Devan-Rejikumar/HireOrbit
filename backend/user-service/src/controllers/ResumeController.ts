@@ -7,6 +7,7 @@ import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { AppError } from '../utils/errors/AppError';
+import { logger } from '../utils/logger';
 
 @injectable()
 export class ResumeController {
@@ -61,7 +62,7 @@ export class ResumeController {
       const extension = mimeType === 'application/pdf' ? 'pdf' : 'doc';
       const cleanFileName = `resume.${extension}`;
       
-      console.log('🔍 [ResumeController] Processing resume upload:', {
+      logger.debug('[ResumeController] Processing resume upload:', {
         fileName: cleanFileName,
         mimeType,
         size: buffer.length,
@@ -75,7 +76,7 @@ export class ResumeController {
         mimeType
       );
       
-      console.log('[ResumeController] Resume upload successful');
+      logger.info('[ResumeController] Resume upload successful');
       res.status(HttpStatusCode.OK).json({
         success: true,
         data: { resume: result },
@@ -83,7 +84,7 @@ export class ResumeController {
       });
     } catch (error: unknown) {
       const err = error as { message?: string; stack?: string };
-      console.error(' [ResumeController] Resume upload error:', {
+      logger.error('[ResumeController] Resume upload error:', {
         error: err.message,
         stack: err.stack
       });

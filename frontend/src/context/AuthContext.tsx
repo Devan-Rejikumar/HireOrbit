@@ -17,7 +17,7 @@ interface AdminMeResponse {
   admin: User;
 }
 
-interface User {
+export interface User {
   id: string;
   username: string;
   email: string;
@@ -83,50 +83,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const fetchAuth = async () => {
-      console.log('🔍 AuthContext - Starting authentication check for role:', role);
-      console.log('🔍 AuthContext - Current localStorage role:', localStorage.getItem('role'));
-      console.log('🔍 AuthContext - Available cookies:', document.cookie);
-      
       try {
         if (role === 'admin') {
-          console.log('🔍 AuthContext - Checking admin authentication...');
           const res = await api.get<ApiResponse<AdminMeResponse>>('/users/admin/me');
-          console.log('🔍 AuthContext - Admin API response:', res.data);
           setUser(res.data.data?.admin as User);
           setCompany(null);
         } else if (role === 'jobseeker') {
-          console.log('🔍 AuthContext - Checking jobseeker authentication...');
           const res = await api.get<ApiResponse<UserMeResponse>>('/users/me');
-          console.log('🔍 AuthContext - Full API response:', res.data);
-          console.log('🔍 AuthContext - User data:', res.data.data?.user);
           setUser(res.data.data?.user as User);
           setCompany(null);
         } else if (role === 'company') {
-          console.log('🔍 AuthContext - Checking company authentication...');
           const res = await api.get<ApiResponse<Company>>('/company/me');
-          console.log('🔍 AuthContext - Company API response:', res.data);
           setCompany(res.data.data as Company);
           setUser(null);
         }
-        console.log('🔍 AuthContext - Authentication successful!');
       } catch (error: unknown) {
-        console.log('🔍 AuthContext - Authentication check failed:', error);
         const isAxiosError = error && typeof error === 'object' && 'response' in error;
         const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
-        console.log('🔍 AuthContext - Error status:', axiosError?.response?.status);
-        console.log('🔍 AuthContext - Error data:', axiosError?.response?.data);
         
         // Only logout if it's a 401 (unauthorized) or 403 (forbidden) error
         if (axiosError?.response?.status === 401 || axiosError?.response?.status === 403) {
-          console.log('🔍 AuthContext - Token invalid (401/403), logging out user');
           setUser(null);
           setCompany(null);
           setRole(null);
           localStorage.removeItem('role');
-        } else {
-          console.log('🔍 AuthContext - Network error, keeping user logged in');
-          // For network errors, keep the user logged in
         }
+        // For network errors, keep the user logged in
       }
     };
     if (role) fetchAuth();
@@ -165,7 +147,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('role');
       setRole(null);
     } catch (error) {
-      console.error('Logout error:', error);
       setUser(null);
       setCompany(null);
       localStorage.removeItem('role');

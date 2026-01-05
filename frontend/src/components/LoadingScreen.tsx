@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Logo } from './Logo';
 
 interface LoadingScreenProps {
@@ -8,8 +8,20 @@ interface LoadingScreenProps {
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ isVisible }) => {
   const [shouldRender, setShouldRender] = useState(isVisible);
   const [progress, setProgress] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Clear any existing intervals/timers
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (isVisible) {
       setShouldRender(true);
       // Reset progress when loading starts
@@ -20,7 +32,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ isVisible }) => {
       const startTime = Date.now();
       const duration = 2000; // 2 seconds for full progress
       
-      const progressInterval = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const progressPercent = Math.min((elapsed / duration) * 100, 95); // Cap at 95% until loading completes
         
@@ -31,20 +43,31 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ isVisible }) => {
         setProgress(currentProgress);
         
         if (progressPercent >= 95) {
-          clearInterval(progressInterval);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
         }
       }, 16); // ~60fps
-
-      return () => clearInterval(progressInterval);
     } else {
       // Complete progress to 100% before hiding
       setProgress(100);
-      const timer = setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setShouldRender(false);
         setProgress(0); // Reset for next load
       }, 300); // Wait for fade-out animation
-      return () => clearTimeout(timer);
     }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [isVisible]);
 
   if (!shouldRender) return null;

@@ -19,11 +19,10 @@ const AdminDashboard: React.FC = () => {
 
   const handleLogout = async() =>{
     try {
-      console.log(1);
       await api.post('/users/admin/logout');
       navigate(ROUTES.ADMIN_LOGIN,{ replace:true });
     } catch (error) {
-      console.error('Logout failed:', error);
+      // Silently handle error
     }
   };
   return (

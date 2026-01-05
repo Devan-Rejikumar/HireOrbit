@@ -36,7 +36,6 @@ export const MessagesSidebar: React.FC<MessagesSidebarProps> = ({
                           'User';
           names[conversation.id] = userName;
         } catch (error) {
-          console.error('Error fetching user name:', error);
           names[conversation.id] = 'User';
         }
       }

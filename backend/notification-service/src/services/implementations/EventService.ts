@@ -98,8 +98,6 @@ export class EventService implements IEventService {
     if (this.isRunning) {
       throw new Error('Cannot subscribe to topics after consumer has started running');
     }
-    
-    // Type assertion is safe because T extends unknown, and handler will receive unknown from JSON.parse
     this.handlers.set(eventType, handler as (data: unknown) => Promise<void>);
     
     if (!this.topics.includes(eventType)) {

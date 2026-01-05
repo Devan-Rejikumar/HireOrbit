@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { useUserConversations, useCompanyConversations } from '@/hooks/useChat';
-import { MessageResponse } from '@/api/chatService';
+import { MessageResponse, ConversationResponse } from '@/api/chatService';
 import { ENV } from '../config/env';
 
 interface GlobalChatContextType {
@@ -56,30 +56,24 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
       });
 
       newSocket.on('connect', () => {
-        console.log('✅ Global chat WebSocket connected');
         setIsConnected(true);
         
         // Register user as online
         if (currentUserId) {
           newSocket.emit('register-user', { userId: currentUserId });
-          console.log(`✅ Registered user ${currentUserId} as online`);
         }
       });
 
       newSocket.on('disconnect', () => {
-        console.log('❌ Global chat WebSocket disconnected');
         setIsConnected(false);
       });
 
-      newSocket.on('connect_error', (error) => {
-        console.error('❌ Global chat WebSocket connection error:', error);
+      newSocket.on('connect_error', () => {
         setIsConnected(false);
       });
 
       // Listen for new messages from ANY conversation
       newSocket.on('new-message', (message: MessageResponse) => {
-        console.log('📨 New message received globally:', message);
-        
         // Optimize: Update messages cache directly instead of invalidating
         queryClient.setQueryData(['messages', message.conversationId], (oldData: MessageResponse[] | undefined) => {
           if (!oldData) return [message];
@@ -89,12 +83,21 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         });
         
         // Update conversations list (needed for last message update)
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        // Use setQueryData instead of invalidate to avoid refetch during active chat
+        queryClient.setQueryData(['conversations'], (oldData: ConversationResponse[] | undefined) => {
+          if (!oldData) return oldData;
+          // Update the conversation's last message
+          return oldData.map(conv => 
+            conv.id === message.conversationId 
+              ? { ...conv, lastMessage: message, lastMessageAt: message.createdAt }
+              : conv,
+          );
+        });
         
-        // Only invalidate unread counts (these are lightweight queries)
-        queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
-        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
-        queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId] });
+        // Only invalidate unread counts (these are lightweight queries and won't cause reloads)
+        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'none' });
+        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'none' });
+        queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId], refetchType: 'none' });
       });
 
       socketRef.current = newSocket;
@@ -114,7 +117,6 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         if (!joinedConversationsRef.current.has(conv.id)) {
           socketRef.current!.emit('join-conversation', conv.id);
           joinedConversationsRef.current.add(conv.id);
-          console.log(`✅ Joined conversation: ${conv.id}`);
         }
       });
     }

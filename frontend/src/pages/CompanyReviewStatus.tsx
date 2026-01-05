@@ -52,42 +52,22 @@ const CompanyReviewStatus = () => {
   const [reapplying, setReapplying] = useState(false);
 
   useEffect(() => {
-    console.log('🔄 CompanyReviewStatus: Component mounted, fetching profile...');
     fetchCompanyProfile();
   }, []);
 
   const fetchCompanyProfile = async () => {
-    console.log('🚀 CompanyReviewStatus: Starting fetchCompanyProfile...');
     try {
-      console.log('📡 CompanyReviewStatus: Making API call to /company/profile');
-      console.log('🍪 CompanyReviewStatus: Current cookies:', document.cookie);
-      
       const response = await api.get<ProfileResponse>('/company/profile');
-      
-      console.log('✅ CompanyReviewStatus: API call successful');
-      console.log('📊 CompanyReviewStatus: Response status:', response.status);
-      console.log('📋 CompanyReviewStatus: Full response:', response);
-      console.log('📋 CompanyReviewStatus: Response data:', response.data);
       
       // Check if response has the expected structure
       if (response.data && response.data.success && response.data.data && response.data.data.company) {
-        console.log('✅ CompanyReviewStatus: Valid response structure found');
         setCompany(response.data.data.company);
-        console.log('🏢 CompanyReviewStatus: Company data set:', response.data.data.company);
       } else {
-        console.error('❌ CompanyReviewStatus: Invalid response structure');
-        console.error('❌ CompanyReviewStatus: Expected structure: { success: true, data: { company: {...} } }');
-        console.error('❌ CompanyReviewStatus: Actual structure:', response.data);
         setError('Invalid response format from server');
       }
     } catch (error: unknown) {
-      console.error('❌ CompanyReviewStatus: Error fetching company profile');
-      console.error('❌ CompanyReviewStatus: Error details:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } } }) : null;
-      console.error('❌ CompanyReviewStatus: Error response:', axiosError?.response);
-      console.error('❌ CompanyReviewStatus: Error status:', axiosError?.response?.status);
-      console.error('❌ CompanyReviewStatus: Error data:', axiosError?.response?.data);
       
       if (axiosError?.response?.status === 401) {
         setError('Authentication required. Please login again.');
@@ -99,43 +79,31 @@ const CompanyReviewStatus = () => {
         setError('Failed to load company profile. Please try again.');
       }
     } finally {
-      console.log('🏁 CompanyReviewStatus: fetchCompanyProfile completed');
       setLoading(false);
     }
   };
 
   const handleReapply = async () => {
     if (!company?.id) {
-      console.error('❌ No company ID available for reapply');
       toast.error('No company ID available for reapply');
       return;
     }
 
     try {
       setReapplying(true);
-      console.log('🔄 CompanyReviewStatus: Starting reapply process for company:', company.id);
       
       // Call the reapply API endpoint
-      const response = await api.post('/company/reapply');
-      
-      console.log('✅ CompanyReviewStatus: Reapply API call successful');
-      console.log('📊 CompanyReviewStatus: Reapply response:', response.data);
+      await api.post('/company/reapply');
       
       // Show success message
       toast.success('Reapplication initiated successfully! You can now update your profile.');
       
       // Navigate to profile setup to complete the reapplication
-      console.log('🚀 CompanyReviewStatus: Navigating to profile setup for reapplication');
       navigate(ROUTES.COMPANY_PROFILE_SETUP);
       
     } catch (error: unknown) {
-      console.error('❌ CompanyReviewStatus: Error during reapply');
-      console.error('❌ CompanyReviewStatus: Error details:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
-      console.error('❌ CompanyReviewStatus: Error response:', axiosError?.response);
-      console.error('❌ CompanyReviewStatus: Error status:', axiosError?.response?.status);
-      console.error('❌ CompanyReviewStatus: Error data:', axiosError?.response?.data);
       
       const errorData = axiosError?.response?.data && typeof axiosError.response.data === 'object' && 'error' in axiosError.response.data
         ? (axiosError.response.data as { error?: string }).error
@@ -149,20 +117,11 @@ const CompanyReviewStatus = () => {
   };
 
   const getStatusInfo = () => {
-    console.log('🔍 CompanyReviewStatus: getStatusInfo called with company:', company);
-    
     if (!company) {
-      console.log('❌ CompanyReviewStatus: No company data available');
       return null;
     }
 
-    console.log('📊 CompanyReviewStatus: Company status check:');
-    console.log('  - profileCompleted:', company.profileCompleted);
-    console.log('  - isVerified:', company.isVerified);
-    console.log('  - rejectionReason:', company.rejectionReason);
-
     if (!company.profileCompleted) {
-      console.log('🟡 CompanyReviewStatus: Status = INCOMPLETE');
       return {
         status: 'incomplete',
         icon: <Clock className="h-8 w-8 text-yellow-500" />,
@@ -175,7 +134,6 @@ const CompanyReviewStatus = () => {
     }
 
     if (company.rejectionReason) {
-      console.log('🔴 CompanyReviewStatus: Status = REJECTED');
       return {
         status: 'rejected',
         icon: <XCircle className="h-8 w-8 text-red-500" />,
@@ -188,7 +146,6 @@ const CompanyReviewStatus = () => {
     }
 
     if (company.isVerified) {
-      console.log('🟢 CompanyReviewStatus: Status = APPROVED');
       return {
         status: 'approved',
         icon: <CheckCircle className="h-8 w-8 text-green-500" />,
@@ -200,7 +157,6 @@ const CompanyReviewStatus = () => {
       };
     }
 
-    console.log('🔵 CompanyReviewStatus: Status = PENDING');
     return {
       status: 'pending',
       icon: <Clock className="h-8 w-8 text-blue-500" />,
@@ -212,13 +168,7 @@ const CompanyReviewStatus = () => {
     };
   };
 
-  console.log('🎨 CompanyReviewStatus: Rendering component');
-  console.log('🎨 CompanyReviewStatus: Loading state:', loading);
-  console.log('🎨 CompanyReviewStatus: Error state:', error);
-  console.log('🎨 CompanyReviewStatus: Company state:', company);
-
   if (loading) {
-    console.log('⏳ CompanyReviewStatus: Showing loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -230,9 +180,6 @@ const CompanyReviewStatus = () => {
   }
 
   if (error || !company) {
-    console.log('❌ CompanyReviewStatus: Showing error state');
-    console.log('❌ CompanyReviewStatus: Error:', error);
-    console.log('❌ CompanyReviewStatus: Company:', company);
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -259,7 +206,6 @@ const CompanyReviewStatus = () => {
   }
 
   const statusInfo = getStatusInfo();
-  console.log('📊 CompanyReviewStatus: Status info:', statusInfo);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 p-4">
@@ -404,9 +350,9 @@ const CompanyReviewStatus = () => {
           </Button>
           <Button 
             variant="outline" 
-            onClick={() => navigate(ROUTES.LOGIN)}
+            onClick={() => navigate(ROUTES.HOME)}
           >
-            Logout
+            Home
           </Button>
         </div>
       </div>

@@ -7,7 +7,6 @@ import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
 import { CookieConfig } from '../constants/CookieConfig';
 import jwt from 'jsonwebtoken';
-import path from 'path';
 import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
 import { UserRole } from '../enums/UserRole';
 import { GOOGLE_AUTH_TOKEN_EXPIRY } from '../constants/TimeConstants';
@@ -166,7 +165,7 @@ export class UserController {
       throw new AppError(Messages.USER.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    // Include profile data (especially profilePicture) if available
+
     let profileData = null;
     try {
       const profile = await this._profileService.getProfile(id);
@@ -176,14 +175,13 @@ export class UserController {
           headline: profile.headline,
           location: profile.location,
         };
-        console.log(`✅ [UserController] Profile found for user ${id}, profilePicture:`, profile.profilePicture);
+    
       } else {
-        console.log(`ℹ️ [UserController] No profile found for user ${id}`);
+        console.log(` [UserController] No profile found for user ${id}`);
       }
     } catch (error) {
-      // Profile might not exist, which is okay - just continue without it
-      // This allows the endpoint to work even if user hasn't created a profile yet
-      console.log(`ℹ️ [UserController] Profile fetch failed for user ${id}:`, error instanceof Error ? error.message : 'Unknown error');
+
+      console.log(`ℹ[UserController] Profile fetch failed for user ${id}:`, error instanceof Error ? error.message : 'Unknown error');
     }
 
     const responseData: { user: typeof user; profile?: typeof profileData } = { user };
@@ -191,7 +189,7 @@ export class UserController {
       responseData.profile = profileData;
     }
 
-    console.log(`📤 [UserController] Sending response for user ${id}, has profile:`, !!profileData);
+
 
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(responseData, Messages.USER.RETRIEVED_SUCCESS)
@@ -270,52 +268,38 @@ export class UserController {
 
   async googleAuth(req: Request, res: Response): Promise<void> {
     try {
-      console.log('[UserController] Google auth request received');
       const validationResult = GoogleAuthSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.error('[UserController] Validation failed:', validationResult.error.message);
+
         throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
       }
       const { idToken, email, name, photoURL } = validationResult.data;
-      console.log('[UserController] Validated data:', { email, hasName: !!name, hasPhoto: !!photoURL });
-
-      console.log('[UserController] Verifying Firebase token...');
       const decodedToken = await admin.auth().verifyIdToken(idToken);
-      console.log('[UserController] Token verified successfully:', { email: decodedToken.email });
+
 
       if (decodedToken.email !== email) {
-        console.error('[UserController] Email mismatch:', { tokenEmail: decodedToken.email, providedEmail: email });
         throw new AppError(Messages.AUTH.INVALID_TOKEN, HttpStatusCode.BAD_REQUEST);
       }
-
-      console.log('[UserController] Checking if user exists...');
       let user = await this._userService.findByEmail(email);
       let isNewUser = false;
 
       if (!user) {
-        console.log('[UserController] User not found, creating new Google user:', { email, name });
         user = await this._userService.createGoogleUser({
           email,
           fullName: name || email.split('@')[0],
           profilePicture: photoURL,
         });
         isNewUser = true;
-        console.log('[UserController] Google user created successfully:', { userId: user.id });
       } else {
         console.log('[UserController] Existing user found:', { userId: user.id, email: user.email });
       }
 
-      console.log('[UserController] Generating JWT token...');
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
         process.env.JWT_SECRET!,
         { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
       );
-      console.log('[UserController] Token generated successfully');
-
-      console.log('[UserController] Setting token in cookie...');
       this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);
-      console.log('[UserController] Token set in cookie, sending response');
 
       res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
         .json(buildSuccessResponse({ user, token, isNewUser }, 
@@ -333,8 +317,7 @@ export class UserController {
       if (error instanceof AppError) {
         throw error;
       }
-      
-      // Check if it's a Firebase Admin error
+ 
       if (err.code === 'auth/invalid-argument' || err.code === 'auth/id-token-expired') {
         throw new AppError('Invalid or expired Google token', HttpStatusCode.UNAUTHORIZED);
       }

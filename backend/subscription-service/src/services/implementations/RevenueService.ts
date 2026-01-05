@@ -32,7 +32,6 @@ export class RevenueService implements IRevenueService {
         : Promise.resolve([]),
     ]);
 
-    // Calculate revenueByUserType from revenueByPlan (more reliable than checking userId/companyId)
     const revenueByUserType = {
       user: 0,
       company: 0,
@@ -367,7 +366,7 @@ export class RevenueService implements IRevenueService {
                     
                     const planNameMatch = invoiceDescription.match(/(?:Company|User)\s+(\w+)\s+Plan/i);
                     if (planNameMatch) {
-                      const extractedPlanName = planNameMatch[1]; // "Basic", "Premium", etc.
+                      const extractedPlanName = planNameMatch[1]; 
                       const userType = invoiceDescription.toLowerCase().includes('company') ? 'company' : 'user';
                       
                       console.log('Extracted plan info from description', { 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, LogOut, Search } from 'lucide-react';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -14,26 +14,9 @@ import api from '@/api/axios';
 const MessagesPage = () => {
   const { user, logout, role } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(user?.id || null);
+  useTotalUnreadCount(user?.id || null);
   const [selectedConversation, setSelectedConversation] = useState<ConversationResponse | null>(null);
   const [otherParticipantName, setOtherParticipantName] = useState<string>('');
-  
-  if (!user?.id) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/', { replace: true });
-  };
 
   // Get conversations for jobseekers
   const currentUserId = role === 'jobseeker' ? user?.id || '' : '';
@@ -126,7 +109,7 @@ const MessagesPage = () => {
                             (typeof typedJobData?.company === 'string' ? typedJobData.company : null) ||
                             null;
               }
-            } catch (jobError: unknown) {
+            } catch {
               // Silent fail
             }
           }
@@ -135,19 +118,34 @@ const MessagesPage = () => {
             setOtherParticipantName(companyName);
             return;
           }
-        } catch (appError: unknown) {
+        } catch {
           // Silent fail
         }
         
         setOtherParticipantName('Company');
-      } catch (error) {
-        console.error('Error fetching participant name:', error);
+      } catch {
         setOtherParticipantName('Company');
       }
     };
 
     fetchOtherParticipantName();
   }, [selectedConversation, role]);
+
+  if (!user?.id) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
 
   const handleSelectConversation = (conversation: ConversationResponse) => {
     setSelectedConversation(conversation);
@@ -161,6 +159,7 @@ const MessagesPage = () => {
 
   const handleSendMessage = () => {
     // This will be handled by ChatWindow component
+    // No action needed - WebSocket handles real-time updates
   };
 
   

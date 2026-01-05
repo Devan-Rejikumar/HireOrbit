@@ -8,8 +8,8 @@ export const useNotifications = (recipientId: string) => {
     // No polling - rely on WebSocket for real-time updates
     refetchInterval: false,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent loading bar from showing
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data on mount
   });
 };
@@ -31,8 +31,8 @@ export const useUnreadCount = (recipientId: string) => {
     // No polling - rely on WebSocket for real-time updates
     refetchInterval: false,
     staleTime: 180000, // Consider data fresh for 3 minutes
-    // Refetch on window focus as a safety fallback (if WebSocket missed something)
-    refetchOnWindowFocus: true,
+    // Disable refetch on window focus to prevent loading bar from showing
+    refetchOnWindowFocus: false,
     refetchOnMount: false, // Use cached data on mount
   });
 };

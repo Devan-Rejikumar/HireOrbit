@@ -1,5 +1,5 @@
 import { CompanyOfferTemplate } from '@prisma/client';
-import { CreateTemplateInput, UpdateTemplateInput } from '../../repositories/interfaces/ICompanyOfferTemplateRepository';
+import { CreateTemplateInput } from '../../repositories/interfaces/ICompanyOfferTemplateRepository';
 
 export interface PreviewOfferData {
   jobTitle: string;

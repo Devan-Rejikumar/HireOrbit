@@ -86,7 +86,6 @@ const CompanyList = () => {
       setTotalCompanies(Array.isArray(companiesData) ? companiesData.length : 0);
       setTotalPages(Math.ceil((Array.isArray(companiesData) ? companiesData.length : 0) / pageSize));
     } catch (error) {
-      console.error('Error fetching companies:', error);
       setCompanies([]);
     } finally {
       setLoading(false);
@@ -190,24 +189,18 @@ const CompanyList = () => {
   const fetchCompanyDetails = async (companyId: string) => {
     try {
       setDetailsLoading(true);
-      console.log('🔍 Fetching company details for ID:', companyId);
       const response = await api.get<CompanyDetailsResponse>(`/company/admin/${companyId}`);
       
       // Handle the actual response structure: { success: true, data: { company: {...} }, message: "...", timestamp: "..." }
       const companyData = response.data.data?.company;
-      console.log('🔍 Company data:', companyData);
       
       if (companyData) {
         setCompanyDetails(companyData);
         setShowDetailsModal(true);
-        console.log('🔍 Modal should be showing now');
       } else {
-        console.error('🔍 No company data in response');
-        console.log('🔍 Full response structure:', JSON.stringify(response.data, null, 2));
         toast.error('No company data received');
       }
     } catch (error: unknown) {
-      console.error('Error fetching company details:', error);
       const errorMessage = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
         : undefined;

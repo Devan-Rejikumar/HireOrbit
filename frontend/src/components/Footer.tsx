@@ -1,5 +1,5 @@
 
-import { Heart, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <h3 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              JobPortal
+              HireOrbit
             </h3>
             <p className="text-gray-400 mb-6">
               Connecting talented professionals with amazing opportunities worldwide.
@@ -57,24 +57,18 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-gray-400">
                 <Mail className="h-4 w-4" />
-                support@jobportal.com
+                hireorbit@gmail.com
               </li>
               <li className="flex items-center gap-2 text-gray-400">
                 <Phone className="h-4 w-4" />
-                +1 (555) 123-4567
+                9562209682
               </li>
-              <li className="flex items-center gap-2 text-gray-400">
-                <MapPin className="h-4 w-4" />
-                San Francisco, CA
+              <li className="flex items-start gap-2 text-gray-400">
+                <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
+                <span>HireOrbit, Near Placid Vihar, Opposite to Apollo Pharmacy, Kerala, India</span>
               </li>
             </ul>
           </div>
-        </div>
-        
-        <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-          <p className="text-gray-400 flex items-center justify-center gap-1">
-            Made with <Heart className="h-4 w-4 text-red-500" /> by JobPortal Team © 2024
-          </p>
         </div>
       </div>
     </footer>

@@ -27,7 +27,6 @@ const AdminIndustryCategories: React.FC = () => {
       const apiCategories: IndustryCategory[] = response.data?.data?.categories || [];
       setCategories(apiCategories);
     } catch (err: unknown) {
-      console.error('Failed to load industry categories', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to load industry categories');
@@ -68,7 +67,6 @@ const AdminIndustryCategories: React.FC = () => {
       resetForm();
       await loadCategories();
     } catch (err: unknown) {
-      console.error('Failed to save industry category', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to save industry category');
@@ -104,7 +102,6 @@ const AdminIndustryCategories: React.FC = () => {
       closeDeleteModal();
       await loadCategories();
     } catch (err: unknown) {
-      console.error('Failed to delete industry category', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to delete industry category');
@@ -122,7 +119,6 @@ const AdminIndustryCategories: React.FC = () => {
       });
       await loadCategories();
     } catch (err: unknown) {
-      console.error('Failed to update industry category status', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to update industry category status');

@@ -55,7 +55,6 @@ const ReportJobModal: React.FC<ReportJobModalProps> = ({
         onReportSuccess();
       }
     } catch (err: unknown) {
-      console.error('Failed to report job', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       setError(axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to report job. Please try again.');

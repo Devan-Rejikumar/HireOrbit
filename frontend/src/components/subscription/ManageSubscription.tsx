@@ -28,7 +28,6 @@ export const ManageSubscription = () => {
       const plansRes = await subscriptionService.getPlans(userType);
       setAvailablePlans(plansRes.data);
     } catch (error: unknown) {
-      console.error('Error loading data:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to load subscription data');
@@ -51,7 +50,6 @@ export const ManageSubscription = () => {
       toast.success('Subscription cancelled successfully');
       loadData();
     } catch (error: unknown) {
-      console.error('Error cancelling subscription:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to cancel subscription');
@@ -69,7 +67,6 @@ export const ManageSubscription = () => {
       toast.success('Subscription upgraded successfully');
       loadData();
     } catch (error: unknown) {
-      console.error('Error upgrading subscription:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to upgrade subscription');

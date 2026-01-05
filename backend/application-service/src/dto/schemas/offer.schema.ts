@@ -12,7 +12,7 @@ export const CreateOfferSchema = z.object({
   {
     message: 'Offer expiry date must be after joining date',
     path: ['offerExpiryDate'],
-  }
+  },
 );
 
 export const GetOffersQuerySchema = z.object({

@@ -56,15 +56,28 @@ const CONTENT_TYPE_JSON = 'application/json';
 
 export const _applicationService = {
   applyForJob: async (applicationData: ApplicationData): Promise<ApplicationResponse> => {
-    console.log('[ApplicationService] Sending application with axios');
-    
-    const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
-      headers: {
-        'Content-Type': CONTENT_TYPE_JSON,
-      },
-    });
-    
-    return response.data;
+    try {
+      const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
+        headers: {
+          'Content-Type': CONTENT_TYPE_JSON,
+        },
+      });
+      
+      return response.data;
+    } catch (error: unknown) {
+      // Re-throw with better error message for deadline validation
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string }; status?: number } };
+        if (axiosError.response?.status === 400 && axiosError.response?.data?.message) {
+          const errorMessage = axiosError.response.data.message;
+          if (errorMessage.includes('deadline')) {
+            throw new Error('Application deadline has passed. This job is no longer accepting applications.');
+          }
+          throw new Error(errorMessage);
+        }
+      }
+      throw error;
+    }
   },
   
   getUserApplications: async (page: number = 1, limit: number = 10, status?: string, search?: string) => {
@@ -133,6 +146,13 @@ export const _applicationService = {
     const response = await api.get<{
       data: ApplicationStatusHistory[];
     }>(`/applications/${applicationId}/history`);
+    return response.data;
+  },
+
+  downloadResume: async (applicationId: string): Promise<Blob> => {
+    const response = await api.get(`/applications/${applicationId}/resume/download`, {
+      responseType: 'blob',
+    });
     return response.data;
   },
 };

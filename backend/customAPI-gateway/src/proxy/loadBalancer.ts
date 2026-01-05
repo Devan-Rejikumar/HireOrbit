@@ -7,12 +7,13 @@ import { notificationServiceProxy } from './notificationService';
 import { chatServiceProxy } from './chatService';
 import { subscriptionServiceProxy } from './subscriptionService';
 import { SERVICE_ROUTES } from '../config/routes';
+import { logger } from '../utils/logger';
 
 export const createProxy = (req: Request, res: Response, next: NextFunction): void => {
   const path = req.originalUrl;
 
   if (path.startsWith(SERVICE_ROUTES.USERS)) {
-    console.log('Routing to User Service');
+    logger.debug('Routing to User Service', { path });
     
     const contentType = req.headers['content-type'];
     if (contentType && contentType.includes('multipart/form-data')) {
@@ -39,7 +40,7 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
     applicationServiceProxy(req, res, next);
     
   } else if (path.startsWith(SERVICE_ROUTES.OFFERS)) {
-    console.log('Routing to Application Service for offers');
+    logger.debug('Routing to Application Service for offers', { path });
     applicationServiceProxy(req, res, next);
     
   } else if (path.startsWith(SERVICE_ROUTES.NOTIFICATIONS)) {
@@ -49,10 +50,10 @@ export const createProxy = (req: Request, res: Response, next: NextFunction): vo
     chatServiceProxy(req, res, next);
     
   } else if (path.startsWith(SERVICE_ROUTES.SUBSCRIPTIONS) || path.startsWith('/api/admin/subscriptions')) {
-    console.log('Routing to Subscription Service');
+    logger.debug('Routing to Subscription Service', { path });
     subscriptionServiceProxy(req, res, next);
   } else if (path.startsWith('/api/industries')) {
-    console.log('Routing to Company Service for industries');
+    logger.debug('Routing to Company Service for industries', { path });
     companyServiceProxy(req, res, next);
   } else {
     userServiceProxy(req, res, next);

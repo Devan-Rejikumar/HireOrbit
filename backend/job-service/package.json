@@ -2,7 +2,7 @@
   "name": "job-service",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=docker tsx watch src/server.ts",
     "local": "cross-env NODE_ENV=local tsx watch src/server.ts",

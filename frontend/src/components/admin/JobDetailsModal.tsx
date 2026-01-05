@@ -52,7 +52,6 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, jobI
       const response = await api.get<{ success: boolean; data: { job: Job } }>(`/jobs/${jobId}`);
       setJob(response.data.data.job);
     } catch (err) {
-      console.error('Error fetching job details:', err);
       setError('Failed to load job details');
     } finally {
       setLoading(false);

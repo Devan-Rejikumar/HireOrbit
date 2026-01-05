@@ -11,7 +11,6 @@ export interface ResumeResponse {
 
 export const userService = {
   uploadResume: async (file: File): Promise<ResumeResponse> => {
-    // Convert file to base64
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -34,7 +33,7 @@ export const userService = {
   },
 
   updateResume: async (file: File): Promise<ResumeResponse> => {
-    // Convert file to base64
+
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -57,54 +56,39 @@ export const userService = {
   },
 
   changePassword: async (currentPassword: string, newPassword: string) => {
-    console.log('🔍 [UserService] Calling change password API...');
-    console.log('🔍 [UserService] API base URL:', api.defaults.baseURL);
-  
-
-
-    // Call user service directly since API gateway might not be running
-    const response = await fetch(`${ENV.USER_SERVICE_URL}/users/change-password`, {
+    const response = await fetch(`${ENV.API_BASE_URL}/users/change-password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // This sends HttpOnly cookies
+      credentials: 'include', 
       body: JSON.stringify({
         currentPassword,
         newPassword,
       }),
     });
   
-    console.log('🔍 [UserService] Change password response status:', response.status);
   
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ [UserService] Change password error:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
   
     const data = await response.json();
-    console.log('🔍 [UserService] Change password response:', data);
     return data;
   },
 
   sendOTP: async (email: string) => {
-    console.log('🔍 [UserService] Sending OTP to:', email);
     const response = await api.post('/users/generate-otp', { email });
-    console.log('🔍 [UserService] Send OTP response:', response.data);
     return response.data;
   },
 
   verifyOTP: async (email: string, otp: number) => {
-    console.log('🔍 [UserService] Verifying OTP for:', email, 'OTP:', otp);
     const response = await api.post('/users/verify-otp', { email, otp: otp.toString() });
-    console.log('🔍 [UserService] Verify OTP response:', response.data);
     return response.data;
   },
   sendVerificationOTP: async (email: string) => {
-    console.log('🔍 [UserService] Sending verification OTP to:', email);
     const response = await api.post('/users/generate-verification-otp', { email });
-    console.log('🔍 [UserService] Send verification OTP response:', response.data);
     return response.data;
   },
 };

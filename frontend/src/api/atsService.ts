@@ -11,13 +11,11 @@ export interface ATSAnalysisResponse {
 export const atsService = {
   analyzeResume: async (
     resumeFile: File,
-    jobDescription: string
+    jobDescription: string,
   ): Promise<{ data: ATSAnalysisResponse; message: string }> => {
     const formData = new FormData();
     formData.append('resume', resumeFile);
     formData.append('jobDescription', jobDescription);
-
-    // Don't set Content-Type header - axios will automatically set it with boundary for FormData
     const response = await api.post<{
       success: boolean;
       data: ATSAnalysisResponse;

@@ -47,7 +47,6 @@ const ResumeViewerModal = ({ isOpen, onClose, resumeUrl, applicantName }: Resume
       setLoading(false);
       
     } catch (err) {
-      console.error('Error fetching PDF:', err);
       setError('Failed to load resume');
       setLoading(false);
     }

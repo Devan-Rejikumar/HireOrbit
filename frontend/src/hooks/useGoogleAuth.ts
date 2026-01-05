@@ -46,9 +46,7 @@ export const useGoogleAuth = () => {
       // Note: Cross-Origin-Opener-Policy warnings may appear in console but are harmless
       // They occur when Firebase checks if the popup window is closed - this is a browser security feature
       try {
-        console.log('[useGoogleAuth] Attempting popup sign-in...');
         const result = await signInWithPopup(auth, googleProvider);
-        console.log('[useGoogleAuth] Popup sign-in successful');
         return await processGoogleUser(result.user);
       } catch (popupError: unknown) {
         // Handle actual Firebase auth errors
@@ -65,21 +63,18 @@ export const useGoogleAuth = () => {
           throw new Error('Another sign-in attempt is already in progress. Please wait.');
         }
         
-        // For other errors, log but don't treat COOP warnings as fatal
+        // For other errors, don't treat COOP warnings as fatal
         // COOP warnings are browser security notices and don't prevent sign-in from working
         if (firebaseError?.message?.includes('Cross-Origin-Opener-Policy')) {
-          console.warn('[useGoogleAuth] COOP warning detected (harmless):', firebaseError.message);
           // If it's just a COOP warning without an error code, the sign-in might have still succeeded
           // But we can't check, so we'll treat it as an error to be safe
           throw new Error('Sign-in may have been affected by browser security settings. Please try again.');
         }
         
         // For other errors, throw them as-is
-        console.error('[useGoogleAuth] Popup sign-in failed:', popupError);
         throw popupError;
       }
     } catch (error) {
-      console.error('[useGoogleAuth] Google sign-in error:', error);
       throw error;
     } finally {
       setLoading(false);

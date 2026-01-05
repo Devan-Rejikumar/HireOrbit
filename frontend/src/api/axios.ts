@@ -33,18 +33,17 @@ api.interceptors.request.use(
   (config) => {
     // Don't set Content-Type for FormData - axios will set it automatically with boundary
     if (!(config.data instanceof FormData)) {
-      config.headers = { ...(config.headers || {}), 'Content-Type': 'application/json' };
+      config.headers = config.headers ?? {};
+      config.headers['Content-Type'] = 'application/json';
     }
     
     const token = getAccessToken();
     if (token) {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
-      // Removed console.log to reduce console spam
+      
     } else {
-      // Only log warnings for missing tokens in development
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[axios] No token found for request:', config.url);
-      }
+      // Token not found - request will proceed without auth header
     }
     
     return config;
@@ -99,10 +98,8 @@ api.interceptors.response.use(
           refreshEndpoint = '/api/company/refresh-token';
         } else if (role === 'admin') {
           refreshEndpoint = '/api/users/admin/refresh-token';
-          console.log('Admin token expired, attempting to refresh...');
         }
         
-        console.log('Calling refresh endpoint:', refreshEndpoint);
         const baseUrl = ENV.API_BASE_URL.replace('/api', '');
         const response = await axios.post(
           `${baseUrl}${refreshEndpoint}`,
@@ -110,11 +107,9 @@ api.interceptors.response.use(
           { withCredentials: true },
         );
         if (response.status === HTTP_STATUS.OK) {
-          console.log('Token refresh successful, retrying original request');
           return api(originalRequest);
         }
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
         localStorage.removeItem('role');
         window.location.href = ROUTES.LOGIN;
       }

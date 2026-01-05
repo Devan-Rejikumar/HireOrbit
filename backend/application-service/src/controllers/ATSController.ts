@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { AppError } from '../utils/errors/AppError';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import axios from 'axios';
+import { AppConfig } from '../config/app.config';
 
 @injectable()
 export class ATSController {
@@ -16,22 +17,18 @@ export class ATSController {
   ) {}
 
   async analyzeResume(req: Request, res: Response): Promise<void> {
-    // Check subscription status
     const userId = req.headers['x-user-id'] as string;
     if (!userId) {
       throw new AppError('User ID is required', HttpStatusCode.UNAUTHORIZED);
     }
-
-    // Check subscription
     const hasActiveSubscription = await this.checkSubscription(userId);
     if (!hasActiveSubscription) {
       throw new AppError(
         'ATS Score Checker is available only for users with an active subscription. Please upgrade to access this feature.',
-        HttpStatusCode.FORBIDDEN
+        HttpStatusCode.FORBIDDEN,
       );
     }
 
-    // Validate request
     if (!req.file) {
       throw new AppError('Resume file is required', HttpStatusCode.BAD_REQUEST);
     }
@@ -40,8 +37,6 @@ export class ATSController {
     if (!jobDescription || typeof jobDescription !== 'string' || jobDescription.trim().length === 0) {
       throw new AppError('Job description is required', HttpStatusCode.BAD_REQUEST);
     }
-
-    // Parse resume
     logger.info('Parsing resume file', {
       filename: req.file.originalname,
       mimeType: req.file.mimetype,
@@ -50,7 +45,6 @@ export class ATSController {
 
     const parseResult = await this.resumeParser.parseResume(req.file.buffer, req.file.mimetype);
 
-    // Analyze with GROQ
     logger.info('Analyzing resume with GROQ', {
       resumeLength: parseResult.text.length,
       jobDescriptionLength: jobDescription.length,
@@ -67,7 +61,7 @@ export class ATSController {
       });
       throw new AppError(
         `ATS analysis failed: ${errorMessage}`,
-        HttpStatusCode.INTERNAL_SERVER_ERROR
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
       );
     }
 
@@ -86,7 +80,7 @@ export class ATSController {
 
   private async checkSubscription(userId: string): Promise<boolean> {
     try {
-      const subscriptionServiceUrl = process.env.SUBSCRIPTION_SERVICE_URL || 'http://localhost:3005';
+      const subscriptionServiceUrl =  AppConfig.SUBSCRIPTION_SERVICE_URL;
       const response = await axios.get(
         `${subscriptionServiceUrl}/api/subscriptions/status`,
         {
@@ -95,7 +89,7 @@ export class ATSController {
             'x-user-role': 'user',
           },
           timeout: 5000,
-        }
+        },
       );
 
       const data = response.data?.data;
@@ -111,8 +105,6 @@ export class ATSController {
           message: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-      // If subscription service is unavailable, allow access (fail open for development)
-      // In production, you might want to fail closed
       return process.env.NODE_ENV === 'development';
     }
   }

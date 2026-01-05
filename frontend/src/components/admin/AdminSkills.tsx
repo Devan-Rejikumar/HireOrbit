@@ -62,7 +62,6 @@ const AdminSkills: React.FC = () => {
       
       setSkills(apiSkills);
     } catch (err: unknown) {
-      console.error('Failed to load skills', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to load skills';
@@ -107,7 +106,6 @@ const AdminSkills: React.FC = () => {
       await loadSkills();
       toast.success(editingSkill ? 'Skill updated successfully' : 'Skill created successfully');
     } catch (err: unknown) {
-      console.error('Failed to save skill', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to save skill';
@@ -145,7 +143,6 @@ const AdminSkills: React.FC = () => {
       closeDeleteModal();
       toast.success('Skill deleted successfully');
     } catch (err: unknown) {
-      console.error('Failed to delete skill', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to delete skill';
@@ -166,7 +163,6 @@ const AdminSkills: React.FC = () => {
       await loadSkills();
       toast.success(`Skill ${!skill.isActive ? 'activated' : 'deactivated'} successfully`);
     } catch (err: unknown) {
-      console.error('Failed to update skill status', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to update skill status';

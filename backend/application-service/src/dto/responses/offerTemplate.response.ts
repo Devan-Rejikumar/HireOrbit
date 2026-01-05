@@ -33,6 +33,6 @@ export function mapTemplateToResponse(template: CompanyOfferTemplate): CompanyOf
     footerText: template.footerText,
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,
-  }
+  };
 }
 

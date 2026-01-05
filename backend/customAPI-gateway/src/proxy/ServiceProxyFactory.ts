@@ -2,6 +2,7 @@ import proxy from 'express-http-proxy';
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '../enums/HttpStatusCode';
 import { CommonMessages } from '../constants/CommonMessages';
+import { logger } from '../utils/logger';
 
 export interface ProxyConfig {
   serviceUrl: string;
@@ -36,7 +37,7 @@ const forwardStandardHeaders = (sourceHeaders: Record<string, unknown>, targetHe
 
 const createProxyErrorHandler = (serviceName: string) => {
   return (err: Error, res: Response, next: NextFunction): void => {
-    console.error(`[${serviceName.toUpperCase()}-PROXY] Error:`, err);
+    logger.error(`[${serviceName.toUpperCase()}-PROXY] Error:`, err);
     res.status(HttpStatusCode.SERVICE_UNAVAILABLE).json({
       success: false,
       error: CommonMessages.SERVICE_ERROR(serviceName),
@@ -53,7 +54,7 @@ export class ServiceProxyFactory {
     return proxy(serviceUrl, {
       proxyReqPathResolver: (req) => {
         if (enableLogging) {
-          console.log(`[${serviceName.toUpperCase()}-PROXY] JSON request to:`, req.originalUrl);
+          logger.info(`[${serviceName.toUpperCase()}-PROXY] JSON request to:`, { url: req.originalUrl });
         }
         return req.originalUrl;
       },
@@ -65,7 +66,7 @@ export class ServiceProxyFactory {
         forwardStandardHeaders(srcReq.headers, proxyReqOpts.headers);
 
         if (enableLogging) {
-          console.log(`[${serviceName.toUpperCase()}-PROXY] Forwarding headers:`, {
+          logger.debug(`[${serviceName.toUpperCase()}-PROXY] Forwarding headers:`, {
             'x-user-id': srcReq.headers['x-user-id'],
             'x-user-email': srcReq.headers['x-user-email'],
             'x-user-role': srcReq.headers['x-user-role']
@@ -77,7 +78,7 @@ export class ServiceProxyFactory {
 
       userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
         if (enableLogging) {
-          console.log(`[${serviceName.toUpperCase()}-PROXY] JSON response:`, proxyRes.statusCode);
+          logger.info(`[${serviceName.toUpperCase()}-PROXY] JSON response:`, { statusCode: proxyRes.statusCode });
         }
         return proxyResData;
       },
@@ -92,7 +93,7 @@ export class ServiceProxyFactory {
     return proxy(serviceUrl, {
       proxyReqPathResolver: (req) => {
         if (enableLogging) {
-          console.log(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] File upload request to:`, req.originalUrl);
+          logger.info(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] File upload request to:`, { url: req.originalUrl });
         }
         return req.originalUrl;
       },
@@ -106,7 +107,7 @@ export class ServiceProxyFactory {
         forwardStandardHeaders(srcReq.headers, proxyReqOpts.headers);
 
         if (enableLogging) {
-          console.log(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Forwarding headers:`, {
+          logger.debug(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Forwarding headers:`, {
             'x-user-id': srcReq.headers['x-user-id'],
             'x-user-role': srcReq.headers['x-user-role']
           });
@@ -117,13 +118,13 @@ export class ServiceProxyFactory {
 
       userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
         if (enableLogging) {
-          console.log(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Upload response:`, proxyRes.statusCode);
+          logger.info(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Upload response:`, { statusCode: proxyRes.statusCode });
         }
         return proxyResData;
       },
 
       proxyErrorHandler: (err: Error, res: Response, next: NextFunction) => {
-        console.error(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Proxy error:`, err);
+        logger.error(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Proxy error:`, err);
         res.status(HttpStatusCode.SERVICE_UNAVAILABLE).json({
           success: false,
           error: CommonMessages.SERVICE_ERROR(serviceName),

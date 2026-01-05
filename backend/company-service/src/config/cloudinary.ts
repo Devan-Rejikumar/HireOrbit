@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
+import { logger } from '../utils/logger';
 
-// Lazy configuration - only configure when first used
 let isConfigured = false;
 
 const configureCloudinary = () => {
@@ -9,7 +9,7 @@ const configureCloudinary = () => {
     const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
-    console.log('[Cloudinary] Checking configuration:', {
+    logger.debug('[Cloudinary] Checking configuration:', {
       hasCloudName: !!cloudName,
       hasApiKey: !!apiKey,
       hasApiSecret: !!apiSecret,
@@ -19,10 +19,6 @@ const configureCloudinary = () => {
     });
 
     if (!cloudName || !apiKey || !apiSecret) {
-      console.error('[Cloudinary] Configuration missing. Required environment variables:');
-      console.error('  - CLOUDINARY_CLOUD_NAME:', cloudName ? '✓ Set' : '✗ Missing');
-      console.error('  - CLOUDINARY_API_KEY:', apiKey ? '✓ Set' : '✗ Missing');
-      console.error('  - CLOUDINARY_API_SECRET:', apiSecret ? '✓ Set' : '✗ Missing');
       return false;
     }
 
@@ -32,13 +28,11 @@ const configureCloudinary = () => {
       api_secret: apiSecret,
     });
     isConfigured = true;
-    console.log('[Cloudinary] Configuration loaded successfully');
     return true;
   }
   return true;
 };
 
-// Configure on module load if env vars are available
 configureCloudinary();
 
 export default cloudinary;

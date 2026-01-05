@@ -16,8 +16,6 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
   message,
   buttonText = 'Great!',
 }) => {
-  console.log(' SuccessModal render - isOpen:', isOpen, 'message:', message);
-  
   if (!isOpen) return null;
 
   return (

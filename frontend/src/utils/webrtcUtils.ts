@@ -46,8 +46,6 @@ export async function getUserMedia(
       });
       return stream;
     } catch (error) {
-      console.warn('Failed to get media with ideal constraints, trying with basic video:', error);
-      
       // Second attempt: Try with basic video (no constraints)
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -56,8 +54,6 @@ export async function getUserMedia(
         });
         return stream;
       } catch (error2) {
-        console.warn('Failed to get media with basic video, trying audio-only:', error2);
-        
         // Third attempt: If video fails but audio is requested, try audio-only
         if (audio) {
           try {
@@ -65,7 +61,6 @@ export async function getUserMedia(
               audio: true,
               video: false,
             });
-            console.warn('Video unavailable, continuing with audio-only');
             return stream;
           } catch (error3) {
             // All attempts failed, throw detailed error

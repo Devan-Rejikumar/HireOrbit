@@ -1,6 +1,8 @@
 import api from './axios';
+import { ENV } from '../config/env';
 
-const API_BASE_URL = '/notifications';
+const NOTIFICATION_API_BASE_URL = ENV.API_BASE_URL;
+const NOTIFICATION_API_PATH = '/notifications';
 
 export interface NotificationData {
   id: string;
@@ -35,33 +37,33 @@ export interface UnreadCountResponse {
 
 export const _notificationService = {
   getNotifications: async (recipientId: string): Promise<NotificationData[]> => {
-    const response = await api.get<NotificationResponse>(`${API_BASE_URL}/${recipientId}`);
+    const response = await api.get<NotificationResponse>(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${recipientId}`);
     return response.data.data;
   },
   getNotificationsPaginated: async (recipientId: string, page: number = 1, limit: number = 10) => {
-    const response = await api.get(`${API_BASE_URL}/${recipientId}/paginated`, {
+    const response = await api.get(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${recipientId}/paginated`, {
       params: { page, limit },
     });
     return response.data;
   },
   getUnreadCount: async (recipientId: string): Promise<number> => {
-    const response = await api.get<UnreadCountResponse>(`${API_BASE_URL}/${recipientId}/unread-count`);
+    const response = await api.get<UnreadCountResponse>(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${recipientId}/unread-count`);
     return response.data.data.count;
   },
   markAsRead: async (notificationId: string) => {
-    const response = await api.patch(`${API_BASE_URL}/${notificationId}/read`);
+    const response = await api.patch(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${notificationId}/read`);
     return response.data;
   },
   markAsUnread: async (notificationId: string) => {
-    const response = await api.patch(`${API_BASE_URL}/${notificationId}/unread`);
+    const response = await api.patch(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${notificationId}/unread`);
     return response.data;
   },
   markAllAsRead: async (recipientId: string) => {
-    const response = await api.patch(`${API_BASE_URL}/${recipientId}/mark-all-read`);
+    const response = await api.patch(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${recipientId}/mark-all-read`);
     return response.data;
   },
   deleteNotification: async (notificationId: string) => {
-    const response = await api.delete(`${API_BASE_URL}/${notificationId}`);
+    const response = await api.delete(`${NOTIFICATION_API_BASE_URL}${NOTIFICATION_API_PATH}/${notificationId}`);
     return response.data;
   },
 };

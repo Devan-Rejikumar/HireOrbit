@@ -35,12 +35,12 @@ export enum UserType {
 }
 
 export enum FeatureName {
-  ATS_CHECKER = 'ats_checker', // For users
+  ATS_CHECKER = 'ats_checker', 
   UNLIMITED_JOBS = 'unlimited_jobs',
   FEATURED_JOBS = 'featured_jobs',
   ADVANCED_ANALYTICS = 'advanced_analytics',
-  USER_PROFILE_SEARCH = 'user_profile_search', // Company can search user profiles
-  COMPANY_ATS_FILTER = 'company_ats_filter', // ATS-filtered resumes for companies
-  ENHANCED_ANALYTICS = 'enhanced_analytics', // Enhanced analytics for Basic plan
+  USER_PROFILE_SEARCH = 'user_profile_search', 
+  COMPANY_ATS_FILTER = 'company_ats_filter', 
+  ENHANCED_ANALYTICS = 'enhanced_analytics', 
 }
 

@@ -95,8 +95,6 @@ export const ATSCheckerPage = () => {
       
       toast.success('Resume analysis complete!');
     } catch (error: unknown) {
-      console.error('Error analyzing resume:', error);
-      
       // Handle specific error messages
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { message?: string }; status?: number } };
@@ -177,7 +175,7 @@ export const ATSCheckerPage = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Your Resume</h3>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors">
-                  <input
+                <input
                   type="file"
                   accept=".pdf,.docx,.doc"
                   onChange={handleFileChange}

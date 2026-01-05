@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Briefcase, CheckCircle, AlertCircle, Plus, X, Building2, MapPin, DollarSign, Calendar, GraduationCap, Users, Clock, Target, Star, CreditCard } from 'lucide-react';
 import api from '@/api/axios';
@@ -119,8 +118,7 @@ const PostJob = () => {
         salary: parseSalary(formData.salary),
       };
 
-      console.log('Submitting job data:', cleanedData);
-      const response = await api.post('/jobs', cleanedData);
+      await api.post('/jobs', cleanedData);
       setSuccess('Job posted successfully!');
       
       // Redirect to dashboard after 2 seconds
@@ -129,11 +127,8 @@ const PostJob = () => {
       }, 2000);
       
     } catch (err: unknown) {
-      console.error('Error posting job:', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: unknown } }) : null;
-      console.error('Error response:', axiosError?.response?.data);
-      console.error('Form data that failed:', formData);
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to post job';
       
       // Check if it's a job posting limit error

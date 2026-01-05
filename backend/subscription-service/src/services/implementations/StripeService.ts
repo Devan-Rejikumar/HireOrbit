@@ -3,7 +3,6 @@ import Stripe from 'stripe';
 import { stripe } from '../../config/stripe.config';
 import { AppConfig } from '../../config/app.config';
 import { IStripeService } from '../interfaces/IStripeService';
-// Logger removed - using console.log instead
 
 @injectable()
 export class StripeService implements IStripeService {
@@ -168,7 +167,7 @@ export class StripeService implements IStripeService {
     try {
       const price = await stripe.prices.create({
         product: productId,
-        unit_amount: Math.round(amount * 100), // Convert to cents
+        unit_amount: Math.round(amount * 100), 
         currency,
         recurring: {
           interval,

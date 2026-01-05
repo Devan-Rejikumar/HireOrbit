@@ -220,7 +220,7 @@ const CompanyDashboard = () => {
           allInterviews = interviewsResponse.data?.interviews || interviewsResponse.data || [];
           allInterviews = Array.isArray(allInterviews) ? allInterviews : [];
         } catch (error) {
-          console.error('Error loading dashboard data:', error);
+          // Silently handle error
         }
       }
 
@@ -259,7 +259,7 @@ const CompanyDashboard = () => {
         totalApplicants: Array.isArray(allApplications) ? allApplications.length : 0,
       });
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      // Silently handle error
     }
   }, [jobs, premiumApplications, premiumInterviews, totalUnreadMessages]);
 
@@ -270,7 +270,6 @@ const CompanyDashboard = () => {
 
   const fetchCompanyProfile = async () => {
     try {
-      console.log('🚀 CompanyDashboard: Fetching company profile...');
       const response = await api.get<{
         success: boolean;
         data: {
@@ -283,28 +282,17 @@ const CompanyDashboard = () => {
 
       // Check the actual response structure
       if (response.data && response.data.success && response.data.data && response.data.data.company) {
-        console.log('✅ CompanyDashboard: Valid response structure found');
         setCompany(response.data.data.company);
         setProfileStep(response.data.data.profileStep || null);
-        console.log('🏢 CompanyDashboard: Company data set:', response.data.data.company);
       } else if (response.data && response.data.company) {
-        console.log('✅ CompanyDashboard: Direct company structure found');
         setCompany(response.data.company);
         setProfileStep(response.data.profileStep || null);
       } else {
-        console.error('❌ CompanyDashboard: Invalid response structure');
-        console.error('❌ CompanyDashboard: Expected structure: { success: true, data: { company: {...} } } or { company: {...} }');
-        console.error('❌ CompanyDashboard: Actual structure:', response.data);
         setCompany(null);
         setProfileStep(null);
       }
     } catch (error) {
-      console.error('❌ CompanyDashboard: Error fetching company profile:', error);
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: unknown } };
-        console.error('❌ CompanyDashboard: Error response:', axiosError.response);
-        console.error('❌ CompanyDashboard: Error data:', axiosError.response?.data);
-      }
+      // Silently handle error
     } finally {
       setLoading(false);
     }
@@ -315,7 +303,6 @@ const CompanyDashboard = () => {
       const response = await api.get<{ success: boolean; data: { count: number } }>('/company/job-count');
       setJobCount(response.data.data.count || 0);
     } catch (error) {
-      console.error('Error fetching job count:', error);
       setJobCount(0);
     }
   };
@@ -329,7 +316,6 @@ const CompanyDashboard = () => {
       const list: DashboardJob[] = res.data?.data?.jobs ?? [];
       setJobs(list);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
       setJobs([]);
     }
   };
@@ -372,7 +358,7 @@ const CompanyDashboard = () => {
         loadPremiumInterviews(),
       ]);
     } catch (error) {
-      console.error('Error loading premium dashboard data:', error);
+      // Silently handle error
     } finally {
       setLoadingPremiumData(false);
     }
@@ -406,7 +392,6 @@ const CompanyDashboard = () => {
       
       setPremiumApplications(apps);
     } catch (error) {
-      console.error('Error loading premium applications:', error);
       setPremiumApplications([]);
     }
   };
@@ -417,7 +402,6 @@ const CompanyDashboard = () => {
       const interviewsList = response.data?.interviews || response.data || [];
       setPremiumInterviews(Array.isArray(interviewsList) ? interviewsList : []);
     } catch (error) {
-      console.error('Error loading premium interviews:', error);
       setPremiumInterviews([]);
     }
   };
@@ -679,7 +663,7 @@ const CompanyDashboard = () => {
       setIsDeleteModalOpen(false);
       setJobToDelete(null);
     } catch (error) {
-      console.error('Error deleting job:', error);
+      // Silently handle error
     } finally {
       setIsDeleting(false);
     }
@@ -696,8 +680,6 @@ const CompanyDashboard = () => {
   };
 
   const handleEditProfile = (): void => {
-    console.log('Edit profile button clicked!');
-    console.log('Current company data:', company);
     setIsEditProfileModalOpen(true);
   };
 
@@ -726,8 +708,8 @@ const CompanyDashboard = () => {
       );
       
       // Don't wait for all to complete - just start them
-      Promise.all(markAllPromises).catch(error => {
-        console.error('Error marking messages as read:', error);
+      Promise.all(markAllPromises).catch(() => {
+        // Silently handle error
       });
     }
     
@@ -899,7 +881,7 @@ const CompanyDashboard = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto transition-all duration-300 z-10`}>
+        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10`}>
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -975,27 +957,28 @@ const CompanyDashboard = () => {
                 Settings
               </button>
             </div>
-          </nav>
-          
-          <div className="absolute bottom-3 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-              {company?.logo ? (
-                <img 
-                  src={company.logo} 
-                  alt={company.companyName || 'Company logo'} 
-                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                />
-              ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                  <Building2 className="h-4 w-4 text-white" />
+            
+            {/* Company Info */}
+            <div className="mt-8">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
+                  <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
                 </div>
-              )}
-              <div>
-                <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
-                <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
               </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* Toggle Sidebar Button - Only show in messages section */}

@@ -12,21 +12,21 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ className = ''
           className="w-2 h-2 bg-gray-500 rounded-full" 
           style={{ 
             animation: 'typing-bounce 1.4s ease-in-out infinite',
-            animationDelay: '0ms'
+            animationDelay: '0ms',
           }}
         ></span>
         <span 
           className="w-2 h-2 bg-gray-500 rounded-full" 
           style={{ 
             animation: 'typing-bounce 1.4s ease-in-out infinite',
-            animationDelay: '200ms'
+            animationDelay: '200ms',
           }}
         ></span>
         <span 
           className="w-2 h-2 bg-gray-500 rounded-full" 
           style={{ 
             animation: 'typing-bounce 1.4s ease-in-out infinite',
-            animationDelay: '400ms'
+            animationDelay: '400ms',
           }}
         ></span>
       </div>

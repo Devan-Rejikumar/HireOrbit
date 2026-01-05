@@ -57,11 +57,10 @@ export class OfferPdfService implements IOfferPdfService {
     candidateName: string,
     companyName: string,
     template?: CompanyOfferTemplate | null,
-    companyLogoUrl?: string | null
+    companyLogoUrl?: string | null,
   ): Promise<Buffer> {
     return new Promise(async (resolve, reject) => {
       try {
-        // Use template or default
         const effectiveTemplate = template || this.getDefaultTemplate();
         const brandColor = (template?.brandColor || effectiveTemplate.brandColor) || '#000000';
         const fontFamily = (template?.fontFamily || effectiveTemplate.fontFamily) || 'Helvetica';
@@ -78,18 +77,14 @@ export class OfferPdfService implements IOfferPdfService {
           resolve(pdfBuffer);
         });
         doc.on('error', reject);
-
-        // Set font family (ensure it's not null)
         doc.font(fontFamily);
-
-        // Resolve and add logo
         const logoUrl = this.resolveLogo(template ?? null, companyLogoUrl ?? null);
         if (logoUrl) {
           try {
             const logoBuffer = await this.downloadImage(logoUrl);
             if (logoBuffer) {
               const logoWidth = 200;
-              const logoHeight = (logoBuffer.length > 0) ? logoWidth * 0.5 : 50; // Approximate aspect ratio
+              const _logoHeight = (logoBuffer.length > 0) ? logoWidth * 0.5 : 50;
               const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
               const x = (pageWidth - logoWidth) / 2 + doc.page.margins.left;
               
@@ -100,32 +95,23 @@ export class OfferPdfService implements IOfferPdfService {
             logger.warn('[OfferPdfService] Error adding logo, continuing without it:', error);
           }
         }
-
-        // Header
         const headerText = template?.headerText || 'OFFER LETTER';
         doc.fontSize(24).fillColor(brandColor as string).text(headerText, { align: 'center' });
-        doc.fillColor('#000000'); // Reset to black for body text
+        doc.fillColor('#000000'); 
         doc.moveDown(2);
-
-        // Date
         doc.fontSize(12).text(`Date: ${new Date(offer.createdAt).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
         })}`, { align: 'right' });
         doc.moveDown(2);
-
-        // Greeting
         doc.fontSize(14).text(`Dear ${candidateName},`, { align: 'left' });
         doc.moveDown();
 
-        // Introduction
         const introText = template?.introText || 
           `We are pleased to extend an offer of employment to you for the position of ${offer.jobTitle} at ${companyName}.`;
         doc.fontSize(12).text(introText, { align: 'justify' });
         doc.moveDown();
-
-        // Offer Details Section
         doc.fontSize(16).fillColor(brandColor as string).text('OFFER DETAILS', { underline: true });
         doc.fillColor('#000000');
         doc.moveDown();
@@ -149,8 +135,6 @@ export class OfferPdfService implements IOfferPdfService {
         doc.text(`Location: ${offer.location}`, { continued: false });
         doc.text(`Offer Validity: ${expiryDate}`, { continued: false });
         doc.moveDown();
-
-        // Offer Message
         if (offer.offerMessage) {
           doc.fontSize(14).fillColor(brandColor as string).text('ADDITIONAL INFORMATION', { underline: true });
           doc.fillColor('#000000');
@@ -158,19 +142,16 @@ export class OfferPdfService implements IOfferPdfService {
           doc.fontSize(12).text(offer.offerMessage, { align: 'justify' });
           doc.moveDown();
         }
-
-        // Terms and Conditions placeholder
         doc.fontSize(14).fillColor(brandColor as string).text('TERMS AND CONDITIONS', { underline: true });
         doc.fillColor('#000000');
         doc.moveDown();
         doc.fontSize(11).text(
           'This offer is subject to your acceptance and is valid until the expiry date mentioned above. ' +
           'Please review all details carefully. If you have any questions, please contact our HR team.',
-          { align: 'justify' }
+          { align: 'justify' },
         );
         doc.moveDown(2);
 
-        // Closing
         const closingText = template?.closingText || 'Best regards,';
         doc.fontSize(12).text(closingText, { align: 'left' });
         doc.moveDown();
@@ -179,7 +160,6 @@ export class OfferPdfService implements IOfferPdfService {
         doc.fontSize(12).text(footerText, { align: 'left' });
         doc.moveDown();
 
-        // Signature
         if (template?.signatureUrl) {
           try {
             const signatureBuffer = await this.downloadImage(template.signatureUrl);
@@ -197,7 +177,7 @@ export class OfferPdfService implements IOfferPdfService {
             doc.fontSize(10).text('Authorized Signatory', { align: 'left' });
           }
         } else {
-          // Default signature line
+        
           doc.fontSize(10).text('_________________________', { align: 'left' });
           doc.fontSize(10).text('Authorized Signatory', { align: 'left' });
         }
@@ -227,7 +207,7 @@ export class OfferPdfService implements IOfferPdfService {
     candidateName: string,
     companyName: string,
     template?: CompanyOfferTemplate | null,
-    companyLogoUrl?: string | null
+    companyLogoUrl?: string | null,
   ): Promise<string> {
     try {
       const pdfBuffer = await this.generateOfferPdf(offer, candidateName, companyName, template, companyLogoUrl);

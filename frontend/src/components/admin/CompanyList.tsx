@@ -76,18 +76,11 @@ const CompanyList = () => {
     try {
       setLoading(true);
       const response = await api.get<CompaniesResponse>('/company/admin/all');
-      //    console.log("API Response:", response.data);
-      // console.log("Response structure:", {
-      //   data: response.data,
-      //   companies: response.data.companies,
-      //   companiesLength: response.data.companies?.length
-      // });
       const companiesData = response.data.data?.companies || [];
       setCompanies(Array.isArray(companiesData) ? companiesData : []);
       setTotalCompanies(Array.isArray(companiesData) ? companiesData.length : 0);
       setTotalPages(Math.ceil((Array.isArray(companiesData) ? companiesData.length : 0) / pageSize));
     } catch (error) {
-      console.error('Error fetching companies:', error);
       setCompanies([]);
     } finally {
       setLoading(false);
@@ -188,24 +181,18 @@ const CompanyList = () => {
   const fetchCompanyDetails = async (companyId: string) => {
     try {
       setDetailsLoading(true);
-      console.log('🔍 Fetching company details for ID:', companyId);
       const response = await api.get<CompanyDetailsResponse>(`/company/admin/${companyId}`);
       
       // Handle the actual response structure: { success: true, data: { company: {...} }, message: "...", timestamp: "..." }
       const companyData = response.data.data?.company;
-      console.log('🔍 Company data:', companyData);
       
       if (companyData) {
         setCompanyDetails(companyData);
         setShowDetailsModal(true);
-        console.log('🔍 Modal should be showing now');
       } else {
-        console.error('🔍 No company data in response');
-        console.log('🔍 Full response structure:', JSON.stringify(response.data, null, 2));
         toast.error('No company data received');
       }
     } catch (error: unknown) {
-      console.error('Error fetching company details:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
       toast.error(axiosError?.response?.data?.error || 'Failed to fetch company details');

@@ -90,9 +90,7 @@ export class JobRepository implements IJobRepository {
     if (filters.isActive !== undefined) {
       where.isActive = filters.isActive;
     }
-    
-    // Filter by isListed for user-facing queries (non-admin)
-    // Admin queries should explicitly set isListed filter if needed
+ 
     if (filters.isListed !== undefined) {
       where.isListed = filters.isListed;
     }
@@ -101,11 +99,10 @@ export class JobRepository implements IJobRepository {
     if (filters.company) where.company = { contains: filters.company, mode: 'insensitive' };
     if (filters.companyId) where.companyId = filters.companyId;
     if (filters.location) where.location = { contains: filters.location, mode: 'insensitive' };
-    // Case-insensitive jobType matching to handle format variations (Full-time, full-time, Full Time, etc.)
     if (filters.jobType) {
       where.jobType = { 
         equals: filters.jobType, 
-        mode: 'insensitive' 
+        mode: 'insensitive' ,
       };
     }
     if (filters.experienceLevel) where.experienceLevel = { contains: filters.experienceLevel, mode: 'insensitive' };
@@ -154,7 +151,6 @@ export class JobRepository implements IJobRepository {
       },
     });
 
-    // Group by time period
     const grouped = new Map<string, number>();
     
     jobs.forEach(job => {
@@ -162,20 +158,19 @@ export class JobRepository implements IJobRepository {
       let key: string;
       
       if (groupBy === 'day') {
-        key = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        key = date.toISOString().split('T')[0]; 
       } else if (groupBy === 'week') {
         const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+        weekStart.setDate(date.getDate() - date.getDay()); 
         weekStart.setHours(0, 0, 0, 0);
         key = weekStart.toISOString().split('T')[0];
-      } else { // month
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+      } else { 
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; 
       }
       
       grouped.set(key, (grouped.get(key) || 0) + 1);
     });
 
-    // Generate all periods in the range to ensure continuity
     const allPeriods = new Map<string, number>();
     const current = new Date(startDate);
     current.setHours(0, 0, 0, 0);
@@ -194,7 +189,7 @@ export class JobRepository implements IJobRepository {
         weekStart.setHours(0, 0, 0, 0);
         key = weekStart.toISOString().split('T')[0];
         current.setDate(current.getDate() + 7);
-      } else { // month
+      } else { 
         key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
         current.setMonth(current.getMonth() + 1);
       }
@@ -202,7 +197,6 @@ export class JobRepository implements IJobRepository {
       allPeriods.set(key, grouped.get(key) || 0);
     }
 
-    // Convert to array and sort
     const result = Array.from(allPeriods.entries())
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -222,7 +216,6 @@ export class JobRepository implements IJobRepository {
       },
     });
 
-    // Group by company
     const companyMap = new Map<string, { companyId: string; companyName: string; jobCount: number }>();
     
     jobs.forEach(job => {
@@ -240,7 +233,7 @@ export class JobRepository implements IJobRepository {
       }
     });
 
-    // Sort by job count and return top N
+   
     return Array.from(companyMap.values())
       .sort((a, b) => b.jobCount - a.jobCount)
       .slice(0, limit);

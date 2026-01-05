@@ -14,6 +14,7 @@ import cloudinary from '../config/cloudinary';
 import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { RequestWithUser } from '../types/express/RequestWithUser';
 import { AppError } from '../utils/errors/AppError';
+import { logger } from '../utils/logger';
 
 @injectable()
 export class ProfileController {
@@ -60,14 +61,11 @@ export class ProfileController {
     if (!userId) return;
 
     if (req.body?.name && typeof req.body.name === 'string') {
-      console.log(' Updating User name:', req.body.name);
       await this._userService.updateUserName(userId, req.body.name);
-      console.log('User name updated successfully');
     }
     
     const existingProfile = await this._profileService.getProfile(userId);
     if (!existingProfile) {
-      console.log(' No existing profile found, creating new one');
       await this._profileService.createProfile(userId, {});
     }
 
@@ -80,12 +78,13 @@ export class ProfileController {
       profilePicture: req.body?.profilePicture || undefined
     };
     if (req.body?.profilePicture) {
-      console.log('ProfileController] profilePicture starts with data:image/:', req.body.profilePicture.startsWith('data:image/'));
-      console.log('ProfileController] profilePicture length:', req.body.profilePicture.length);
+      logger.debug('ProfileController: profilePicture starts with data:image/', { 
+        startsWithDataImage: req.body.profilePicture.startsWith('data:image/'),
+        length: req.body.profilePicture.length 
+      });
     }
     
     if (req.body?.profilePicture && typeof req.body.profilePicture === 'string' && req.body.profilePicture.startsWith('data:image/')) {
-      console.log('ProfileController] Processing profile picture upload to Cloudinary...');
       try {
         const result = await cloudinary.uploader.upload(req.body.profilePicture, {
           folder: 'user-profiles',
@@ -96,13 +95,11 @@ export class ProfileController {
           resource_type: 'image'
         });
         profileData.profilePicture = result.secure_url;
-        console.log('ProfileController] Cloudinary upload successful:', result.secure_url);
       } catch (cloudinaryError) {
-        console.error('ProfileController] Cloudinary upload error:', cloudinaryError);
         throw new AppError(Messages.PROFILE.IMAGE_UPLOAD_FAILED, HttpStatusCode.INTERNAL_SERVER_ERROR);
       }
     } else {
-      console.log(' [ProfileController] No valid profile picture data found');
+      logger.debug('ProfileController: No valid profile picture data found');
     }
     
     const cleanedProfileData = Object.entries(profileData).reduce((acc, [key, value]) => {
@@ -112,16 +109,14 @@ export class ProfileController {
       return acc;
     }, {} as Record<string, unknown>);
 
-    console.log(' ProfileController: Cleaned profile data:', JSON.stringify(cleanedProfileData, null, 2));
+    logger.debug('ProfileController: Cleaned profile data:', cleanedProfileData);
 
     const validationResult = UpdateProfileSchema.safeParse(cleanedProfileData);
     if (!validationResult.success) {
-      console.log(' Validation failed:', validationResult.error);
       throw new AppError(validationResult.error.message, HttpStatusCode.BAD_REQUEST);
     }
 
     const updatedProfile = await this._profileService.updateProfile(userId, validationResult.data);
-    console.log(' Profile updated successfully:', JSON.stringify(updatedProfile, null, 2));
     
     res.status(HttpStatusCode.OK).json({ 
       success: true,
@@ -247,7 +242,7 @@ export class ProfileController {
           score += 2;
         }
       } catch {
-        // Ignore parse errors
+ 
       }
     }
     maxScore += 2;
@@ -261,7 +256,7 @@ export class ProfileController {
           score += 2;
         }
       } catch {
-        // Ignore parse errors
+       
       }
     }
     maxScore += 2;

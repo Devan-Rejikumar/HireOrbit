@@ -53,6 +53,13 @@ export class SkillService implements ISkillService {
   }
 
   async updateSkill(id: string, data: SkillUpdateInput): Promise<Skill> {
+    if(data.name){
+      const name = data.name.trim();
+      const existing = await this._skillRepository.findByName(name);
+      if(existing && existing.id !== id){
+        throw new AppError('A skill with this name already exist', HttpStatusCode.BAD_REQUEST);
+      }
+    }
     return this._skillRepository.update(id, data);
   }
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileText, X, CheckCircle, Eye, X as CloseIcon } from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, Eye, X as CloseIcon, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ConfirmationModal from './ConfirmationModal';
 
 interface ResumeUploadProps {
   onUpload: (file: File) => Promise<void>;
@@ -18,6 +19,8 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -74,13 +77,15 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete your resume?')) {
-      try {
-        await onDelete();
-        toast.success('Resume deleted successfully!');
-      } catch (error) {
-        toast.error('Failed to delete resume');
-      }
+    setDeleting(true);
+    try {
+      await onDelete();
+      toast.success('Resume deleted successfully!');
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      toast.error('Failed to delete resume');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -121,11 +126,12 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
                 <span>View</span>
               </button>
               <button
-                onClick={handleDelete}
-                disabled={isLoading}
-                className="text-red-600 hover:text-red-700 text-sm font-medium disabled:opacity-50"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isLoading || deleting}
+                className="text-red-600 hover:text-red-700 p-2 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Delete Resume"
               >
-                Delete
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -212,6 +218,19 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Resume"
+        message="Are you sure you want to delete your resume? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 };

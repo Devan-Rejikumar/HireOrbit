@@ -28,7 +28,7 @@ export class GrokATSService implements IATSService {
     }
   }
 
-  async parseResume(fileBuffer: Buffer, mimeType: string): Promise<never> {
+  async parseResume(_fileBuffer: Buffer, _mimeType: string): Promise<never> {
     throw new Error('Use ResumeParserService for resume parsing');
   }
 
@@ -73,7 +73,7 @@ export class GrokATSService implements IATSService {
             },
           ],
           temperature: 0.3,
-          max_tokens: 100, // Reduced tokens since we only need the score
+          max_tokens: 100, 
         },
         {
           headers: {
@@ -81,7 +81,7 @@ export class GrokATSService implements IATSService {
             'Content-Type': 'application/json',
           },
           timeout: 30000,
-        }
+        },
       );
 
       const content = response.data.choices?.[0]?.message?.content;
@@ -90,7 +90,6 @@ export class GrokATSService implements IATSService {
         return 0;
       }
 
-      // Parse JSON response - expect { "score": number }
       let jsonString = content.trim();
       if (jsonString.startsWith('```json')) {
         jsonString = jsonString.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -111,13 +110,11 @@ export class GrokATSService implements IATSService {
         return 0;
       }
 
-      // Clamp score between 0-100
       return Math.max(0, Math.min(100, Math.round(score)));
     } catch (error) {
       logger.error('Error calculating ATS score:', {
         message: error instanceof Error ? error.message : 'Unknown error',
       });
-      // Return 0 on error - don't block application creation
       return 0;
     }
   }
@@ -133,7 +130,7 @@ export class GrokATSService implements IATSService {
       const response = await axios.post<GroqResponse>(
         this.groqApiUrl,
         {
-          model: 'llama-3.1-8b-instant', // GROQ model - using 8b-instant for faster responses
+          model: 'llama-3.1-8b-instant',
           messages: [
             {
               role: 'system',
@@ -144,7 +141,7 @@ export class GrokATSService implements IATSService {
               content: prompt,
             },
           ],
-          temperature: 0.3, // Lower temperature for more deterministic results
+          temperature: 0.3, 
           max_tokens: 2000,
         },
         {
@@ -152,16 +149,14 @@ export class GrokATSService implements IATSService {
             'Authorization': `Bearer ${this.groqApiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 30000, // 30 second timeout
-        }
+          timeout: 30000, 
+        },
       );
 
       const content = response.data.choices?.[0]?.message?.content;
       if (!content) {
         throw new Error('No response content from GROQ API');
       }
-
-      // Parse JSON response
       const analysis = this.parseGroqResponse(content);
 
       return analysis;
@@ -188,11 +183,10 @@ export class GrokATSService implements IATSService {
           },
         });
         
-        // Log full error response for debugging (but safely)
         if (errorData) {
           try {
             logger.error('GROQ API error response:', JSON.stringify(errorData, null, 2));
-          } catch (e) {
+          } catch {
             logger.error('GROQ API error response (could not stringify):', String(errorData));
           }
         }
@@ -254,23 +248,18 @@ Return ONLY valid JSON, no markdown, no explanations.`;
 
   private parseGroqResponse(content: string): ATSAnalysisResult {
     try {
-      // Remove markdown code blocks if present
       let jsonString = content.trim();
       if (jsonString.startsWith('```json')) {
         jsonString = jsonString.replace(/```json\n?/g, '').replace(/```\n?/g, '');
       } else if (jsonString.startsWith('```')) {
         jsonString = jsonString.replace(/```\n?/g, '').replace(/```$/g, '');
       }
-
-      // Try to extract JSON if there's extra text
       const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         jsonString = jsonMatch[0];
       }
 
       const parsed = JSON.parse(jsonString) as Partial<ATSAnalysisResult>;
-
-      // Validate and set defaults
       const result: ATSAnalysisResult = {
         score: Math.max(0, Math.min(100, parsed.score || 0)),
         improvements: Array.isArray(parsed.improvements) ? parsed.improvements : [],
@@ -283,8 +272,6 @@ Return ONLY valid JSON, no markdown, no explanations.`;
     } catch (error) {
       logger.error('Error parsing GROQ response:', error);
       logger.error('Response content:', content);
-      
-      // Fallback: return a basic analysis
       return {
         score: 50,
         improvements: ['Unable to parse AI response. Please try again.'],

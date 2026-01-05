@@ -88,7 +88,7 @@ const AdminJobManagement: React.FC = () => {
       const companyList = response.data?.data?.companies || [];
       setCompanies(companyList);
     } catch (error) {
-      console.error('Error fetching companies:', error);
+      // Silently handle error
     }
   };
 
@@ -123,7 +123,6 @@ const AdminJobManagement: React.FC = () => {
       setTotalJobs(total);
       setTotalPages(Math.ceil(total / itemsPerPage));
     } catch (error) {
-      console.error('Error fetching jobs:', error);
       toast.error(MESSAGES.ERROR.JOB_LOAD_FAILED);
     } finally {
       setLoading(false);
@@ -137,7 +136,6 @@ const AdminJobManagement: React.FC = () => {
       const reportedJobsList = response.data?.data?.reportedJobs || [];
       setReportedJobs(reportedJobsList);
     } catch (error: unknown) {
-      console.error('Error fetching reported jobs:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
       toast.error(axiosError?.response?.data?.error || 'Failed to fetch reported jobs');
@@ -164,7 +162,6 @@ const AdminJobManagement: React.FC = () => {
         fetchReportedJobs();
       }
     } catch (error: unknown) {
-      console.error('Error deleting job:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to delete job');
@@ -191,20 +188,19 @@ const AdminJobManagement: React.FC = () => {
           prevJobs.map(reportedJob => 
             reportedJob.job.id === job.id 
               ? { 
-                  ...reportedJob, 
-                  job: { 
-                    ...reportedJob.job, 
-                    isActive: !job.isActive
-                  } 
-                }
-              : reportedJob
-          )
+                ...reportedJob, 
+                job: { 
+                  ...reportedJob.job, 
+                  isActive: !job.isActive,
+                }, 
+              }
+              : reportedJob,
+          ),
         );
       } else {
         fetchJobs();
       }
     } catch (error: unknown) {
-      console.error('Error toggling job status:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to update job status');

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { logger } from '../utils/logger';
-import '../types/express'; // Import Express type extensions
+import '../types/express'; 
 const USER_ID_HEADER = 'x-user-id';
 const USER_EMAIL_HEADER = 'x-user-email';
 const USER_ROLE_HEADER = 'x-user-role';

@@ -42,7 +42,6 @@ const SkillsModal: React.FC<SkillsModalProps> = ({
         setAvailableSkills(apiSkills);
       } catch (err: unknown) {
         // silently ignore, user can still type custom skills
-        console.error('Failed to load skills suggestions', err);
       } finally {
         setLoadingSuggestions(false);
       }

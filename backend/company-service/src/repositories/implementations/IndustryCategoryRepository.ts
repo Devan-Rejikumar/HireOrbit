@@ -27,7 +27,6 @@ export class IndustryCategoryRepository implements IIndustryCategoryRepository {
   }
 
   async findByName(name: string): Promise<IndustryCategory | null> {
-    // Case-insensitive search
     return prisma.industryCategory.findFirst({
       where: {
         name: {

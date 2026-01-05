@@ -39,14 +39,14 @@ const CompanyOffersPage = () => {
 
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
-    authCompany?.id || null
+    authCompany?.id || null,
   );
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchCompanyProfile();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -67,8 +67,8 @@ const CompanyOffersPage = () => {
     try {
       const response = await api.get('/company/profile');
       setCompany(response.data?.data?.company || null);
-    } catch (error) {
-      console.error('Error fetching company profile:', error);
+    } catch (_error) {
+      // Silently handle error
     }
   };
 
@@ -79,13 +79,12 @@ const CompanyOffersPage = () => {
         currentPage,
         10,
         statusFilter !== 'ALL' ? statusFilter : undefined,
-        searchQuery || undefined
+        searchQuery || undefined,
       );
       setOffers(response.data.offers);
       setTotalPages(response.data.pagination.totalPages);
       setTotalOffers(response.data.pagination.total || 0);
-    } catch (error) {
-      console.error('Failed to fetch offers:', error);
+    } catch (_error) {
       toast.error('Failed to load offers');
     } finally {
       setLoading(false);
@@ -181,7 +180,7 @@ const CompanyOffersPage = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className={`w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] bottom-0 overflow-y-auto transition-all duration-300 z-10 ${
+        <aside className={`w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10 ${
           isSidebarCollapsed ? '-left-64' : 'left-0'
         }`}>
           <nav className="p-6">
@@ -263,27 +262,28 @@ const CompanyOffersPage = () => {
                 Settings
               </button>
             </div>
-          </nav>
-          
-          <div className="absolute bottom-3 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-              {company?.logo ? (
-                <img 
-                  src={company.logo} 
-                  alt={company.companyName || 'Company logo'} 
-                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                />
-              ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                  <Building2 className="h-4 w-4 text-white" />
+            
+            {/* Company Info */}
+            <div className="mt-8">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
+                  <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
                 </div>
-              )}
-              <div>
-                <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
-                <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
               </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* Toggle Sidebar Button */}
@@ -386,7 +386,7 @@ const CompanyOffersPage = () => {
                 <p className="text-gray-500 mb-4">
                   {statusFilter !== 'ALL'
                     ? `You don't have any ${statusFilter.toLowerCase()} offers`
-                    : "You haven't sent any offers yet"}
+                    : 'You haven\'t sent any offers yet'}
                 </p>
                 <Button
                   onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)}

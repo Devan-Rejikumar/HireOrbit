@@ -78,8 +78,7 @@ const isProtectedRoute = (path: string, method: string): boolean =>{
         console.log(' Matched admin subscription route:', clean);
         return true;
     }
-    
-    // Settings PUT routes require authentication
+
     if (clean.startsWith('/api/settings') && method !== 'GET') {
         console.log(' Matched settings update route:', clean);
         return true;
@@ -98,8 +97,7 @@ const isPublicRoute = (path: string, method: string): boolean =>{
     if (clean.match(/^\/api\/jobs\/[a-zA-Z0-9_-]+$/) && method === 'GET') {
         return true;
     }
-    
-    // Settings GET is public
+
     if (clean === '/api/settings' && method === 'GET') {
         return true;
     }
@@ -119,42 +117,25 @@ const isPublicRoute = (path: string, method: string): boolean =>{
 }
 
 export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction): void =>{
-    console.log('routerHandler reacheddd starting of iit................')
     const path = req.originalUrl;
-    console.log('===== ROUTE HANDLER =====');
-    console.log('Path:', req.path);
-    console.log('Method:', req.method);
-    console.log('URL:', req.url);
-    console.log('Original URL:', req.originalUrl);
-    console.log('Using for route matching:', path);
-
     if(isAuthenticationRoute(path)){
-        console.log('AUTHENTICATION ROUTE - Forwarding to User Service');
-        console.log('[ROUTE HANDLER] About to call createProxy for auth...');
         createProxy(req,res,next);
-        console.log('[ROUTE HANDLER] createProxy call completed for auth');
         return
     }
 
     if(isProtectedRoute(path, req.method)){
-        console.log('Protected Route - Requirinmg authorization');
-        console.log('Route Handler About to call Authenticatee');
         Authenticate(req,res,(err)=>{
             if(err){
-                console.log('[ROUTE HANDLER] Authentication error:', err);
                 return next(err);
             }
             
             if(res.headersSent){
-                console.log('[ROUTE HANDLER] Response already sent, authentication failed');
                 return;
             }
             if(!req.user){
-                console.log('[ROUTE HANDLER] No user found after authentication');
                 return;
             }
             
-            console.log('Authorization successsfukl- proceeding to proxy');
 
             delete req.headers['x-user-id'];
             delete req.headers['x-user-email'];
@@ -168,38 +149,29 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
                 'x-user-role': req.user.role
             });
             
-            console.log('[ROUTE HANDLER] About to call createProxy after auth...');
+           
             createProxy(req,res,next);
-            console.log('[ROUTE HANDLER] createProxy call completed after auth');
+            
         });
         return
     }
 
     if(isPublicRoute(path, req.method)){
-        console.log('Public ROUTE - No authorisation required');
-        console.log('Route handler About tot call createProxy');
         createProxy(req,res,next);
-        console.log('[ROUTE HANDLER] createProxy call completed for public');
         return
     }
-    console.log('DEFAULT ROUTE - Treating as protected');
-    console.log('[ROUTE HANDLER] About to call Authenticate...');
     Authenticate(req, res, (err) => {
         if(err) {
-            console.log('Authorization failed:', err);
             return next(err);
         }
 
         if(res.headersSent){
-            console.log('[ROUTE HANDLER] Response already sent, authentication failed');
             return;
         }
         if(!req.user){
-            console.log('[ROUTE HANDLER] No user found after authentication');
             return;
         }
         
-        console.log('Authorization successful - proceeding to proxy');
         delete req.headers['x-user-id'];
         delete req.headers['x-user-email'];
         delete req.headers['x-user-role'];
@@ -209,8 +181,6 @@ export const routeHandler = (req: AuthRequest, res: Response, next: NextFunction
         
         createProxy(req, res, next);
     });
-    
-    console.log('[ROUTE HANDLER] Route handler function completed');
 
 }
 

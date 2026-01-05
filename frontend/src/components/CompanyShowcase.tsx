@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Building2, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import CompanyDetailsModal from '@/components/CompanyDetailsModal';
@@ -24,12 +24,19 @@ interface Company {
 
 const CompanyShowcase = () => {
   const { data: jobsData, isLoading: jobsLoading } = useJobs();
-  const jobs: Job[] = Array.isArray(jobsData) ? jobsData : [];
+  
+  // Memoize jobs array to ensure stable reference
+  const jobs: Job[] = useMemo(() => {
+    return Array.isArray(jobsData) ? jobsData : [];
+  }, [jobsData]);
+  
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const prevCompaniesKeyRef = useRef<string>('');
+  const isFetchingRef = useRef<boolean>(false);
 
   // Memoize top companies calculation from jobs
   const topCompanies = useMemo(() => {
@@ -67,11 +74,32 @@ const CompanyShowcase = () => {
   // Fetch company profiles when topCompanies changes
   useEffect(() => {
     const fetchProfiles = async () => {
-      if (topCompanies.length === 0) {
-        setCompanies([]);
-        setLoading(false);
+      // Prevent concurrent fetches
+      if (isFetchingRef.current) {
         return;
       }
+
+      if (topCompanies.length === 0) {
+        // Only update state if it's different from current state to prevent infinite loops
+        const emptyKey = '';
+        if (prevCompaniesKeyRef.current !== emptyKey) {
+          setCompanies([]);
+          setLoading(false);
+          prevCompaniesKeyRef.current = emptyKey;
+        }
+        return;
+      }
+
+      // Create a stable reference key from topCompanies to prevent unnecessary re-fetches
+      const companiesKey = topCompanies.map(c => `${c.name}-${c.companyId || ''}`).join(',');
+      
+      // Skip if companies haven't actually changed
+      if (prevCompaniesKeyRef.current === companiesKey) {
+        return;
+      }
+      
+      prevCompaniesKeyRef.current = companiesKey;
+      isFetchingRef.current = true;
 
       setLoading(true);
       const companiesWithProfiles: Company[] = [];
@@ -119,6 +147,7 @@ const CompanyShowcase = () => {
       
       setCompanies(companiesWithProfiles);
       setLoading(false);
+      isFetchingRef.current = false;
     };
 
     fetchProfiles();

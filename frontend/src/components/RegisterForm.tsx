@@ -99,14 +99,8 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
     try {
       setError('');
       setSuccess('');
-      console.log('[RegisterForm] Starting Google sign-up...');
       
       const userData = await signInWithGoogle();
-      console.log('[RegisterForm] Google sign-up successful:', { 
-        isNewUser: userData.isNewUser, 
-        hasToken: !!userData.token,
-        userEmail: userData.user?.email, 
-      });
     
       if (userData.isNewUser) {
         setSuccess('Account created successfully with Google!');
@@ -119,33 +113,18 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
       
       // Call login which will fetch user data
       try {
-        console.log('[RegisterForm] Calling login function...');
         await login('jobseeker'); 
-        console.log('[RegisterForm] Login successful!');
         setSuccess('Successfully signed up and logged in! You can now navigate to the home page.');
         // Don't auto-navigate - let user see the success message
       } catch (loginError: unknown) {
-        console.error('[RegisterForm] Login after Google signup failed:', loginError);
         const isAxiosError = loginError && typeof loginError === 'object' && 'response' in loginError;
         const axiosLoginError = isAxiosError ? (loginError as { response?: { status?: number; data?: { error?: string } }; message?: string }) : null;
-        console.error('[RegisterForm] Error details:', {
-          status: axiosLoginError?.response?.status,
-          data: axiosLoginError?.response?.data,
-          message: axiosLoginError?.message,
-        });
         setError(`Account created, but failed to fetch user data: ${axiosLoginError?.response?.data?.error || axiosLoginError?.message || 'Unknown error'}. Please try logging in manually.`);
         // Don't auto-navigate - let user see the error
       }
     } catch (error: unknown) {
-      console.error('[RegisterForm] Google sign-up error:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } }; message?: string; code?: string }) : null;
-      console.error('[RegisterForm] Error details:', {
-        status: axiosError?.response?.status,
-        data: axiosError?.response?.data,
-        message: axiosError?.message,
-        code: axiosError?.code,
-      });
       const errorMessage = axiosError?.response?.data?.error || axiosError?.message || 'Google sign-up failed. Please try again.';
       setError(errorMessage);
       // Don't auto-navigate - let user see the error

@@ -68,7 +68,6 @@ export const Chat = () => {
           let companyName: string | null = null;
           
           try {
-            console.log(`📋 [Chat] Fetching application details for ${selectedConversation.applicationId}`);
             interface ApplicationData {
               companyName?: string;
               jobId?: string;
@@ -90,7 +89,6 @@ export const Chat = () => {
             }
             
             const appResponse = await api.get<ApplicationResponse>(`/applications/${selectedConversation.applicationId}`);
-            console.log('📋 [Chat] Application response:', appResponse.data);
             
             // Try multiple possible response structures
             const responseData = appResponse.data;
@@ -107,11 +105,8 @@ export const Chat = () => {
                             : null) ||
                         null;
             
-            console.log('📋 [Chat] Extracted company name:', companyName);
-            
             // If still not found, try fetching from job service using jobId as fallback
             if ((!companyName || companyName === 'Company Name' || companyName === 'Unknown Company') && applicationData?.jobId) {
-              console.log(`📋 [Chat] Company name not in application, trying job service with jobId: ${applicationData.jobId}`);
               try {
                 interface JobResponse {
                   data?: {
@@ -150,29 +145,20 @@ export const Chat = () => {
                               (typeof typedJobData?.company === 'string' ? typedJobData.company : null) ||
                               null;
                 }
-                
-                console.log('📋 [Chat] Company name from job service:', companyName);
               } catch (jobError: unknown) {
-                console.error('❌ [Chat] Error fetching job details:', jobError);
+                // Silently handle job fetch errors
               }
             }
             
             if (companyName && companyName !== 'Company Name' && companyName !== 'Unknown Company') {
               setOtherParticipantName(companyName);
-              console.log(`✅ [Chat] Company name set: ${companyName}`);
               return;
-            } else {
-              console.warn('⚠️ [Chat] Company name not found or invalid in application response');
             }
           } catch (appError: unknown) {
-            console.error('❌ [Chat] Error fetching application details:', appError);
-            const isAxiosError = appError && typeof appError === 'object' && 'response' in appError;
-            const axiosError = isAxiosError ? (appError as { response?: { data?: unknown } }) : null;
-            console.error('❌ [Chat] Error response:', axiosError?.response?.data);
+            // Silently handle application fetch errors
           }
           
           // Final fallback
-          console.warn('⚠️ [Chat] Using fallback \'Company\' name');
           setOtherParticipantName('Company');
         } else {
           // Fetch user name
@@ -183,7 +169,6 @@ export const Chat = () => {
           setOtherParticipantName(userName);
         }
       } catch (error) {
-        console.error('Error fetching participant name:', error);
         const fallbackName = role === 'jobseeker' ? 'Company' : 'User';
         setOtherParticipantName(fallbackName);
       }
@@ -201,32 +186,25 @@ export const Chat = () => {
     }
     
     if (conversationByApp) {
-      console.log('✅ [Chat] Conversation found:', conversationByApp.id);
       setSelectedConversation(conversationByApp);
       retryCountRef.current = 0;
       
-      // Invalidate conversations list to refresh sidebar
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      // Invalidate conversations list to refresh sidebar (without refetch to prevent reloads)
+      queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
     } else if (applicationId && !conversationByApp) {
-      console.log('⏳ [Chat] Conversation not found for application:', applicationId);
-      console.log('🔄 [Chat] Will attempt to refetch - backend should auto-create...');
-      
       const maxRetries = 6; // Try 6 times with increasing delays
       
       const attemptRefetch = () => {
         if (retryCountRef.current >= maxRetries) {
-          console.error('❌ [Chat] Failed to get/create conversation after all retries');
           return;
         }
         
         const delay = (retryCountRef.current + 1) * 500; // 500ms, 1000ms, 1500ms, etc.
-        console.log(`🔄 [Chat] Refetch attempt ${retryCountRef.current + 1}/${maxRetries} in ${delay}ms...`);
         
         retryTimeoutRef.current = setTimeout(async () => {
           try {
             const result = await refetchConversation();
             if (result.data) {
-              console.log('✅ [Chat] Conversation found after retry!');
               setSelectedConversation(result.data);
               
               // Invalidate conversations list to refresh sidebar
@@ -237,12 +215,9 @@ export const Chat = () => {
               attemptRefetch();
             }
           } catch (error) {
-            console.error('❌ [Chat] Error refetching conversation:', error);
             retryCountRef.current++;
             if (retryCountRef.current < maxRetries) {
               attemptRefetch();
-            } else {
-              console.error('❌ [Chat] Failed to get/create conversation after all retries');
             }
           }
         }, delay);

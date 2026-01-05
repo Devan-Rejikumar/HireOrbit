@@ -24,11 +24,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role'],
 }));
 
-// Body parsing middleware - skip for multipart/form-data (multer handles it)
+
 app.use((req, res, next) => {
   const contentType = req.headers['content-type'] || '';
   if (contentType.includes('multipart/form-data')) {
-    return next(); // Skip body parsing for multipart, multer will handle it
+    return next(); 
   }
   next();
 });
@@ -85,23 +85,16 @@ app.get('/health', (req, res) => {
 app.use(APPLICATION_ROUTES.API_BASE_PATH, applicationRoutes);
 app.use(INTERVIEW_ROUTES.API_BASE_PATH, interviewRoutes);
 
-// Debug: Log offer template routes registration
-console.log('=== OFFER TEMPLATE ROUTES DEBUG ===');
-console.log('Base path:', OFFER_TEMPLATE_ROUTES.API_BASE_PATH);
-console.log('GET template route:', OFFER_TEMPLATE_ROUTES.GET_TEMPLATE);
-console.log('Full route will be:', OFFER_TEMPLATE_ROUTES.API_BASE_PATH + OFFER_TEMPLATE_ROUTES.GET_TEMPLATE);
+
 app.use(OFFER_TEMPLATE_ROUTES.API_BASE_PATH, (req, res, next) => {
-  console.log(`[TEMPLATE MIDDLEWARE] ${req.method} ${req.originalUrl} - matched template base path`);
   next();
 }, offerTemplateRoutes);
 
 app.use(OFFER_ROUTES.API_BASE_PATH, (req, res, next) => {
-  console.log(`[OFFER MIDDLEWARE] ${req.method} ${req.originalUrl} - matched offer base path`);
   next();
 }, offerRoutes);
 app.use(ATS_ROUTES.API_BASE_PATH, atsRoutes);
 
-// Debug: Log registered routes
 logger.info(`Registered offer routes at: ${OFFER_ROUTES.API_BASE_PATH}`);
 logger.info(`  GET ${OFFER_ROUTES.GET_USER_OFFERS}`);
 logger.info(`  GET ${OFFER_ROUTES.GET_COMPANY_OFFERS}`);

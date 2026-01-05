@@ -2,7 +2,7 @@
   "name": "company-service",
   "version": "1.0.0",
   "description": "Company service for job portal microservices",
-  "main": "dist/server.js",
+  "main": "server.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=docker tsx watch src/server.ts",
     "local": "cross-env NODE_ENV=local tsx watch src/server.ts",

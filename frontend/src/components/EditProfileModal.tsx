@@ -112,12 +112,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       };
 
       await onSave(submitData);
-      toast.success('Profile updated successfully!');
       
       // Close modal; let cleanup happen in handleClose
       onClose();
     } catch (error: unknown) {
-      console.error('Save error:', error);
       const errorMessage = error && typeof error === 'object' && 'message' in error
         ? (error as { message?: string }).message
         : undefined;

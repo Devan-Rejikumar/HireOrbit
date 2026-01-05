@@ -28,32 +28,22 @@ export class StripeWebhookHandler {
   ) {}
 
   handleWebhook = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    console.log('=== WEBHOOK REQUEST RECEIVED ===');
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('Body type:', typeof req.body);
-    console.log('Body length:', req.body?.length || 0);
     
     const signature = req.headers['stripe-signature'] as string;
 
     if (!signature) {
-      console.error('Missing stripe-signature header');
       res.status(HttpStatusCode.BAD_REQUEST).json({ error: 'Missing stripe-signature header' });
       return;
     }
-    
-    console.log('Stripe signature found:', signature.substring(0, 20) + '...');
 
     let event: Stripe.Event;
 
     try {
       event = this._stripeService.constructWebhookEvent(req.body, signature);
     } catch (error) {
-      console.error('Webhook signature verification failed', error);
       res.status(HttpStatusCode.BAD_REQUEST).json({ error: 'Invalid signature' });
       return;
     }
-
-    console.log('Stripe webhook received', { type: event.type, id: event.id });
 
     try {
       switch (event.type) {
@@ -88,13 +78,11 @@ export class StripeWebhookHandler {
 
       res.status(HttpStatusCode.OK).json(buildSuccessResponse({ received: true }, 'Webhook processed'));
     } catch (error) {
-      console.error('Error processing webhook', { error, eventType: event.type });
       res.status(HttpStatusCode.INTERNAL_SERVER_ERROR).json({ error: 'Webhook processing failed' });
     }
   });
 
   private async handleSubscriptionCreated(subscription: Stripe.Subscription): Promise<void> {
-    console.log('Subscription created in Stripe', { subscriptionId: subscription.id });
     const existingSubscription = await this._subscriptionService.getSubscriptionByStripeId(subscription.id);
     
     if (existingSubscription) {
@@ -172,21 +160,12 @@ export class StripeWebhookHandler {
       let userId = metadata.userId && metadata.userId !== '' ? metadata.userId : undefined;
       let companyId = metadata.companyId && metadata.companyId !== '' ? metadata.companyId : undefined;
       let planId = metadata.planId && metadata.planId !== '' ? metadata.planId : undefined;
-
-      console.log('Creating subscription from Stripe webhook', {
-        subscriptionId: stripeSubscription.id,
-        metadata,
-        userId,
-        companyId,
-        planId,
-      });
       
       if (!planId) {
         const subscriptionItem = stripeSubscription.items.data[0];
         const priceId = subscriptionItem?.price?.id;
         
         if (priceId) {
-          console.log('Plan ID missing, attempting to find by Stripe price ID', { priceId });
        
           const allPlans = await this._subscriptionPlanRepository.findAll();
           const matchingPlan = allPlans.find(
@@ -195,7 +174,6 @@ export class StripeWebhookHandler {
           
           if (matchingPlan) {
             planId = matchingPlan.id;
-            console.log('Found plan by Stripe price ID', { planId, priceId, planName: matchingPlan.name });
           } else {
             console.error('Plan not found by Stripe price ID', { priceId });
           }
@@ -441,9 +419,6 @@ export class StripeWebhookHandler {
     let planId: string | undefined;
 
     try {
-      console.log('=== CREATING TRANSACTION FROM INVOICE ===');
-      console.log('Invoice ID:', invoice.id);
-      console.log('Status:', status);
  
       if (invoice.id) {
         const existingTransaction = await this._transactionRepository.findByStripeInvoiceId(invoice.id);
@@ -537,18 +512,6 @@ export class StripeWebhookHandler {
         billingPeriod,
         paymentDate,
       });
-
-      console.log(' Transaction created successfully from invoice', {
-        transactionId: transaction.id,
-        invoiceId: invoice.id,
-        amount,
-        status,
-        planId,
-        userId,
-        companyId,
-        paymentDate: transaction.paymentDate,
-      });
-      console.log('=== TRANSACTION CREATION COMPLETED ===');
     } catch (error: unknown) {
       const err = error as { message?: string; stack?: string };
       const errorAmount = invoiceData.amount_paid ? invoiceData.amount_paid / 100 : 0;

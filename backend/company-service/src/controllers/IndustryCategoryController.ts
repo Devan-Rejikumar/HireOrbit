@@ -13,16 +13,12 @@ export class IndustryCategoryController {
     @inject(TYPES.IIndustryCategoryService)
     private readonly _industryCategoryService: IIndustryCategoryService,
   ) {}
-
-  // Public endpoint: list active categories for company registration
   async getActiveCategories(req: Request, res: Response): Promise<void> {
     const categories = await this._industryCategoryService.getActiveCategories();
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse({ categories }, 'Industry categories retrieved successfully'),
     );
   }
-
-  // Admin endpoints
   async createCategory(req: Request, res: Response): Promise<void> {
     const validationResult = CreateIndustryCategorySchema.safeParse(req.body);
     if (!validationResult.success) {

@@ -32,7 +32,6 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
         );
         setPremiumPlan(premium || null);
       } catch (error) {
-        console.error('Error loading plans:', error);
         // If plans fail, use default pricing
         setPremiumPlan(null);
       }
@@ -51,12 +50,10 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
           // User is not authenticated or doesn't have subscription - treat as free
           setStatus(null);
         } else {
-          console.error('Error loading subscription status:', error);
           setStatus(null);
         }
       }
     } catch (error) {
-      console.error('Error loading subscription data:', error);
       setStatus(null);
     } finally {
       setLoading(false);
@@ -75,64 +72,109 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
   // Show premium success banner if on premium
   if (isPremium) {
     return (
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6 mb-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-6 w-6 text-white" />
+      <div className="relative bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border-2 border-emerald-300 rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 shadow-lg overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-20 h-20 md:w-32 md:h-32 bg-emerald-200/20 rounded-full blur-2xl md:blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-16 h-16 md:w-24 md:h-24 bg-teal-200/20 rounded-full blur-xl md:blur-2xl"></div>
+        
+        <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
+          <div className="flex items-start gap-3 md:gap-5 flex-1 w-full">
+            {/* Icon with enhanced styling */}
+            <div className="relative flex-shrink-0">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+                <span className="text-[10px] md:text-xs">⭐</span>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-green-900 mb-1">
-                You're on the <span className="text-green-700">Premium Plan</span> 🎉
+            
+            <div className="flex-1 min-w-0">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-0.5 md:py-1 bg-emerald-100 border border-emerald-300 rounded-full mb-2 md:mb-3">
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="text-[10px] md:text-xs font-semibold text-emerald-700 uppercase tracking-wide">Premium Active</span>
+              </div>
+              
+              <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
+                You're on the <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Premium Plan</span> 🎉
               </h3>
-              <p className="text-green-800 mb-2">
+              <p className="text-sm md:text-base text-gray-700 mb-3 md:mb-4 font-medium">
                 Enjoy all premium features including:
               </p>
-              <ul className="text-sm text-green-700 space-y-1 mb-3">
+              <ul className="space-y-2 md:space-y-2.5">
                 {userType === 'user' ? (
                   <>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>ATS Score Checker</strong> - Optimize your resume for job applications</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm md:text-base">ATS Score Checker</span>
+                        <span className="text-gray-600 text-xs md:text-sm"> - Optimize your resume for job applications</span>
+                      </div>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>Increased Visibility</strong> - Your profile highlighted to recruiters</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm md:text-base">Increased Visibility</span>
+                        <span className="text-gray-600 text-xs md:text-sm"> - Your profile highlighted to recruiters</span>
+                      </div>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span><strong>Premium Badge</strong> - Shows Premium status on your profile</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm md:text-base">Premium Badge</span>
+                        <span className="text-gray-600 text-xs md:text-sm"> - Shows Premium status on your profile</span>
+                      </div>
                     </li>
                   </>
                 ) : (
                   <>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>Unlimited job postings</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base">Unlimited job postings</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>Featured job listings</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base">Featured job listings</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>User profile search & ATS-filtered resumes</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base break-words">User profile search & ATS-filtered resumes</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-green-600">✓</span>
-                      <span>Advanced analytics dashboard</span>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-emerald-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base">Advanced analytics dashboard</span>
                     </li>
                   </>
                 )}
               </ul>
             </div>
           </div>
-          <div className="flex gap-3 flex-shrink-0">
+          
+          {/* Button with enhanced styling */}
+          <div className="flex-shrink-0 w-full lg:w-auto">
             <button
               onClick={() => navigate(ROUTES.SUBSCRIPTIONS_STATUS)}
-              className="px-4 py-2 bg-white border border-green-300 rounded-lg text-green-700 hover:bg-green-50 transition-colors text-sm font-medium"
+              className="w-full lg:w-auto px-4 md:px-6 py-2.5 md:py-3 bg-white border-2 border-emerald-400 rounded-lg md:rounded-xl text-emerald-700 hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-md transition-all duration-200 font-semibold text-xs md:text-sm flex items-center justify-center gap-2 group"
             >
-              Manage Plan
+              <span>Manage Plan</span>
+              <svg className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>
@@ -144,70 +186,70 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
   const planName = currentPlan?.name || 'Free';
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-blue-200 rounded-lg p-6 mb-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <Sparkles className="h-6 w-6 text-white" />
+    <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-blue-200 rounded-lg md:rounded-xl p-4 md:p-6 mb-6 shadow-sm">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
+        <div className="flex items-start gap-3 md:gap-4 flex-1 w-full">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-white" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 leading-tight">
               {isFree ? (
                 <>You're currently on the <span className="text-blue-600">{planName} Plan</span></>
               ) : (
                 <>You're on the <span className="text-blue-600">{planName} Plan</span></>
               )}
             </h3>
-            <p className="text-gray-700 mb-2">
+            <p className="text-sm md:text-base text-gray-700 mb-2">
               {userType === 'user' ? (
                 <>Upgrade to <span className="font-semibold text-purple-600">Premium</span> for just <span className="font-bold text-blue-600">₹{premiumPrice.toLocaleString('en-IN')}/month</span> and unlock:</>
               ) : (
                 <>Upgrade to <span className="font-semibold text-purple-600">Premium</span> for just <span className="font-bold text-blue-600">₹{premiumPrice.toLocaleString('en-IN')}/month</span> and unlock:</>
               )}
             </p>
-            <ul className="text-sm text-gray-600 space-y-1 mb-3">
+            <ul className="text-xs md:text-sm text-gray-600 space-y-1 mb-3">
               {userType === 'user' ? (
                 <>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span><strong>ATS Score Checker</strong> - Optimize your resume for job applications</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words"><strong>ATS Score Checker</strong> - Optimize your resume for job applications</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span><strong>Increased Visibility</strong> - Your profile highlighted to recruiters</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words"><strong>Increased Visibility</strong> - Your profile highlighted to recruiters</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span><strong>Premium Badge</strong> - Shows Premium status on your profile</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words"><strong>Premium Badge</strong> - Shows Premium status on your profile</span>
                   </li>
                 </>
               ) : (
                 <>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>Unlimited job postings</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words">Unlimited job postings</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>Featured job listings</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words">Featured job listings</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>User profile search & ATS-filtered resumes</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words">User profile search & ATS-filtered resumes</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
-                    <span>Advanced analytics dashboard</span>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">✓</span>
+                    <span className="break-words">Advanced analytics dashboard</span>
                   </li>
                 </>
               )}
             </ul>
           </div>
         </div>
-        <div className="flex gap-3 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3 flex-shrink-0 w-full lg:w-auto">
           <button
             onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium"
+            className="w-full sm:w-auto px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs md:text-sm font-medium"
           >
             View Plans
           </button>
@@ -219,9 +261,9 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
                 navigate(ROUTES.SUBSCRIPTIONS);
               }
             }}
-            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 text-sm font-semibold"
+            className="w-full sm:w-auto px-4 md:px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-xs md:text-sm font-semibold"
           >
-            <CreditCard className="h-4 w-4" />
+            <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
             Upgrade Now
           </button>
         </div>

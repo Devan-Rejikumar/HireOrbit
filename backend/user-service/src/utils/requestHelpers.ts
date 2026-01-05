@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { RequestWithUser } from '../types/express/RequestWithUser';
 import { HttpStatusCode } from '../enums/StatusCodes';
 import { Messages } from '../constants/Messages';
-import { buildErrorResponse } from 'hireorbit-shared-dto'
+import { buildErrorResponse } from 'hireorbit-shared-dto';
 import { UserRole } from '../enums/UserRole';
 
 /**

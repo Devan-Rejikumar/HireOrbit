@@ -9,7 +9,6 @@ import {
   User,
   Users,
   GraduationCap,
-  Clock,
   CreditCard,
   HelpCircle,
   Bell,
@@ -17,16 +16,13 @@ import {
   LogOut,
   Building2,
   Plus,
-  ArrowLeft,
   Calendar as CalendarIcon,
   Save,
-  Upload,
   Mail,
   Phone,
   MapPin,
   Globe,
   FileText,
-  Image as ImageIcon,
   Palette,
   Type,
   Eye as EyeIcon,
@@ -36,6 +32,7 @@ import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
 import { Logo } from '@/components/Logo';
 import api from '@/api/axios';
 import { offerTemplateService, CompanyOfferTemplate, UpdateTemplateInput, PreviewOfferData } from '@/api/offerTemplateService';
+import toast from 'react-hot-toast';
 
 interface Company {
   id: string;
@@ -96,8 +93,8 @@ const CompanySettings = () => {
         });
         setUseCustomLogo(!!templateData.logoUrl);
       }
-    } catch (error) {
-      console.error('Error fetching template:', error);
+    } catch (_error) {
+      // Silently handle error
     } finally {
       setTemplateLoading(false);
     }
@@ -120,8 +117,8 @@ const CompanySettings = () => {
       }
       
       setCompany(companyData);
-    } catch (error) {
-      console.error('Error fetching company profile:', error);
+    } catch (_error) {
+      // Silently handle error
     } finally {
       setLoading(false);
     }
@@ -140,10 +137,9 @@ const CompanySettings = () => {
       setTemplateLoading(true);
       const updatedTemplate = await offerTemplateService.updateTemplate(templateForm);
       setTemplate(updatedTemplate);
-      alert('Template saved successfully!');
-    } catch (error) {
-      console.error('Error saving template:', error);
-      alert('Failed to save template. Please try again.');
+      toast.success('Template saved successfully!');
+    } catch (_error) {
+      toast.error('Failed to save template. Please try again.');
     } finally {
       setTemplateLoading(false);
     }
@@ -152,12 +148,11 @@ const CompanySettings = () => {
   const handleLogoUpload = async (file: File) => {
     try {
       setTemplateLoading(true);
-      const logoUrl = await offerTemplateService.uploadLogo(file);
+      await offerTemplateService.uploadLogo(file);
       await fetchTemplate(); // Refresh template
-      alert('Logo uploaded successfully!');
-    } catch (error) {
-      console.error('Error uploading logo:', error);
-      alert('Failed to upload logo. Please try again.');
+      toast.success('Logo uploaded successfully!');
+    } catch (_error) {
+      toast.error('Failed to upload logo. Please try again.');
     } finally {
       setTemplateLoading(false);
     }
@@ -166,12 +161,11 @@ const CompanySettings = () => {
   const handleSignatureUpload = async (file: File) => {
     try {
       setTemplateLoading(true);
-      const signatureUrl = await offerTemplateService.uploadSignature(file);
+      await offerTemplateService.uploadSignature(file);
       await fetchTemplate(); // Refresh template
-      alert('Signature uploaded successfully!');
-    } catch (error) {
-      console.error('Error uploading signature:', error);
-      alert('Failed to upload signature. Please try again.');
+      toast.success('Signature uploaded successfully!');
+    } catch (_error) {
+      toast.error('Failed to upload signature. Please try again.');
     } finally {
       setTemplateLoading(false);
     }
@@ -194,9 +188,8 @@ const CompanySettings = () => {
       const url = URL.createObjectURL(blob);
       setPreviewPdfUrl(url);
       setShowPreview(true);
-    } catch (error) {
-      console.error('Error generating preview:', error);
-      alert('Failed to generate preview. Please try again.');
+    } catch (_error) {
+      toast.error('Failed to generate preview. Please try again.');
     } finally {
       setTemplateLoading(false);
     }
@@ -307,7 +300,7 @@ const CompanySettings = () => {
 
       <div className="flex min-h-screen">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative overflow-y-auto hide-scrollbar">
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -377,27 +370,28 @@ const CompanySettings = () => {
                 Help Center
               </a>
             </div>
-          </nav>
-          
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              {company?.logo ? (
-                <img 
-                  src={company.logo} 
-                  alt={company.companyName || 'Company logo'} 
-                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200"
-                />
-              ) : (
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Building2 className="h-4 w-4 text-purple-600" />
+            
+            {/* Company Info */}
+            <div className="mt-8">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Building2 className="h-4 w-4 text-purple-600" />
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
+                  <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
                 </div>
-              )}
-              <div>
-                <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
-                <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
               </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* Main Content */}
@@ -419,7 +413,7 @@ const CompanySettings = () => {
               
               {/* Company Profile Section */}
               <Card>
-                  <CardHeader>
+                <CardHeader>
                   <CardTitle className="flex items-center gap-3">
                     <Building2 className="h-6 w-6 text-purple-600" />
                     Company Profile

@@ -2,13 +2,7 @@ import { Application, ApplicationStatusHistory, ApplicationNotes } from '@prisma
 import { ApplicationResponse, ApplicationDetailsResponse, ApplicationStatusHistoryResponse, ApplicationNoteResponse,CompanyApplicationsResponse,UserApplicationsResponse } from '../responses/application.response';
 
 export function mapApplicationToResponse(application: Application | ApplicationResponse): ApplicationResponse {
-  // Handle both atsscore (Prisma lowercase) and atsScore (camelCase)
-  const app = application as any; // Use any to handle both field name variations
-  const atsScore = app.atsScore !== undefined 
-    ? app.atsScore 
-    : (app.atsscore !== undefined 
-      ? app.atsscore 
-      : null);
+  const app = application as Application & { atsscore?: number | null };
   
   return {
     id: app.id,
@@ -21,7 +15,7 @@ export function mapApplicationToResponse(application: Application | ApplicationR
     availability: app.availability,
     experience: app.experience,
     resumeUrl: app.resumeUrl,
-    atsScore,
+    atsScore: app.atsscore ?? null,
     appliedAt: app.appliedAt,
     updatedAt: app.updatedAt,
   };

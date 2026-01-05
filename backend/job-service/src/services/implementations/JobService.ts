@@ -30,7 +30,6 @@ export class JobService implements IJobService {
       throw new AppError(Messages.JOB.DUPLICATE_TITLE, HttpStatusCode.CONFLICT);
     }
 
-    // Ensure new jobs are automatically listed
     const job = await this._jobRepository.create({
       ...jobData,
       isListed: true,
@@ -108,14 +107,12 @@ export class JobService implements IJobService {
   }
 
   async toggleJobListing(jobId: string, companyId: string, isListed: boolean, authToken?: string): Promise<JobResponse> {
-    // Find the job
     const job = await this._jobRepository.findById(jobId);
     
     if (!job) {
       throw new AppError(Messages.JOB.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    // Verify company owns the job
     if (job.companyId !== companyId) {
       throw new AppError(
         Messages.JOB.PERMISSION_DENIED,
@@ -123,7 +120,6 @@ export class JobService implements IJobService {
       );
     }
 
-    // If listing, check subscription status
     if (isListed) {
       const subscriptionCheck = await this._subscriptionValidationService.checkSubscriptionStatus(companyId, authToken);
       if (!subscriptionCheck.isValid) {
@@ -134,7 +130,6 @@ export class JobService implements IJobService {
       }
     }
 
-    // Update listing status
     const listedAt = isListed ? new Date() : job.listedAt;
     const updatedJob = await this._jobRepository.updateListingStatus(jobId, isListed, listedAt);
     

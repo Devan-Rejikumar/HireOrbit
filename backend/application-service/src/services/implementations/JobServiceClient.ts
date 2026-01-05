@@ -3,44 +3,33 @@ import { IJobServiceClient } from '../interfaces/IJobServiceClient';
 import { JobApiResponse } from '../../types/external-api.types';
 import { logger } from '../../utils/logger';
 import { AppConfig } from '../../config/app.config';
+import { ServiceHttpClient, HttpClientConfig } from 'hireorbit-shared-dto';
 
 @injectable()
 export class JobServiceClient implements IJobServiceClient {
-  private readonly baseUrl: string;
+  private readonly httpClient: ServiceHttpClient;
 
   constructor() {
-    this.baseUrl = AppConfig.JOB_SERVICE_URL;
+    const config: HttpClientConfig = {
+      baseUrl: AppConfig.JOB_SERVICE_URL,
+      timeout: AppConfig.HTTP_CLIENT_TIMEOUT,
+      retries: 3,
+      logger: {
+        debug: (message: string, meta?: unknown) => logger.debug(message, meta),
+        info: (message: string, meta?: unknown) => logger.info(message, meta),
+        warn: (message: string, meta?: unknown) => logger.warn(message, meta),
+        error: (message: string, meta?: unknown) => logger.error(message, meta),
+      },
+    };
+    this.httpClient = new ServiceHttpClient(config);
   }
 
   async getJobById(jobId: string): Promise<JobApiResponse> {
     try {
-      const timeout = AppConfig.HTTP_CLIENT_TIMEOUT; 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      const response = await fetch(`${this.baseUrl}/api/jobs/${jobId}`, {
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        logger.warn(`JobServiceClient: Failed to fetch job ${jobId}, status: ${response.status}`);
-        return {};
-      }
-
-      const data = await response.json() as JobApiResponse;
+      const data = await this.httpClient.get<JobApiResponse>(`/api/jobs/${jobId}`);
       return data;
     } catch (error: unknown) {
-      const err = error as { name?: string };
-      if (err.name === 'AbortError') {
-        logger.error(`JobServiceClient: Request timeout for job ${jobId}`);
-      } else {
-        logger.error(`JobServiceClient: Error fetching job ${jobId}:`, error);
-      }
+      logger.error(`JobServiceClient: Error fetching job ${jobId}:`, error);
       return {};
     }
   }
@@ -55,7 +44,7 @@ export class JobServiceClient implements IJobServiceClient {
       }
       
       return null;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error(`JobServiceClient: Error fetching job deadline for ${jobId}:`, error);
       return null;
     }

@@ -140,8 +140,8 @@ services:
     env_file:
       - .env
       - ./user-service/.env.docker
-    expose:
-      - "3009"
+    ports:
+      - "3009:3009"
     depends_on:
       postgres:
         condition: service_healthy
@@ -160,8 +160,8 @@ services:
     env_file:
       - .env
       - ./company-service/.env.docker
-    expose:
-      - "3001"
+    ports:
+      - "3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -180,8 +180,8 @@ services:
     env_file:
       - .env
       - ./job-service/.env.docker
-    expose:
-      - "3002"
+    ports:
+      - "3002:3002"
     depends_on:
       postgres:
         condition: service_healthy
@@ -198,8 +198,8 @@ services:
     env_file:
       - .env
       - ./subscription-service/.env.docker
-    expose:
-      - "3005"
+    ports:
+      - "3005:3005"
     depends_on:
       postgres:
         condition: service_healthy
@@ -218,8 +218,8 @@ services:
     env_file:
       - .env
       - ./application-service/.env.docker
-    expose:
-      - "3004"
+    ports:
+      - "3004:3004"
     depends_on:
       postgres:
         condition: service_healthy

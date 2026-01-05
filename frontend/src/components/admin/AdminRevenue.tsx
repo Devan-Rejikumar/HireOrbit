@@ -19,7 +19,6 @@ import { FiDollarSign, FiUsers, FiHome, FiRefreshCw, FiTrendingUp, FiCalendar } 
 import toast from 'react-hot-toast';
 import { MESSAGES } from '@/constants/messages';
 
-// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -127,7 +126,6 @@ const AdminRevenue: React.FC = () => {
         setStatistics(response.data.statistics);
       }
     } catch (error: unknown) {
-      console.error('Error fetching revenue statistics:', error);
       toast.error(MESSAGES.ERROR.REVENUE_STATS_LOAD_FAILED, {
         duration: 4000,
       });
@@ -154,7 +152,6 @@ const AdminRevenue: React.FC = () => {
         setTransactionsPage(response.data.page);
       }
     } catch (error: unknown) {
-      console.error('Error fetching transactions:', error);
       toast.error(MESSAGES.ERROR.TRANSACTION_HISTORY_LOAD_FAILED, {
         duration: 4000,
       });
@@ -179,7 +176,6 @@ const AdminRevenue: React.FC = () => {
       await fetchStatistics();
       await fetchTransactions(1);
     } catch (error: unknown) {
-      console.error('Error syncing transactions:', error);
       toast.error(MESSAGES.ERROR.STRIPE_SYNC_FAILED, {
         duration: 4000,
       });

@@ -1,4 +1,4 @@
-import { Offer, Prisma } from '@prisma/client';
+import { Offer } from '@prisma/client';
 import { OfferStatus } from '../../enums/OfferStatus';
 import { CreateOfferInput } from '../../dto/schemas/offer.schema';
 

@@ -6,11 +6,11 @@
 // Cookie maxAge values in milliseconds (configurable via .env)
 export const CookieConfig = {
   COMPANY_ACCESS_TOKEN_MAX_AGE: parseInt(
-    process.env.COMPANY_ACCESS_TOKEN_MAX_AGE || '900000', // 15 minutes
+    process.env.COMPANY_ACCESS_TOKEN_MAX_AGE || '900000', 
     10,
   ),
   COMPANY_REFRESH_TOKEN_MAX_AGE: parseInt(
-    process.env.COMPANY_REFRESH_TOKEN_MAX_AGE || '604800000', // 7 days
+    process.env.COMPANY_REFRESH_TOKEN_MAX_AGE || '604800000', 
     10,
   ),
 } as const;

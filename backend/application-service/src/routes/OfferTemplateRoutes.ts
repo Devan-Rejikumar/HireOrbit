@@ -9,27 +9,21 @@ import { OFFER_TEMPLATE_ROUTES } from '../constants/routes';
 
 const router = Router();
 
-// Get controller with error handling
 let templateController: CompanyOfferTemplateController;
 try {
   templateController = container.get<CompanyOfferTemplateController>(TYPES.CompanyOfferTemplateController);
-  console.log('[OfferTemplateRoutes] CompanyOfferTemplateController initialized successfully');
 } catch (error) {
-  console.error('[OfferTemplateRoutes] Failed to initialize CompanyOfferTemplateController:', error);
   throw error;
 }
 
-// Apply authentication middleware to all routes
 router.use(authenticateToken);
 
-// Configure multer for image uploads (logo and signature)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit for images
+    fileSize: 5 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    // Accept image files
     const allowedMimes = [
       'image/png',
       'image/jpeg',
@@ -47,8 +41,7 @@ const upload = multer({
   },
 });
 
-// Multer error handler
-const handleMulterError = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+const handleMulterError = (err: Error, req: Request, res: Response, _next: NextFunction): void => {
   console.error('[OfferTemplateRoutes] Multer error:', err.message);
   
   if (err.message.includes('Only image files')) {
@@ -73,7 +66,6 @@ const handleMulterError = (err: Error, req: Request, res: Response, next: NextFu
   });
 };
 
-// Template management routes (company only)
 console.log('[OfferTemplateRoutes] Registering GET route:', OFFER_TEMPLATE_ROUTES.GET_TEMPLATE);
 router.get(OFFER_TEMPLATE_ROUTES.GET_TEMPLATE, (req, res, next) => {
   console.log(`[OfferTemplateRoutes] GET ${req.originalUrl} hit the template route!`);
@@ -82,22 +74,20 @@ router.get(OFFER_TEMPLATE_ROUTES.GET_TEMPLATE, (req, res, next) => {
 router.post(OFFER_TEMPLATE_ROUTES.CREATE_OR_UPDATE_TEMPLATE, asyncHandler((req: Request, res) => templateController.createOrUpdateTemplate(req, res)));
 router.put(OFFER_TEMPLATE_ROUTES.CREATE_OR_UPDATE_TEMPLATE, asyncHandler((req: Request, res) => templateController.createOrUpdateTemplate(req, res)));
 
-// File upload routes
 router.post(
   OFFER_TEMPLATE_ROUTES.UPLOAD_LOGO,
   upload.single('logo'),
   handleMulterError,
-  asyncHandler((req: Request, res) => templateController.uploadLogo(req, res))
+  asyncHandler((req: Request, res) => templateController.uploadLogo(req, res)),
 );
 
 router.post(
   OFFER_TEMPLATE_ROUTES.UPLOAD_SIGNATURE,
   upload.single('signature'),
   handleMulterError,
-  asyncHandler((req: Request, res) => templateController.uploadSignature(req, res))
+  asyncHandler((req: Request, res) => templateController.uploadSignature(req, res)),
 );
 
-// Preview route
 router.post(OFFER_TEMPLATE_ROUTES.PREVIEW_TEMPLATE, asyncHandler((req: Request, res) => templateController.previewTemplate(req, res)));
 
 export default router;

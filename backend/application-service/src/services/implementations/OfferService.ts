@@ -18,6 +18,7 @@ import { AppError } from '../../utils/errors/AppError';
 import { Messages } from '../../constants/Messages';
 import { HttpStatusCode } from '../../enums/StatusCodes';
 import { Events } from '../../constants/Events';
+import { Offer } from '@prisma/client';
 
 @injectable()
 export class OfferService implements IOfferService {
@@ -33,23 +34,19 @@ export class OfferService implements IOfferService {
   ) {}
 
   async createOffer(applicationId: string, companyId: string, data: CreateOfferInput): Promise<OfferResponse> {
-    // 1. Fetch application by ID
     const application = await this._applicationRepository.findById(applicationId);
     if (!application) {
       throw new AppError(Messages.APPLICATION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    // 2. Verify application belongs to company
     if (application.companyId !== companyId) {
       throw new AppError(Messages.VALIDATION.UNAUTHORIZED_ACCESS, HttpStatusCode.FORBIDDEN);
     }
 
-    // 3. Verify application status is ACCEPTED (SELECTED)
     if (application.status !== ApplicationStatus.ACCEPTED) {
       throw new AppError(Messages.OFFER.APPLICATION_NOT_SELECTED, HttpStatusCode.BAD_REQUEST);
     }
 
-    // 4. Check if offer already exists
     const existingOffer = await this._offerRepository.findByApplicationId(applicationId);
     if (existingOffer) {
       throw new AppError(Messages.OFFER.ALREADY_EXISTS, HttpStatusCode.BAD_REQUEST);
@@ -162,7 +159,7 @@ export class OfferService implements IOfferService {
       companyId,
       filters.page,
       filters.limit,
-      offerFilters
+      offerFilters,
     );
 
     const totalPages = Math.ceil(total / filters.limit);
@@ -306,7 +303,7 @@ export class OfferService implements IOfferService {
     return this.mapToResponse(updatedOffer);
   }
 
-  private mapToResponse(offer: any): OfferResponse {
+  private mapToResponse(offer: Offer): OfferResponse {
     return {
       id: offer.id,
       applicationId: offer.applicationId,
@@ -316,10 +313,10 @@ export class OfferService implements IOfferService {
       ctc: offer.ctc,
       joiningDate: offer.joiningDate,
       location: offer.location,
-      offerMessage: offer.offerMessage,
+      offerMessage: offer.offerMessage || undefined,
       offerExpiryDate: offer.offerExpiryDate,
       status: offer.status as OfferStatus,
-      pdfUrl: offer.pdfUrl,
+      pdfUrl: offer.pdfUrl || undefined,
       createdAt: offer.createdAt,
       updatedAt: offer.updatedAt,
     };

@@ -102,48 +102,27 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
     try {
       setError('');
       setSuccess('');
-      console.log('[LoginForm] Starting Google sign-in...');
       
       const userData = await signInWithGoogle();
-      console.log('[LoginForm] Google sign-in successful:', { 
-        isNewUser: userData.isNewUser, 
-        hasToken: !!userData.token,
-        userEmail: userData.user?.email, 
-      });
       
       // Wait a bit for the cookie to be set by the backend
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Call login which will fetch user data
       try {
-        console.log('[LoginForm] Calling login function...');
         await login('jobseeker');
-        console.log('[LoginForm] Login successful!');
         setSuccess('Successfully signed in! You can now navigate to the home page.');
         // Don't auto-navigate - let user see the success message
       } catch (loginError: unknown) {
-        console.error('[LoginForm] Login after Google signin failed:', loginError);
         const isAxiosError = loginError && typeof loginError === 'object' && 'response' in loginError;
         const axiosLoginError = isAxiosError ? (loginError as { response?: { status?: number; data?: { error?: string } }; message?: string }) : null;
-        console.error('[LoginForm] Error details:', {
-          status: axiosLoginError?.response?.status,
-          data: axiosLoginError?.response?.data,
-          message: axiosLoginError?.message,
-        });
         setError(`Failed to fetch user data: ${axiosLoginError?.response?.data?.error || axiosLoginError?.message || 'Unknown error'}`);
         // Don't auto-navigate - let user see the error
       }
       
     } catch (error: unknown) {
-      console.error('[LoginForm] Google sign-in error:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } }; message?: string; code?: string }) : null;
-      console.error('[LoginForm] Error details:', {
-        status: axiosError?.response?.status,
-        data: axiosError?.response?.data,
-        message: axiosError?.message,
-        code: axiosError?.code,
-      });
       const errorMessage = axiosError?.response?.data?.error || axiosError?.message || 'Google sign-in failed. Please try again.';
       setError(errorMessage);
       // Don't auto-navigate - let user see the error
