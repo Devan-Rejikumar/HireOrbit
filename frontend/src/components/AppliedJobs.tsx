@@ -54,7 +54,6 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
       setTotalApplications(response.data.pagination?.total || apps.length);
       setTotalPages(response.data.pagination?.totalPages || 1);
     } catch (error) {
-      console.error('Error fetching applications:', error);
       toast.error('Failed to load applications');
     } finally {
       setLoading(false);
@@ -131,7 +130,6 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
       toast.success('Application withdrawn successfully');
       fetchApplications(); 
     } catch (error) {
-      console.error('Error withdrawing application:', error);
       toast.error('Failed to withdraw application');
     }
   };

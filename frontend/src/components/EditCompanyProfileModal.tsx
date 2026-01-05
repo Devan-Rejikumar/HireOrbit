@@ -75,7 +75,6 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
         const response = await api.get<{ data: { categories: Array<{ id: string; name: string }> } }>('/industries');
         setIndustryCategories(response.data?.data?.categories || []);
       } catch (err) {
-        console.error('Failed to load industry categories', err);
         setIndustryCategories([]);
       } finally {
         setLoadingCategories(false);
@@ -192,13 +191,7 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
         ...(logoData && { logo: logoData }),
       };
 
-      console.log('Updating company profile with data:', updateData);
-      console.log('Form data before processing:', formData);
-      console.log('Description length:', formData.description?.length);
-      console.log('Description content:', formData.description);
-      
-      const response = await api.put('/company/profile', updateData);
-      console.log('Update response:', response.data);
+      await api.put('/company/profile', updateData);
       
       toast.success(MESSAGES.SUCCESS.COMPANY_PROFILE_UPDATED);
       
@@ -211,11 +204,8 @@ const EditCompanyProfileModal: React.FC<EditCompanyProfileModalProps> = ({
       onProfileUpdated();
       onClose();
     } catch (error: unknown) {
-      console.error('Error updating company profile:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string; message?: string } } }) : null;
-      console.error('Error response:', axiosError?.response);
-      console.error('Error response data:', axiosError?.response?.data);
       const errorMessage = axiosError?.response?.data?.error || axiosError?.response?.data?.message || 'Failed to update company profile';
       toast.error(errorMessage);
     } finally {

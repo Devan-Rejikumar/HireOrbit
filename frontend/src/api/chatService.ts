@@ -89,12 +89,9 @@ export const _chatService = {
     } catch (error: unknown) {
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: unknown } }) : null;
-      // Handle 404 (not found) or 500 (creation failed) as "no conversation yet"
       if (axiosError && (axiosError.response?.status === HTTP_STATUS.NOT_FOUND || axiosError.response?.status === HTTP_STATUS.INTERNAL_SERVER_ERROR)) {
-        console.warn(`⚠️ [ChatService] Conversation not found/created for ${applicationId}:`, axiosError.response?.data);
         return null;
       }
-      console.error('❌ [ChatService] Unexpected error fetching conversation:', error);
       throw error;
     }
   },

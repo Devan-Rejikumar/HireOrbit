@@ -15,19 +15,12 @@ export class JobUnlistCronService {
   async unlistExpiredJobs(): Promise<void> {
     try {
       const now = new Date();
-      
-      // Calculate date 1 calendar month ago
-      // Handle month-end edge cases (e.g., Jan 31 -> Feb 28/29)
       const oneMonthAgo = new Date(now);
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      
-      // If the day doesn't exist in the previous month (e.g., Jan 31 -> Feb 31 doesn't exist),
-      // set to the last day of the previous month
       if (oneMonthAgo.getDate() !== now.getDate()) {
-        oneMonthAgo.setDate(0); // Sets to last day of previous month
+        oneMonthAgo.setDate(0); 
       }
 
-      // Find jobs that are listed and were listed 1 calendar month or more ago
       const expiredJobs = await this.prisma.job.findMany({
         where: {
           isListed: true,
@@ -47,7 +40,6 @@ export class JobUnlistCronService {
         return;
       }
 
-      // Unlist all expired jobs
       const result = await this.prisma.job.updateMany({
         where: {
           id: {

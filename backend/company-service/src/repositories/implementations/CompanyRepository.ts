@@ -275,7 +275,7 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
     
     console.log('[CompanyRepository] Generated periods:', {
       periodCount: allPeriods.size,
-      periods: Array.from(allPeriods.entries()).slice(0, 10), // Log first 10
+      periods: Array.from(allPeriods.entries()).slice(0, 10), 
     });
     const result = Array.from(allPeriods.entries())
       .map(([date, count]) => ({ date, count }))

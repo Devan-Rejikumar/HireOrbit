@@ -6,7 +6,6 @@ export class KafkaEventService implements IEventService {
   private isProducerConnected = false;
 
   async publish<T>(event: string, data: T): Promise<void> {
-    // Ensure producer is connected before publishing
     if (!this.isProducerConnected) {
       logger.warn('Producer not connected, attempting to connect...');
       try {
@@ -28,7 +27,6 @@ export class KafkaEventService implements IEventService {
       logger.info(`Event published successfully to topic: ${event}`);
     } catch (error) {
       logger.error(`Failed to publish event to topic: ${event}`, error);
-      // Mark producer as disconnected so it can reconnect on next attempt
       this.isProducerConnected = false;
       throw error;
     }
@@ -61,7 +59,6 @@ export class KafkaEventService implements IEventService {
       logger.info('Kafka consumer connected successfully');
     } catch (error) {
       logger.error('Failed to connect Kafka consumer:', error);
-      // Don't throw - producer can still work
     }
   }
 

@@ -31,7 +31,6 @@ app.use(express.json({ limit: `${AppConfig.JSON_BODY_SIZE_LIMIT_MB}mb` }));
 app.use(express.urlencoded({ extended: true, limit: `${AppConfig.URL_ENCODED_BODY_SIZE_LIMIT_MB}mb` }));
 app.use(cookieParser());
 
-// Metrics and logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   logger.info({
@@ -72,15 +71,12 @@ app.get('/health', (req, res) => {
   res.json({ message: 'Company Service is running!' });
 });
 
-// Mount industryCategoryRoutes FIRST so /admin/industries matches before /admin/:id
-app.use('/api/company', industryCategoryRoutes); // Admin routes: /api/company/admin/industries
+app.use('/api/company', industryCategoryRoutes); 
 app.use('/api/company', companyRoutes);
 
-// Public route for industries (for company registration)
 const industryCategoryController = container.get<IndustryCategoryController>(TYPES.IndustryCategoryController);
 app.get('/api/industries', asyncHandler((req, res) => industryCategoryController.getActiveCategories(req, res)));
 
-// Global error handler (must be last)
 app.use(ErrorHandler);
 
 export default app; 

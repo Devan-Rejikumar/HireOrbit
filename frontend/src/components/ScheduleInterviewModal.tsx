@@ -87,9 +87,12 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
     setSelectedDate(date);
     if (selectedTime) {
       const [hours, minutes] = selectedTime.split(':');
-      const newDateTime = new Date(date);
-      newDateTime.setHours(parseInt(hours), parseInt(minutes));
-      setFormData(prev => ({ ...prev, scheduledAt: newDateTime.toISOString().slice(0, 16) }));
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      // Store as local datetime string (YYYY-MM-DDTHH:mm) - no timezone conversion
+      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+      setFormData(prev => ({ ...prev, scheduledAt: localDateTime }));
     }
   };
 
@@ -97,9 +100,12 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
     setSelectedTime(time);
     if (selectedDate) {
       const [hours, minutes] = time.split(':');
-      const newDateTime = new Date(selectedDate);
-      newDateTime.setHours(parseInt(hours), parseInt(minutes));
-      setFormData(prev => ({ ...prev, scheduledAt: newDateTime.toISOString().slice(0, 16) }));
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      // Store as local datetime string (YYYY-MM-DDTHH:mm) - no timezone conversion
+      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+      setFormData(prev => ({ ...prev, scheduledAt: localDateTime }));
     }
   };
 
@@ -169,9 +175,15 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
       setSubmitting(true);
       setError('');
 
+      // Convert local datetime to UTC ISO string
+      // formData.scheduledAt is in format "YYYY-MM-DDTHH:mm" (local time, no timezone)
+      // We need to treat it as local time and convert to UTC
+      const localDate = new Date(formData.scheduledAt);
+      const utcISOString = localDate.toISOString();
+
       const interviewData: CreateInterviewData = {
         applicationId,
-        scheduledAt: new Date(formData.scheduledAt).toISOString(),
+        scheduledAt: utcISOString,
         duration: formData.duration,
         type: formData.type,
         location: formData.type === 'OFFLINE' ? formData.location : undefined,
@@ -197,7 +209,6 @@ const ScheduleInterviewModal: React.FC<ScheduleInterviewModalProps> = ({
       setSelectedTime('');
       setCurrentMonth(new Date());
     } catch (err: unknown) {
-      console.error('Failed to schedule interview:', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
       setError(axiosError?.response?.data?.message || 'Failed to schedule interview. Please try again.');

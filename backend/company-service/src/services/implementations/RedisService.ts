@@ -22,27 +22,26 @@ export class RedisService {
     });
 
     this._redis.on('connect', () => {
-      console.log('✅ Connected to Redis (Company Service)');
+      console.log(' Connected to Redis (Company Service)');
     });
   }
 
   async storeOTP(email: string, otp: string, expiresIn: number = OTP_EXPIRY_SECONDS): Promise<void> {
     const key = `company_otp:${email}`;
     await this._redis.setex(key, expiresIn, otp);
-    console.log(`[Redis] Stored company OTP for ${email}, expires in ${expiresIn}s`);
+   
   }
 
   async getOTP(email: string): Promise<string | null> {
     const key = `company_otp:${email}`;
     const otp = await this._redis.get(key);
-    console.log(`[Redis] Retrieved company OTP for ${email}: ${otp ? 'FOUND' : 'NOT FOUND'}`);
     return otp;
   }
 
   async deleteOTP(email: string): Promise<void> {
     const key = `company_otp:${email}`;
     await this._redis.del(key);
-    console.log(`[Redis] Deleted company OTP for ${email}`);
+    
   }
 
   async hasOTP(email: string): Promise<boolean> {
@@ -61,7 +60,6 @@ export class RedisService {
       const count = await this._redis.get(`company:${companyId}:jobCount`);
       return count ? parseInt(count) : 0;
     } catch (error) {
-      console.error('Error getting job count from Redis:', error);
       return 0;
     }
   }

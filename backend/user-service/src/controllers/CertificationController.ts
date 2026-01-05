@@ -45,7 +45,6 @@ export class CertificationController {
     }
 
     const updates = req.body;
-    console.log('CERTIFICATION-CONTROLLER Received update data:', JSON.stringify(updates, null, 2));
     const result = await this._certificationService.updateCertification(userId, certificationId, updates);
     
     res.status(HttpStatusCode.OK).json(

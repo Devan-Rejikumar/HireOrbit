@@ -57,7 +57,7 @@ export const offerService = {
   createOffer: async (applicationId: string, offerData: CreateOfferInput): Promise<OfferResponse> => {
     const response = await api.post<OfferResponse>(
       `/applications/${applicationId}/offer`,
-      offerData
+      offerData,
     );
     return response.data;
   },
@@ -69,7 +69,7 @@ export const offerService = {
     if (status) params.append('status', status);
 
     const response = await api.get<PaginatedOfferResponse>(
-      `/offers/users/me/offers?${params.toString()}`
+      `/offers/users/me/offers?${params.toString()}`,
     );
     return response.data;
   },
@@ -82,7 +82,7 @@ export const offerService = {
     if (search) params.append('search', search);
 
     const response = await api.get<PaginatedOfferResponse>(
-      `/offers/companies/me/offers?${params.toString()}`
+      `/offers/companies/me/offers?${params.toString()}`,
     );
     return response.data;
   },
@@ -106,7 +106,7 @@ export const offerService = {
     const response = await api.get(`/offers/${offerId}/pdf`, {
       responseType: 'blob',
     });
-    return response.data;
+    return response.data as Blob;
   },
 };
 

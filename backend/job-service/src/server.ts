@@ -8,8 +8,6 @@ import { JobUnlistCronService } from './services/implementations/JobUnlistCronSe
 
 const PORT = parseInt(AppConfig.PORT, 10);
 
-// Initialize cron job for auto-unlisting expired jobs
-// Runs daily at midnight (00:00)
 const jobUnlistCronService = container.get<JobUnlistCronService>(TYPES.JobUnlistCronService);
 
 cron.schedule('0 0 * * *', async () => {

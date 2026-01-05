@@ -1,4 +1,4 @@
-import "dotenv-flow/config";
+import 'dotenv-flow/config';
 
 export const AppConfig = {
 
@@ -18,7 +18,7 @@ export const AppConfig = {
   APPLICATION_SERVICE_URL: process.env.APPLICATION_SERVICE_URL || 'http://localhost:3004',
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
   SMTP_PORT: parseInt(process.env.SMTP_PORT || '587'),
-  SMTP_FROM: process.env.SMTP_FROM || '"Job Portal" <no-reply@jobportal.com>',
+  SMTP_FROM: process.env.SMTP_FROM ,
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'localhost',
   LOKI_HOST: process.env.LOKI_HOST || 'http://localhost:3100',
   OTP_MIN_VALUE: parseInt(process.env.OTP_MIN_VALUE || '100000'),

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, memo } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 // import JobCategories from '@/components/JobCategories';
@@ -18,9 +18,7 @@ const ComponentLoader = () => (
   </div>
 );
 
-const Index = () => {
-  console.log('Rendering job portal landing page');
-  
+const Index = memo(() => {
   return (
     <div className="min-h-screen">
       <Header />
@@ -52,6 +50,8 @@ const Index = () => {
       <Footer />
     </div>
   );
-};
+});
+
+Index.displayName = 'Index';
 
 export default Index;

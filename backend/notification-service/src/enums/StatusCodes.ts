@@ -8,7 +8,6 @@ export enum StatusCodes {
   INTERNAL_SERVER_ERROR = 500
 }
 
-// Alias for consistency with other services
 export const HttpStatusCode = StatusCodes;
 
 export enum ErrorMessages {

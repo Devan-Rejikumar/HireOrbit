@@ -15,6 +15,7 @@ interface JobApplicationModalProps {
   jobTitle: string;
   companyName: string;
   companyId?: string;
+  applicationDeadline?: string;
   onApplicationSubmit: (applicationData: ApplicationData) => void;
 }
 
@@ -42,6 +43,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
   jobTitle,
   companyName,
   companyId,
+  applicationDeadline,
   onApplicationSubmit,
 }) => {
   const [formData, setFormData] = useState<ApplicationData>({
@@ -100,6 +102,16 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
+
+    // Check if application deadline has passed
+    if (applicationDeadline) {
+      const deadline = new Date(applicationDeadline);
+      const now = new Date();
+      if (deadline < now) {
+        toast.error('Application deadline has passed. This job is no longer accepting applications.');
+        return false;
+      }
+    }
 
     if (!formData.coverLetter.trim()) {
       newErrors.coverLetter = 'Cover letter is required';
@@ -173,7 +185,6 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
       // Use the application service
       const result: ApplicationResponse = await _applicationService.applyForJob(applicationData);
-      console.log('Application submitted successfully:', result);
       
       // Call the callback to notify parent component
       onApplicationSubmit({
@@ -188,12 +199,21 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       toast.success(MESSAGES.SUCCESS.APPLICATION_SUBMITTED);
       onClose();
     } catch (error: unknown) {
-      console.error('Application submission error:', error);
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : typeof error === 'object' && error !== null && 'message' in error
-          ? String((error as { message: unknown }).message)
-          : 'Failed to submit application. Please try again.';
+      let errorMessage = 'Failed to submit application. Please try again.';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string }; status?: number } };
+        if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        } else if (axiosError.response?.status === 400) {
+          errorMessage = 'Application deadline has passed or invalid application data.';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String((error as { message: unknown }).message);
+      }
+      
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);

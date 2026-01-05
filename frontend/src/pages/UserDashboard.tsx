@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
@@ -22,7 +22,6 @@ import {
   Clock,
   Eye,
   FileText,
-  Filter,
 } from 'lucide-react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
@@ -67,6 +66,15 @@ ChartJS.register(
 type DateRange = '30days' | '3months' | '6months' | '1year' | 'all';
 type StatusFilter = 'all' | 'PENDING' | 'REVIEWING' | 'SHORTLISTED' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
 
+type SidebarItem = {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  path: string | null;
+  badge?: number;
+  premium?: boolean;
+};
+
 const UserDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -90,131 +98,6 @@ const UserDashboard = () => {
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(user?.id || null);
 
-  useEffect(() => {
-    loadSubscriptionStatus();
-    if (activeSection === 'overview') {
-      loadDashboardStats();
-      if (isPremium) {
-        loadPremiumDashboardData();
-      }
-    }
-  }, [activeSection, user?.id, isPremium]);
-
-  const loadDashboardStats = async () => {
-    if (!user?.id) return;
-    
-    setLoadingStats(true);
-    try {
-      // Load all stats in parallel
-      await Promise.all([
-        loadProfileCompletion(),
-        loadUpcomingInterviews(),
-      ]);
-    } catch (error) {
-      console.error('Error loading dashboard stats:', error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  const loadProfileCompletion = async () => {
-    try {
-      interface ProfileCompletionResponse {
-        success: boolean;
-        data: {
-          profile: Record<string, unknown>;
-          user: User;
-          completionPercentage: number;
-        };
-        message: string;
-      }
-      const response = await api.get<ProfileCompletionResponse>('/profile/full');
-      
-      if (response.data.data?.completionPercentage !== undefined) {
-        setProfileCompletion(response.data.data.completionPercentage);
-      }
-    } catch (error) {
-      console.error('Error loading profile completion:', error);
-      setProfileCompletion(0);
-    }
-  };
-
-  const loadUpcomingInterviews = async () => {
-    try {
-      const response = await _interviewService.getCandidateInterviews(1, 100); // Get all interviews
-      const interviews = response.data?.interviews || response.data || [];
-      
-      // Filter for upcoming interviews (future date, not cancelled or completed)
-      const upcoming = interviews.filter((interview: InterviewWithDetails) => {
-        const interviewDate = new Date(interview.scheduledAt);
-        const now = new Date();
-        return interviewDate > now && 
-               interview.status !== 'CANCELLED' && 
-               interview.status !== 'COMPLETED';
-      });
-      
-      setUpcomingInterviewsCount(upcoming.length);
-    } catch (error) {
-      console.error('Error loading upcoming interviews:', error);
-      setUpcomingInterviewsCount(0);
-    }
-  };
-
-  const loadPremiumDashboardData = async () => {
-    if (!user?.id || !isPremium) return;
-    
-    setLoadingPremiumData(true);
-    try {
-      await Promise.all([
-        loadPremiumApplications(),
-        loadPremiumInterviews(),
-      ]);
-    } catch (error) {
-      console.error('Error loading premium dashboard data:', error);
-    } finally {
-      setLoadingPremiumData(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadDashboardStats();
-    if (isPremium) {
-      await loadPremiumDashboardData();
-    }
-    setRefreshing(false);
-    toast.success('Dashboard refreshed');
-  };
-
-  const loadPremiumApplications = async () => {
-    try {
-      const response = await _applicationService.getUserApplications(1, 1000);
-      let apps = response.data.applications || [];
-      
-      // Filter by date range
-      const filterDate = getFilterDate(dateRange);
-      if (filterDate) {
-        apps = apps.filter(app => new Date(app.appliedAt) >= filterDate);
-      }
-      
-      setPremiumApplications(apps);
-    } catch (error) {
-      console.error('Error loading premium applications:', error);
-      setPremiumApplications([]);
-    }
-  };
-
-  const loadPremiumInterviews = async () => {
-    try {
-      const response = await _interviewService.getCandidateInterviews(1, 1000);
-      const interviewsList = response.data?.interviews || response.data || [];
-      setPremiumInterviews(interviewsList);
-    } catch (error) {
-      console.error('Error loading premium interviews:', error);
-      setPremiumInterviews([]);
-    }
-  };
-
   const getFilterDate = (range: DateRange): Date | null => {
     const now = new Date();
     switch (range) {
@@ -231,7 +114,108 @@ const UserDashboard = () => {
     }
   };
 
-  const loadSubscriptionStatus = async () => {
+  const loadProfileCompletion = useCallback(async () => {
+    try {
+      interface ProfileCompletionResponse {
+        success: boolean;
+        data: {
+          profile: Record<string, unknown>;
+          user: User;
+          completionPercentage: number;
+        };
+        message: string;
+      }
+      const response = await api.get<ProfileCompletionResponse>('/profile/full');
+      
+      if (response.data.data?.completionPercentage !== undefined) {
+        setProfileCompletion(response.data.data.completionPercentage);
+      }
+    } catch (_error) {
+      setProfileCompletion(0);
+    }
+  }, []);
+
+  const loadUpcomingInterviews = useCallback(async () => {
+    try {
+      const response = await _interviewService.getCandidateInterviews(1, 100); // Get all interviews
+      const interviews = response.data?.interviews || response.data || [];
+      
+      // Filter for upcoming interviews (future date, not cancelled or completed)
+      const upcoming = interviews.filter((interview: InterviewWithDetails) => {
+        const interviewDate = new Date(interview.scheduledAt);
+        const now = new Date();
+        return interviewDate > now && 
+               interview.status !== 'CANCELLED' && 
+               interview.status !== 'COMPLETED';
+      });
+      
+      setUpcomingInterviewsCount(upcoming.length);
+    } catch (_error) {
+      setUpcomingInterviewsCount(0);
+    }
+  }, []);
+
+  const loadDashboardStats = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setLoadingStats(true);
+    try {
+      // Load all stats in parallel
+      await Promise.all([
+        loadProfileCompletion(),
+        loadUpcomingInterviews(),
+      ]);
+    } catch (_error) {
+      // Silently handle error
+    } finally {
+      setLoadingStats(false);
+    }
+  }, [user?.id, loadProfileCompletion, loadUpcomingInterviews]);
+
+  const loadPremiumApplications = useCallback(async () => {
+    try {
+      const response = await _applicationService.getUserApplications(1, 1000);
+      let apps = response.data.applications || [];
+      
+      // Filter by date range
+      const filterDate = getFilterDate(dateRange);
+      if (filterDate) {
+        apps = apps.filter(app => new Date(app.appliedAt) >= filterDate);
+      }
+      
+      setPremiumApplications(apps);
+    } catch (_error) {
+      setPremiumApplications([]);
+    }
+  }, [dateRange]);
+
+  const loadPremiumInterviews = useCallback(async () => {
+    try {
+      const response = await _interviewService.getCandidateInterviews(1, 1000);
+      const interviewsList = response.data?.interviews || response.data || [];
+      setPremiumInterviews(interviewsList);
+    } catch (_error) {
+      setPremiumInterviews([]);
+    }
+  }, []);
+
+  const loadPremiumDashboardData = useCallback(async () => {
+    if (!user?.id || !isPremium) return;
+    
+    setLoadingPremiumData(true);
+    try {
+      await Promise.all([
+        loadPremiumApplications(),
+        loadPremiumInterviews(),
+      ]);
+    } catch (_error) {
+      // Silently handle error
+    } finally {
+      setLoadingPremiumData(false);
+    }
+  }, [user?.id, isPremium, loadPremiumApplications, loadPremiumInterviews]);
+
+  const loadSubscriptionStatus = useCallback(async () => {
     try {
       const response = await subscriptionService.getSubscriptionStatus();
       setSubscriptionStatus(response.data);
@@ -243,13 +227,29 @@ const UserDashboard = () => {
       if (premium && activeSection === 'overview') {
         loadPremiumDashboardData();
       }
-    } catch (error: unknown) {
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
-      if (axiosError && (axiosError.response?.status === 401 || axiosError.response?.status === 403)) {
-        setIsPremium(false);
+    } catch (_error: unknown) {
+      setIsPremium(false);
+    }
+  }, [activeSection, loadPremiumDashboardData]);
+
+  useEffect(() => {
+    loadSubscriptionStatus();
+    if (activeSection === 'overview') {
+      loadDashboardStats();
+      if (isPremium) {
+        loadPremiumDashboardData();
       }
     }
+  }, [activeSection, user?.id, isPremium, loadDashboardStats, loadPremiumDashboardData, loadSubscriptionStatus]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardStats();
+    if (isPremium) {
+      await loadPremiumDashboardData();
+    }
+    setRefreshing(false);
+    toast.success('Dashboard refreshed');
   };
 
   const handleLogout = async () => {
@@ -257,13 +257,21 @@ const UserDashboard = () => {
     navigate(ROUTES.HOME, { replace: true });
   };
 
-  const sidebarItems = [
+  const messagesItem: SidebarItem = {
+    id: 'messages',
+    label: 'Messages',
+    icon: MessageSquare,
+    path: '/messages',
+    ...(totalUnreadMessages > 0 ? { badge: totalUnreadMessages } : {}),
+  };
+
+  const sidebarItems: SidebarItem[] = [
     { id: 'overview', label: 'Overview', icon: Home, path: null },
     { id: 'profile', label: 'Profile', icon: UserIcon, path: '/profile' },
     { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/applied-jobs' },
     { id: 'offers', label: 'My Offers', icon: FileText, path: '/user/offers' },
     { id: 'schedule', label: 'My Schedule', icon: Calendar, path: '/schedule' },
-    { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', ...(totalUnreadMessages > 0 ? { badge: totalUnreadMessages } : {}) },
+    messagesItem,
     ...(isPremium ? [{ id: 'ats-checker', label: 'ATS Score Checker', icon: FileCheck, path: '/ats-checker', premium: true }] : []),
     { id: 'password', label: 'Change Password', icon: Lock, path: null },
   ];
@@ -388,7 +396,7 @@ const UserDashboard = () => {
     }
   };
 
-  const handleSidebarClick = (item: typeof sidebarItems[0]) => {
+  const handleSidebarClick = (item: SidebarItem) => {
     if (item.path) {
       navigate(item.path);
     } else if (item.id === 'password') {
@@ -418,14 +426,14 @@ const UserDashboard = () => {
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [activeSection, user?.id, isPremium]);
+  }, [activeSection, user?.id, isPremium, loadDashboardStats, loadPremiumDashboardData]);
 
   // Reload premium data when date range changes
   useEffect(() => {
     if (isPremium && activeSection === 'overview') {
       loadPremiumApplications();
     }
-  }, [dateRange, isPremium, activeSection]);
+  }, [dateRange, isPremium, activeSection, loadPremiumApplications]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -489,7 +497,7 @@ const UserDashboard = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 sticky top-[73px] self-start h-[calc(100vh-73px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -528,22 +536,22 @@ const UserDashboard = () => {
                 Settings
               </button>
             </div>
-          </nav>
-          
-          {/* User Info at Bottom */}
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-300">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
-                <span className="text-white font-semibold">
-                  {user?.username?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
-                <div className="text-xs text-blue-600 truncate">{user?.email || 'email@example.com'}</div>
+            
+            {/* User Info */}
+            <div className="mt-8">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-300">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-white font-semibold">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">{user?.username || 'User'}</div>
+                  <div className="text-xs text-blue-600 truncate">{user?.email || 'email@example.com'}</div>
+                </div>
               </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* Main Content */}

@@ -173,7 +173,5 @@ export class NotificationService implements INotificationService {
       },
       timestamp: new Date().toISOString(),
     });
-  
-    console.log('Interview decision notification created and sent via WebSocket:', notification.id);
   }
 }

@@ -40,61 +40,43 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
   };
 
   const validateForm = () => {
-    console.log('🔍 [Validation] Starting validation with data:', formData);
-
     if (!formData.currentPassword) {
-      console.log('❌ [Validation] Current password is missing');
       toast.error(MESSAGES.VALIDATION.CURRENT_PASSWORD_REQUIRED);
       return false;
     }
     if (!formData.newPassword) {
-      console.log('❌ [Validation] New password is missing');
       toast.error(MESSAGES.VALIDATION.NEW_PASSWORD_REQUIRED);
       return false;
     }
     if (formData.newPassword.length < 8) {
-      console.log('❌ [Validation] New password too short:', formData.newPassword.length);
       toast.error(MESSAGES.VALIDATION.PASSWORD_MIN_LENGTH);
       return false;
     }
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.newPassword)) {
-      console.log('❌ [Validation] New password does not meet complexity requirements');
       toast.error(MESSAGES.VALIDATION.PASSWORD_COMPLEXITY);
       return false;
     }
     if (formData.newPassword !== formData.confirmPassword) {
-      console.log('❌ [Validation] Passwords do not match:', {
-        newPassword: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
-      });
       toast.error(MESSAGES.VALIDATION.PASSWORD_MISMATCH);
       return false;
     }
     if (formData.currentPassword === formData.newPassword) {
-      console.log('❌ [Validation] New password same as current password');
       toast.error(MESSAGES.VALIDATION.PASSWORD_SAME_AS_CURRENT);
       return false;
     }
-    console.log('✅ [Validation] All validations passed!');
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 Form submitted with data:', formData);
-    console.log('🚀 Event:', e);
     
     if (!validateForm()) {
-      console.log('❌ Form validation failed');
       return;
     }
 
-    console.log('✅ Form validation passed, calling API...');
     setIsLoading(true);
     try {
-      console.log('📞 Calling userService.changePassword...');
-      const result = await userService.changePassword(formData.currentPassword, formData.newPassword);
-      console.log('✅ Change password API response:', result);
+      await userService.changePassword(formData.currentPassword, formData.newPassword);
       
       toast.success(`${MESSAGES.SUCCESS.PASSWORD_CHANGED} ${MESSAGES.SUCCESS.LOGIN_REQUIRED}`);
       
@@ -114,14 +96,8 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
       }, 2000);
       
     } catch (error: unknown) {
-      console.error(' Error changing password:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { message?: string; response?: { data?: unknown; status?: number } }) : null;
-      console.error(' Error details:', {
-        message: axiosError?.message,
-        response: axiosError?.response?.data,
-        status: axiosError?.response?.status,
-      });
       const errorMessage = axiosError?.response?.data && typeof axiosError.response.data === 'object' && 'message' in axiosError.response.data
         ? (axiosError.response.data as { message?: string }).message
         : undefined;
@@ -265,10 +241,6 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 onClick={(e) => {
-                  console.log('🔥 Save Password button clicked!');
-                  console.log('🔥 Form data:', formData);
-                  console.log('🔥 Is loading:', isLoading);
-                  console.log('🔥 Event:', e);
                   // Manually trigger form submission
                   handleSubmit(e as React.FormEvent<HTMLButtonElement>);
                 }}

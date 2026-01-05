@@ -32,7 +32,6 @@ export const SubscriptionStatusBadge = ({ userType, className = '' }: Subscripti
         // User is not authenticated or doesn't have subscription - treat as free
         setStatus({ subscription: null, isActive: false, plan: null, features: [] });
       } else {
-        console.error('Error loading subscription status:', error);
         setStatus({ subscription: null, isActive: false, plan: null, features: [] });
       }
     } finally {

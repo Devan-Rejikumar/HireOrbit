@@ -1,5 +1,4 @@
 import "dotenv-flow/config";
-// dotenv.config();
 interface EnvConfig {
   PORT: number;
   NODE_ENV: string;

@@ -33,6 +33,7 @@ import { IUserServiceClient } from '../interfaces/IUserServiceClient';
 import { IJobServiceClient } from '../interfaces/IJobServiceClient';
 import { IATSService } from '../interfaces/IATSService';
 import axios from 'axios';
+import { Application } from '@prisma/client';
 
 @injectable()
 export class ApplicationService implements IApplicationService {
@@ -53,8 +54,6 @@ export class ApplicationService implements IApplicationService {
     }
 
     const application = await this._applicationRepository.create(data);
-    
-    // Calculate ATS score asynchronously (don't block response)
     this.calculateAndStoreATSScore(application.id, data.jobId, data.resumeUrl, resumeBuffer, resumeMimeType).catch(error => {
       logger.error('Failed to calculate ATS score for application:', {
         applicationId: application.id,
@@ -96,7 +95,6 @@ export class ApplicationService implements IApplicationService {
         resumeMimeType: resumeMimeType || 'none',
       });
 
-      // Fetch job description
       logger.info('Fetching job description', { jobId });
       const jobData = await this._jobServiceClient.getJobById(jobId);
       logger.info('Job data fetched', { 
@@ -107,8 +105,6 @@ export class ApplicationService implements IApplicationService {
       });
       
       const jobDescriptionRaw = jobData.data?.job?.description || jobData.job?.description;
-      
-      // Ensure jobDescription is a string
       const jobDescription = typeof jobDescriptionRaw === 'string' ? jobDescriptionRaw : String(jobDescriptionRaw || '');
       
       if (!jobDescription || jobDescription.trim().length === 0) {
@@ -124,8 +120,6 @@ export class ApplicationService implements IApplicationService {
         jobId,
         descriptionLength: jobDescription.length,
       });
-
-      // Get resume text
       let resumeText: string;
       
       if (resumeBuffer && resumeMimeType) {
@@ -134,7 +128,6 @@ export class ApplicationService implements IApplicationService {
           bufferSize: resumeBuffer.length,
           mimeType: resumeMimeType,
         });
-        // Parse from buffer if available - use ResumeParserService
         try {
           const parseResult = await this._resumeParser.parseResume(resumeBuffer, resumeMimeType);
           resumeText = parseResult.text;
@@ -158,7 +151,6 @@ export class ApplicationService implements IApplicationService {
           applicationId,
           resumeUrl,
         });
-        // Fetch from Cloudinary URL
         try {
           const response = await axios.get(resumeUrl, { responseType: 'arraybuffer' });
           const buffer = Buffer.from(response.data);
@@ -168,7 +160,7 @@ export class ApplicationService implements IApplicationService {
             bufferSize: buffer.length,
             mimeType,
           });
-          // Use ResumeParserService for parsing
+   
           const parseResult = await this._resumeParser.parseResume(buffer, mimeType);
           resumeText = parseResult.text;
           logger.info('Resume parsed from URL', {
@@ -193,27 +185,24 @@ export class ApplicationService implements IApplicationService {
         });
         return;
       }
-
-      // Calculate ATS score
       logger.info('Calculating ATS score with GROQ', {
         applicationId,
         resumeTextLength: resumeText.length,
         jobDescriptionLength: jobDescription.length,
       });
       
-      const atsScore = await this._atsService.calculateATSScore(resumeText, jobDescription);
+      const atsscore = await this._atsService.calculateATSScore(resumeText, jobDescription);
       
       logger.info('ATS score calculated', {
         applicationId,
-        atsScore,
+        atsscore,
       });
       
-              // Update application with ATS score (use atsscore for Prisma)
-              await this._applicationRepository.update(applicationId, { atsscore: atsScore } as any);
+      await this._applicationRepository.update(applicationId, { atsscore } as Partial<Application>);
       
       logger.info('ATS score calculated and stored successfully', {
         applicationId,
-        atsScore,
+        atsscore,
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -231,7 +220,6 @@ export class ApplicationService implements IApplicationService {
         errorStack,
         fullError: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : 'No error object',
       });
-      // Don't throw - this is a background operation
     }
   }
 

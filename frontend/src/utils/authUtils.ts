@@ -41,7 +41,7 @@ export const getUserInfoFromToken = () => {
       userId = payload.userId || payload.id || '';
       userEmail = payload.email || '';
     } catch (error) {
-      console.error('Error decoding token:', error);
+      // Silently handle error
     }
   }
 

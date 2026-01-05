@@ -12,8 +12,6 @@ import AdminAuthProtected from './components/AdminAuthProtected';
 import LoadingScreen from './components/LoadingScreen';
 import { useLoadingState } from './hooks/useLoadingState';
 import { ROUTES } from './constants/routes';
-
-// Keep critical routes non-lazy for faster initial load
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import Index from './pages/Index';
@@ -23,7 +21,6 @@ import Companies from './pages/Companies';
 import NotFound from './pages/404Page';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
-// Lazy load heavy/less-frequently-used routes
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const AdminAuth = lazy(() => import('./components/AdminAuth'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));

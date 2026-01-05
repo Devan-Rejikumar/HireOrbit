@@ -24,15 +24,11 @@ export class CompanyAuthController {
     }
     
     const { email, password, companyName, logo } = validationResult.data;
-    
-    // Handle logo upload to Cloudinary if provided
+
     let logoUrl: string | undefined = undefined;
     if (logo && typeof logo === 'string' && logo.startsWith('data:image/')) {
-      console.log('[CompanyAuthController] Processing logo upload to Cloudinary during registration...');
       try {
-        // Ensure Cloudinary is configured
         if (!configureCloudinary()) {
-          console.error('[CompanyAuthController] Cloudinary configuration missing');
           throw new AppError('Cloudinary configuration is missing. Please check environment variables.', HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
 
@@ -40,20 +36,17 @@ export class CompanyAuthController {
           folder: 'company-logos',
           transformation: [
             { width: 500, height: 500, crop: 'limit' },
-            { quality: 'auto' }
+            { quality: 'auto' },
           ],
-          resource_type: 'image'
+          resource_type: 'image',
         });
         
         if (!result || !result.secure_url) {
-          console.error('[CompanyAuthController] Cloudinary upload returned invalid result:', result);
           throw new AppError('Invalid response from Cloudinary', HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
         
         logoUrl = result.secure_url;
-        console.log('[CompanyAuthController] Cloudinary upload successful:', result.secure_url);
       } catch (cloudinaryError: unknown) {
-        console.error('[CompanyAuthController] Cloudinary upload error:', cloudinaryError);
         const errorMessage = cloudinaryError instanceof Error 
           ? cloudinaryError.message 
           : typeof cloudinaryError === 'object' && cloudinaryError !== null && 'message' in cloudinaryError

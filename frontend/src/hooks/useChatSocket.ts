@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
-import { MessageResponse } from '@/api/chatService';
+import { MessageResponse, ConversationResponse } from '@/api/chatService';
 import { ENV } from '../config/env';
 
 export interface TypingData {
@@ -70,13 +70,21 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
         return exists ? oldData : [...oldData, message];
       });
       
-      // Invalidate conversations list (needed for last message update)
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      // Update conversations list directly (without refetch to prevent reloads)
+      queryClient.setQueryData(['conversations'], (oldData: ConversationResponse[] | undefined) => {
+        if (!oldData || !Array.isArray(oldData)) return oldData;
+        // Update the conversation's last message
+        return oldData.map(conv => 
+          conv.id === message.conversationId 
+            ? { ...conv, lastMessage: message, lastMessageAt: message.createdAt }
+            : conv,
+        );
+      });
       
-      // Only invalidate unread counts if message is not from current user
+      // Only invalidate unread counts if message is not from current user (without refetch)
       if (message.senderId !== currentUserId) {
-        queryClient.invalidateQueries({ queryKey: ['total-unread-count'] });
-        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'] });
+        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'none' });
+        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'none' });
       }
     });
 
@@ -107,8 +115,7 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
       }));
     });
 
-    newSocket.on('message-error', (error: { error: string; details?: string }) => {
-      console.error('Chat error:', error);
+    newSocket.on('message-error', () => {
     });
 
     setSocket(newSocket);

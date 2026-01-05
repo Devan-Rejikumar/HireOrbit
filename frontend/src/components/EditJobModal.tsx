@@ -84,12 +84,10 @@ const EditJobModal: React.FC<EditJobModalProps> = ({
             const date = new Date(job.applicationDeadline);
             // Check if date is valid
             if (isNaN(date.getTime())) {
-              console.warn('Invalid date received:', job.applicationDeadline);
               return '';
             }
             return date.toISOString().split('T')[0];
           } catch (error) {
-            console.warn('Error parsing date:', job.applicationDeadline, error);
             return '';
           }
         })() : '';

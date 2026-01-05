@@ -40,8 +40,18 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
 
   useEffect(() => {
     if (interview && isOpen) {
+      // Parse the UTC date string and convert to local datetime-local format
       const scheduledDate = new Date(interview.scheduledAt);
-      const localDateTime = new Date(scheduledDate.getTime() - scheduledDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      
+      // Get local date components
+      const year = scheduledDate.getFullYear();
+      const month = String(scheduledDate.getMonth() + 1).padStart(2, '0');
+      const day = String(scheduledDate.getDate()).padStart(2, '0');
+      const hours = String(scheduledDate.getHours()).padStart(2, '0');
+      const minutes = String(scheduledDate.getMinutes()).padStart(2, '0');
+      
+      // Format as datetime-local string (YYYY-MM-DDTHH:mm)
+      const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
       
       setFormData({
         scheduledAt: localDateTime,
@@ -72,10 +82,8 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
       return false;
     }
 
-    if (formData.type === 'ONLINE' && !formData.meetingLink.trim()) {
-      setError('Meeting link is required for online interviews');
-      return false;
-    }
+    // Meeting link is optional - WebRTC video call will be used by default
+    // Meeting link can be provided as fallback (e.g., Zoom, Google Meet)
 
     const selectedDate = new Date(formData.scheduledAt);
     const now = new Date();
@@ -96,12 +104,18 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
       setSubmitting(true);
       setError('');
 
+      // Convert local datetime to UTC ISO string
+      // formData.scheduledAt is in format "YYYY-MM-DDTHH:mm" (local time, no timezone)
+      // We need to treat it as local time and convert to UTC
+      const localDate = new Date(formData.scheduledAt);
+      const utcISOString = localDate.toISOString();
+
       const updateData: UpdateInterviewData = {
-        scheduledAt: new Date(formData.scheduledAt).toISOString(),
+        scheduledAt: utcISOString,
         duration: formData.duration,
         type: formData.type,
         location: formData.type === 'OFFLINE' ? formData.location : undefined,
-        meetingLink: formData.type === 'ONLINE' ? formData.meetingLink : undefined,
+        meetingLink: formData.type === 'ONLINE' && formData.meetingLink.trim() ? formData.meetingLink : undefined,
         notes: formData.notes || undefined,
         status: formData.status,
       };
@@ -109,7 +123,6 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
       await onSuccess(interview.id, updateData);
       onClose();
     } catch (err: unknown) {
-      console.error('Failed to update interview:', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { message?: string } } }) : null;
       setError(axiosError?.response?.data?.message || 'Failed to update interview. Please try again.');
@@ -236,21 +249,21 @@ const EditInterviewModal: React.FC<EditInterviewModalProps> = ({
               </div>
             )}
 
-            {/* Meeting Link (for online) */}
+            {/* Meeting Link (for online) - Optional */}
             {formData.type === 'ONLINE' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Video className="inline h-4 w-4 mr-1" />
-                  Meeting Link
+                  Meeting Link <span className="text-gray-500 text-xs font-normal">(Optional)</span>
                 </label>
                 <input
                   type="url"
                   value={formData.meetingLink}
                   onChange={(e) => handleInputChange('meetingLink', e.target.value)}
-                  placeholder="https://meet.google.com/..."
+                  placeholder="https://meet.google.com/... (Optional - WebRTC will be used by default)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
                 />
+                <p className="text-xs text-gray-500 mt-1">If not provided, WebRTC video call will be used by default</p>
               </div>
             )}
 

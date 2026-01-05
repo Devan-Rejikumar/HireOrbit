@@ -56,16 +56,6 @@ export const useUserProfile = (userId: string | null | undefined) => {
         const profileData = userResponse.data?.data?.profile;
         const profilePicture = profileData?.profilePicture || null;
         
-        // Debug logging - make it very visible
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('🔍 [useUserProfile] FETCHING PROFILE FOR USER:', userId);
-        console.log('🔍 [useUserProfile] Full API Response:', JSON.stringify(userResponse.data, null, 2));
-        console.log('🔍 [useUserProfile] User Data:', userData);
-        console.log('🔍 [useUserProfile] Profile Data Object:', profileData);
-        console.log('🔍 [useUserProfile] Extracted Profile Picture:', profilePicture);
-        console.log('🔍 [useUserProfile] Final profilePicture value:', profilePicture || userData.profilePicture || userData.avatar || 'NULL/UNDEFINED');
-        console.log('═══════════════════════════════════════════════════════');
-        
         // Return user data with profile picture if available
         const finalProfilePicture = profilePicture || userData.profilePicture || userData.avatar || undefined;
         
@@ -74,11 +64,8 @@ export const useUserProfile = (userId: string | null | undefined) => {
           profilePicture: finalProfilePicture,
         };
         
-        console.log('✅ [useUserProfile] Returning user data with profilePicture:', result.profilePicture);
-        
         return result;
       } catch (error) {
-        console.error('❌ [useUserProfile] Error fetching user profile:', error);
         return null;
       }
     },

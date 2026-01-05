@@ -36,8 +36,6 @@ export class SubscriptionValidationService {
         } 
       };
 
-      // Check if subscription exists and is active
-      // Free plan is still a subscription, so we check for existence and active status
       const hasSubscription = data.data?.subscription !== null && data.data?.subscription !== undefined;
       const isActive = data.data?.isActive === true;
       

@@ -42,8 +42,7 @@ const AdminSettings: React.FC = () => {
           setLogoUrlInput(response.data.data.logoUrl);
         }
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error);
+    } catch {
       toast.error('Failed to load settings');
     } finally {
       setLoading(false);
@@ -97,9 +96,9 @@ const AdminSettings: React.FC = () => {
       } else {
         throw new Error('Upload failed');
       }
-    } catch (error: any) {
-      console.error('Error uploading logo:', error);
-      toast.error(error.response?.data?.error || 'Failed to upload logo');
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      toast.error(axiosError.response?.data?.error || 'Failed to upload logo');
       setLogoPreview(settings.logoUrl);
     } finally {
       setUploading(false);
@@ -136,9 +135,9 @@ const AdminSettings: React.FC = () => {
       } else {
         throw new Error('Save failed');
       }
-    } catch (error: any) {
-      console.error('Error saving logo URL:', error);
-      toast.error(error.response?.data?.error || 'Failed to save logo URL');
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      toast.error(axiosError.response?.data?.error || 'Failed to save logo URL');
     } finally {
       setUploading(false);
     }
@@ -170,9 +169,9 @@ const AdminSettings: React.FC = () => {
       } else {
         throw new Error('Update failed');
       }
-    } catch (error: any) {
-      console.error('Error updating company name:', error);
-      toast.error(error.response?.data?.error || 'Failed to update company name');
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      toast.error(axiosError.response?.data?.error || 'Failed to update company name');
     } finally {
       setSaving(false);
     }
@@ -190,9 +189,9 @@ const AdminSettings: React.FC = () => {
       } else {
         throw new Error('Update failed');
       }
-    } catch (error: any) {
-      console.error('Error updating about page:', error);
-      toast.error(error.response?.data?.error || 'Failed to update about page');
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      toast.error(axiosError.response?.data?.error || 'Failed to update about page');
     } finally {
       setSaving(false);
     }
@@ -330,7 +329,7 @@ const AdminSettings: React.FC = () => {
                       setSettings(prev => ({ ...prev, logoUrl: null }));
                       toast.success('Logo removed successfully!');
                       window.dispatchEvent(new Event('branding-updated'));
-                    } catch (error: any) {
+                    } catch {
                       toast.error('Failed to remove logo');
                     }
                   }}

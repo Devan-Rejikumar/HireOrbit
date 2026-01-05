@@ -47,8 +47,6 @@ export class WebRTCSignalingClient {
         // Ensure URL doesn't have trailing slash for Socket.IO
         const cleanUrl = this.signalingServerUrl.replace(/\/$/, '');
         
-        console.log(`WebRTC Signaling: Connecting to ${cleanUrl}...`);
-        
         this.socket = io(cleanUrl, {
           transports: ['websocket', 'polling'], // Allow fallback to polling
           autoConnect: true,
@@ -77,8 +75,6 @@ export class WebRTCSignalingClient {
         const startRoomJoinTimeout = () => {
           clearRoomJoinTimeout(); // Clear any existing timeout
           roomJoinTimeout = setTimeout(() => {
-            console.error('❌ Timeout waiting for ROOM_JOINED event after emitting JOIN_ROOM');
-            console.error('❌ This means the server is not responding. Check server logs.');
             cleanup();
             reject(new Error('Timeout: Server did not respond to JOIN_ROOM request. Please check if the chat service is running and receiving events.'));
           }, 10000); // 10 seconds to receive ROOM_JOINED
@@ -101,7 +97,6 @@ export class WebRTCSignalingClient {
         }, 15000);
 
         this.socket.on('connect', () => {
-          console.log('✅ WebRTC Signaling: Connected to server, Socket ID:', this.socket?.id);
           cleanup();
           
           // Join the room
@@ -111,7 +106,6 @@ export class WebRTCSignalingClient {
             role: this.role,
           };
           
-          console.log('📤 Emitting JOIN_ROOM:', joinData);
           startRoomJoinTimeout(); // Start timeout for ROOM_JOINED response
           this.socket?.emit(WebRTCEvent.JOIN_ROOM, joinData);
         });
@@ -120,29 +114,23 @@ export class WebRTCSignalingClient {
           participants?: string[];
           [key: string]: unknown;
         }
-        this.socket.on(WebRTCEvent.ROOM_JOINED, (data: { interviewId: string; room: RoomData }) => {
-          console.log('✅ WebRTC Signaling: ROOM_JOINED event received!', data.interviewId);
-          console.log('📊 Room participants:', data.room?.participants);
-          console.log('📊 Full room data:', JSON.stringify(data.room, null, 2));
+        this.socket.on(WebRTCEvent.ROOM_JOINED, () => {
           clearRoomJoinTimeout();
           cleanup();
           resolve();
         });
 
         this.socket.on(WebRTCEvent.ERROR, (error: { error: string; message?: string }) => {
-          console.error('WebRTC Signaling Error:', error);
           cleanup();
           reject(new Error(error.message || error.error || 'Unknown signaling error'));
         });
 
-        this.socket.on('connect_error', (error: Error) => {
-          console.error('WebRTC Signaling: Connection error', error);
+        this.socket.on('connect_error', () => {
           // Don't reject immediately - let reconnection attempts happen
           // Only reject if all reconnection attempts fail
         });
 
         this.socket.on('disconnect', (reason: string) => {
-          console.warn('WebRTC Signaling: Disconnected:', reason);
           if (reason === 'io server disconnect') {
             // Server disconnected, reject immediately
             cleanup();
@@ -181,12 +169,8 @@ export class WebRTCSignalingClient {
    */
   onPeerJoined(callback: (peer: PeerInfo) => void): void {
     this.socket?.on(WebRTCEvent.PEER_JOINED, (data: { interviewId: string; peer: PeerInfo }) => {
-      console.log('📥 PEER_JOINED event received:', data);
       if (data.interviewId === this.interviewId) {
-        console.log('✅ Peer joined matches interview ID, calling callback');
         callback(data.peer);
-      } else {
-        console.log('⚠️ Peer joined event for different interview ID, ignoring');
       }
     });
   }
@@ -196,12 +180,8 @@ export class WebRTCSignalingClient {
    */
   onOffer(callback: (data: OfferData) => void): void {
     this.socket?.on(WebRTCEvent.OFFER, (data: OfferData) => {
-      console.log('📥 OFFER event received:', { interviewId: data.interviewId, toUserId: data.toUserId, fromUserId: data.fromUserId });
       if (data.interviewId === this.interviewId && data.toUserId === this.userId) {
-        console.log('✅ Offer matches, calling callback');
         callback(data);
-      } else {
-        console.log('⚠️ Offer not for this user/interview, ignoring');
       }
     });
   }
@@ -211,12 +191,8 @@ export class WebRTCSignalingClient {
    */
   onAnswer(callback: (data: AnswerData) => void): void {
     this.socket?.on(WebRTCEvent.ANSWER, (data: AnswerData) => {
-      console.log('📥 ANSWER event received:', { interviewId: data.interviewId, toUserId: data.toUserId, fromUserId: data.fromUserId });
       if (data.interviewId === this.interviewId && data.toUserId === this.userId) {
-        console.log('✅ Answer matches, calling callback');
         callback(data);
-      } else {
-        console.log('⚠️ Answer not for this user/interview, ignoring');
       }
     });
   }
@@ -256,7 +232,6 @@ export class WebRTCSignalingClient {
       fromUserId: this.userId,
       toUserId,
     };
-    console.log('📤 Sending OFFER to:', toUserId);
     this.socket?.emit(WebRTCEvent.OFFER, offerData);
   }
 
@@ -273,7 +248,6 @@ export class WebRTCSignalingClient {
       fromUserId: this.userId,
       toUserId,
     };
-    console.log('📤 Sending ANSWER to:', toUserId);
     this.socket?.emit(WebRTCEvent.ANSWER, answerData);
   }
 

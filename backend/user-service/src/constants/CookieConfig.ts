@@ -2,8 +2,6 @@
  * Centralized cookie configuration constants
  * Cookie maxAge values are configurable via environment variables with sensible defaults
  */
-
-// Cookie maxAge values in milliseconds (configurable via .env)
 export const CookieConfig = {
   ACCESS_TOKEN_MAX_AGE: parseInt(
     process.env.ACCESS_TOKEN_MAX_AGE || '900000',

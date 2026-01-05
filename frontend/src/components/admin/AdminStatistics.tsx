@@ -89,17 +89,6 @@ const AdminStatistics: React.FC = () => {
       ]);
 
       if (dashboardResponse.data.success && dashboardResponse.data.data) {
-        console.log('Statistics received:', {
-          topCompanies: dashboardResponse.data.data.topCompanies?.length || 0,
-          topApplicants: dashboardResponse.data.data.topApplicants?.length || 0,
-          totalUsers: dashboardResponse.data.data.totalUsers,
-          totalCompanies: dashboardResponse.data.data.totalCompanies,
-          totalJobs: dashboardResponse.data.data.totalJobs,
-          userRegistrations: dashboardResponse.data.data.userRegistrations?.length || 0,
-          companyRegistrations: dashboardResponse.data.data.companyRegistrations?.length || 0,
-          userRegData: dashboardResponse.data.data.userRegistrations,
-          companyRegData: dashboardResponse.data.data.companyRegistrations,
-        });
         setStatistics(dashboardResponse.data.data);
       }
 
@@ -108,7 +97,6 @@ const AdminStatistics: React.FC = () => {
         setTotalRevenue(revenueResponse.data.statistics.totalRevenue);
       }
     } catch (error: unknown) {
-      console.error('Error fetching statistics:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
           
@@ -187,7 +175,6 @@ const AdminStatistics: React.FC = () => {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }
     } catch (error) {
-      console.error('Error formatting date label:', error, dateString);
       return dateString;
     }
   };

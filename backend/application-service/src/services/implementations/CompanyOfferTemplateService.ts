@@ -38,7 +38,6 @@ export class CompanyOfferTemplateService implements ICompanyOfferTemplateService
     try {
       const logoUrl = await uploadImageToCloudinary(fileBuffer, fileName, `offer-templates/${companyId}`);
       
-      // Update template with logo URL
       const existingTemplate = await this._templateRepository.findByCompanyId(companyId);
       if (existingTemplate) {
         await this._templateRepository.update(companyId, { logoUrl });
@@ -59,8 +58,6 @@ export class CompanyOfferTemplateService implements ICompanyOfferTemplateService
   async uploadSignature(companyId: string, fileBuffer: Buffer, fileName: string): Promise<string> {
     try {
       const signatureUrl = await uploadImageToCloudinary(fileBuffer, fileName, `offer-templates/${companyId}`);
-      
-      // Update template with signature URL
       const existingTemplate = await this._templateRepository.findByCompanyId(companyId);
       if (existingTemplate) {
         await this._templateRepository.update(companyId, { signatureUrl });
@@ -81,8 +78,6 @@ export class CompanyOfferTemplateService implements ICompanyOfferTemplateService
   async previewTemplate(companyId: string, sampleOfferData: PreviewOfferData): Promise<Buffer> {
     try {
       const template = await this._templateRepository.findByCompanyId(companyId);
-      
-      // Create a mock offer for preview
       const mockOffer: Offer = {
         id: 'preview',
         applicationId: 'preview',
@@ -99,14 +94,12 @@ export class CompanyOfferTemplateService implements ICompanyOfferTemplateService
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
-      // Generate PDF with template (company logo will be resolved in PDF service)
       const pdfBuffer = await this._pdfService.generateOfferPdf(
         mockOffer,
         sampleOfferData.candidateName,
         sampleOfferData.companyName,
         template,
-        null, // companyLogoUrl - can be fetched if needed, but template.logoUrl takes precedence
+        null,
       );
       
       return pdfBuffer;

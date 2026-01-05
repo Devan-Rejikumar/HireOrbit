@@ -65,7 +65,6 @@ export const CheckoutPage = () => {
       
       setPlan(selectedPlan);
     } catch (error) {
-      console.error('Error loading plan:', error);
       toast.error(MESSAGES.ERROR.PLAN_DETAILS_LOAD_FAILED);
       navigate(ROUTES.SUBSCRIPTIONS);
     } finally {
@@ -88,10 +87,8 @@ export const CheckoutPage = () => {
       }
       
       // For free plans, subscription is created directly
-      toast.success(response.message || 'Subscription created successfully!');
       navigate(ROUTES.SUBSCRIPTIONS_STATUS);
     } catch (error: unknown) {
-      console.error('Error creating subscription:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to create subscription');

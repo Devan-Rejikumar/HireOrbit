@@ -26,12 +26,9 @@ export class ExpireOffersJob {
 
       logger.info(`[ExpireOffersJob] Found ${expiredOffers.length} expired offers`);
 
-      // Update each expired offer
       for (const offer of expiredOffers) {
         try {
           await this._offerRepository.updateStatus(offer.id, OfferStatus.EXPIRED);
-          
-          // Publish event for each expired offer
           try {
             await this._eventService.publish(Events.OFFER.EXPIRED, {
               offerId: offer.id,

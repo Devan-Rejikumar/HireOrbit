@@ -29,7 +29,6 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
       toast.success('OTP sent to your email!');
       setStep('verify');
     } catch (error) {
-      console.error('Error sending OTP:', error);
       toast.error('Failed to send OTP. Please try again.');
     } finally {
       setIsSendingOtp(false);
@@ -51,7 +50,6 @@ const VerificationModal: React.FC<VerificationModalProps> = ({
       setOtp('');
       setStep('send');
     } catch (error) {
-      console.error('Error verifying OTP:', error);
       toast.error('Invalid OTP. Please try again.');
     } finally {
       setIsLoading(false);

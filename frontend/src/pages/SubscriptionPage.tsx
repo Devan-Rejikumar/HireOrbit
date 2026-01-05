@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { subscriptionService, SubscriptionPlan, SubscriptionStatusResponse } from '../api/subscriptionService';
+import { useEffect, useState, useCallback } from 'react';
+import { subscriptionService, SubscriptionPlan } from '../api/subscriptionService';
 import { SubscriptionCard } from '../components/subscription/SubscriptionCard';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
@@ -12,18 +12,12 @@ import {
   MessageSquare, 
   Settings, 
   LogOut,
-  Search,
   CreditCard,
   Building2,
   Calendar as CalendarIcon,
-  Plus,
-  Bell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NotificationBell } from '@/components/NotificationBell';
-import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount } from '@/hooks/useChat';
-import { SubscriptionStatusBadge } from '@/components/subscription/SubscriptionStatusBadge';
 import { CompanyHeader } from '@/components/CompanyHeader';
 import { Logo } from '@/components/Logo';
 import api from '@/api/axios';
@@ -53,31 +47,22 @@ export const SubscriptionPage = () => {
     role === 'jobseeker' ? user?.id || null : (company?.id || authCompany?.id || null),
   );
 
-  // Fetch company profile with logo for company users
-  useEffect(() => {
-    if (role === 'company') {
-      fetchCompanyProfile();
-    }
-  }, [role]);
-
-  const fetchCompanyProfile = async () => {
+  const fetchCompanyProfile = useCallback(async () => {
     try {
-      const response = await api.get<{ 
-        success?: boolean; 
-        data?: { company?: CompanyProfile }; 
+      const response = await api.get<{
+        data?: { company?: CompanyProfile };
         company?: CompanyProfile;
       }>('/company/profile');
-      
       let companyData: CompanyProfile | null = null;
-      if (response.data && response.data.success && response.data.data && response.data.data.company) {
+      
+      if (response.data && response.data.data && response.data.data.company) {
         companyData = response.data.data.company;
       } else if (response.data && response.data.company) {
         companyData = response.data.company;
       }
       
       setCompany(companyData);
-    } catch (error) {
-      console.error('Error fetching company profile:', error);
+    } catch (_error) {
       // Fallback to auth company if available
       if (authCompany) {
         setCompany({
@@ -89,46 +74,47 @@ export const SubscriptionPage = () => {
         });
       }
     }
-  };
+  }, [authCompany]);
+
+  const loadPlans = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await subscriptionService.getPlans(userType);
+      // Show all plans including Free
+      setPlans(response.data || []);
+    } catch (_error) {
+      setPlans([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userType]);
+
+  const loadCurrentSubscription = useCallback(async () => {
+    try {
+      const response = await subscriptionService.getSubscriptionStatus();
+      if (response.data.subscription) {
+        setCurrentPlanId(response.data.subscription.planId);
+      }
+    } catch (_error) {
+      // No active subscription found
+    }
+  }, []);
 
   useEffect(() => {
     if (role) {
       loadPlans();
       loadCurrentSubscription();
     }
-  }, [role]);
+  }, [role, loadPlans, loadCurrentSubscription]);
 
-  const loadPlans = async () => {
-    try {
-      setLoading(true);
-      const response = await subscriptionService.getPlans(userType);
-      // Show all plans including Free
-      setPlans(response.data || []);
-    } catch (error) {
-      console.error('Error loading plans:', error);
-      setPlans([]);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (role === 'company') {
+      fetchCompanyProfile();
     }
-  };
+  }, [role, fetchCompanyProfile]);
 
-  const loadCurrentSubscription = async () => {
-    try {
-      const response = await subscriptionService.getSubscriptionStatus();
-      if (response.data.subscription) {
-        setCurrentPlanId(response.data.subscription.planId);
-      }
-    } catch (error) {
-      console.log('No active subscription found');
-    }
-  };
-
-  const handleSelectPlan = async (planId: string, billingPeriod: 'monthly' | 'yearly') => {
-    try {
-      navigate(`/subscriptions/checkout?planId=${planId}&billingPeriod=${billingPeriod}`);
-    } catch (error) {
-      console.error('Error selecting plan:', error);
-    }
+  const handleSelectPlan = async (_planId: string, _billingPeriod: 'monthly' | 'yearly') => {
+    // This function is not used, navigation happens in SubscriptionCard
   };
 
   const handleLogout = async () => {
@@ -228,7 +214,7 @@ export const SubscriptionPage = () => {
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
         {role === 'company' ? (
-          <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto transition-all duration-300 z-10">
+          <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10">
             <nav className="p-6">
               <div className="space-y-1 mb-8">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -289,30 +275,31 @@ export const SubscriptionPage = () => {
                   Settings
                 </button>
               </div>
-            </nav>
-            
-            <div className="absolute bottom-3 left-6 right-6">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-                {company?.logo ? (
-                  <img 
-                    src={company.logo} 
-                    alt={company.companyName || 'Company logo'} 
-                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                    <Building2 className="h-4 w-4 text-white" />
+              
+              {/* Company Info */}
+              <div className="mt-8">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
+                  {company?.logo ? (
+                    <img 
+                      src={company.logo} 
+                      alt={company.companyName || 'Company logo'} 
+                      className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                      <Building2 className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
+                    <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
                   </div>
-                )}
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
-                  <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
                 </div>
               </div>
-            </div>
+            </nav>
           </aside>
         ) : (
-          <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto transition-all duration-300 z-10">
+          <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10">
             <nav className="p-6">
               <div className="space-y-1 mb-8">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -369,7 +356,7 @@ export const SubscriptionPage = () => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 pt-[84px] ml-64 h-[calc(100vh-68px)] overflow-y-auto">
+        <main className="flex-1 pt-[84px] ml-64 h-[calc(100vh-68px)] overflow-y-auto hide-scrollbar">
           <div className="h-full flex flex-col justify-center p-4 md:p-5">
             <div className="w-full max-w-6xl mx-auto">
               {/* Page Title and Description */}

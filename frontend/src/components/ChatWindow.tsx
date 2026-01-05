@@ -47,30 +47,7 @@ export const ChatWindow = ({
   
   // Additional debug: log if profile fetch failed
   useEffect(() => {
-    if (profileError) {
-      console.error('❌ [ChatWindow] Profile fetch error:', profileError);
-    }
   }, [profileError]);
-  
-  // Debug logging - make it very visible
-  useEffect(() => {
-    if (role === 'company' && otherParticipantId) {
-      console.log('═══════════════════════════════════════════════════════');
-      console.log('🔍 [ChatWindow] CHAT WINDOW DEBUG');
-      console.log('🔍 [ChatWindow] Role:', role);
-      console.log('🔍 [ChatWindow] Other Participant ID:', otherParticipantId);
-      console.log('🔍 [ChatWindow] Profile Loading:', profileLoading);
-      console.log('🔍 [ChatWindow] User Profile Object:', JSON.stringify(userProfile, null, 2));
-      console.log('🔍 [ChatWindow] User Avatar URL:', userAvatar);
-      console.log('🔍 [ChatWindow] Avatar Error State:', avatarError);
-      console.log('🔍 [ChatWindow] Condition Check:');
-      console.log('   - role === "company":', role === 'company');
-      console.log('   - userAvatar exists:', !!userAvatar);
-      console.log('   - !avatarError:', !avatarError);
-      console.log('   - WILL SHOW IMAGE:', role === 'company' && userAvatar && !avatarError);
-      console.log('═══════════════════════════════════════════════════════');
-    }
-  }, [role, otherParticipantId, userProfile, userAvatar, avatarError, profileLoading]);
   
   // Reset avatar error when user changes
   useEffect(() => {
@@ -156,7 +133,10 @@ export const ChatWindow = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [allMessages, isOtherParticipantTyping]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (!messageInput.trim() || !isConnected) return;
 
     // Stop typing indicator before sending message
@@ -350,13 +330,11 @@ export const ChatWindow = ({
                   src={userAvatar} 
                   alt={otherParticipantName} 
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.error('❌ [ChatWindow] Image load error for URL:', userAvatar);
-                    console.error('❌ [ChatWindow] Error event:', e);
+                  onError={() => {
                     setAvatarError(true);
                   }}
                   onLoad={() => {
-                    console.log('✅ [ChatWindow] Image loaded successfully:', userAvatar);
+                    // Image loaded successfully
                   }}
                 />
               ) : (
@@ -555,6 +533,7 @@ export const ChatWindow = ({
             />
           </div>
           <button
+            type="button"
             onClick={handleSendMessage}
             disabled={!messageInput.trim() || !isConnected || isLoading}
             className="w-11 h-11 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm hover:shadow-md disabled:hover:shadow-sm"

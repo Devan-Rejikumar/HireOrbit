@@ -16,8 +16,6 @@ export class SettingsController {
   async getSettings(req: Request, res: Response): Promise<void> {
     try {
       const settings = await this._settingsService.getSettings();
-      
-      // If no settings exist, return default values
       if (!settings) {
         res.status(HttpStatusCode.OK).json(
           buildSuccessResponse(
@@ -50,8 +48,6 @@ export class SettingsController {
       }
 
       const logoData = req.body.logo;
-
-      // Handle base64 data URI
       if (typeof logoData === 'string' && logoData.startsWith('data:image/')) {
         try {
           const result = await cloudinary.uploader.upload(logoData, {
@@ -73,7 +69,6 @@ export class SettingsController {
           throw new AppError('Failed to upload logo', HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
       } else if (typeof logoData === 'string' && logoData.startsWith('http')) {
-        // If it's already a URL, just save it
         const updatedSettings = await this._settingsService.updateLogo(logoData);
         
         res.status(HttpStatusCode.OK).json(

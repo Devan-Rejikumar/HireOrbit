@@ -24,7 +24,7 @@ import { OfferService } from '../services/implementations/OfferService';
 import { IOfferPdfService } from '../services/interfaces/IOfferPdfService';
 import { OfferPdfService } from '../services/implementations/OfferPdfService';
 import { OfferController } from '../controllers/OfferController';
-import { IATSService } from '../services/interfaces/IATSService';
+import type { IATSService } from '../services/interfaces/IATSService';
 import { ResumeParserService } from '../services/implementations/ResumeParserService';
 import { GrokATSService } from '../services/implementations/GrokATSService';
 import { ATSController } from '../controllers/ATSController';

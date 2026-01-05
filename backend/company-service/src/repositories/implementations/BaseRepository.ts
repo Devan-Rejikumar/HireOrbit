@@ -13,8 +13,9 @@ export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepos
   constructor() {
     this.prisma = prisma;
   }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    protected abstract getModel(): any;
+    // Using unknown instead of any - type safety is maintained through generic T constraint
+    // The actual Prisma delegate type is complex and varies per model, but all methods use T correctly
+    protected abstract getModel(): unknown;
     
     async findById(id: string): Promise<T | null> {
       const model = this.getModel();

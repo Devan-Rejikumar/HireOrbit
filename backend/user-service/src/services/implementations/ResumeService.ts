@@ -15,16 +15,7 @@ export class ResumeService implements IResumeService {
 
   async uploadResume(userId: string, resumeFile: Buffer, fileName: string, mimeType: string): Promise<string> {
     try {
-      console.log(' [ResumeService] Starting Cloudinary upload:', {
-        userId,
-        fileName,
-        mimeType,
-        fileSize: resumeFile.length
-      });
-
-    
       if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-        console.error(' [ResumeService] Cloudinary configuration missing');
         throw new AppError('Cloudinary configuration is missing. Please check environment variables.', HttpStatusCode.INTERNAL_SERVER_ERROR);
       }
 
@@ -32,7 +23,6 @@ export class ResumeService implements IResumeService {
       const base64String = resumeFile.toString('base64');
       const dataUri = `data:${mimeType};base64,${base64String}`;
 
-      console.log(' [ResumeService] Uploading to Cloudinary...');
       const result = await cloudinary.uploader.upload(dataUri, {
         folder: 'user-resumes',
         resource_type: 'raw',
@@ -41,25 +31,12 @@ export class ResumeService implements IResumeService {
       });
 
       if (!result || !result.secure_url) {
-        console.error('[ResumeService] Cloudinary upload returned invalid result:', result);
         throw new AppError(Messages.RESUME.UPLOAD_FAILED, HttpStatusCode.INTERNAL_SERVER_ERROR);
       }
-
-      console.log(' [ResumeService] Cloudinary upload successful:', result.secure_url);
       await this._resumeRepository.saveResume(userId, result.secure_url);
-      console.log('✅ [ResumeService] Resume URL saved to database');
-      
       return result.secure_url;
     } catch (error: unknown) {
       const err = error as { message?: string; stack?: string; http_code?: number };
-      console.error(' [ResumeService] Resume upload error:', {
-        error: err.message,
-        stack: err.stack,
-        userId,
-        fileName,
-        mimeType
-      });
-
       if (error instanceof AppError) {
         throw error;
       }

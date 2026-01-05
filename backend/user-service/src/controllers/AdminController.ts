@@ -21,20 +21,15 @@ export class AdminController {
 
   async login(req: Request, res: Response): Promise<void> {
     const { email, password } = req.body;
-    console.log(`[AdminController] 2. Attempting login for email: ${email}`);
 
     if (!email || !password) {
       throw new AppError(Messages.VALIDATION.EMAIL_AND_PASSWORD_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
 
     const { admin, tokens } = await this._adminService.login(email, password);
-    console.log('[AdminController] 3. Tokens generated successfully');
     
     this._cookieService.setAdminAccessToken(res, tokens.accessToken);
     this._cookieService.setAdminRefreshToken(res, tokens.refreshToken);
-
-    console.log('[AdminController] 3a. Response headers prepared in user-service:', res.getHeaders());
-
     res.status(AuthStatusCode.LOGIN_SUCCESS).json({ admin });
   }
 
@@ -195,23 +190,12 @@ export class AdminController {
       if (!['week', 'month', 'year'].includes(timeFilter)) {
         throw new AppError('Invalid time filter. Must be week, month, or year', HttpStatusCode.BAD_REQUEST);
       }
-
-      console.log(`[AdminController] Fetching dashboard statistics with timeFilter: ${timeFilter}`);
       const statistics = await this._adminService.getDashboardStatistics(timeFilter);
-      
-      console.log('[AdminController] Successfully fetched statistics:', {
-        totalUsers: statistics.totalUsers,
-        totalCompanies: statistics.totalCompanies,
-        totalJobs: statistics.totalJobs
-      });
-  
       res.status(HttpStatusCode.OK).json({
         success: true,
         data: statistics
       });
     } catch (error: unknown) {
-      console.error('[AdminController] Error in getDashboardStatistics:', error);
-
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - 30);

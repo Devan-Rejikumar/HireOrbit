@@ -51,7 +51,6 @@ export class JobReportController {
   }
 
   async getReportedJobs(req: Request, res: Response): Promise<void> {
-    // Check if user is admin (role should be 'admin' from headers)
     const userRole = req.user?.role;
     if (userRole !== 'admin') {
       throw new AppError(

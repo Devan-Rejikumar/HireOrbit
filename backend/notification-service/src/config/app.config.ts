@@ -12,7 +12,6 @@ export const AppConfig = {
   JOB_SERVICE_URL: process.env.JOB_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3002',
   API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://localhost:4001',
   KAFKA_BROKERS: process.env.KAFKA_BROKERS || 'localhost:9092',
-  // MongoDB URI should be in .env file for security
   MONGODB_URI: process.env.MONGODB_URI || '',
 } as const;
 

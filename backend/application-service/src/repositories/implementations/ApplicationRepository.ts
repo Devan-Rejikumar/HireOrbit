@@ -194,7 +194,7 @@ export class ApplicationRepository implements IApplicationRepository {
     statusHistory: ApplicationStatusHistory[];
     notes: ApplicationNotes[];
   }>> {
-    const where: any = { companyId };
+    const where: Prisma.ApplicationWhereInput = { companyId };
     
     if (atsScoreMin !== undefined && atsScoreMin !== null) {
       where.atsscore = {

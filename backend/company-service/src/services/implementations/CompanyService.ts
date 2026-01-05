@@ -144,32 +144,23 @@ export class CompanyService implements ICompanyService {
 
   async completeStep2(companyId: string, step2Data: CompanyRegistrationStep2): Promise<CompanyResponse> {
     try {
-      console.log('COMPANY-SERVICE Checking if company exists...');
       const existingCompany = await this._companyRepository.getCompanyProfile(companyId);
       if (!existingCompany) {
-        console.log('COMPANY-SERVICE Company not found with ID:', companyId);
         throw new Error('Company not found');
       }
-      console.log('COMPANY-SERVICE Company found:', existingCompany.id);
 
-      console.log('COMPANY-SERVICE Updating company profile...');
       const company = await this._companyRepository.updateCompanyProfile(
         companyId,
         step2Data,
       );
-      console.log('COMPANY-SERVICE Company profile updated successfully');
-
-      console.log('COMPANY-SERVICEUpdating profile step...');
       const profileStep = await this._companyRepository.updateProfileStep(companyId, {
         companyDetailsCompleted: true,
         currentStep: 3,
       });
-      console.log('COMPANY-SERVICE Profile step updated successfully:', profileStep);
+     
 
       return mapCompanyToResponse(company);
     } catch (error) {
-      console.error('COMPANY-SERVICE Error in completeStep2 service:', error);
-      console.error('COMPANY-SERVICE Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       throw error;
     }
   }
@@ -268,7 +259,7 @@ export class CompanyService implements ICompanyService {
   async logoutWithToken(refreshToken: string): Promise<void> {
     try {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as CompanyTokenPayload;
-      console.log(`Company ${decoded.email} logged out successfully`);
+      
     } catch {
       console.log('Invalid company refresh token during logout');
     }
@@ -282,22 +273,22 @@ export class CompanyService implements ICompanyService {
       const data = await response.json() as { data: { count: number } };
       return data.data?.count || 0;
     } catch (error) {
-      console.error('Error getting job count:', error);
+    
       return 0;
     }
   }
 
   async reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; message: string }> {
-    console.log(' Service reapplyCompany - Company ID:', companyId);
+
 
     const company = await this._companyRepository.getCompanyProfile(companyId);
     if (!company) {
-      console.log(' Company not found');
+      
       throw new Error('Company not found');
     }
 
     if (!company.rejectionReason || company.isVerified) {
-      console.log('Company is not eligible for reapplication');
+     
       throw new Error('Company is not eligible for reapplication');
     }
 
@@ -307,7 +298,7 @@ export class CompanyService implements ICompanyService {
       reviewedAt: null,
       reviewedBy: null,
     });
-    console.log(' Company profile reset successfully');
+   
 
     const profileStep = await this._companyRepository.updateProfileStep(companyId, {
       basicInfoCompleted: true,
@@ -315,8 +306,7 @@ export class CompanyService implements ICompanyService {
       contactInfoCompleted: false,
       currentStep: 2,
     });
-    console.log(' Profile step reset successfully:', profileStep);
-
+    
     return {
       company: mapCompanyToResponse(updatedCompany),
       message: 'Reapplication initiated successfully. You can now complete your profile from step 2.',
@@ -324,11 +314,10 @@ export class CompanyService implements ICompanyService {
   }
 
   async getReapplyStatus(companyId: string): Promise<{ canReapply: boolean; rejectionReason?: string; lastReviewedAt?: Date }> {
-    console.log(' Service getReapplyStatus - Company ID:', companyId);
-
+   
     const company = await this._companyRepository.getCompanyProfile(companyId);
     if (!company) {
-      console.log(' Company not found');
+     
       throw new Error('Company not found');
     }
 

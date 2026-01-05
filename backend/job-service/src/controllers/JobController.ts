@@ -158,8 +158,6 @@ export class JobController {
       );
     }
 
-    // For non-admin users, only show listed jobs
-    // Admin users can see all jobs by explicitly setting isListed filter
     const filters = { ...searchValidation.data };
     if (req.user?.role !== 'admin' && filters.isListed === undefined) {
       filters.isListed = true;

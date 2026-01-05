@@ -2,44 +2,33 @@ import { injectable } from 'inversify';
 import { ICompanyServiceClient, CompanyApiResponse } from '../interfaces/ICompanyServiceClient';
 import { logger } from '../../utils/logger';
 import { AppConfig } from '../../config/app.config';
+import { ServiceHttpClient, HttpClientConfig } from 'hireorbit-shared-dto';
 
 @injectable()
 export class CompanyServiceClient implements ICompanyServiceClient {
-  private readonly baseUrl: string;
+  private readonly httpClient: ServiceHttpClient;
 
   constructor() {
-    this.baseUrl = AppConfig.API_GATEWAY_URL || 'http://localhost:4001';
+    const config: HttpClientConfig = {
+      baseUrl: AppConfig.API_GATEWAY_URL || 'http://localhost:4001',
+      timeout: AppConfig.HTTP_CLIENT_TIMEOUT,
+      retries: 3,
+      logger: {
+        debug: (message: string, meta?: unknown) => logger.debug(message, meta),
+        info: (message: string, meta?: unknown) => logger.info(message, meta),
+        warn: (message: string, meta?: unknown) => logger.warn(message, meta),
+        error: (message: string, meta?: unknown) => logger.error(message, meta),
+      },
+    };
+    this.httpClient = new ServiceHttpClient(config);
   }
 
   async getCompanyById(companyId: string): Promise<CompanyApiResponse> {
     try {
-      const timeout = AppConfig.HTTP_CLIENT_TIMEOUT; 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-      const response = await fetch(`${this.baseUrl}/api/company/${companyId}`, {
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        logger.warn(`CompanyServiceClient: Failed to fetch company ${companyId}, status: ${response.status}`);
-        return {};
-      }
-
-      const data = await response.json() as CompanyApiResponse;
+      const data = await this.httpClient.get<CompanyApiResponse>(`/api/company/${companyId}`);
       return data;
     } catch (error: unknown) {
-      const err = error as { name?: string };
-      if (err.name === 'AbortError') {
-        logger.error(`CompanyServiceClient: Request timeout for company ${companyId}`);
-      } else {
-        logger.error(`CompanyServiceClient: Error fetching company ${companyId}:`, error);
-      }
+      logger.error(`CompanyServiceClient: Error fetching company ${companyId}:`, error);
       return {};
     }
   }

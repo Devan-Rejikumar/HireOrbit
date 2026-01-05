@@ -30,8 +30,6 @@ container.bind<CookieService>(TYPES.CookieService).to(CookieService);
 container.bind<ICompanyRepository>(TYPES.ICompanyRepository).to(CompanyRepository);
 container.bind<ICompanyService>(TYPES.ICompanyService).to(CompanyService);
 container.bind<IEmailService>(TYPES.EmailService).to(EmailService);
-
-// Industry Category bindings
 container.bind<IIndustryCategoryRepository>(TYPES.IIndustryCategoryRepository).to(IndustryCategoryRepository);
 container.bind<IIndustryCategoryService>(TYPES.IIndustryCategoryService).to(IndustryCategoryService);
 container.bind<IndustryCategoryController>(TYPES.IndustryCategoryController).to(IndustryCategoryController);

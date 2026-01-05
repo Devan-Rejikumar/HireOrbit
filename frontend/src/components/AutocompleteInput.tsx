@@ -49,7 +49,6 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
       setShowSuggestions(true);
       setActiveSuggestion(-1);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
       setSuggestions([]);
       setShowSuggestions(false);
     }

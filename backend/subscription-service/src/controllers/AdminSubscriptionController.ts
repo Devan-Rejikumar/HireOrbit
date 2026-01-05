@@ -27,7 +27,7 @@ export class AdminSubscriptionController {
         total: result.total, 
         page: result.page, 
         limit: result.limit, 
-        totalPages: result.totalPages 
+        totalPages: result.totalPages, 
       }, 'Subscription plans retrieved successfully'),
     );
   });

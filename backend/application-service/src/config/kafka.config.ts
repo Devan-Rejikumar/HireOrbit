@@ -1,16 +1,13 @@
 import { Kafka } from 'kafkajs';
 
-// Parse broker string and validate
 const getBrokers = (): string[] => {
   const brokerEnv = process.env.KAFKA_BROKERS;
-  
-  // Default to localhost:9092 if not set or invalid
+
   if (!brokerEnv || brokerEnv.trim() === '') {
     console.log('[Kafka] Using default broker: localhost:9092');
     return ['localhost:9092'];
   }
-  
-  // Validate the broker address has a valid port
+
   const brokers = brokerEnv.split(',').map(b => b.trim()).filter(b => {
     const parts = b.split(':');
     if (parts.length !== 2) return false;

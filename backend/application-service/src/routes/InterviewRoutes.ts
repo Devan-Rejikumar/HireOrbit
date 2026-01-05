@@ -9,7 +9,6 @@ import { INTERVIEW_ROUTES } from '../constants/routes';
 const router = Router();
 const interviewController = container.get<InterviewController>(TYPES.InterviewController);
 
-// Apply authentication middleware to all routes
 router.use(authenticateToken);
 
 router.post(INTERVIEW_ROUTES.SCHEDULE_INTERVIEW, asyncHandler((req: Request, res) => interviewController.scheduleInterview(req, res)));

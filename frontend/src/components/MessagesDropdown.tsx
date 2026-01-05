@@ -114,9 +114,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
                   // Only log non-429 errors
                   const isAxiosError = jobError && typeof jobError === 'object' && 'response' in jobError;
                   const axiosError = isAxiosError ? (jobError as { response?: { status?: number } }) : null;
-                  if (axiosError?.response?.status !== 429) {
-                    console.error('Error fetching job details:', jobError);
-                  }
+                  // Silently handle non-429 errors
                 }
               }
               
@@ -130,9 +128,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
               // Only log non-429 errors
               const isAxiosError = appError && typeof appError === 'object' && 'response' in appError;
               const axiosError = isAxiosError ? (appError as { response?: { status?: number } }) : null;
-              if (axiosError?.response?.status !== 429) {
-                console.error('Error fetching application details:', appError);
-              }
+              // Silently handle non-429 errors
               names[conversation.id] = 'Company';
               fetchedNamesRef.current.add(conversation.id);
             }
@@ -149,9 +145,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
           // Only log non-429 errors
           const isAxiosError = error && typeof error === 'object' && 'response' in error;
           const axiosError = isAxiosError ? (error as { response?: { status?: number } }) : null;
-          if (axiosError?.response?.status !== 429) {
-            console.error('Error fetching participant name:', error);
-          }
+          // Silently handle non-429 errors
           names[conversation.id] = role === 'jobseeker' ? 'Company' : 'User';
           fetchedNamesRef.current.add(conversation.id);
         }

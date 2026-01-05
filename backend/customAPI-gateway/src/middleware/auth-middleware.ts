@@ -16,10 +16,8 @@ const extractToken = (req: Request): string | null => {
   if (req.cookies) {
     const tokenFromCookie = req.cookies.accessToken || req.cookies.adminAccessToken || req.cookies.companyAccessToken;
     if (tokenFromCookie) {
-      console.log('[AUTH] Token found in cookies');
       return tokenFromCookie;
     }
-    console.log('[AUTH] No token in cookies. Available cookies:', Object.keys(req.cookies));
   } else {
     console.log('[AUTH] req.cookies is undefined - cookie-parser may not be configured');
   }
@@ -27,12 +25,8 @@ const extractToken = (req: Request): string | null => {
 
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    console.log('[AUTH] Token found in Authorization header');
     return authHeader.substring(7);
   }
-  
-  console.log('[AUTH] No token found in Authorization header');
-
   return null;
 };
 
@@ -53,7 +47,6 @@ export const Authenticate = (req: Request, res: Response, next: NextFunction): v
   const token = extractToken(req);
 
   if (!token) {
-    console.log('[AUTH] No token provided - returning 401');
     res.status(HttpStatusCode.UNAUTHORIZED).json(
       createUnauthorizedResponse('No token provided')
     );
@@ -72,7 +65,6 @@ export const Authenticate = (req: Request, res: Response, next: NextFunction): v
 
     next();
   } catch (error) {
-    console.log('[AUTH] Token verification failed:', error);
     if (error instanceof jwt.TokenExpiredError) {
       res.status(HttpStatusCode.UNAUTHORIZED).json(
         createUnauthorizedResponse('Token expired')

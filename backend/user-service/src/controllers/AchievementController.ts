@@ -45,7 +45,6 @@ export class AchievementController {
     }
 
     const updates = req.body;
-    console.log('🔍 [ACHIEVEMENT-CONTROLLER] Received update data:', JSON.stringify(updates, null, 2));
     const result = await this._achievementService.updateAchievement(userId, achievementId, updates);
     
     res.status(HttpStatusCode.OK).json(
@@ -62,12 +61,9 @@ export class AchievementController {
       throw new AppError(Messages.ACHIEVEMENT.ID_REQUIRED, HttpStatusCode.BAD_REQUEST);
     }
 
-    console.log('DELETE-ACHIEVEMENT User ID:', userId);
-    console.log('DELETE-ACHIEVEMENT Achievement ID:', achievementId);
     
     await this._achievementService.deleteAchievement(userId, achievementId);
-    
-    console.log('DELETE-ACHIEVEMENT Achievement deleted successfully');
+
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(null, Messages.ACHIEVEMENT.DELETED_SUCCESS)
     );

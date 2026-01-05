@@ -29,45 +29,37 @@ export const useWebSocket = (recipientId: string) => {
 
     if (!recipientId) return;
 
-    console.log(' Connecting to notification service...');
     const newSocket = io(ENV.NOTIFICATION_SERVICE_URL, {
       transports: ['websocket'],
       autoConnect: true,
     });
 
     newSocket.on('connect', () => {
-      console.log(' WebSocket connected successfully');
       setIsConnected(true);
       
       newSocket.emit('join-room', recipientId);
-      console.log(` Joined room for user: ${recipientId}`);
     });
 
 
     newSocket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
       setIsConnected(false);
     });
 
 
     newSocket.on('notification', (data: RealTimeNotificationData) => {
-      console.log('Received real-time notification:', data);
-
       setRealTimeNotifications(prev => [data, ...prev]);
 
       queryClient.invalidateQueries({ queryKey: ['notifications', recipientId] });
       queryClient.invalidateQueries({ queryKey: ['notifications', recipientId, 'unread-count'] });
     });
 
-    newSocket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+    newSocket.on('connect_error', () => {
       setIsConnected(false);
     });
 
     setSocket(newSocket);
     socketRef.current = newSocket;
     return () => {
-      console.log(' Closing WebSocket connection');
       newSocket.close();
     };
   }, [recipientId, queryClient]);
@@ -75,14 +67,12 @@ export const useWebSocket = (recipientId: string) => {
   const joinRoom = (roomId: string) => {
     if (socketRef.current) {
       socketRef.current.emit('join-room', roomId);
-      console.log(`Joined room: ${roomId}`);
     }
   };
 
   const leaveRoom = (roomId: string) => {
     if (socketRef.current) {
       socketRef.current.emit('leave-room', roomId);
-      console.log(`Left room: ${roomId}`);
     }
   };
 

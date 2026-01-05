@@ -37,63 +37,65 @@ const io = new Server(server, {
 });
 
 const webrtcRooms = new Map<string, WebRTCRoom>();
-
-// Online users tracking: userId -> Set of socketIds (for multiple tabs/devices)
 const onlineUsers = new Map<string, Set<string>>();
-// Socket to userId mapping
 const socketToUserId = new Map<string, string>();
 
 io.on('connection', (socket) => {
-  console.log('🔌 [SERVER] ========== NEW SOCKET CONNECTION ==========');
-  console.log('🔌 [SERVER] Socket ID:', socket.id);
-  console.log('🔌 [SERVER] Socket transport:', socket.conn.transport.name);
-  console.log('🔌 [SERVER] Socket connected:', socket.connected);
-  
-  // Register user as online when they connect with userId
   socket.on('register-user', (data: { userId: string }) => {
     const { userId } = data;
     if (!userId) return;
-    
-    // Track this socket for this user
+
     if (!onlineUsers.has(userId)) {
       onlineUsers.set(userId, new Set());
     }
     onlineUsers.get(userId)!.add(socket.id);
     socketToUserId.set(socket.id, userId);
     
-    console.log(`✅ [SERVER] User ${userId} registered as online (socket: ${socket.id})`);
-    
-    // Notify all conversations this user is part of that they're online
+    console.log(`[SERVER] User ${userId} registered as online (socket: ${socket.id})`);
+
     socket.rooms.forEach(roomId => {
-      if (roomId !== socket.id) { // socket.id is the default room
+      if (roomId !== socket.id) { 
         socket.to(roomId).emit('user-online', { userId });
       }
     });
-    
-    // Broadcast to all sockets that this user is online
+
     socket.broadcast.emit('user-online', { userId });
   });
   
-  // Test handler to verify socket is working
   socket.on('test-event', (data: unknown) => {
-    console.log('🧪 [SERVER] Test event received:', data);
+    console.log('[SERVER] Test event received:', data);
     socket.emit('test-response', { received: true, data });
   });
   
   socket.on('join-conversation', (conversationId: string) => {
     socket.join(conversationId);
-    console.log(`User ${socket.id} joined conversation: ${conversationId}`);
-    
-    // If user is registered, notify others in this conversation that they're online
+
     const userId = socketToUserId.get(socket.id);
     if (userId) {
+      // Notify others in the conversation that this user is online
       socket.to(conversationId).emit('user-online', { userId });
+      
+      // Send list of already-online users in this conversation to the new joiner
+      const room = io.sockets.adapter.rooms.get(conversationId);
+      if (room) {
+        const onlineUsersInRoom = new Set<string>();
+        room.forEach(socketId => {
+          const otherUserId = socketToUserId.get(socketId);
+          if (otherUserId && otherUserId !== userId && onlineUsers.has(otherUserId)) {
+            onlineUsersInRoom.add(otherUserId);
+          }
+        });
+        
+        // Send online status for each user already in the conversation
+        onlineUsersInRoom.forEach(otherUserId => {
+          socket.emit('user-online', { userId: otherUserId });
+        });
+      }
     }
   });
   
   socket.on('leave-conversation', (conversationId: string) => {
     socket.leave(conversationId);
-    console.log(`User ${socket.id} left conversation: ${conversationId}`);
   });
   
   socket.on('send-message', async (data: unknown) => {
@@ -108,7 +110,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Stop typing indicator when message is sent
       socket.to(validationResult.data.conversationId).emit('user-typing', {
         userId: validationResult.data.senderId,
         isTyping: false,
@@ -159,22 +160,13 @@ io.on('connection', (socket) => {
       });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error marking as read:', errorMessage);
     }
   });
-
-  console.log(`📋 [SERVER] About to register JOIN_ROOM handler for socket ${socket.id}`);
-  console.log(`📋 [SERVER] WebRTCEvent.JOIN_ROOM = "${WebRTCEvent.JOIN_ROOM}"`);
   
   socket.on(WebRTCEvent.JOIN_ROOM, async (data: unknown) => {
-    console.log('📥 [SERVER] ========== JOIN_ROOM EVENT RECEIVED ==========');
-    console.log(`📥 [SERVER] Socket ID: ${socket.id}`);
-    console.log(`📥 [SERVER] Event name: ${WebRTCEvent.JOIN_ROOM}`);
-    console.log('📥 [SERVER] Data received:', JSON.stringify(data, null, 2));
     try {
       const validationResult = joinRoomSchema.safeParse(data);
       if (!validationResult.success) {
-        console.error('❌ [SERVER] Validation failed for JOIN_ROOM:', validationResult.error.issues);
         socket.emit(WebRTCEvent.ERROR, {
           interviewId: (data as JoinRoomData).interviewId || 'unknown',
           error: Messages.WEBRTC.VALIDATION_FAILED,
@@ -184,7 +176,6 @@ io.on('connection', (socket) => {
       }
 
       const { interviewId, userId, role } = validationResult.data;
-      console.log(`✅ [SERVER] Valid JOIN_ROOM: interviewId=${interviewId}, userId=${userId}, role=${role}`);
 
       let room = webrtcRooms.get(interviewId);
       if (!room) {
@@ -194,14 +185,14 @@ io.on('connection', (socket) => {
           createdAt: new Date(),
         };
         webrtcRooms.set(interviewId, room);
-        console.log(`🆕 [SERVER] ${Messages.WEBRTC.ROOM_CREATED}: ${interviewId}`);
+       
       }
 
       const existingParticipant = Array.from(room.participants.values())
         .find(p => p.userId === userId);
       
       if (existingParticipant) {
-        console.log(`🔄 [SERVER] Removing existing participant with socket ${existingParticipant.socketId}`);
+        
         room.participants.delete(existingParticipant.socketId);
       }
 
@@ -213,27 +204,16 @@ io.on('connection', (socket) => {
       };
       room.participants.set(socket.id, participant);
       socket.join(interviewId);
-
-      console.log(`✅ [SERVER] ${Messages.WEBRTC.USER_JOINED}: ${userId} (${role}) - ${interviewId}`);
-      console.log(`📊 [SERVER] Room now has ${room.participants.size} participant(s)`);
-
       const serializedRoom = serializeRoom(room);
-      console.log(`📤 [SERVER] Emitting ROOM_JOINED to socket ${socket.id}`);
       socket.emit(WebRTCEvent.ROOM_JOINED, {
         interviewId,
         room: serializedRoom,
       });
-      console.log('✅ [SERVER] ROOM_JOINED emitted successfully');
-
-      // Notify existing participants about the new user, and notify new user about existing participants
       if (room.participants.size > 1) {
-        console.log(`👥 [SERVER] Room has ${room.participants.size} participants, notifying peers...`);
         const participants = Array.from(room.participants.values());
-        
-        // Notify all existing participants about the new participant
+
         const newParticipant = participants.find(p => p.socketId === socket.id);
         if (newParticipant) {
-          console.log(`📤 [SERVER] Emitting PEER_JOINED to room ${interviewId} about new participant ${newParticipant.userId}`);
           socket.to(interviewId).emit(WebRTCEvent.PEER_JOINED, {
             interviewId,
             peer: {
@@ -241,14 +221,10 @@ io.on('connection', (socket) => {
               role: newParticipant.role,
             },
           });
-          console.log(`✅ [SERVER] ${Messages.WEBRTC.PEER_JOINED}: Notified others about new participant ${newParticipant.userId} (${newParticipant.role}) in room ${interviewId}`);
         }
-        
-        // Notify the new participant about all existing participants
+
         const existingParticipants = participants.filter(p => p.socketId !== socket.id);
-        console.log(`📤 [SERVER] Notifying new participant about ${existingParticipants.length} existing participant(s)`);
         existingParticipants.forEach(existingParticipant => {
-          console.log(`📤 [SERVER] Emitting PEER_JOINED to socket ${socket.id} about existing ${existingParticipant.userId}`);
           socket.emit(WebRTCEvent.PEER_JOINED, {
             interviewId,
             peer: {
@@ -256,15 +232,12 @@ io.on('connection', (socket) => {
               role: existingParticipant.role,
             },
           });
-          console.log(`✅ [SERVER] ${Messages.WEBRTC.PEER_JOINED}: Notified new participant about existing ${existingParticipant.userId} (${existingParticipant.role}) in room ${interviewId}`);
         });
       } else {
-        console.log('⏳ [SERVER] Room has only 1 participant, waiting for peer to join...');
       }
 
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error in join-room handler:', errorMessage);
       socket.emit(WebRTCEvent.ERROR, {
         interviewId: (data as JoinRoomData).interviewId || 'unknown',
         error: Messages.WEBRTC.FAILED_TO_JOIN_ROOM,
@@ -313,11 +286,9 @@ io.on('connection', (socket) => {
         toUserId,
       });
 
-      console.log(`${Messages.WEBRTC.OFFER_FORWARDED} from ${fromUserId} to ${toUserId} in room ${interviewId}`);
-
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error in offer handler:', errorMessage);
+      
     }
   });
 
@@ -365,7 +336,7 @@ io.on('connection', (socket) => {
 
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Error in answer handler:', errorMessage);
+      
     }
   });
 
@@ -431,37 +402,31 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`${Messages.WEBRTC.USER_DISCONNECTED}: ${socket.id}`);
 
-    // Handle online status cleanup
     const userId = socketToUserId.get(socket.id);
     if (userId) {
       const userSockets = onlineUsers.get(userId);
       if (userSockets) {
         userSockets.delete(socket.id);
         
-        // If user has no more active sockets, mark as offline
+       
         if (userSockets.size === 0) {
           onlineUsers.delete(userId);
-          console.log(`❌ [SERVER] User ${userId} went offline`);
-          
-          // Notify all conversations this user is part of that they're offline
+
           socket.rooms.forEach(roomId => {
             if (roomId !== socket.id) {
               socket.to(roomId).emit('user-offline', { userId });
             }
           });
-          
-          // Broadcast to all sockets that this user is offline
+
           socket.broadcast.emit('user-offline', { userId });
         } else {
-          console.log(`ℹ️ [SERVER] User ${userId} still online (${userSockets.size} active connection(s))`);
+          
         }
       }
       socketToUserId.delete(socket.id);
     }
 
-    // Handle WebRTC cleanup
     for (const [interviewId, room] of webrtcRooms.entries()) {
       const participant = room.participants.get(socket.id);
       if (participant) {
@@ -492,7 +457,7 @@ async function initializeKafkaConsumer(): Promise<void> {
         try {
           const eventData = JSON.parse(message.value?.toString() || '{}') as StatusUpdatedEventData;
           if (eventData.newStatus === 'SHORTLISTED') {
-            console.log('Application shortlisted, creating conversation:', eventData.applicationId);
+           
             
             const _chatService = container.get<IChatService>(TYPES.IChatService);
             
@@ -505,20 +470,17 @@ async function initializeKafkaConsumer(): Promise<void> {
               userId,
               companyId,
             );
-            
-            console.log(`Conversation created for application: ${eventData.applicationId}`);
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.error('Error processing Kafka event:', errorMessage);
+          
         }
       },
     });
 
-    console.log('Kafka consumer initialized for chat-service');
+ 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Failed to initialize Kafka consumer:', errorMessage);
   }
 }
 
@@ -536,7 +498,7 @@ async function initializeServices(): Promise<void> {
 }
 
 process.on('SIGTERM', async () => {
-  console.log('Shutting down chat service...');
+  
   try {
     await consumer.disconnect();
     console.log('Kafka consumer disconnected');

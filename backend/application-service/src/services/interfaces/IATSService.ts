@@ -9,7 +9,7 @@ export interface ResumeParseResult {
 }
 
 export interface ATSAnalysisResult {
-  score: number; // 0-100
+  score: number;
   improvements: string[];
   missingKeywords: string[];
   strengths?: string[];

@@ -46,7 +46,7 @@ const Hero = () => {
           </p>
           
          
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl mb-12 animate-scale-in">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-2xl mb-12 animate-scale-in">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />

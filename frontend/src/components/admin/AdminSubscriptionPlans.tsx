@@ -42,7 +42,6 @@ const AdminSubscriptionPlans: React.FC = () => {
       setTotalPages(response.totalPages);
       setCurrentPage(response.page);
     } catch (err: unknown) {
-      console.error('Failed to load plans', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || MESSAGES.ERROR.PLAN_LOAD_FAILED;
@@ -136,7 +135,6 @@ const AdminSubscriptionPlans: React.FC = () => {
       resetForm();
       await loadPlans();
     } catch (err: unknown) {
-      console.error('Failed to save plan', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || MESSAGES.ERROR.PLAN_SAVE_FAILED;
@@ -181,7 +179,6 @@ const AdminSubscriptionPlans: React.FC = () => {
       await loadPlans();
       closeDeleteModal();
     } catch (err: unknown) {
-      console.error('Failed to delete plan', err);
       const isAxiosError = err && typeof err === 'object' && 'response' in err;
       const axiosError = isAxiosError ? (err as { response?: { data?: { error?: string; message?: string } } }) : null;
       const errorMsg = axiosError?.response?.data?.error || axiosError?.response?.data?.message || MESSAGES.ERROR.PLAN_DELETE_FAILED;

@@ -23,14 +23,6 @@ export const SubscriptionStatus = () => {
     loadStatus();
   }, []);
 
-  useEffect(() => {
-    // If session_id is present, it means payment was just completed
-    if (sessionId) {
-      setIsNewSubscription(true);
-      toast.success('🎉 Payment successful! Your subscription is now active.');
-    }
-  }, [sessionId]);
-
   const loadStatus = async () => {
     try {
       setLoading(true);
@@ -40,13 +32,14 @@ export const SubscriptionStatus = () => {
       // If we have a session_id and subscription is active, it's a new subscription
       if (sessionId && response.data.isActive && response.data.subscription) {
         setIsNewSubscription(true);
+        // Show success toast only once
+        toast.success('🎉 Payment successful! Your subscription is now active.');
         // Redirect to dashboard after 3 seconds to show success message
         setTimeout(() => {
           navigate(dashboardPath); // Now dashboardPath is accessible
         }, 3000);
       }
     } catch (error: unknown) {
-      console.error('Error loading subscription status:', error);
       const isAxiosError = error && typeof error === 'object' && 'response' in error;
       const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
       toast.error(axiosError?.response?.data?.message || 'Failed to load subscription status');

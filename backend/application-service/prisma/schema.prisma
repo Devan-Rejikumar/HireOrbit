@@ -21,7 +21,6 @@ model Application {
   appliedAt      DateTime                   @default(now())
   updatedAt      DateTime                   @updatedAt
   atsscore       Float?
-  atsScore       Float?
   notes          ApplicationNotes[]
   statusHistory  ApplicationStatusHistory[]
   interviews     Interview[]

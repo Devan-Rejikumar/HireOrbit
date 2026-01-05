@@ -9,14 +9,12 @@ import { ATS_ROUTES } from '../constants/routes';
 const router = Router();
 const atsController = container.get<ATSController>(TYPES.ATSController);
 
-// Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    // Accept PDF and DOCX files
     const allowedMimes = [
       'application/pdf',
       'application/x-pdf',
@@ -35,8 +33,7 @@ const upload = multer({
   },
 });
 
-// Multer error handler - Express error middleware (4 parameters)
-const handleMulterError = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+const handleMulterError = (err: Error, req: Request, res: Response, _next: NextFunction): void => {
   console.error('[ATS Route] Multer error:', err.message);
   
   if (err.message === 'Only PDF and DOCX files are allowed') {
@@ -74,7 +71,7 @@ router.post(
     next();
   },
   upload.single('resume'),
-  handleMulterError, // Error middleware - will only be called if multer throws an error
+  handleMulterError,
   (req: Request, res: Response, next: NextFunction) => {
     console.log('[ATS Route] After multer:', {
       hasFile: !!req.file,
@@ -97,7 +94,7 @@ router.post(
       console.error('[ATS Route] No file received! Request details:', {
         headers: req.headers,
         body: req.body,
-        files: (req as any).files,
+        files: (req as Request & { files?: Express.Multer.File[] }).files,
       });
     }
     next();

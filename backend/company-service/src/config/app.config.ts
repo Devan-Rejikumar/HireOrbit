@@ -3,7 +3,7 @@
  * Non-sensitive configuration values with safe defaults
  * Sensitive values (secrets, passwords) should be in .env file
  */
-import "dotenv-flow/config";
+import 'dotenv-flow/config';
 
 export const AppConfig = {
   PORT: process.env.PORT || '3001',

@@ -9,7 +9,6 @@ import { Subscription, SubscriptionPlan } from '@prisma/client';
 import { AppError } from '../../utils/errors/AppError';
 import { HttpStatusCode } from '../../enums/StatusCodes';
 import { Messages } from '../../constants/Messages';
-// Logger removed - using console.log instead
 import { SubscriptionStatus } from '../../enums/StatusCodes';
 import { mapSubscriptionStatusToResponse } from '../../dto/mappers/subscription.mapper';
 import { AppConfig } from '../../config/app.config';
@@ -27,13 +26,11 @@ export class SubscriptionService implements ISubscriptionService {
 
   async createSubscription(input: CreateSubscriptionInput): Promise<Subscription> {
     try {
-      // Validate plan exists
       const plan = await this._subscriptionPlanRepository.findById(input.planId);
       if (!plan) {
         throw new AppError(Messages.SUBSCRIPTION.INVALID_PLAN, HttpStatusCode.BAD_REQUEST);
       }
 
-      // Check if user/company already has an active subscription
       const existingSubscription = input.userId
         ? await this._subscriptionRepository.findByUserId(input.userId)
         : await this._subscriptionRepository.findByCompanyId(input.companyId!);
@@ -42,21 +39,19 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError(Messages.SUBSCRIPTION.ALREADY_EXISTS, HttpStatusCode.CONFLICT);
       }
 
-      // Handle Free plans - no Stripe needed
       const isFreePlan = plan.priceMonthly === null || plan.priceMonthly === 0;
       
       if (isFreePlan) {
-        // For free plans, create subscription directly without Stripe
         const subscription = await this._subscriptionRepository.create({
           userId: input.userId,
           companyId: input.companyId,
           planId: input.planId,
-          stripeSubscriptionId: `free_${Date.now()}`, // Dummy ID for free plans
-          stripeCustomerId: `free_customer_${input.userId || input.companyId}`, // Dummy customer ID
+          stripeSubscriptionId: `free_${Date.now()}`, 
+          stripeCustomerId: `free_customer_${input.userId || input.companyId}`, 
           status: SubscriptionStatus.ACTIVE,
           billingPeriod: 'monthly',
           currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+          currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
         });
 
         console.log('Free subscription created', {
@@ -69,7 +64,6 @@ export class SubscriptionService implements ISubscriptionService {
         return subscription;
       }
 
-      // Get Stripe price ID based on billing period
       const stripePriceId = input.billingPeriod === 'monthly'
         ? plan.stripePriceIdMonthly
         : plan.stripePriceIdYearly;
@@ -78,8 +72,6 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError('Stripe price ID not configured for this plan', HttpStatusCode.BAD_REQUEST);
       }
 
-      // Create or get Stripe customer
-      // TODO: Fetch actual email from user-service/company-service
       const customerEmail = input.userId ? `user-${input.userId}@example.com` : `company-${input.companyId}@example.com`;
       const customerName = input.userId ? `User ${input.userId}` : `Company ${input.companyId}`;
       
@@ -88,7 +80,6 @@ export class SubscriptionService implements ISubscriptionService {
         companyId: input.companyId || '',
       });
 
-      // Create Stripe subscription
       const stripeSubscription = await this._stripeService.createSubscription(
         customer.id,
         stripePriceId,
@@ -99,7 +90,6 @@ export class SubscriptionService implements ISubscriptionService {
         },
       );
 
-      // Create subscription record in database
       const subData = stripeSubscription as unknown as {
         current_period_start?: number;
         current_period_end?: number;
@@ -130,7 +120,6 @@ export class SubscriptionService implements ISubscriptionService {
       if (error instanceof AppError) {
         throw error;
       }
-      // FIX: Use proper error message instead of success message
       throw new AppError(
         'Failed to create subscription. Please try again later.',
         HttpStatusCode.INTERNAL_SERVER_ERROR,
@@ -140,13 +129,10 @@ export class SubscriptionService implements ISubscriptionService {
 
   async createCheckoutSession(input: CreateSubscriptionInput): Promise<{ url: string; sessionId: string }> {
     try {
-      // Validate plan exists
       const plan = await this._subscriptionPlanRepository.findById(input.planId);
       if (!plan) {
         throw new AppError(Messages.SUBSCRIPTION.INVALID_PLAN, HttpStatusCode.BAD_REQUEST);
       }
-
-      // Get Stripe price ID based on billing period
       const stripePriceId = input.billingPeriod === 'monthly'
         ? plan.stripePriceIdMonthly
         : plan.stripePriceIdYearly;
@@ -159,13 +145,12 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError('Stripe price ID not configured for this plan', HttpStatusCode.BAD_REQUEST);
       }
 
-      // Verify Stripe price matches database price
       try {
         const stripePrice = await this._stripeService.getPrice(stripePriceId);
-        const stripePriceAmount = (stripePrice.unit_amount || 0) / 100; // Convert from paise to rupees
+        const stripePriceAmount = (stripePrice.unit_amount || 0) / 100;
         
         if (expectedPrice && Math.abs(stripePriceAmount - expectedPrice) > 0.01) {
-          console.error('⚠️ PRICE MISMATCH DETECTED', {
+          console.error(' PRICE MISMATCH DETECTED', {
             planId: plan.id,
             planName: plan.name,
             billingPeriod: input.billingPeriod,
@@ -173,15 +158,13 @@ export class SubscriptionService implements ISubscriptionService {
             stripePrice: stripePriceAmount,
             stripePriceId,
           });
-          // Don't throw - just log the warning, as the user might have already paid
         }
       } catch (error: unknown) {
         const err = error as { message?: string };
         console.error('Failed to verify Stripe price', { error: err.message, stripePriceId });
-        // Continue anyway - price might still work
+
       }
 
-      // Create or get Stripe customer
       const customerEmail = input.userId ? `user-${input.userId}@example.com` : `company-${input.companyId}@example.com`;
       const customerName = input.userId ? `User ${input.userId}` : `Company ${input.companyId}`;
       
@@ -190,7 +173,6 @@ export class SubscriptionService implements ISubscriptionService {
         companyId: input.companyId || '',
       });
 
-      // Create checkout session
       const frontendUrl = AppConfig.FRONTEND_URL || 'http://localhost:5173';
       const successUrl = `${frontendUrl}/subscriptions/status?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${frontendUrl}/subscriptions?canceled=true`;
@@ -207,12 +189,6 @@ export class SubscriptionService implements ISubscriptionService {
         },
       );
 
-      console.log('Checkout session created', {
-        sessionId: session.id,
-        userId: input.userId,
-        companyId: input.companyId,
-        planId: input.planId,
-      });
 
       return {
         url: session.url || '',
@@ -237,10 +213,8 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError(Messages.SUBSCRIPTION.NOT_FOUND, HttpStatusCode.NOT_FOUND);
       }
 
-      // Cancel in Stripe
       await this._stripeService.cancelSubscription(subscription.stripeSubscriptionId);
 
-      // Update in database
       await this._subscriptionRepository.update(subscriptionId, {
         status: SubscriptionStatus.CANCELLED,
         cancelAtPeriodEnd: true,
@@ -268,7 +242,6 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError(Messages.SUBSCRIPTION.INVALID_PLAN, HttpStatusCode.BAD_REQUEST);
       }
 
-      // Get appropriate Stripe price ID
       const newStripePriceId = subscription.billingPeriod === 'monthly'
         ? newPlan.stripePriceIdMonthly
         : newPlan.stripePriceIdYearly;
@@ -277,13 +250,11 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError('Stripe price ID not configured for this plan', HttpStatusCode.BAD_REQUEST);
       }
 
-      // Update in Stripe
       const updatedStripeSubscription = await this._stripeService.updateSubscription(
         subscription.stripeSubscriptionId,
         newStripePriceId,
       );
 
-      // Update in database
       const subData = updatedStripeSubscription as unknown as {
         current_period_start?: number;
         current_period_end?: number;
@@ -307,7 +278,6 @@ export class SubscriptionService implements ISubscriptionService {
   }
 
   async downgradeSubscription(subscriptionId: string, newPlanId: string): Promise<Subscription> {
-    // Same logic as upgrade, but you might want to handle proration differently
     return this.upgradeSubscription(subscriptionId, newPlanId);
   }
 
@@ -338,12 +308,7 @@ export class SubscriptionService implements ISubscriptionService {
       
       const plan = subscriptionWithPlan.plan;
       const features = plan?.features?.map((f: { name: string }) => f.name) || [];
-      
-      // Check if subscription is active or trialing
       const isStatusActive = subscription.status === SubscriptionStatus.ACTIVE || subscription.status === SubscriptionStatus.TRIALING;
-      
-      // Check if subscription is cancelled but still within paid period
-      // Users should have access until the end of the period they paid for
       const isCancelledButActive = 
         subscription.status === SubscriptionStatus.CANCELLED &&
         subscription.cancelAtPeriodEnd === true &&
@@ -358,7 +323,6 @@ export class SubscriptionService implements ISubscriptionService {
         isActive,
       );
     } catch (error) {
-      console.error('Failed to get subscription status', { error, userId, companyId });
       throw error;
     }
   }

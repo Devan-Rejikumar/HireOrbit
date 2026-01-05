@@ -57,11 +57,9 @@ export class ChatService implements IChatService {
   ): Promise<ConversationResponse> {
     const existingConversation = await this._chatRepository.findConversationByUserAndCompany(userId, companyId);
     if (existingConversation) {
-      console.log(`[ChatService] Reusing existing conversation ${existingConversation.id} for user ${userId} and company ${companyId}`);
       return ChatResponseMapper.toConversationResponse(existingConversation);
     }
     const conversation = await this._chatRepository.createConversation(applicationId, userId, companyId);
-    console.log(` [ChatService] Created new conversation ${conversation.id} for user ${userId} and company ${companyId}`);
     return ChatResponseMapper.toConversationResponse(conversation);
   }
 

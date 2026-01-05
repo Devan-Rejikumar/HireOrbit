@@ -217,7 +217,6 @@ export const uploadImageToCloudinary = async (fileBuffer: Buffer, fileName: stri
     });
 
     const base64String = fileBuffer.toString('base64');
-    // Determine mime type from extension
     const mimeTypeMap: Record<string, string> = {
       '.png': 'image/png',
       '.jpg': 'image/jpeg',

@@ -11,7 +11,6 @@ import { StripeWebhookHandler } from './webhooks/stripe.webhook';
 const app = express();
 
 app.use((req, res, next) => {
-  console.log({ method: req.method, url: req.url, contentType: req.headers['content-type'] });
   next();
 });
 

@@ -6,7 +6,7 @@ import { logger } from '../../utils/logger';
 
 @injectable()
 export class ResumeParserService implements IATSService {
-  async calculateATSScore(resumeText: string, jobDescription: string): Promise<number> {
+  async calculateATSScore(_resumeText: string, _jobDescription: string): Promise<number> {
     throw new Error('Use GrokATSService for ATS score calculation');
   }
 
@@ -55,7 +55,6 @@ export class ResumeParserService implements IATSService {
   }
 
   private cleanText(text: string): string {
-    // Remove excessive whitespace
     return text
       .replace(/\s+/g, ' ')
       .replace(/\n\s*\n/g, '\n')
@@ -66,7 +65,6 @@ export class ResumeParserService implements IATSService {
     const lowerText = text.toLowerCase();
     const sections: ResumeParseResult['sections'] = {};
 
-    // Extract skills (look for common skill section headers)
     const skillKeywords = ['skills', 'technical skills', 'core competencies', 'expertise', 'proficiencies'];
     const skillMatch = skillKeywords.find(keyword => lowerText.includes(keyword));
     if (skillMatch) {
@@ -104,19 +102,17 @@ export class ResumeParserService implements IATSService {
   }
 
   private extractListItems(text: string): string[] {
-    // Extract items from bullet points or comma-separated lists
+
     const items: string[] = [];
-    
-    // Match bullet points
+
     const bulletMatches = text.match(/[•\-\*]\s*([^\n]+)/g);
     if (bulletMatches) {
       items.push(...bulletMatches.map(match => match.replace(/[•\-\*]\s*/, '').trim()));
     }
 
-    // Match comma-separated items (if no bullets found)
     if (items.length === 0) {
       const commaMatches = text.split(',').map(item => item.trim()).filter(item => item.length > 2);
-      items.push(...commaMatches.slice(0, 20)); // Limit to 20 items
+      items.push(...commaMatches.slice(0, 20)); 
     }
 
     return items.filter(item => item.length > 0 && item.length < 100);
@@ -140,7 +136,7 @@ export class ResumeParserService implements IATSService {
   }
 
   // This method is required by IATSService but analysis is done by GrokATSService (uses GROQ)
-  async analyzeATS(resumeText: string, jobDescription: string): Promise<never> {
+  async analyzeATS(_resumeText: string, _jobDescription: string): Promise<never> {
     throw new Error('Use GrokATSService for ATS analysis');
   }
 }

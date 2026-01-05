@@ -177,8 +177,6 @@ export class OfferController {
     }
 
     const { offerId } = req.params;
-
-    // Get offer to verify ownership and get PDF URL
     const offer = await this._offerService.getOfferById(
       offerId,
       userRole === 'jobseeker' ? userId : undefined,
@@ -190,7 +188,6 @@ export class OfferController {
     }
 
     try {
-      // Fetch PDF from Cloudinary
       const response = await axios.get(offer.pdfUrl, {
         responseType: 'stream',
       });
@@ -198,7 +195,7 @@ export class OfferController {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="offer_${offerId}.pdf"`);
       response.data.pipe(res);
-    } catch (error) {
+    } catch {
       throw new AppError('Failed to download offer PDF', HttpStatusCode.INTERNAL_SERVER_ERROR);
     }
   }

@@ -7,21 +7,15 @@ import {
   Briefcase, 
   Edit, 
   Trash2, 
-  ChevronLeft, 
-  ChevronRight, 
-  ArrowLeft,
   MapPin,
   DollarSign,
   Calendar,
-  Users,
   Building2,
   Eye,
   FileText,
   Home,
   MessageSquare,
   User,
-  GraduationCap,
-  Clock,
   CreditCard,
   Settings,
   Calendar as CalendarIcon,
@@ -81,7 +75,7 @@ const CompanyJobListing = () => {
 
   // Get total unread message count
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
-    authCompany?.id || null
+    authCompany?.id || null,
   );
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,7 +151,6 @@ const CompanyJobListing = () => {
       setCompany(companyData);
       
       if (!companyId || !companyData) {
-        console.error('No company ID found');
         setJobs([]);
         return;
       }
@@ -173,7 +166,6 @@ const CompanyJobListing = () => {
       const jobsList = jobsResponse.data?.data?.jobs ?? [];
       setJobs(Array.isArray(jobsList) ? jobsList : []);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
       setJobs([]);
     } finally {
       setLoading(false);
@@ -200,7 +192,7 @@ const CompanyJobListing = () => {
       setIsDeleteModalOpen(false);
       setJobToDelete(null);
     } catch (error) {
-      console.error('Error deleting job:', error);
+      // Silently handle error
     } finally {
       setIsDeleting(false);
     }
@@ -228,17 +220,16 @@ const CompanyJobListing = () => {
         prevJobs.map(j => 
           j.id === job.id 
             ? { ...j, isListed: response.data.job.isListed, listedAt: response.data.job.listedAt }
-            : j
-        )
+            : j,
+        ),
       );
       
       toast.success(
         newListedStatus 
           ? MESSAGES.SUCCESS.JOB_LISTED 
-          : MESSAGES.SUCCESS.JOB_UNLISTED
+          : MESSAGES.SUCCESS.JOB_UNLISTED,
       );
     } catch (error: unknown) {
-      console.error('Error toggling job listing:', error);
       const errorMessage = error && typeof error === 'object' && 'response' in error
         ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
         : MESSAGES.ERROR.JOB_TOGGLE_FAILED;
@@ -269,7 +260,7 @@ const CompanyJobListing = () => {
 
       <div className="flex min-h-screen relative">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto transition-all duration-300 z-10">
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10">
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
@@ -337,27 +328,28 @@ const CompanyJobListing = () => {
                 Settings
               </button>
             </div>
-          </nav>
-          
-          <div className="absolute bottom-3 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-              {company?.logo ? (
-                <img 
-                  src={company.logo} 
-                  alt={company.companyName || 'Company logo'} 
-                  className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                />
-              ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                  <Building2 className="h-4 w-4 text-white" />
+            
+            {/* Company Info */}
+            <div className="mt-8">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
+                  <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
                 </div>
-              )}
-              <div>
-                <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
-                <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
               </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* Main Content */}

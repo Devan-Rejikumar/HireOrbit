@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, MapPin, Briefcase, Filter, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import toast from 'react-hot-toast';
 import api from '../api/axios';
 import { useLocation, Link } from 'react-router-dom';
 import AutocompleteInput from '../components/AutocompleteInput';
@@ -56,7 +55,7 @@ const JobListings = () => {
   });
   
   // Quick search functionality
-  const [quickSearch, setQuickSearch] = useState('');
+  const [_quickSearch, _setQuickSearch] = useState('');
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -115,8 +114,7 @@ const JobListings = () => {
 
       setAllJobs(jobsData);
       setTotalJobs(total);
-    } catch (error: unknown) {
-      console.error('Error fetching jobs:', error);
+    } catch (_error: unknown) {
       setSearchError('Failed to fetch jobs. Please try again.');
       setAllJobs([]);
       setTotalJobs(0);

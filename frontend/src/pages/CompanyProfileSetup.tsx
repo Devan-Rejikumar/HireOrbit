@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,8 +86,7 @@ const CompanyProfileSetup = () => {
         setLoadingCategories(true);
         const response = await api.get<{ data: { categories: Array<{ id: string; name: string }> } }>('/industries');
         setIndustryCategories(response.data?.data?.categories || []);
-      } catch (err) {
-        console.error('Failed to load industry categories', err);
+      } catch (_err) {
         // Fallback to empty array if API fails
         setIndustryCategories([]);
       } finally {
@@ -126,63 +125,40 @@ const CompanyProfileSetup = () => {
             contactPersonPhone: company.contactPersonPhone || '',
           }));
         }
-      } catch (err) {
+      } catch (_err) {
         // keep silent for now; page still works without prefill
       }
     })();
   }, []);
 
-  useEffect(() => {
-    if (!hasCheckedProfile.current) {
-      hasCheckedProfile.current = true;
-      checkProfileStep();
-    }
-  }, [isNavigating]);
-
-  const checkProfileStep = async () => {
+  const checkProfileStep = useCallback(async () => {
     if(isNavigating) return;
     try {
-      console.log('=== Frontend Debug ===');
-      console.log('All cookies:', document.cookie);
-      console.log('Making request to:', '/company/profile/step');
       const response = await api.get<ProfileStepResponse>(
         '/company/profile/step',
       );
-      console.log('Profile step response:', response.data);
-      console.log('Profile step data:', response.data.data);
-      console.log('Profile step value:', response.data.data?.profileStep);
-      console.log('Profile step type:', typeof response.data.data?.profileStep);
       const step = response.data.data?.profileStep;
-      console.log('Current step',step);
       if (step === null || step === undefined) {
-        console.log('Step is null/undefined, setting to step 2');
         setCurrentStep(2);
       } else if (typeof step === 'object') {
-        console.log('Step is object:', step);
         // Check if it's a completed profile object
         if (step.profileCompleted) {
-          console.log('Profile completed, redirecting to review status');
           setIsNavigating(true);
           navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else {
-          console.log('Profile not completed, setting to step 2');
           setCurrentStep(2);
         }
       } else if (typeof step === 'string') {
-        console.log('Step is string:', step);
         if (step === 'approved') {
-          console.log('Redirecting to dashboard...');
           setIsNavigating(true);
           navigate(ROUTES.COMPANY_DASHBOARD, { replace: true });
           return;
         } else if (step === 'rejected') {
-          console.log('Redirecting to review status...');
           setIsNavigating(true);
           navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
         } else if (step === 'completed') {
-          console.log('Redirecting to review status...');
           setIsNavigating(true);
           navigate(ROUTES.COMPANY_REVIEW_STATUS, { replace: true });
           return;
@@ -192,15 +168,17 @@ const CompanyProfileSetup = () => {
           setCurrentStep(2);
         }
       }
-    } catch (error: unknown) {
-      console.error('=== Frontend Error ===');
-      const isAxiosError = error && typeof error === 'object' && 'response' in error;
-      const axiosError = isAxiosError ? (error as { response?: { data?: unknown; status?: number; headers?: unknown } }) : null;
-      console.error('Error details:', axiosError?.response?.data);
-      console.error('Status:', axiosError?.response?.status);
-      console.error('Headers:', axiosError?.response?.headers);
+    } catch (_error: unknown) {
+      // Silently handle errors
     }
-  };
+  }, [isNavigating, navigate]);
+
+  useEffect(() => {
+    if (!hasCheckedProfile.current) {
+      hasCheckedProfile.current = true;
+      checkProfileStep();
+    }
+  }, [isNavigating, checkProfileStep]);
 
 
   const handleInputChange = (

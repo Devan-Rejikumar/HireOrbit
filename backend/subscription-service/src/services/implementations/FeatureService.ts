@@ -4,7 +4,6 @@ import { IFeatureService } from '../interfaces/IFeatureService';
 import { ISubscriptionService } from '../interfaces/ISubscriptionService';
 import { IJobPostingLimitRepository } from '../../repositories/interfaces/IJobPostingLimitRepository';
 import { FeatureName } from '../../enums/StatusCodes';
-// Logger removed - using console.log instead
 
 @injectable()
 export class FeatureService implements IFeatureService {
@@ -20,7 +19,6 @@ export class FeatureService implements IFeatureService {
       const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
       
       if (!subscriptionStatus.subscription || !subscriptionStatus.isActive) {
-        // Default to Free plan limits if no active subscription
         const limit = 2;
         const limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
         const currentCount = limitRecord?.currentCount || 0;
@@ -37,7 +35,6 @@ export class FeatureService implements IFeatureService {
         throw new Error('Plan not found for subscription');
       }
 
-      // Check if plan has unlimited jobs feature
       const hasUnlimitedJobs = subscriptionStatus.features.includes(FeatureName.UNLIMITED_JOBS);
       
       if (hasUnlimitedJobs) {
@@ -48,11 +45,9 @@ export class FeatureService implements IFeatureService {
         };
       }
 
-      // Get or create job posting limit record
       let limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
-      
-      // Determine limit based on plan name
-      let limit = 2; // Default Free plan
+
+      let limit = 2; 
       if (plan.name === 'Basic') {
         limit = 10;
       } else if (plan.name === 'Premium') {
@@ -71,7 +66,6 @@ export class FeatureService implements IFeatureService {
           resetDate: nextMonth,
         });
       } else {
-        // Update limit if plan changed
         if (limitRecord.limit !== limit) {
           limitRecord = await this._jobPostingLimitRepository.update(companyId, { limit });
         }
@@ -128,7 +122,6 @@ export class FeatureService implements IFeatureService {
       if (limitRecord) {
         await this._jobPostingLimitRepository.incrementCount(companyId);
       } else {
-        // Create if doesn't exist (shouldn't happen, but handle gracefully)
         const nextMonth = new Date();
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         nextMonth.setDate(1);
@@ -136,7 +129,7 @@ export class FeatureService implements IFeatureService {
         await this._jobPostingLimitRepository.create({
           companyId,
           currentCount: 1,
-          limit: 2, // Default Free plan
+          limit: 2, 
           resetDate: nextMonth,
         });
       }

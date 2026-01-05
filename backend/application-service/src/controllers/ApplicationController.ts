@@ -6,7 +6,7 @@ import { buildSuccessResponse } from 'hireorbit-shared-dto';
 import { HttpStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { TYPES } from '../config/types';
 import { uploadToCloudinary } from '../config/cloudinary';
-import { mapApplicationToResponse,mapUserApplicationsResponse } from '../dto/mappers/application.mapper';
+import { mapApplicationToResponse } from '../dto/mappers/application.mapper';
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
 import { logger } from '../utils/logger';
@@ -85,7 +85,6 @@ export class ApplicationController {
       userId,
     };
 
-    // Pass resume buffer if available for ATS score calculation
     let resumeBuffer: Buffer | undefined;
     let resumeMimeType: string | undefined;
     
@@ -106,8 +105,8 @@ export class ApplicationController {
     } else if (resumeBase64 && resumeFileName) {
       resumeBuffer = Buffer.from(resumeBase64, 'base64');
       resumeMimeType = resumeFileName.endsWith('.pdf') ? 'application/pdf' : 
-                      resumeFileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
-                      resumeFileName.endsWith('.doc') ? 'application/msword' : 'application/pdf';
+        resumeFileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+          resumeFileName.endsWith('.doc') ? 'application/msword' : 'application/pdf';
       logger.info('Using resume base64 for ATS', {
         bufferSize: resumeBuffer.length,
         mimeType: resumeMimeType,
@@ -236,7 +235,7 @@ export class ApplicationController {
       );
     }
     
-    // Parse query parameters for ATS score filtering
+
     const queryParams = GetApplicationsQuerySchema.safeParse(req.query);
     const atsScoreMin = queryParams.success ? queryParams.data.atsScoreMin : undefined;
     
