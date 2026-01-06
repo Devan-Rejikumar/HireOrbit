@@ -221,34 +221,73 @@ export class StripeWebhookHandler {
         ? new Date(subData.current_period_end * 1000)
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); 
 
-      console.log('Attempting to create subscription record', {
-        subscriptionId: stripeSubscription.id,
-        userId,
-        companyId,
-        planId,
-        customerId,
-        billingPeriod,
-        status: this.mapStripeStatus(stripeSubscription.status),
-      });
-      const subscription = await this._subscriptionRepository.create({
-        userId,
-        companyId,
-        planId,
-        stripeSubscriptionId: stripeSubscription.id,
-        stripeCustomerId: customerId,
-        status: this.mapStripeStatus(stripeSubscription.status),
-        billingPeriod,
-        currentPeriodStart,
-        currentPeriodEnd,
-      });
+      // Check if there's an existing subscription (cancelled or expired) for this user/company
+      const existingSubscription = userId
+        ? await this._subscriptionRepository.findByUserId(userId)
+        : await this._subscriptionRepository.findByCompanyId(companyId!);
 
-      console.log('Subscription created from Stripe webhook', {
-        subscriptionId: subscription.id,
-        stripeSubscriptionId: stripeSubscription.id,
-        userId,
-        companyId,
-        planId,
-      });
+      // If existing subscription exists and is cancelled/expired, update it instead of creating new
+      if (existingSubscription && (
+        existingSubscription.status === SubscriptionStatus.CANCELLED ||
+        existingSubscription.currentPeriodEnd <= new Date()
+      )) {
+        console.log('Updating existing cancelled/expired subscription from Stripe webhook', {
+          existingSubscriptionId: existingSubscription.id,
+          stripeSubscriptionId: stripeSubscription.id,
+          previousStatus: existingSubscription.status,
+          userId,
+          companyId,
+          planId,
+        });
+
+        const updatedSubscription = await this._subscriptionRepository.update(existingSubscription.id, {
+          planId,
+          stripeSubscriptionId: stripeSubscription.id,
+          stripeCustomerId: customerId,
+          status: this.mapStripeStatus(stripeSubscription.status),
+          billingPeriod,
+          currentPeriodStart,
+          currentPeriodEnd,
+          cancelAtPeriodEnd: false,
+        });
+
+        console.log('Subscription reactivated from Stripe webhook', {
+          subscriptionId: updatedSubscription.id,
+          stripeSubscriptionId: stripeSubscription.id,
+          userId,
+          companyId,
+          planId,
+        });
+      } else {
+        console.log('Attempting to create subscription record', {
+          subscriptionId: stripeSubscription.id,
+          userId,
+          companyId,
+          planId,
+          customerId,
+          billingPeriod,
+          status: this.mapStripeStatus(stripeSubscription.status),
+        });
+        const subscription = await this._subscriptionRepository.create({
+          userId,
+          companyId,
+          planId,
+          stripeSubscriptionId: stripeSubscription.id,
+          stripeCustomerId: customerId,
+          status: this.mapStripeStatus(stripeSubscription.status),
+          billingPeriod,
+          currentPeriodStart,
+          currentPeriodEnd,
+        });
+
+        console.log('Subscription created from Stripe webhook', {
+          subscriptionId: subscription.id,
+          stripeSubscriptionId: stripeSubscription.id,
+          userId,
+          companyId,
+          planId,
+        });
+      }
     } catch (error: unknown) {
       const err = error as { message?: string; stack?: string };
       console.error('Failed to create subscription from Stripe webhook', {

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { subscriptionService, SubscriptionStatusResponse } from '../../api/subscriptionService';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { CheckCircle, Sparkles, ArrowRight } from 'lucide-react';
+import { CheckCircle, Sparkles, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export const SubscriptionStatus = () => {
@@ -15,6 +15,7 @@ export const SubscriptionStatus = () => {
   const [isNewSubscription, setIsNewSubscription] = useState(false);
   const navigate = useNavigate();
   const { role } = useAuth();
+  const toastShownRef = useRef(false);
 
   // Move dashboardPath here, before it's used
   const dashboardPath = role === 'company' ? '/company/dashboard' : '/user/dashboard';
@@ -30,8 +31,9 @@ export const SubscriptionStatus = () => {
       setStatus(response.data);
       
       // If we have a session_id and subscription is active, it's a new subscription
-      if (sessionId && response.data.isActive && response.data.subscription) {
+      if (sessionId && response.data.isActive && response.data.subscription && !toastShownRef.current) {
         setIsNewSubscription(true);
+        toastShownRef.current = true; // Mark toast as shown
         // Show success toast only once
         toast.success('🎉 Payment successful! Your subscription is now active.');
         // Redirect to dashboard after 3 seconds to show success message
@@ -75,6 +77,35 @@ export const SubscriptionStatus = () => {
 
   const subscription = status.subscription;
   const isActive = status.isActive;
+  
+  // Check if subscription is cancelled or expired
+  const isCancelled = subscription.status === 'cancelled' || !isActive;
+  const expiryDate = new Date(subscription.currentPeriodEnd);
+  const now = new Date();
+  const isExpired = expiryDate <= now;
+  const needsRenewal = isCancelled || isExpired;
+
+  const handleRenew = async () => {
+    try {
+      const response = await subscriptionService.createSubscription(
+        subscription.planId,
+        subscription.billingPeriod
+      );
+      
+      // If response contains checkoutUrl, redirect to Stripe checkout
+      if (response.data && typeof response.data === 'object' && 'checkoutUrl' in response.data) {
+        const checkoutData = response.data as { checkoutUrl: string; sessionId: string };
+        window.location.href = checkoutData.checkoutUrl;
+      } else {
+        toast.success('Subscription renewed successfully');
+        loadStatus();
+      }
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to renew subscription');
+    }
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -136,6 +167,31 @@ export const SubscriptionStatus = () => {
           </div>
         </div>
 
+        {needsRenewal && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-800 font-semibold mb-1">
+                  {isExpired ? 'Your subscription has expired' : 'Your subscription is cancelled'}
+                </p>
+                <p className="text-red-700 text-sm mb-3">
+                  {isExpired 
+                    ? `Your subscription expired on ${expiryDate.toLocaleDateString()}. Renew now to continue enjoying premium features.`
+                    : 'Renew your subscription to continue enjoying premium features.'}
+                </p>
+                <button
+                  onClick={handleRenew}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Renew Subscription
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
             <p className="text-sm text-gray-600">Current Period Start</p>
@@ -144,14 +200,14 @@ export const SubscriptionStatus = () => {
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Current Period End</p>
+            <p className="text-sm text-gray-600">{needsRenewal ? 'Expired on' : 'Current Period End'}</p>
             <p className="font-semibold">
               {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
             </p>
           </div>
         </div>
 
-        {subscription.cancelAtPeriodEnd && (
+        {subscription.cancelAtPeriodEnd && !needsRenewal && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <p className="text-yellow-800">
               ⚠️ Your subscription will be cancelled at the end of the current billing period.

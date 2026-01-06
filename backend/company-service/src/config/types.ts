@@ -14,6 +14,7 @@ const TYPES = {
   IndustryCategoryService: Symbol.for('IndustryCategoryService'),
   IIndustryCategoryService: Symbol.for('IIndustryCategoryService'),
   IndustryCategoryController: Symbol.for('IndustryCategoryController'),
+  JobServiceClient: Symbol.for('JobServiceClient'),
 };
 
 export default TYPES;

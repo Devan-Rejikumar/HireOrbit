@@ -6,6 +6,7 @@ import { NotificationService } from '../services/implementations/NotificationSer
 import { NotificationController } from '../controllers/NotificationController';
 import { IEventService } from '../services/interfaces/IEventService';
 import { EventService } from '../services/implementations/EventService';
+import { JobServiceClient } from '../services/implementations/JobServiceClient';
 import { NotificationModel } from '../models/NotificationModel';
 import { TYPES } from './types';
 
@@ -14,5 +15,6 @@ container.bind<INotificationRepository>(TYPES.INotificationRepository).to(Notifi
 container.bind<INotificationService>(TYPES.INotificationService).to(NotificationService).inSingletonScope();
 container.bind<NotificationController>(TYPES.INotificationController).to(NotificationController).inSingletonScope();
 container.bind<IEventService>(TYPES.IEventService).to(EventService).inSingletonScope();
+container.bind<JobServiceClient>(TYPES.JobServiceClient).to(JobServiceClient);
 container.bind(TYPES.NotificationModel).toConstantValue(NotificationModel);
 export { container };

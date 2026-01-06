@@ -92,11 +92,17 @@ export const SubscriptionPage = () => {
   const loadCurrentSubscription = useCallback(async () => {
     try {
       const response = await subscriptionService.getSubscriptionStatus();
-      if (response.data.subscription) {
+      const subscription = response.data?.subscription;
+      // Only set currentPlanId if subscription is active and not expired
+      // This allows selection for cancelled/expired subscriptions
+      if (subscription && response.data.isActive) {
         setCurrentPlanId(response.data.subscription.planId);
+      } else {
+        setCurrentPlanId(null); // Allow selection for cancelled/expired
       }
     } catch (_error) {
       // No active subscription found
+      setCurrentPlanId(null);
     }
   }, []);
 

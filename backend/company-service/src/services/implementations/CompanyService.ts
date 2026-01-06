@@ -7,10 +7,10 @@ import { ICompanyService } from '../interfaces/ICompanyService';
 import { IEmailService } from '../interfaces/IEmailService';
 import { CompanyProfileData, CompanyRegistrationStep2, CompanyRegistrationStep3, CompanyProfileStep, CompanyProfileStepData } from '../../types/company';
 import { RedisService } from './RedisService';
+import { JobServiceClient } from './JobServiceClient';
 import { PaginationResult } from '../../repositories/interfaces/IBaseRepository';
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
 import { mapCompaniesToResponse, mapCompanyToAuthResponse, mapCompanyToResponse } from '../../dto/mappers/company.mapper';
-import { AppConfig } from '../../config/app.config';
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, OTP_MIN_VALUE, OTP_MAX_VALUE, OTP_EXPIRY_SECONDS } from '../../constants/TimeConstants';
 
 interface CompanyTokenPayload extends JwtPayload {
@@ -28,6 +28,7 @@ export class CompanyService implements ICompanyService {
     private _companyRepository: ICompanyRepository,
     @inject(TYPES.EmailService) private _emailService: IEmailService,
     @inject(TYPES.RedisService) private _redisService: RedisService,
+    @inject(TYPES.JobServiceClient) private _jobServiceClient: JobServiceClient,
   ) { }
 
   async register(email: string, password: string, companyName: string, logo?: string): Promise<CompanyResponse> {
@@ -266,16 +267,7 @@ export class CompanyService implements ICompanyService {
   }
 
   async getCompanyJobCount(companyId: string): Promise<number> {
-    try {
-      const response = await fetch(`${AppConfig.JOB_SERVICE_URL}/api/jobs/company/${companyId}/count`);
-      if (!response.ok) return 0;
-
-      const data = await response.json() as { data: { count: number } };
-      return data.data?.count || 0;
-    } catch (error) {
-    
-      return 0;
-    }
+    return await this._jobServiceClient.getCompanyJobCount(companyId);
   }
 
   async reapplyCompany(companyId: string): Promise<{ company: CompanyResponse; message: string }> {
