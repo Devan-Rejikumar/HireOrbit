@@ -4,7 +4,7 @@ import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/context/AuthContext';
 import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscriptionService';
 import { atsService } from '@/api/atsService';
-import { FileCheck, Upload, Sparkles, ArrowLeft, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { FileCheck, Upload, Sparkles, ArrowLeft, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface ATSAnalysis {
@@ -20,6 +20,7 @@ export const ATSCheckerPage = () => {
   const navigate = useNavigate();
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatusResponse | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const [loading, setLoading] = useState(true);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
@@ -36,11 +37,26 @@ export const ATSCheckerPage = () => {
       setLoading(true);
       const response = await subscriptionService.getSubscriptionStatus();
       setSubscriptionStatus(response.data);
-      // Check if user has any active subscription (not just premium)
+      
+      const subscription = response.data?.subscription;
       const isActive = response.data?.isActive === true;
+      
+      // Check if subscription has expired
+      if (subscription && subscription.currentPeriodEnd) {
+        const expiryDate = new Date(subscription.currentPeriodEnd);
+        const now = new Date();
+        const expired = expiryDate <= now;
+        setIsExpired(expired);
+        
+        if (expired) {
+          setIsPremium(false);
+          return; // Don't navigate, show expiration message instead
+        }
+      }
+      
       setIsPremium(isActive);
       
-      if (!isActive) {
+      if (!isActive && !isExpired) {
         toast.error('ATS Score Checker is available only for users with an active subscription. Please upgrade to access it.');
         navigate(ROUTES.SUBSCRIPTIONS);
       }
@@ -119,6 +135,72 @@ export const ATSCheckerPage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show expiration message
+  if (isExpired && subscriptionStatus?.subscription) {
+    const expiryDate = new Date(subscriptionStatus.subscription.currentPeriodEnd);
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate(ROUTES.USER_DASHBOARD)}
+                  className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                    <FileCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">ATS Score Checker</h1>
+                    <p className="text-sm text-gray-600">Optimize your resume for job applications</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-red-200 p-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Subscription Expired</h2>
+              <p className="text-gray-600 mb-4">
+                Your {subscriptionStatus.plan?.name || 'Premium'} subscription expired on{' '}
+                <span className="font-semibold">{expiryDate.toLocaleDateString()}</span>
+              </p>
+              <p className="text-gray-600 mb-6">
+                To continue using the ATS Score Checker and other premium features, please renew your subscription.
+              </p>
+              
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                  Renew Subscription
+                </button>
+                <button
+                  onClick={() => navigate(ROUTES.USER_DASHBOARD)}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+                >
+                  Go to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

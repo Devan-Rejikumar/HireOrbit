@@ -219,6 +219,18 @@ const UserDashboard = () => {
     try {
       const response = await subscriptionService.getSubscriptionStatus();
       setSubscriptionStatus(response.data);
+      const subscription = response.data?.subscription;
+      
+      // Check if subscription has expired
+      if (subscription && subscription.currentPeriodEnd) {
+        const expiryDate = new Date(subscription.currentPeriodEnd);
+        const now = new Date();
+        if (expiryDate <= now) {
+          setIsPremium(false);
+          return;
+        }
+      }
+      
       const currentPlan = response.data?.plan;
       const premium = currentPlan?.name?.toLowerCase() === 'premium' && response.data?.isActive === true;
       setIsPremium(premium);

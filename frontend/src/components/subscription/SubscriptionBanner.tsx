@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { subscriptionService, SubscriptionStatusResponse, SubscriptionPlan } from '../../api/subscriptionService';
-import { CreditCard, Sparkles } from 'lucide-react';
+import { CreditCard, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface SubscriptionBannerProps {
   userType: 'user' | 'company';
@@ -66,8 +66,125 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
 
   // If status is null (not authenticated or no subscription), treat as free
   const currentPlan = status?.plan || null;
-  const isPremium = currentPlan?.name?.toLowerCase() === 'premium' && status?.isActive;
-  const isFree = !currentPlan || !status?.isActive || currentPlan.priceMonthly === 0 || currentPlan.priceMonthly === null || currentPlan.priceMonthly === undefined;
+  const subscription = status?.subscription;
+  
+  // Check if subscription has expired
+  let hasExpired = false;
+  if (subscription && subscription.currentPeriodEnd) {
+    const expiryDate = new Date(subscription.currentPeriodEnd);
+    const now = new Date();
+    hasExpired = expiryDate <= now;
+  }
+  
+  const isPremium = currentPlan?.name?.toLowerCase() === 'premium' && status?.isActive && !hasExpired;
+  const isExpiredPremium = currentPlan?.name?.toLowerCase() === 'premium' && hasExpired;
+  const isFree = !currentPlan || (!status?.isActive && !isExpiredPremium) || currentPlan.priceMonthly === 0 || currentPlan.priceMonthly === null || currentPlan.priceMonthly === undefined;
+
+  // Show expired premium banner
+  if (isExpiredPremium && subscription) {
+    const expiryDate = new Date(subscription.currentPeriodEnd);
+    return (
+      <div className="bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 border-2 border-red-300 rounded-xl md:rounded-2xl p-4 md:p-6 mb-6 shadow-lg">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
+          <div className="flex items-start gap-3 md:gap-5 flex-1 w-full">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+              <AlertCircle className="h-6 w-6 md:h-8 md:w-8 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-100 border border-red-300 rounded-full mb-2 md:mb-3">
+                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="text-xs font-semibold text-red-700 uppercase tracking-wide">Subscription Expired</span>
+              </div>
+              <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
+                Your <span className="text-red-600">Premium Plan</span> has expired
+              </h3>
+              <p className="text-sm md:text-base text-gray-700 mb-2">
+                Your subscription expired on <span className="font-semibold">{expiryDate.toLocaleDateString()}</span>
+              </p>
+              <p className="text-sm md:text-base text-gray-700 mb-3 md:mb-4">
+                Renew your subscription to continue enjoying premium features:
+              </p>
+              <ul className="space-y-2 md:space-y-2.5">
+                {userType === 'user' ? (
+                  <>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm md:text-base">ATS Score Checker</span>
+                        <span className="text-gray-600 text-xs md:text-sm"> - Optimize your resume for job applications</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm md:text-base">Increased Visibility</span>
+                        <span className="text-gray-600 text-xs md:text-sm"> - Your profile highlighted to recruiters</span>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 text-sm md:text-base">Premium Badge</span>
+                        <span className="text-gray-600 text-xs md:text-sm"> - Shows Premium status on your profile</span>
+                      </div>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base">Unlimited job postings</span>
+                    </li>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base">Featured job listings</span>
+                    </li>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base break-words">User profile search & ATS-filtered resumes</span>
+                    </li>
+                    <li className="flex items-start gap-2 md:gap-3">
+                      <div className="mt-0.5 w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-bold text-xs md:text-sm">✓</span>
+                      </div>
+                      <span className="text-gray-700 text-sm md:text-base">Advanced analytics dashboard</span>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+          </div>
+          <div className="flex-shrink-0 w-full lg:w-auto">
+            <button
+              onClick={() => {
+                if (premiumPlan) {
+                  navigate(`/subscriptions/checkout?planId=${premiumPlan.id}&billingPeriod=monthly`);
+                } else {
+                  navigate(ROUTES.SUBSCRIPTIONS);
+                }
+              }}
+              className="w-full lg:w-auto px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg md:rounded-xl hover:from-red-700 hover:to-orange-700 hover:shadow-md transition-all duration-200 font-semibold text-xs md:text-sm flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4 md:h-5 md:w-5" />
+              <span>Renew Subscription</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Show premium success banner if on premium
   if (isPremium) {
@@ -194,11 +311,7 @@ export const SubscriptionBanner = ({ userType }: SubscriptionBannerProps) => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-1 leading-tight">
-              {isFree ? (
-                <>You're currently on the <span className="text-blue-600">{planName} Plan</span></>
-              ) : (
-                <>You're on the <span className="text-blue-600">{planName} Plan</span></>
-              )}
+              <>You're currently on the <span className="text-blue-600">{planName} Plan</span></>
             </h3>
             <p className="text-sm md:text-base text-gray-700 mb-2">
               {userType === 'user' ? (

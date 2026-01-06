@@ -5,6 +5,7 @@ import { IChatService } from '../services/interfaces/IChatService';
 import { ChatService } from '../services/implementations/ChatService';
 import { ConversationModel, MessageModel } from '../models/ChatModel';
 import { ChatController } from '../controllers/ChatController';
+import { ApplicationServiceClient } from '../services/implementations/ApplicationServiceClient';
 import { TYPES } from './types';
 
 const container = new Container();
@@ -14,5 +15,6 @@ container.bind<IChatService>(TYPES.IChatService).to(ChatService).inSingletonScop
 container.bind<ChatController>(TYPES.ChatController).to(ChatController).inSingletonScope();
 container.bind(TYPES.ConversationModel).toConstantValue(ConversationModel);
 container.bind(TYPES.MessageModel).toConstantValue(MessageModel);
+container.bind<ApplicationServiceClient>(TYPES.ApplicationServiceClient).to(ApplicationServiceClient);
 
 export { container };

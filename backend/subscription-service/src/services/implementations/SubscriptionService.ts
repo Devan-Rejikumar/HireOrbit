@@ -42,6 +42,29 @@ export class SubscriptionService implements ISubscriptionService {
       const isFreePlan = plan.priceMonthly === null || plan.priceMonthly === 0;
       
       if (isFreePlan) {
+        // For free plans, update existing subscription if it exists (cancelled/expired), otherwise create new
+        if (existingSubscription) {
+          const updatedSubscription = await this._subscriptionRepository.update(existingSubscription.id, {
+            planId: input.planId,
+            stripeSubscriptionId: `free_${Date.now()}`,
+            stripeCustomerId: `free_customer_${input.userId || input.companyId}`,
+            status: SubscriptionStatus.ACTIVE,
+            billingPeriod: 'monthly',
+            currentPeriodStart: new Date(),
+            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+            cancelAtPeriodEnd: false,
+          });
+
+          console.log('Free subscription reactivated', {
+            subscriptionId: updatedSubscription.id,
+            userId: input.userId,
+            companyId: input.companyId,
+            planId: input.planId,
+          });
+
+          return updatedSubscription;
+        }
+
         const subscription = await this._subscriptionRepository.create({
           userId: input.userId,
           companyId: input.companyId,
@@ -72,13 +95,34 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError('Stripe price ID not configured for this plan', HttpStatusCode.BAD_REQUEST);
       }
 
-      const customerEmail = input.userId ? `user-${input.userId}@example.com` : `company-${input.companyId}@example.com`;
-      const customerName = input.userId ? `User ${input.userId}` : `Company ${input.companyId}`;
-      
-      const customer = await this._stripeService.createCustomer(customerEmail, customerName, {
-        userId: input.userId || '',
-        companyId: input.companyId || '',
-      });
+      // Check if existing subscription is cancelled or expired - reactivate instead of creating new
+      const isCancelledOrExpired = existingSubscription && (
+        existingSubscription.status === SubscriptionStatus.CANCELLED ||
+        existingSubscription.currentPeriodEnd <= new Date()
+      );
+
+      let customer;
+      if (isCancelledOrExpired && existingSubscription.stripeCustomerId) {
+        // Reuse existing Stripe customer if available
+        try {
+          customer = await this._stripeService.getCustomer(existingSubscription.stripeCustomerId);
+        } catch (error) {
+          // If customer doesn't exist in Stripe, create a new one
+          const customerEmail = input.userId ? `user-${input.userId}@example.com` : `company-${input.companyId}@example.com`;
+          const customerName = input.userId ? `User ${input.userId}` : `Company ${input.companyId}`;
+          customer = await this._stripeService.createCustomer(customerEmail, customerName, {
+            userId: input.userId || '',
+            companyId: input.companyId || '',
+          });
+        }
+      } else {
+        const customerEmail = input.userId ? `user-${input.userId}@example.com` : `company-${input.companyId}@example.com`;
+        const customerName = input.userId ? `User ${input.userId}` : `Company ${input.companyId}`;
+        customer = await this._stripeService.createCustomer(customerEmail, customerName, {
+          userId: input.userId || '',
+          companyId: input.companyId || '',
+        });
+      }
 
       const stripeSubscription = await this._stripeService.createSubscription(
         customer.id,
@@ -94,6 +138,30 @@ export class SubscriptionService implements ISubscriptionService {
         current_period_start?: number;
         current_period_end?: number;
       };
+      
+      // If cancelled/expired subscription exists, update it instead of creating new
+      if (isCancelledOrExpired) {
+        const updatedSubscription = await this._subscriptionRepository.update(existingSubscription!.id, {
+          planId: input.planId,
+          stripeSubscriptionId: stripeSubscription.id,
+          stripeCustomerId: customer.id,
+          status: stripeSubscription.status,
+          billingPeriod: input.billingPeriod,
+          currentPeriodStart: new Date((subData.current_period_start || 0) * 1000),
+          currentPeriodEnd: new Date((subData.current_period_end || 0) * 1000),
+          cancelAtPeriodEnd: false,
+        });
+
+        console.log('Subscription reactivated', {
+          subscriptionId: updatedSubscription.id,
+          userId: input.userId,
+          companyId: input.companyId,
+          planId: input.planId,
+          previousStatus: existingSubscription!.status,
+        });
+
+        return updatedSubscription;
+      }
       
       const subscription = await this._subscriptionRepository.create({
         userId: input.userId,
@@ -250,6 +318,80 @@ export class SubscriptionService implements ISubscriptionService {
         throw new AppError('Stripe price ID not configured for this plan', HttpStatusCode.BAD_REQUEST);
       }
 
+      // Check if subscription is cancelled or expired - cannot update cancelled Stripe subscriptions
+      const isCancelledOrExpired = subscription.status === SubscriptionStatus.CANCELLED ||
+        subscription.currentPeriodEnd <= new Date();
+
+      if (isCancelledOrExpired) {
+        // Cannot update cancelled Stripe subscription - need to create new one
+        // Reuse existing customer if available
+        let customer;
+        if (subscription.stripeCustomerId) {
+          try {
+            customer = await this._stripeService.getCustomer(subscription.stripeCustomerId);
+          } catch (error) {
+            // If customer doesn't exist, create new one
+            const customerEmail = subscription.userId 
+              ? `user-${subscription.userId}@example.com` 
+              : `company-${subscription.companyId}@example.com`;
+            const customerName = subscription.userId 
+              ? `User ${subscription.userId}` 
+              : `Company ${subscription.companyId}`;
+            customer = await this._stripeService.createCustomer(customerEmail, customerName, {
+              userId: subscription.userId || '',
+              companyId: subscription.companyId || '',
+            });
+          }
+        } else {
+          // No customer ID, create new one
+          const customerEmail = subscription.userId 
+            ? `user-${subscription.userId}@example.com` 
+            : `company-${subscription.companyId}@example.com`;
+          const customerName = subscription.userId 
+            ? `User ${subscription.userId}` 
+            : `Company ${subscription.companyId}`;
+          customer = await this._stripeService.createCustomer(customerEmail, customerName, {
+            userId: subscription.userId || '',
+            companyId: subscription.companyId || '',
+          });
+        }
+
+        // Create new Stripe subscription
+        const newStripeSubscription = await this._stripeService.createSubscription(
+          customer.id,
+          newStripePriceId,
+          {
+            userId: subscription.userId || '',
+            companyId: subscription.companyId || '',
+            planId: newPlanId,
+          },
+        );
+
+        const subData = newStripeSubscription as unknown as {
+          current_period_start?: number;
+          current_period_end?: number;
+        };
+
+        // Update existing subscription record with new Stripe subscription details
+        const updatedSubscription = await this._subscriptionRepository.update(subscriptionId, {
+          planId: newPlanId,
+          stripeSubscriptionId: newStripeSubscription.id,
+          stripeCustomerId: customer.id,
+          status: newStripeSubscription.status,
+          currentPeriodStart: new Date((subData.current_period_start || 0) * 1000),
+          currentPeriodEnd: new Date((subData.current_period_end || 0) * 1000),
+          cancelAtPeriodEnd: false,
+        });
+
+        console.log('Cancelled subscription reactivated via upgrade', { 
+          subscriptionId, 
+          newPlanId,
+          previousStatus: subscription.status,
+        });
+        return updatedSubscription;
+      }
+
+      // Normal upgrade flow for active subscriptions
       const updatedStripeSubscription = await this._stripeService.updateSubscription(
         subscription.stripeSubscriptionId,
         newStripePriceId,
@@ -308,13 +450,19 @@ export class SubscriptionService implements ISubscriptionService {
       
       const plan = subscriptionWithPlan.plan;
       const features = plan?.features?.map((f: { name: string }) => f.name) || [];
+      
+      // Check if subscription period has expired
+      const now = new Date();
+      const hasExpired = subscription.currentPeriodEnd <= now;
+      
       const isStatusActive = subscription.status === SubscriptionStatus.ACTIVE || subscription.status === SubscriptionStatus.TRIALING;
       const isCancelledButActive = 
         subscription.status === SubscriptionStatus.CANCELLED &&
         subscription.cancelAtPeriodEnd === true &&
-        subscription.currentPeriodEnd > new Date();
+        !hasExpired;
       
-      const isActive = isStatusActive || isCancelledButActive;
+      // Subscription is active only if status is active AND period hasn't expired
+      const isActive = (isStatusActive || isCancelledButActive) && !hasExpired;
 
       return mapSubscriptionStatusToResponse(
         subscription,

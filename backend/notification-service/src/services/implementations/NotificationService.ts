@@ -4,7 +4,7 @@ import { INotificationRepository } from '../../repositories/interfaces/INotifica
 import { INotificationDocument } from '../../models/NotificationModel';
 import { CreateNotificationInput } from '../../types/notifications';
 import { TYPES } from '../../config/types';
-import { AppConfig } from '../../config/app.config';
+import { JobServiceClient } from './JobServiceClient';
 import { 
   NotificationMapper, 
   ApplicationReceivedInput, 
@@ -19,6 +19,7 @@ import { io } from '../../server';
 export class NotificationService implements INotificationService {
   constructor(
     @inject(TYPES.INotificationRepository) private _notificationRepository: INotificationRepository,
+    @inject(TYPES.JobServiceClient) private _jobServiceClient: JobServiceClient,
   ) {}
 
   async createNotification(input: CreateNotificationInput): Promise<INotificationDocument> {
@@ -73,24 +74,7 @@ export class NotificationService implements INotificationService {
   }
 
   async sendStatusUpdatedNotification(input: StatusUpdatedInput): Promise<void> {
-    let jobTitle = 'Job';
-    try {
-      const jobResponse = await fetch(`${AppConfig.JOB_SERVICE_URL}/api/jobs/${input.jobId}`);
-      if (jobResponse.ok) {
-        const jobData = await jobResponse.json() as {
-        data?: {
-          job?: {
-            title?: string;
-          };
-          title?: string;
-        };
-      };
-        jobTitle = jobData.data?.job?.title || jobData.data?.title || 'Job';
-      }
-    } catch (error) {
-      console.error(`Error fetching job title for jobId ${input.jobId}:`, error);
-    }
-
+    const jobTitle = await this._jobServiceClient.getJobTitle(input.jobId);
     const notificationData = NotificationMapper.toStatusUpdatedNotification(input, jobTitle);
     const notification = await this.createNotification(notificationData);
   

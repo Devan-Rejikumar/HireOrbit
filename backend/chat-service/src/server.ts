@@ -1,13 +1,12 @@
 import 'reflect-metadata';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import axios from 'axios';
 import { container } from './config/inversify.config';
 import { connectMongoDB } from './config/mongodb.config';
 import { consumer } from './config/kafka.config';
 import { IChatService } from './services/interfaces/IChatService';
+import { ApplicationServiceClient } from './services/implementations/ApplicationServiceClient';
 import { TYPES } from './config/types';
-import { AppConfig } from './config/app.config';
 import { sendMessageSchema, markAsReadSchema, typingIndicatorSchema } from './dto/schemas/chat.schema';
 import app from './app';
 import { StatusUpdatedEventData } from './types/events';
@@ -27,6 +26,7 @@ import {
 import { WebRTCEvent } from './constants/webrtc.events';
 import { serializeRoom } from './utils/webrtc.utils';
 import { Messages } from './constants/Messages';
+import { AppConfig } from './config/app.config';
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -457,19 +457,19 @@ async function initializeKafkaConsumer(): Promise<void> {
         try {
           const eventData = JSON.parse(message.value?.toString() || '{}') as StatusUpdatedEventData;
           if (eventData.newStatus === 'SHORTLISTED') {
-           
-            
             const _chatService = container.get<IChatService>(TYPES.IChatService);
+            const _applicationServiceClient = container.get<ApplicationServiceClient>(TYPES.ApplicationServiceClient);
             
-            const response = await axios.get(`${AppConfig.APPLICATION_SERVICE_URL}/api/applications/${eventData.applicationId}`);
-            
-            const { userId, companyId } = response.data.data || response.data;
+            const applicationData = await _applicationServiceClient.getApplicationById(eventData.applicationId);
+            const { userId, companyId } = applicationData.data || applicationData;
 
-            await _chatService.createConversationFromApplication(
-              eventData.applicationId,
-              userId,
-              companyId,
-            );
+            if (userId && companyId) {
+              await _chatService.createConversationFromApplication(
+                eventData.applicationId,
+                userId,
+                companyId,
+              );
+            }
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -17,6 +17,7 @@ import { IndustryCategoryService } from '../services/implementations/IndustryCat
 import { IndustryCategoryController } from '../controllers/IndustryCategoryController';
 import { IIndustryCategoryRepository } from '../repositories/interfaces/IIndustryCategoryRepository';
 import { IIndustryCategoryService } from '../services/interfaces/IIndustryCategoryService';
+import { JobServiceClient } from '../services/implementations/JobServiceClient';
 
 const container = new Container();
 
@@ -33,5 +34,6 @@ container.bind<IEmailService>(TYPES.EmailService).to(EmailService);
 container.bind<IIndustryCategoryRepository>(TYPES.IIndustryCategoryRepository).to(IndustryCategoryRepository);
 container.bind<IIndustryCategoryService>(TYPES.IIndustryCategoryService).to(IndustryCategoryService);
 container.bind<IndustryCategoryController>(TYPES.IndustryCategoryController).to(IndustryCategoryController);
+container.bind<JobServiceClient>(TYPES.JobServiceClient).to(JobServiceClient);
 
 export default container;
