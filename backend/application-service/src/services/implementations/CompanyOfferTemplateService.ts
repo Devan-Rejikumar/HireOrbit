@@ -90,7 +90,7 @@ export class CompanyOfferTemplateService implements ICompanyOfferTemplateService
         offerMessage: sampleOfferData.offerMessage || null,
         offerExpiryDate: new Date(sampleOfferData.offerExpiryDate),
         status: 'PENDING',
-        pdfUrl: null,
+        pdfPublicId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };

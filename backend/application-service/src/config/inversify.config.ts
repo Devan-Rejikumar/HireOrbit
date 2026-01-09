@@ -35,6 +35,7 @@ import { CompanyOfferTemplateRepository } from '../repositories/implementations/
 import { ICompanyOfferTemplateService } from '../services/interfaces/ICompanyOfferTemplateService';
 import { CompanyOfferTemplateService } from '../services/implementations/CompanyOfferTemplateService';
 import { CompanyOfferTemplateController } from '../controllers/CompanyOfferTemplateController';
+import { CloudinaryService } from '../services/implementations/CloudinaryService';
 import { TYPES } from './types';
 
 const container = new Container();
@@ -63,5 +64,6 @@ container.bind<ICompanyServiceClient>(TYPES.ICompanyServiceClient).to(CompanySer
 container.bind<ICompanyOfferTemplateRepository>(TYPES.ICompanyOfferTemplateRepository).to(CompanyOfferTemplateRepository);
 container.bind<ICompanyOfferTemplateService>(TYPES.ICompanyOfferTemplateService).to(CompanyOfferTemplateService);
 container.bind<CompanyOfferTemplateController>(TYPES.CompanyOfferTemplateController).to(CompanyOfferTemplateController);
+container.bind<CloudinaryService>(TYPES.CloudinaryService).to(CloudinaryService).inSingletonScope();
 
 export { container };

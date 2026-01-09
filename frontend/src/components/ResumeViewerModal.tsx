@@ -36,13 +36,18 @@ const ResumeViewerModal = ({ isOpen, onClose, resumeUrl, applicantName }: Resume
       setLoading(true);
       setError(null);
       
-      // Fetch PDF with authentication
-      const response = await api.get<Blob>(resumeUrl, {
-        responseType: 'blob',
+      // Fetch PDF using signed URL (no authentication needed as URL is signed)
+      const response = await fetch(resumeUrl, {
+        method: 'GET',
+        credentials: 'omit', // Don't send credentials to avoid CORS issues
       });
       
-      // Create blob URL
-      const blobUrl = URL.createObjectURL(response.data);
+      if (!response.ok) {
+        throw new Error('Failed to fetch resume');
+      }
+      
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
       setPdfBlob(blobUrl);
       setLoading(false);
       

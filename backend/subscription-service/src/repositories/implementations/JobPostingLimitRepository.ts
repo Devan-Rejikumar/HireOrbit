@@ -23,9 +23,20 @@ export class JobPostingLimitRepository implements IJobPostingLimitRepository {
   }
 
   async update(companyId: string, data: Partial<JobPostingLimit>): Promise<JobPostingLimit> {
+    const existing = await this.findByCompanyId(companyId);
+    if (!existing) {
+      throw new Error('Job posting limit not found');
+    }
+
+    const updateData = {
+      currentCount: data.currentCount ?? existing.currentCount,
+      limit: data.limit ?? existing.limit,
+      resetDate: data.resetDate ?? existing.resetDate,
+    };
+
     return prisma.jobPostingLimit.update({
       where: { companyId },
-      data,
+      data: updateData,
     });
   }
 

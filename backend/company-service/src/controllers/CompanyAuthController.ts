@@ -71,8 +71,8 @@ export class CompanyAuthController {
     const { email, password } = validationResult.data;
     const result = await this._companyService.login(email, password);
     
-    this._cookieService.setCompanyAccessToken(res, result.tokens.accessToken);
-    this._cookieService.setCompanyRefreshToken(res, result.tokens.refreshToken);
+    this._cookieService.setAccessToken(res, result.tokens.accessToken);
+    this._cookieService.setRefreshToken(res, result.tokens.refreshToken);
     
     res.status(AuthStatusCode.COMPANY_LOGIN_SUCCESS).json(
       buildSuccessResponse({ company: result.company }, Messages.COMPANY.LOGIN_SUCCESS),
@@ -80,14 +80,14 @@ export class CompanyAuthController {
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies.companyRefreshToken;
+    const refreshToken = req.cookies.refreshToken;
     
     if (!refreshToken) {
       throw new AppError(Messages.AUTH.NO_REFRESH_TOKEN, HttpStatusCode.UNAUTHORIZED);
     }
 
     const result = await this._companyService.refreshToken(refreshToken);
-    this._cookieService.setCompanyAccessToken(res, result.accessToken);
+    this._cookieService.setAccessToken(res, result.accessToken);
 
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(null, Messages.AUTH.TOKEN_REFRESH_SUCCESS),
@@ -134,14 +134,14 @@ export class CompanyAuthController {
   }
 
   async logout(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies.companyRefreshToken;
+    const refreshToken = req.cookies.refreshToken;
   
     if (refreshToken) {
       await this._companyService.logoutWithToken(refreshToken);
     }
     
-    this._cookieService.clearCompanyAccessToken(res);
-    this._cookieService.clearCompanyRefreshToken(res);
+    this._cookieService.clearAccessToken(res);
+    this._cookieService.clearRefreshToken(res);
     
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(null, Messages.AUTH.LOGOUT_SUCCESS),

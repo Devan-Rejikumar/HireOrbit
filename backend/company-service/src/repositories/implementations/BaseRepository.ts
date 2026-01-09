@@ -7,15 +7,26 @@ interface BaseEntity {
     id: string;
 }
 
+// Define the common interface for Prisma delegates
+// Using flexible types to match actual Prisma delegate signatures
+export interface PrismaDelegate<T> {
+    findUnique(args: { where: { id: string }; [key: string]: unknown }): Promise<T | null>;
+    findMany(args?: { where?: Record<string, unknown>; skip?: number; take?: number; orderBy?: Record<string, 'asc' | 'desc'>; [key: string]: unknown }): Promise<T[]>;
+    findFirst(args?: { where?: Record<string, unknown>; [key: string]: unknown }): Promise<T | null>;
+    create(args: { data: unknown; [key: string]: unknown }): Promise<T>;
+    update(args: { where: { id: string }; data: unknown; [key: string]: unknown }): Promise<T>;
+    delete(args: { where: { id: string }; [key: string]: unknown }): Promise<T>;
+    count(args?: { where?: Record<string, unknown>; [key: string]: unknown }): Promise<number>;
+}
+
 @injectable()
 export abstract class BaseRepository<T extends BaseEntity> implements IBaseRepository<T> {
   protected prisma: PrismaClient;
   constructor() {
     this.prisma = prisma;
   }
-    // Using unknown instead of any - type safety is maintained through generic T constraint
-    // The actual Prisma delegate type is complex and varies per model, but all methods use T correctly
-    protected abstract getModel(): unknown;
+    // Return type is now properly typed as PrismaDelegate
+    protected abstract getModel(): PrismaDelegate<T>;
     
     async findById(id: string): Promise<T | null> {
       const model = this.getModel();

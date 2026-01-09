@@ -33,7 +33,7 @@
     "dotenv-flow": "^4.1.0",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
-    "hireorbit-shared-dto": "^1.0.5",
+    "hireorbit-shared-dto": "^1.0.6",
     "inversify": "^7.6.1",
     "ioredis": "^5.7.0",
     "jsonwebtoken": "^9.0.2",

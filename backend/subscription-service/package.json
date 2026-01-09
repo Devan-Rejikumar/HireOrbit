@@ -1,6 +1,9 @@
 {
   "name": "subscription-service",
   "version": "1.0.0",
+  "prisma": {
+    "seed": "prisma/seed.js"
+  },
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -10,8 +13,9 @@
     "start": "node dist/server.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:seed": "prisma/seed.js",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.ts\" --fix"
   },
@@ -26,7 +30,7 @@
     "cross-env": "^10.1.0",
     "dotenv-flow": "^4.1.0",
     "express": "^5.1.0",
-    "hireorbit-shared-dto": "^1.0.5",
+    "hireorbit-shared-dto": "^1.0.6",
     "inversify": "^7.10.4",
     "kafkajs": "^2.2.4",
     "prisma": "^6.19.0",

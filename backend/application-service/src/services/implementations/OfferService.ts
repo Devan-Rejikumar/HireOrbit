@@ -73,7 +73,7 @@ export class OfferService implements IOfferService {
       companyId,
     });
 
-    // 7. Generate PDF and upload
+      // 7. Generate PDF and upload
     try {
       const userData = await this._userServiceClient.getUserById(application.userId);
       const candidateName = userData.data?.user?.name || userData.data?.user?.username || 'Candidate';
@@ -88,11 +88,14 @@ export class OfferService implements IOfferService {
       ]);
       const companyLogoUrl = companyData.data?.company?.logo || companyData.company?.logo || null;
 
-      const pdfUrl = await this._pdfService.generateAndUploadPdf(offer, candidateName, companyName, template, companyLogoUrl);
-
-      // 8. Update offer with PDF URL
-      const updatedOffer = await this._offerRepository.update(offer.id, { pdfUrl });
+      const pdfPublicId = await this._pdfService.generateAndUploadPdf(offer, candidateName, companyName, template, companyLogoUrl);
+      logger.info('PDF public ID from Cloudinary:', pdfPublicId);
       
+      // Store the exact publicId as returned by Cloudinary
+      // Cloudinary includes .pdf extension for raw files with type: 'authenticated'
+      // 8. Update offer with PDF public ID
+      const updatedOffer = await this._offerRepository.update(offer.id, { pdfPublicId: pdfPublicId });
+
       // 9. Publish Kafka event
       try {
         await this._eventService.publish(Events.OFFER.CREATED, {
@@ -104,7 +107,7 @@ export class OfferService implements IOfferService {
           ctc: updatedOffer.ctc,
           joiningDate: updatedOffer.joiningDate.toISOString(),
           offerExpiryDate: updatedOffer.offerExpiryDate.toISOString(),
-          pdfUrl: updatedOffer.pdfUrl || undefined,
+          pdfPublicId: updatedOffer.pdfPublicId || undefined,
           timestamp: new Date().toISOString(),
         });
       } catch (error) {
@@ -114,8 +117,6 @@ export class OfferService implements IOfferService {
       return this.mapToResponse(updatedOffer);
     } catch (error) {
       logger.error('[OfferService] Error generating PDF, but offer created:', error);
-      // Offer is created, but PDF generation failed
-      // We can retry PDF generation later or handle it gracefully
       throw new AppError(Messages.OFFER.PDF_GENERATION_FAILED, HttpStatusCode.INTERNAL_SERVER_ERROR);
     }
   }
@@ -303,6 +304,10 @@ export class OfferService implements IOfferService {
     return this.mapToResponse(updatedOffer);
   }
 
+  async attachPdfPublicId(offerId: string, pdfPublicId: string): Promise<void> {
+    await this._offerRepository.update(offerId, { pdfPublicId });
+  }
+
   private mapToResponse(offer: Offer): OfferResponse {
     return {
       id: offer.id,
@@ -316,7 +321,7 @@ export class OfferService implements IOfferService {
       offerMessage: offer.offerMessage || undefined,
       offerExpiryDate: offer.offerExpiryDate,
       status: offer.status as OfferStatus,
-      pdfUrl: offer.pdfUrl || undefined,
+      pdfPublicId: (offer as any).pdfPublicId || undefined,
       createdAt: offer.createdAt,
       updatedAt: offer.updatedAt,
     };

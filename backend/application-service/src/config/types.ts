@@ -22,4 +22,5 @@ export const TYPES = {
   ICompanyOfferTemplateRepository: Symbol.for('ICompanyOfferTemplateRepository'),
   ICompanyOfferTemplateService: Symbol.for('ICompanyOfferTemplateService'),
   CompanyOfferTemplateController: Symbol.for('CompanyOfferTemplateController'),
+  CloudinaryService: Symbol.for('CloudinaryService'),
 };

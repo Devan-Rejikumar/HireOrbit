@@ -12,7 +12,7 @@ export interface OfferResponse {
   offerMessage?: string;
   offerExpiryDate: Date;
   status: OfferStatus;
-  pdfUrl?: string;
+  pdfPublicId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -48,6 +48,7 @@ const TYPES = {
   SettingsService: Symbol.for('SettingsService'),
   ISettingsService: Symbol.for('ISettingsService'),
   SettingsController: Symbol.for('SettingsController'),
+  CloudinaryService: Symbol.for('CloudinaryService'),
 };
 
 export default TYPES;

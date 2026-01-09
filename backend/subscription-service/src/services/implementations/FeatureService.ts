@@ -1,3 +1,161 @@
+// import { injectable, inject } from 'inversify';
+// import TYPES from '../../config/types';
+// import { IFeatureService } from '../interfaces/IFeatureService';
+// import { ISubscriptionService } from '../interfaces/ISubscriptionService';
+// import { IJobPostingLimitRepository } from '../../repositories/interfaces/IJobPostingLimitRepository';
+// import { FeatureName } from '../../enums/StatusCodes';
+
+// @injectable()
+// export class FeatureService implements IFeatureService {
+//   constructor(
+//     @inject(TYPES.ISubscriptionService)
+//     private readonly _subscriptionService: ISubscriptionService,
+//     @inject(TYPES.IJobPostingLimitRepository)
+//     private readonly _jobPostingLimitRepository: IJobPostingLimitRepository,
+//   ) {}
+
+//   async checkJobPostingLimit(companyId: string): Promise<{ canPost: boolean; remaining: number; limit: number }> {
+//     try {
+//       const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
+      
+//       if (!subscriptionStatus.subscription || !subscriptionStatus.isActive) {
+//         const limit = 2;
+//         const limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
+//         const currentCount = limitRecord?.currentCount || 0;
+        
+//         return {
+//           canPost: currentCount < limit,
+//           remaining: Math.max(0, limit - currentCount),
+//           limit,
+//         };
+//       }
+
+//       const plan = subscriptionStatus.plan;
+//       if (!plan) {
+//         throw new Error('Plan not found for subscription');
+//       }
+
+//       const hasUnlimitedJobs = subscriptionStatus.features.includes(FeatureName.UNLIMITED_JOBS);
+      
+//       if (hasUnlimitedJobs) {
+//         return {
+//           canPost: true,
+//           remaining: Infinity,
+//           limit: Infinity,
+//         };
+//       }
+
+//       let limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
+
+//       let limit = 2; 
+//       if (plan.name === 'Basic') {
+//         limit = 10;
+//       } else if (plan.name === 'Premium') {
+//         limit = Infinity;
+//       }
+
+//       if (!limitRecord) {
+//         const nextMonth = new Date();
+//         nextMonth.setMonth(nextMonth.getMonth() + 1);
+//         nextMonth.setDate(1);
+        
+//         limitRecord = await this._jobPostingLimitRepository.create({
+//           companyId,
+//           currentCount: 0,
+//           limit,
+//           resetDate: nextMonth,
+//         });
+//       } else {
+//         if (limitRecord.limit !== limit) {
+//           limitRecord = await this._jobPostingLimitRepository.update(companyId, { limit });
+//         }
+//       }
+
+//       const currentCount = limitRecord.currentCount;
+//       const canPost = limit === Infinity || currentCount < limit;
+
+//       return {
+//         canPost,
+//         remaining: limit === Infinity ? Infinity : Math.max(0, limit - currentCount),
+//         limit,
+//       };
+//     } catch (error) {
+//       console.error('Error checking job posting limit', { error, companyId });
+//       throw error;
+//     }
+//   }
+
+//   async canPostFeaturedJob(companyId: string): Promise<boolean> {
+//     try {
+//       const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
+      
+//       if (!subscriptionStatus.isActive || !subscriptionStatus.plan) {
+//         return false;
+//       }
+
+//       return subscriptionStatus.features.includes(FeatureName.FEATURED_JOBS);
+//     } catch (error) {
+//       console.error('Error checking featured job access', { error, companyId });
+//       return false;
+//     }
+//   }
+
+//   async canAccessATSChecker(userId: string): Promise<boolean> {
+//     try {
+//       const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(userId);
+      
+//       if (!subscriptionStatus.isActive || !subscriptionStatus.plan) {
+//         return false;
+//       }
+
+//       return subscriptionStatus.features.includes(FeatureName.ATS_CHECKER);
+//     } catch (error) {
+//       console.error('Error checking ATS checker access', { error, userId });
+//       return false;
+//     }
+//   }
+
+//   async incrementJobPostingCount(companyId: string): Promise<void> {
+//     try {
+//       const limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
+      
+//       if (limitRecord) {
+//         await this._jobPostingLimitRepository.incrementCount(companyId);
+//       } else {
+//         const nextMonth = new Date();
+//         nextMonth.setMonth(nextMonth.getMonth() + 1);
+//         nextMonth.setDate(1);
+        
+//         await this._jobPostingLimitRepository.create({
+//           companyId,
+//           currentCount: 1,
+//           limit: 2, 
+//           resetDate: nextMonth,
+//         });
+//       }
+//     } catch (error) {
+//       console.error('Error incrementing job posting count', { error, companyId });
+//       throw error;
+//     }
+//   }
+
+//   async checkFeatureAccess(userId: string | undefined, companyId: string | undefined, featureName: string): Promise<boolean> {
+//     try {
+//       const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(userId, companyId);
+      
+//       if (!subscriptionStatus.isActive || !subscriptionStatus.plan) {
+//         return false;
+//       }
+
+//       return subscriptionStatus.features.includes(featureName);
+//     } catch (error) {
+//       console.error('Error checking feature access', { error, userId, companyId, featureName });
+//       return false;
+//     }
+//   }
+// }
+
+
 import { injectable, inject } from 'inversify';
 import TYPES from '../../config/types';
 import { IFeatureService } from '../interfaces/IFeatureService';
@@ -5,78 +163,97 @@ import { ISubscriptionService } from '../interfaces/ISubscriptionService';
 import { IJobPostingLimitRepository } from '../../repositories/interfaces/IJobPostingLimitRepository';
 import { FeatureName } from '../../enums/StatusCodes';
 
+/**
+ * NOTE:
+ * - NEVER use Infinity with Prisma Int
+ * - We use a very large number to represent "unlimited"
+ */
+const UNLIMITED_LIMIT = 1_000_000;
+
+/**
+ * Centralized default limits
+ * (move this to config later if needed)
+ */
+const DEFAULT_LIMITS = {
+  FREE: 2,
+  BASIC: 10,
+  PREMIUM: UNLIMITED_LIMIT,
+};
+
 @injectable()
 export class FeatureService implements IFeatureService {
   constructor(
     @inject(TYPES.ISubscriptionService)
     private readonly _subscriptionService: ISubscriptionService,
+
     @inject(TYPES.IJobPostingLimitRepository)
     private readonly _jobPostingLimitRepository: IJobPostingLimitRepository,
   ) {}
 
-  async checkJobPostingLimit(companyId: string): Promise<{ canPost: boolean; remaining: number; limit: number }> {
+  /**
+   * Always:
+   * - Determine limit FIRST
+   * - Ensure DB row exists
+   * - Then calculate remaining
+   */
+  async checkJobPostingLimit(
+    companyId: string,
+  ): Promise<{ canPost: boolean; remaining: number; limit: number }> {
     try {
-      const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
-      
+      const subscriptionStatus =
+        await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
+
+      let limit: number;
+
+      // ---------- 1. Decide limit ----------
       if (!subscriptionStatus.subscription || !subscriptionStatus.isActive) {
-        const limit = 2;
-        const limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
-        const currentCount = limitRecord?.currentCount || 0;
-        
-        return {
-          canPost: currentCount < limit,
-          remaining: Math.max(0, limit - currentCount),
-          limit,
-        };
+        // FREE company
+        limit = DEFAULT_LIMITS.FREE;
+      } else {
+        const plan = subscriptionStatus.plan;
+        if (!plan) {
+          throw new Error('Active subscription found but plan is missing');
+        }
+
+        if (subscriptionStatus.features.includes(FeatureName.UNLIMITED_JOBS)) {
+          limit = DEFAULT_LIMITS.PREMIUM;
+        } else if (plan.name === 'Basic') {
+          limit = DEFAULT_LIMITS.BASIC;
+        } else {
+          limit = DEFAULT_LIMITS.FREE;
+        }
       }
 
-      const plan = subscriptionStatus.plan;
-      if (!plan) {
-        throw new Error('Plan not found for subscription');
-      }
+      // ---------- 2. Ensure limit record exists ----------
+      let limitRecord =
+        await this._jobPostingLimitRepository.findByCompanyId(companyId);
 
-      const hasUnlimitedJobs = subscriptionStatus.features.includes(FeatureName.UNLIMITED_JOBS);
-      
-      if (hasUnlimitedJobs) {
-        return {
-          canPost: true,
-          remaining: Infinity,
-          limit: Infinity,
-        };
-      }
-
-      let limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
-
-      let limit = 2; 
-      if (plan.name === 'Basic') {
-        limit = 10;
-      } else if (plan.name === 'Premium') {
-        limit = Infinity;
-      }
+      const nextResetDate = this.getNextMonthResetDate();
 
       if (!limitRecord) {
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        nextMonth.setDate(1);
-        
         limitRecord = await this._jobPostingLimitRepository.create({
           companyId,
           currentCount: 0,
           limit,
-          resetDate: nextMonth,
+          resetDate: nextResetDate,
         });
-      } else {
-        if (limitRecord.limit !== limit) {
-          limitRecord = await this._jobPostingLimitRepository.update(companyId, { limit });
-        }
+      } else if (limitRecord.limit !== limit) {
+        // Plan changed → update quota
+        limitRecord = await this._jobPostingLimitRepository.update(companyId, {
+          limit,
+        });
       }
 
+      // ---------- 3. Compute response ----------
       const currentCount = limitRecord.currentCount;
-      const canPost = limit === Infinity || currentCount < limit;
+      const canPost = limit === UNLIMITED_LIMIT || currentCount < limit;
 
       return {
         canPost,
-        remaining: limit === Infinity ? Infinity : Math.max(0, limit - currentCount),
+        remaining:
+          limit === UNLIMITED_LIMIT
+            ? UNLIMITED_LIMIT
+            : Math.max(0, limit - currentCount),
         limit,
       };
     } catch (error) {
@@ -85,10 +262,41 @@ export class FeatureService implements IFeatureService {
     }
   }
 
+  /**
+   * Increment job count safely
+   * Assumes checkJobPostingLimit was already called
+   */
+  async incrementJobPostingCount(companyId: string): Promise<void> {
+    try {
+      const limitRecord =
+        await this._jobPostingLimitRepository.findByCompanyId(companyId);
+
+      if (!limitRecord) {
+        // Defensive fallback, should not happen if checkJobPostingLimit is used correctly
+        const nextResetDate = this.getNextMonthResetDate();
+
+        await this._jobPostingLimitRepository.create({
+          companyId,
+          currentCount: 1,
+          limit: DEFAULT_LIMITS.FREE,
+          resetDate: nextResetDate,
+        });
+
+        return;
+      }
+
+      await this._jobPostingLimitRepository.incrementCount(companyId);
+    } catch (error) {
+      console.error('Error incrementing job posting count', { error, companyId });
+      throw error;
+    }
+  }
+
   async canPostFeaturedJob(companyId: string): Promise<boolean> {
     try {
-      const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
-      
+      const subscriptionStatus =
+        await this._subscriptionService.getSubscriptionStatus(undefined, companyId);
+
       if (!subscriptionStatus.isActive || !subscriptionStatus.plan) {
         return false;
       }
@@ -102,8 +310,9 @@ export class FeatureService implements IFeatureService {
 
   async canAccessATSChecker(userId: string): Promise<boolean> {
     try {
-      const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(userId);
-      
+      const subscriptionStatus =
+        await this._subscriptionService.getSubscriptionStatus(userId);
+
       if (!subscriptionStatus.isActive || !subscriptionStatus.plan) {
         return false;
       }
@@ -115,43 +324,36 @@ export class FeatureService implements IFeatureService {
     }
   }
 
-  async incrementJobPostingCount(companyId: string): Promise<void> {
+  async checkFeatureAccess(
+    userId: string | undefined,
+    companyId: string | undefined,
+    featureName: string,
+  ): Promise<boolean> {
     try {
-      const limitRecord = await this._jobPostingLimitRepository.findByCompanyId(companyId);
-      
-      if (limitRecord) {
-        await this._jobPostingLimitRepository.incrementCount(companyId);
-      } else {
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        nextMonth.setDate(1);
-        
-        await this._jobPostingLimitRepository.create({
-          companyId,
-          currentCount: 1,
-          limit: 2, 
-          resetDate: nextMonth,
-        });
-      }
-    } catch (error) {
-      console.error('Error incrementing job posting count', { error, companyId });
-      throw error;
-    }
-  }
+      const subscriptionStatus =
+        await this._subscriptionService.getSubscriptionStatus(userId, companyId);
 
-  async checkFeatureAccess(userId: string | undefined, companyId: string | undefined, featureName: string): Promise<boolean> {
-    try {
-      const subscriptionStatus = await this._subscriptionService.getSubscriptionStatus(userId, companyId);
-      
       if (!subscriptionStatus.isActive || !subscriptionStatus.plan) {
         return false;
       }
 
       return subscriptionStatus.features.includes(featureName);
     } catch (error) {
-      console.error('Error checking feature access', { error, userId, companyId, featureName });
+      console.error('Error checking feature access', {
+        error,
+        userId,
+        companyId,
+        featureName,
+      });
       return false;
     }
   }
-}
 
+  /**
+   * Utility: first day of next month
+   */
+  private getNextMonthResetDate(): Date {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  }
+}

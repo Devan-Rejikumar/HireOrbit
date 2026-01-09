@@ -24,4 +24,5 @@ export interface IUserService {
   logoutAllSessions(userId: string): Promise<void>;
   logoutWithToken(refreshToken: string): Promise<void>;
   changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ message: string }>;
+  googleAuth(email:string, name?: string, photoURL?: string): Promise<AuthResponse>;
 }

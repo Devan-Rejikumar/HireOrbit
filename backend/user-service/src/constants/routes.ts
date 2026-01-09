@@ -79,3 +79,11 @@ export const PUBLIC_ROUTES = {
   SKILLS: '/skills',
 } as const;
 
+export const SETTINGS_ROUTES = {
+  GET_SETTINGS: '/',
+  UPDATE_LOGO: '/logo',
+  UPDATE_COMPANY_NAME: '/company-name',
+  UPDATE_ABOUT_PAGE: '/about-page',
+  UPDATE_SETTINGS: '/',
+} as const;
+

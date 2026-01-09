@@ -209,6 +209,19 @@ services:
       - backend
     command: sh -c "npx prisma generate && npm run dev"
 
+  stripe-cli:
+    container_name: stripe-cli
+    image: stripe/stripe-cli:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - subscription-service
+    networks:
+      - backend
+    command: ["listen", "--forward-to", "subscription-service:3005/api/subscriptions/webhook"]
+    
+
   application-service:
     container_name: application-service
     build:
@@ -227,7 +240,6 @@ services:
         condition: service_started
     networks:
       - backend
-    command: sh -c "npx prisma generate && npm run dev"
 
   notification-service:
     container_name: notification-service

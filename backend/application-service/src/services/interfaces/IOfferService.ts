@@ -8,5 +8,6 @@ export interface IOfferService {
   getOfferById(offerId: string, userId?: string, companyId?: string): Promise<OfferDetailsResponse>;
   acceptOffer(offerId: string, userId: string): Promise<OfferResponse>;
   rejectOffer(offerId: string, userId: string): Promise<OfferResponse>;
+  attachPdfPublicId(offerId: string, pdfPublicId: string): Promise<void>;
 }
 

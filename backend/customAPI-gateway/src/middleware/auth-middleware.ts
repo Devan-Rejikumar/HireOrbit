@@ -11,17 +11,17 @@ const USER_ROLE_HEADER = 'x-user-role';
 
 /**
  * Extracts JWT token from request cookies or Authorization header
+ * All roles now use unified accessToken cookie
  */
 const extractToken = (req: Request): string | null => {
   if (req.cookies) {
-    const tokenFromCookie = req.cookies.accessToken || req.cookies.adminAccessToken || req.cookies.companyAccessToken;
+    const tokenFromCookie = req.cookies.accessToken;
     if (tokenFromCookie) {
       return tokenFromCookie;
     }
   } else {
     console.log('[AUTH] req.cookies is undefined - cookie-parser may not be configured');
   }
-
 
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {

@@ -1,4 +1,5 @@
 import api from './axios';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 export interface ATSAnalysisResponse {
   score: number;
@@ -20,7 +21,7 @@ export const atsService = {
       success: boolean;
       data: ATSAnalysisResponse;
       message: string;
-    }>('/applications/ats/analyze', formData);
+    }>(API_ROUTES.APPLICATIONS.ATS.ANALYZE, formData);
 
     return {
       data: response.data.data,

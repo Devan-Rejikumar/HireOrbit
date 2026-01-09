@@ -5,11 +5,7 @@ import { IUserService } from '../services/interfaces/IUserService';
 import { IProfileService } from '../services/interfaces/IProfileService';
 import { CookieService } from '../services/implementations/CookieService';
 import { Messages } from '../constants/Messages';
-import { CookieConfig } from '../constants/CookieConfig';
-import jwt from 'jsonwebtoken';
 import { HttpStatusCode, AuthStatusCode } from '../enums/StatusCodes';
-import { UserRole } from '../enums/UserRole';
-import { GOOGLE_AUTH_TOKEN_EXPIRY } from '../constants/TimeConstants';
 import { UserRegisterSchema, UserLoginSchema, GenerateOTPSchema, VerifyOTPSchema, ResendOTPSchema, ForgotPasswordSchema, ResetPasswordSchema, UpdateNameSchema, GoogleAuthSchema, ChangePasswordSchema } from '../dto/schemas/auth.schema';
 import { buildSuccessResponse } from 'hireorbit-shared-dto';
 import { v2 as cloudinary } from 'cloudinary';
@@ -170,8 +166,32 @@ export class UserController {
     try {
       const profile = await this._profileService.getProfile(id);
       if (profile) {
+        // Normalize profile picture URL - ensure it's a clean public URL
+        let profilePicture = profile.profilePicture;
+        if (profilePicture) {
+          // Remove signed URL parameters and ensure clean public URL
+          if (profilePicture.includes('/image/authenticated/')) {
+            // Extract public_id from signed URL
+            const match = profilePicture.match(/\/image\/authenticated\/s--[^-]+--\/(.+)$/);
+            if (match && match[1]) {
+              const publicId = match[1].split('?')[0].split('_a=')[0];
+              profilePicture = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`;
+            } else {
+              profilePicture = null; // Invalid URL, set to null
+            }
+          } else if (profilePicture.includes('/image/upload/')) {
+            // Clean public URL - remove query params
+            try {
+              const urlObj = new URL(profilePicture);
+              profilePicture = `${urlObj.origin}${urlObj.pathname}`;
+            } catch {
+              profilePicture = profilePicture.split('?')[0];
+            }
+          }
+        }
+        
         profileData = {
-          profilePicture: profile.profilePicture,
+          profilePicture: profilePicture || null,
           headline: profile.headline,
           location: profile.location,
         };
@@ -280,30 +300,18 @@ export class UserController {
       if (decodedToken.email !== email) {
         throw new AppError(Messages.AUTH.INVALID_TOKEN, HttpStatusCode.BAD_REQUEST);
       }
-      let user = await this._userService.findByEmail(email);
-      let isNewUser = false;
 
-      if (!user) {
-        user = await this._userService.createGoogleUser({
-          email,
-          fullName: name || email.split('@')[0],
-          profilePicture: photoURL,
-        });
-        isNewUser = true;
-      } else {
-        console.log('[UserController] Existing user found:', { userId: user.id, email: user.email });
-      }
+      const result = await this._userService.googleAuth(email,name, photoURL);
+      const isNewUser = !result.user.isVerified;
 
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: UserRole.JOBSEEKER },
-        process.env.JWT_SECRET!,
-        { expiresIn: GOOGLE_AUTH_TOKEN_EXPIRY }
-      );
-      this._cookieService.setToken(res, token, CookieConfig.TOKEN_MAX_AGE);
+      this._cookieService.setAccessToken(res, result.tokens.accessToken);
+      this._cookieService.setRefreshToken(res,result.tokens.refreshToken);
 
       res.status(isNewUser ? AuthStatusCode.REGISTRATION_SUCCESS : AuthStatusCode.LOGIN_SUCCESS)
-        .json(buildSuccessResponse({ user, token, isNewUser }, 
+        .json(buildSuccessResponse(result.user, 
           isNewUser ? Messages.AUTH.GOOGLE_REGISTRATION_SUCCESS : Messages.AUTH.GOOGLE_LOGIN_SUCCESS));
+
+
     } catch (error: unknown) {
       const err = error as { message?: string; stack?: string; code?: string; name?: string; response?: { data?: unknown } };
       console.error('[UserController] Google auth error:', {

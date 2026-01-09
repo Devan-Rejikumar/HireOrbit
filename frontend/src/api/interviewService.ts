@@ -1,5 +1,6 @@
 import api from './axios';
 import { WebRTCConfigResponse } from '@/types/webrtc.types';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 export interface Interview {
   id: string;
@@ -71,11 +72,10 @@ export interface InterviewListResponse {
 }
 
 const CONTENT_TYPE_JSON = 'application/json';
-const INTERVIEWS_ENDPOINT = '/interviews';
 
 export const _interviewService = {
   scheduleInterview: async (interviewData: CreateInterviewData): Promise<InterviewResponse> => {
-    const response = await api.post<InterviewResponse>(INTERVIEWS_ENDPOINT, interviewData, {
+    const response = await api.post<InterviewResponse>(API_ROUTES.INTERVIEWS.BASE, interviewData, {
       headers: {
         'Content-Type': CONTENT_TYPE_JSON,
       },
@@ -84,12 +84,12 @@ export const _interviewService = {
   },
 
   getInterviewById: async (interviewId: string): Promise<InterviewWithDetailsResponse> => {
-    const response = await api.get<InterviewWithDetailsResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}`);
+    const response = await api.get<InterviewWithDetailsResponse>(API_ROUTES.INTERVIEWS.GET_BY_ID(interviewId));
     return response.data;
   },
 
   updateInterview: async (interviewId: string, updateData: UpdateInterviewData): Promise<InterviewResponse> => {
-    const response = await api.put<InterviewResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}`, updateData, {
+    const response = await api.put<InterviewResponse>(API_ROUTES.INTERVIEWS.UPDATE(interviewId), updateData, {
       headers: {
         'Content-Type': CONTENT_TYPE_JSON,
       },
@@ -106,19 +106,19 @@ export const _interviewService = {
     };
     
     const response = await api.delete<InterviewResponse>(
-      `${INTERVIEWS_ENDPOINT}/${interviewId}`,
+      API_ROUTES.INTERVIEWS.DELETE(interviewId),
       config,
     );
     return response.data;
   },
 
   getInterviewsByApplication: async (applicationId: string): Promise<InterviewListResponse> => {
-    const response = await api.get<InterviewListResponse>(`${INTERVIEWS_ENDPOINT}/application/${applicationId}`);
+    const response = await api.get<InterviewListResponse>(API_ROUTES.INTERVIEWS.BY_APPLICATION(applicationId));
     return response.data;
   },
 
   getCompanyInterviews: async (): Promise<InterviewListResponse> => {
-    const response = await api.get<InterviewListResponse>(`${INTERVIEWS_ENDPOINT}/company/all`);
+    const response = await api.get<InterviewListResponse>(API_ROUTES.INTERVIEWS.COMPANY_ALL);
     return response.data;
   },
 
@@ -153,12 +153,12 @@ export const _interviewService = {
         };
       };
       message: string;
-    }>(`${INTERVIEWS_ENDPOINT}/candidate/all?${params.toString()}`);
+    }>(`${API_ROUTES.INTERVIEWS.CANDIDATE_ALL}?${params.toString()}`);
     return response.data;
   },
 
   makeInterviewDecision: async (interviewId: string, decisionData: InterviewDecisionData): Promise<InterviewResponse> => {
-    const response = await api.post<InterviewResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}/decision`, decisionData, {
+    const response = await api.post<InterviewResponse>(API_ROUTES.INTERVIEWS.DECISION(interviewId), decisionData, {
       headers: {
         'Content-Type': CONTENT_TYPE_JSON,
       },
@@ -167,7 +167,7 @@ export const _interviewService = {
   },
 
   getWebRTCConfig: async (interviewId: string): Promise<WebRTCConfigResponse> => {
-    const response = await api.get<WebRTCConfigResponse>(`${INTERVIEWS_ENDPOINT}/${interviewId}/webrtc-config`);
+    const response = await api.get<WebRTCConfigResponse>(API_ROUTES.INTERVIEWS.WEBRTC_CONFIG(interviewId));
     return response.data;
   },
 };

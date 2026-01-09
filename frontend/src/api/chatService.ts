@@ -1,9 +1,9 @@
 import api from './axios';
 import { ENV } from '../config/env';
 import { HTTP_STATUS } from '../constants/statusCodes';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 const CHAT_API_BASE_URL = ENV.API_BASE_URL;
-const CHAT_API_PATH = '/chat';
 
 export interface ConversationResponse {
   id: string;
@@ -61,21 +61,21 @@ export interface UnreadCountResponse {
 export const _chatService = {
   getUserConversations: async (userId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.USER_CONVERSATIONS(userId)}`,
     );
     return response.data.data.conversations;
   },
 
   getCompanyConversations: async (companyId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/companies/${companyId}/conversations`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.COMPANY_CONVERSATIONS(companyId)}`,
     );
     return response.data.data.conversations;
   },
 
   getConversation: async (conversationId: string): Promise<ConversationResponse> => {
     const response = await api.get<ConversationResponseData>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.CONVERSATION(conversationId)}`,
     );
     return response.data.data;
   },
@@ -83,7 +83,7 @@ export const _chatService = {
   getConversationByApplication: async (applicationId: string): Promise<ConversationResponse | null> => {
     try {
       const response = await api.get<ConversationResponseData>(
-        `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/application/${applicationId}`,
+        `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.CONVERSATION_BY_APPLICATION(applicationId)}`,
       );
       return response.data.data;
     } catch (error: unknown) {
@@ -102,7 +102,7 @@ export const _chatService = {
     skip?: number,
   ): Promise<MessageResponse[]> => {
     const response = await api.get<MessageListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}/messages`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.MESSAGES(conversationId)}`,
       {
         params: { limit, skip },
       },
@@ -111,14 +111,14 @@ export const _chatService = {
   },
 
   markAsRead: async (conversationId: string, userId: string): Promise<void> => {
-    await api.post(`${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}/read`, {
+    await api.post(`${CHAT_API_BASE_URL}${API_ROUTES.CHAT.MARK_AS_READ(conversationId)}`, {
       userId,
     });
   },
 
   getUnreadCount: async (conversationId: string, userId: string): Promise<number> => {
     const response = await api.get<UnreadCountResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/conversations/${conversationId}/unread-count`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.UNREAD_COUNT(conversationId)}`,
       {
         params: { userId },
       },
@@ -128,14 +128,14 @@ export const _chatService = {
 
   getTotalUnreadCount: async (userId: string): Promise<number> => {
     const response = await api.get<UnreadCountResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/total-unread-count`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.TOTAL_UNREAD_COUNT(userId)}`,
     );
     return response.data.data.unreadCount;
   },
 
   getConversationsWithUnread: async (userId: string): Promise<ConversationResponse[]> => {
     const response = await api.get<ConversationListResponse>(
-      `${CHAT_API_BASE_URL}${CHAT_API_PATH}/users/${userId}/conversations-with-unread`,
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.CONVERSATIONS_WITH_UNREAD(userId)}`,
     );
     return response.data.data.conversations;
   },

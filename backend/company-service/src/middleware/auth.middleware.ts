@@ -1,26 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import { buildErrorResponse } from 'hireorbit-shared-dto';
 import { HttpStatusCode } from '../enums/StatusCodes';
-import { logger } from '../utils/logger';
 import { Messages } from '../constants/Messages';
-import { AppConfig } from '../config/app.config';
 
-declare global {
-  namespace Express {
-    interface Request {
-      cookies?: { [key: string]: string };
-    }
+const USER_ID_HEADER = 'x-user-id';
+const USER_EMAIL_HEADER = 'x-user-email';
+const USER_ROLE_HEADER = 'x-user-role';
+
+/**
+ * Extracts user information from request headers set by API Gateway
+ * These headers are set by the gateway after verifying JWT token
+ */
+const extractUserFromHeaders = (req: Request): { userId: string; email: string; role: string } | null => {
+  const userId = req.headers[USER_ID_HEADER] as string;
+  const userEmail = req.headers[USER_EMAIL_HEADER] as string;
+  const userRole = req.headers[USER_ROLE_HEADER] as string;
+
+  if (!userId) {
+    return null;
   }
-}
 
-interface CompanyTokenPayload extends JwtPayload {
-  userId: string;  
-  companyId?: string;  
-  email: string;
-  role: string;
-  userType: string;
-}
+  return { userId, email: userEmail, role: userRole };
+};
+
+/**
+ * Creates an unauthorized response object
+ */
+const createUnauthorizedResponse = (message: string) => ({
+  success: false,
+  error: Messages.AUTH.AUTHENTICATION_REQUIRED,
+  message
+});
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -31,79 +41,46 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+/**
+ * Middleware to validate user headers from API Gateway
+ * 
+ * This middleware:
+ * - Validates that user headers exist (ensures request came through API Gateway)
+ * - Attaches user information to req.user for use in controllers
+ * - Validates that role is 'company' or 'admin'
+ * 
+ * Note: Token verification and blocked status check are handled by API Gateway.
+ * This middleware only validates the presence of verified headers.
+ */
 export const authenticateCompany = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-  try {
+  const userInfo = extractUserFromHeaders(req);
 
-    let token: string | undefined;
-    const authHeader = req.headers.authorization;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-      logger.debug('Token found in Authorization header');
-    } else if (req.cookies.adminAccessToken) {
-      token = req.cookies.adminAccessToken;
-      logger.debug('Admin token found in cookies (fallback)');
-    } else if (req.cookies.companyAccessToken) {
-      token = req.cookies.companyAccessToken;
-      logger.debug('Company token found in cookies (fallback)');
-    } else if (req.cookies.accessToken) {
-      token = req.cookies.accessToken;
-      logger.debug('Generic access token found in cookies (fallback)');
-    }
-    
-    if (!token) {
-      logger.warn('No access token found in Authorization header or cookies');
-      res.status(HttpStatusCode.UNAUTHORIZED).json(
-        buildErrorResponse(Messages.ERROR.NO_TOKEN_PROVIDED, Messages.AUTH.AUTHENTICATION_REQUIRED),
-      );
-      return;
-    }
-
-    const jwtSecret = AppConfig.JWT_SECRET;
-    logger.debug('Token found, verifying...');
-    const decoded = jwt.verify(token, jwtSecret) as CompanyTokenPayload;
-    
-    logger.debug('Token verified successfully', { userId: decoded.userId, role: decoded.role });
-    
-    if (decoded.role !== 'company' && decoded.role !== 'admin') {
-      logger.warn('Invalid token type', { expected: 'company or admin', got: decoded.role });
-      res.status(HttpStatusCode.FORBIDDEN).json(
-        buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.ERROR.COMPANY_TOKEN_REQUIRED),
-      );
-      return;
-    }
-
-    const userId = decoded.userId;
-    const companyId = decoded.companyId || decoded.userId;
-
-    if (!userId) {
-      logger.warn('No user ID found in token');
-      res.status(HttpStatusCode.UNAUTHORIZED).json(
-        buildErrorResponse(Messages.AUTH.COMPANY_NOT_AUTHENTICATED, Messages.AUTH.AUTHENTICATION_REQUIRED),
-      );
-      return;
-    }
-    
-    req.user = {
-      companyId: companyId,
-      email: decoded.email,
-      role: decoded.role,
-      userType: decoded.userType,
-    };
-
-    logger.debug('User context set', {
-      userId: userId,
-      companyId: companyId,
-      email: decoded.email,
-      role: decoded.role,
-      userType: decoded.userType,
-    });
-
-    next();
-  } catch (error) {
-    logger.error('Token verification failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+  // Trust boundary: Ensure request came through API Gateway
+  if (!userInfo) {
     res.status(HttpStatusCode.UNAUTHORIZED).json(
-      buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.AUTH.AUTHENTICATION_REQUIRED),
+      createUnauthorizedResponse('User identification required. Request must go through API Gateway.')
     );
+    return;
   }
+
+  const { userId, email, role } = userInfo;
+
+  // Validate role is company or admin
+  if (role !== 'company' && role !== 'admin') {
+    res.status(HttpStatusCode.FORBIDDEN).json(
+      buildErrorResponse(Messages.ERROR.INVALID_TOKEN_TYPE, Messages.ERROR.COMPANY_TOKEN_REQUIRED),
+    );
+    return;
+  }
+
+  const companyId = userId; // For company users, userId is the companyId
+
+  req.user = {
+    companyId: companyId,
+    email: email,
+    role: role,
+    userType: role,
+  };
+
+  next();
 };

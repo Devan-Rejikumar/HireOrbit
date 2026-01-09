@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, FileText, Calendar, MapPin, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Offer, offerService } from '@/api/offerService';
 import toast from 'react-hot-toast';
+import ConfirmationModal from './ConfirmationModal';
 
 interface OfferDetailsModalProps {
   isOpen: boolean;
@@ -20,6 +21,10 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
 }) => {
   const [processing, setProcessing] = useState(false);
   const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    type: 'accept' | 'reject';
+  }>({ isOpen: false, type: 'accept' });
 
   if (!isOpen || !offer) return null;
 
@@ -59,29 +64,65 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
   };
 
   const handleDownloadPdf = async () => {
-    if (!offer.pdfUrl) {
-      toast.error('PDF not available');
-      return;
-    }
-
     try {
-      const blob = await offerService.downloadOfferPdf(offer.id);
-      const url = window.URL.createObjectURL(blob);
+      // Get signed URL from backend
+      const { signedUrl } = await offerService.downloadOfferPdf(offer.id);
+      console.log('SIGNED URL RECEIVED IN FRONTEND:', signedUrl);
+      
+      // Fetch the PDF as a blob (this prevents opening in new tab)
+      const response = await fetch(signedUrl, {
+        method: 'GET',
+        credentials: 'omit', // Don't send credentials to Cloudinary
+      });
+
+      if (!response.ok) {
+        // Try to parse error response
+        let errorMessage = 'Failed to download PDF';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error?.message || errorMessage;
+        } catch {
+          // If not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+      
+      // Verify it's actually a PDF
+      if (!blob.type.includes('pdf') && blob.size === 0) {
+        throw new Error('Invalid PDF file received');
+      }
+      
+      // Create a blob URL and trigger download
+      const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
+      link.href = blobUrl;
       link.download = `offer_${offer.id}.pdf`;
+      // Remove target="_blank" to prevent opening in new tab
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success('Offer letter downloaded');
+      
+      // Clean up the blob URL after a short delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+
+      toast.success('Offer letter downloaded successfully');
     } catch (error) {
-      toast.error('Failed to download offer letter');
+      console.error('Download failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to download offer letter';
+      toast.error(errorMessage);
     }
   };
 
+  const handleAcceptClick = () => {
+    setConfirmModal({ isOpen: true, type: 'accept' });
+  };
+
   const handleAccept = async () => {
-    if (!confirm('Are you sure you want to accept this offer?')) return;
+    setConfirmModal({ isOpen: false, type: 'accept' });
 
     try {
       setProcessing(true);
@@ -99,8 +140,12 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
     }
   };
 
+  const handleRejectClick = () => {
+    setConfirmModal({ isOpen: true, type: 'reject' });
+  };
+
   const handleReject = async () => {
-    if (!confirm('Are you sure you want to reject this offer? This action cannot be undone.')) return;
+    setConfirmModal({ isOpen: false, type: 'reject' });
 
     try {
       setProcessing(true);
@@ -218,7 +263,7 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
               <div>
-                {offer.pdfUrl && (
+                {offer.pdfPublicId && (
                   <button
                     onClick={handleDownloadPdf}
                     className="inline-flex items-center space-x-2 px-4 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg font-medium transition-colors"
@@ -232,7 +277,7 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
               {canAcceptOrReject && (
                 <div className="flex items-center space-x-3">
                   <button
-                    onClick={handleReject}
+                    onClick={handleRejectClick}
                     disabled={processing}
                     className="inline-flex items-center space-x-2 px-6 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -240,7 +285,7 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
                     <span>{actionType === 'reject' && processing ? 'Rejecting...' : 'Reject Offer'}</span>
                   </button>
                   <button
-                    onClick={handleAccept}
+                    onClick={handleAcceptClick}
                     disabled={processing}
                     className="inline-flex items-center space-x-2 px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -260,6 +305,24 @@ const OfferDetailsModal: React.FC<OfferDetailsModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: 'accept' })}
+        onConfirm={confirmModal.type === 'accept' ? handleAccept : handleReject}
+        title={confirmModal.type === 'accept' ? 'Accept Offer' : 'Reject Offer'}
+        message={
+          confirmModal.type === 'accept'
+            ? 'Are you sure you want to accept this offer? This action will confirm your acceptance of the job offer.'
+            : 'Are you sure you want to reject this offer? This action cannot be undone.'
+        }
+        confirmText={confirmModal.type === 'accept' ? 'Accept Offer' : 'Reject Offer'}
+        cancelText="Cancel"
+        type={confirmModal.type === 'accept' ? 'info' : 'danger'}
+        loading={processing}
+        loadingText={confirmModal.type === 'accept' ? 'Accepting...' : 'Rejecting...'}
+      />
     </div>
   );
 };

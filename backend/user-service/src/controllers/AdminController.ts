@@ -28,13 +28,13 @@ export class AdminController {
 
     const { admin, tokens } = await this._adminService.login(email, password);
     
-    this._cookieService.setAdminAccessToken(res, tokens.accessToken);
-    this._cookieService.setAdminRefreshToken(res, tokens.refreshToken);
+    this._cookieService.setAccessToken(res, tokens.accessToken);
+    this._cookieService.setRefreshToken(res, tokens.refreshToken);
     res.status(AuthStatusCode.LOGIN_SUCCESS).json({ admin });
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies.adminRefreshToken || req.body.refreshToken;
+    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
     
     if (!refreshToken) {
       throw new AppError(Messages.AUTH.ADMIN_REFRESH_TOKEN_REQUIRED, HttpStatusCode.BAD_REQUEST);
@@ -42,7 +42,7 @@ export class AdminController {
 
     const result = await this._adminService.refreshToken(refreshToken);
     
-    this._cookieService.setAdminAccessToken(res, result.accessToken);
+    this._cookieService.setAccessToken(res, result.accessToken);
 
     res.status(HttpStatusCode.OK).json({ 
       message: Messages.AUTH.ADMIN_TOKEN_REFRESH_SUCCESS 
@@ -103,12 +103,12 @@ export class AdminController {
   }
 
   async logout(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies.adminRefreshToken;
+    const refreshToken = req.cookies.refreshToken;
     if(refreshToken){
       await this._adminService.logoutWithToken(refreshToken);
     }
-    this._cookieService.clearAdminAccessToken(res);
-    this._cookieService.clearAdminRefreshToken(res);
+    this._cookieService.clearAccessToken(res);
+    this._cookieService.clearRefreshToken(res);
   
     res.status(HttpStatusCode.OK).json({ 
       message: Messages.AUTH.ADMIN_LOGOUT_SUCCESS 
@@ -195,7 +195,7 @@ export class AdminController {
         success: true,
         data: statistics
       });
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - 30);

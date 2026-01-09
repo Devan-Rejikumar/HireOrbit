@@ -5,7 +5,7 @@ import { CreateApplicationSchema, UpdateApplicationStatusSchema,  AddApplication
 import { buildSuccessResponse } from 'hireorbit-shared-dto';
 import { HttpStatusCode, ValidationStatusCode } from '../enums/StatusCodes';
 import { TYPES } from '../config/types';
-import { uploadToCloudinary } from '../config/cloudinary';
+import { uploadToCloudinary, generateSignedAccessUrl } from '../config/cloudinary';
 import { mapApplicationToResponse } from '../dto/mappers/application.mapper';
 import { AppError } from '../utils/errors/AppError';
 import { Messages } from '../constants/Messages';
@@ -418,9 +418,29 @@ export class ApplicationController {
       throw new AppError(Messages.RESUME.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
+    // Log for debugging
+    logger.info('Generating signed URL for resume view', {
+      applicationId,
+      resumeUrl: application.resumeUrl,
+      userId,
+      userRole,
+    });
+
+    // Generate signed URL with 30 minute expiration
+    const { signedUrl, expiresAt } = generateSignedAccessUrl(application.resumeUrl, 'raw', 1800);
+    
+    logger.debug('Generated signed resume view URL', {
+      applicationId,
+      signedUrl,
+      expiresAt: expiresAt.toISOString(),
+    });
+
     res.status(HttpStatusCode.OK).json({ 
       success: true,
-      data: { resumeUrl: application.resumeUrl },
+      data: { 
+        resumeUrl: signedUrl,
+        expiresAt: expiresAt.toISOString(),
+      },
     });
   }
 
@@ -446,8 +466,32 @@ export class ApplicationController {
       throw new AppError(Messages.RESUME.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
-    const downloadUrl = application.resumeUrl.replace('/upload/', '/upload/fl_attachment/');
-    res.redirect(downloadUrl);
+    // Log for debugging
+    logger.info('Generating signed URL for resume download', {
+      applicationId,
+      resumeUrl: application.resumeUrl,
+      userId,
+      userRole,
+    });
+
+    // Generate signed URL with attachment flag for download and 30 minute expiration
+    const { signedUrl, expiresAt } = generateSignedAccessUrl(application.resumeUrl, 'raw', 1800);
+    const downloadUrl = signedUrl.replace('/upload/', '/upload/fl_attachment/');
+    
+    logger.debug('Generated signed resume download URL', {
+      applicationId,
+      signedUrl,
+      downloadUrl,
+      expiresAt: expiresAt.toISOString(),
+    });
+    
+    res.status(HttpStatusCode.OK).json({
+      success: true,
+      data: {
+        downloadUrl,
+        expiresAt: new Date(Date.now() + 1800 * 1000).toISOString(),
+      },
+    });
   }
 
   async bulkUpdateApplicationStatus(req: Request, res: Response): Promise<void> {

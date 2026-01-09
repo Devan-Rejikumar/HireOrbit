@@ -159,27 +159,29 @@ const CompanyApplications = () => {
     }
   }, [atsScoreFilter, hasActiveSubscription, loading, fetchApplications]);
 
-  const handleViewResume = useCallback(async (applicantName: string, resumeUrl?: string, _applicationId?: string) => {
-    if (!resumeUrl) return;
-    
-    const newWindow = window.open(resumeUrl, '_blank');
-    if (!newWindow) {
-      toast.error('Pop-up blocked! Please allow pop-ups or click Download button instead.');
-    }
-  }, []);
-
-  const handleDownloadResume = useCallback(async (applicationId: string, applicantName: string, resumeUrl?: string) => {
-    if (!resumeUrl) {
-      toast.error('Resume URL not available');
+  const handleViewResume = useCallback(async (applicantName: string, _resumeUrl?: string, applicationId?: string) => {
+    if (!applicationId) {
+      toast.error('Application ID not available');
       return;
     }
 
     try {
-      // Create download URL with Cloudinary attachment transformation (same as backend does)
-      const downloadUrl = resumeUrl.replace('/upload/', '/upload/fl_attachment/');
+      const { resumeUrl } = await _applicationService.viewResume(applicationId);
+      const newWindow = window.open(resumeUrl, '_blank');
+      if (!newWindow) {
+        toast.error('Pop-up blocked! Please allow pop-ups or click Download button instead.');
+      }
+    } catch (error) {
+      toast.error('Failed to load resume');
+    }
+  }, []);
+
+  const handleDownloadResume = useCallback(async (applicationId: string, applicantName: string, _resumeUrl?: string) => {
+    try {
+      // Get signed download URL from backend
+      const { downloadUrl } = await _applicationService.downloadResume(applicationId);
       
-      // Fetch the PDF blob directly from Cloudinary using fetch API
-      // Using fetch instead of axios to avoid CORS issues with redirects
+      // Fetch the PDF blob using the signed URL
       const response = await fetch(downloadUrl, {
         method: 'GET',
         credentials: 'omit', // Don't send credentials to avoid CORS issues
@@ -199,7 +201,7 @@ const CompanyApplications = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       toast.success('Resume downloaded successfully');
-    } catch (_error) {
+    } catch (error) {
       toast.error('Failed to download resume');
     }
   }, []);

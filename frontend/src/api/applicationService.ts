@@ -1,4 +1,5 @@
 import api from './axios';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 export interface Application {
   id: string;
@@ -57,7 +58,7 @@ const CONTENT_TYPE_JSON = 'application/json';
 export const _applicationService = {
   applyForJob: async (applicationData: ApplicationData): Promise<ApplicationResponse> => {
     try {
-      const response = await api.post<ApplicationResponse>('/applications/apply', applicationData, {
+      const response = await api.post<ApplicationResponse>(API_ROUTES.APPLICATIONS.APPLY, applicationData, {
         headers: {
           'Content-Type': CONTENT_TYPE_JSON,
         },
@@ -97,35 +98,35 @@ export const _applicationService = {
           totalPages: number;
         };
       };
-    }>(`/applications/user/applications?${params.toString()}`);
+    }>(`${API_ROUTES.APPLICATIONS.USER_APPLICATIONS}?${params.toString()}`);
     return response.data;
   },
 
   getApplicationDetails: async (applicationId: string) => {
     const response = await api.get<{
       data: Application;
-    }>(`/applications/${applicationId}`);
+    }>(API_ROUTES.APPLICATIONS.GET_BY_ID(applicationId));
     return response.data;
   },
   
   withdrawApplication: async (applicationId: string) => {
     const response = await api.patch<{
       data: Application;
-    }>(`/applications/${applicationId}/withdraw`);
+    }>(API_ROUTES.APPLICATIONS.WITHDRAW(applicationId));
     return response.data;
   },
   
   getCompanyApplications: async (companyId: string) => {
     const response = await api.get<{
       data: { applications: Application[] };
-    }>('/applications/company/applications');
+    }>(API_ROUTES.APPLICATIONS.COMPANY_APPLICATIONS);
     return response.data;
   },
   
   updateApplicationStatus: async (applicationId: string, status: string, reason?: string) => {
     const response = await api.patch<{
       data: Application;
-    }>(`/applications/${applicationId}/status`, {
+    }>(API_ROUTES.APPLICATIONS.UPDATE_STATUS(applicationId), {
       status,
       reason,
     });
@@ -135,7 +136,7 @@ export const _applicationService = {
   addApplicationNotes: async (applicationId: string, note: string, addedBy: string) => {
     const response = await api.post<{
       data: ApplicationNotes;
-    }>(`/applications/${applicationId}/notes`, {
+    }>(API_ROUTES.APPLICATIONS.NOTES(applicationId), {
       note,
       addedBy,
     });
@@ -145,14 +146,23 @@ export const _applicationService = {
   getApplicationStatusHistory: async (applicationId: string) => {
     const response = await api.get<{
       data: ApplicationStatusHistory[];
-    }>(`/applications/${applicationId}/history`);
+    }>(API_ROUTES.APPLICATIONS.HISTORY(applicationId));
     return response.data;
   },
 
-  downloadResume: async (applicationId: string): Promise<Blob> => {
-    const response = await api.get(`/applications/${applicationId}/resume/download`, {
-      responseType: 'blob',
-    });
-    return response.data;
+  viewResume: async (applicationId: string): Promise<{ resumeUrl: string; expiresAt: string }> => {
+    const response = await api.get<{
+      success: boolean;
+      data: { resumeUrl: string; expiresAt: string };
+    }>(API_ROUTES.APPLICATIONS.RESUME.VIEW(applicationId));
+    return response.data.data;
+  },
+
+  downloadResume: async (applicationId: string): Promise<{ downloadUrl: string; expiresAt: string }> => {
+    const response = await api.get<{
+      success: boolean;
+      data: { downloadUrl: string; expiresAt: string };
+    }>(API_ROUTES.APPLICATIONS.RESUME.DOWNLOAD(applicationId));
+    return response.data.data;
   },
 };

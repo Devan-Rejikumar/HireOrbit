@@ -1,4 +1,5 @@
 import api from './axios';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 export interface Job {
   id: string;
@@ -40,15 +41,15 @@ export const jobService = {
     if (filters.location) params.append('location', filters.location);
     if (filters.jobType) params.append('jobType', filters.jobType);
 
-    const response = await api.get<JobsResponse>(`/jobs/search?${params.toString()}`);
+    const response = await api.get<JobsResponse>(`${API_ROUTES.JOBS.SEARCH}?${params.toString()}`);
     return response.data;
   },
   getJobDetails: async (jobId: string) => {
-    const response = await api.get(`/jobs/${jobId}`);
+    const response = await api.get(API_ROUTES.JOBS.GET_BY_ID(jobId));
     return response.data;
   },
   toggleJobListing: async (jobId: string, isListed: boolean): Promise<{ data: { job: Job } }> => {
-    const response = await api.patch<{ data: { job: Job } }>(`/jobs/${jobId}/toggle-listing`, { isListed });
+    const response = await api.patch<{ data: { job: Job } }>(API_ROUTES.JOBS.TOGGLE_LISTING(jobId), { isListed });
     return response.data;
   },
 };

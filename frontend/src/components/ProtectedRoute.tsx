@@ -27,13 +27,30 @@ const ProtectedRoute = ({
     // Helper function to check if user has valid token in cookies
     const checkCookieAuth = () => {
       const cookies = document.cookie.split(';');
-      const hasAdminToken = cookies.some(cookie => cookie.trim().startsWith('adminAccessToken='));
-      const hasCompanyToken = cookies.some(cookie => cookie.trim().startsWith('companyAccessToken='));
-      const hasUserToken = cookies.some(cookie => cookie.trim().startsWith('accessToken='));
+      const accessTokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
       
-      if (hasAdminToken) return { authenticated: true, role: 'admin' as const };
-      if (hasCompanyToken) return { authenticated: true, role: 'company' as const };
-      if (hasUserToken) return { authenticated: true, role: 'jobseeker' as const };
+      if (!accessTokenCookie) {
+        return { authenticated: false, role: null };
+      }
+      
+      // Extract role from token payload
+      try {
+        const token = accessTokenCookie.split('=')[1];
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const role = payload.role || localStorage.getItem('role') || 'jobseeker';
+        
+        // Validate role is one of the expected values
+        if (['jobseeker', 'company', 'admin'].includes(role)) {
+          return { authenticated: true, role: role as 'jobseeker' | 'company' | 'admin' };
+        }
+      } catch (error) {
+        // If token parsing fails, check localStorage as fallback
+        const role = localStorage.getItem('role');
+        if (role && ['jobseeker', 'company', 'admin'].includes(role)) {
+          return { authenticated: true, role: role as 'jobseeker' | 'company' | 'admin' };
+        }
+      }
+      
       return { authenticated: false, role: null };
     };
 

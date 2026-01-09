@@ -88,6 +88,7 @@ const CreateOfferModal: React.FC<CreateOfferModalProps> = ({
     return true;
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -107,11 +108,11 @@ const CreateOfferModal: React.FC<CreateOfferModalProps> = ({
       };
 
       await offerService.createOffer(applicationId, offerData);
-      
+
       toast.success('Offer letter created and sent successfully!');
       onSuccess();
       onClose();
-      
+
       // Reset form
       setFormData({
         jobTitle: jobTitle,
