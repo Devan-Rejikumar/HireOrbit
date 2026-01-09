@@ -2,29 +2,9 @@
 
 export const getTokenFromCookie = () => {
   const cookies = document.cookie.split(';');
-  let role = localStorage.getItem('role');
   
-  if (!role || !document.cookie.includes(role === 'admin' ? 'adminAccessToken' : role === 'company' ? 'companyAccessToken' : 'accessToken')) {
-    if (document.cookie.includes('adminAccessToken')) {
-      role = 'admin';
-      localStorage.setItem('role', 'admin');
-    } else if (document.cookie.includes('companyAccessToken')) {
-      role = 'company';
-      localStorage.setItem('role', 'company');
-    } else if (document.cookie.includes('accessToken')) {
-      role = 'jobseeker';
-      localStorage.setItem('role', 'jobseeker');
-    }
-  }
-  
-  let cookieName = 'accessToken';
-  if (role === 'admin') {
-    cookieName = 'adminAccessToken';
-  } else if (role === 'company') {
-    cookieName = 'companyAccessToken';
-  }
-  
-  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
+  // All roles now use unified accessToken cookie
+  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
   return tokenCookie ? tokenCookie.split('=')[1] : null;
 };
 

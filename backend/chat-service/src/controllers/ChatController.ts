@@ -56,8 +56,15 @@ export class ChatController {
   async getConversationByApplication(req: AuthenticatedRequest, res: Response): Promise<void> {
     const { applicationId } = req.params;
     const authHeaders: Record<string, string> = {};
-    if (req.user?.userId) {
-      authHeaders['x-user-id'] = req.user.userId;
+    
+    // Use userId for jobseekers, companyId for company accounts
+    // Application-service requires x-user-id header for authentication
+    const userId = req.user?.userId || req.user?.companyId;
+    if (userId) {
+      authHeaders['x-user-id'] = userId;
+    }
+    if (req.user?.email) {
+      authHeaders['x-user-email'] = req.user.email;
     }
     if (req.user?.role) {
       authHeaders['x-user-role'] = req.user.role;

@@ -193,9 +193,12 @@ export class OfferPdfService implements IOfferPdfService {
   async uploadPdfToCloudinary(pdfBuffer: Buffer, offerId: string): Promise<string> {
     try {
       const timestamp = Date.now();
-      const fileName = `offer_${offerId}_${timestamp}.pdf`;
-      const pdfUrl = await uploadOfferPdfToCloudinary(pdfBuffer, fileName);
-      return pdfUrl;
+      const publicId = `offer-letters/offer_${offerId}_${timestamp}`;
+
+      await uploadOfferPdfToCloudinary(pdfBuffer, publicId);
+
+      return publicId; 
+
     } catch (error) {
       logger.error('[OfferPdfService] Error uploading PDF to Cloudinary:', error);
       throw error;
@@ -211,8 +214,8 @@ export class OfferPdfService implements IOfferPdfService {
   ): Promise<string> {
     try {
       const pdfBuffer = await this.generateOfferPdf(offer, candidateName, companyName, template, companyLogoUrl);
-      const pdfUrl = await this.uploadPdfToCloudinary(pdfBuffer, offer.id);
-      return pdfUrl;
+      const publicId = await this.uploadPdfToCloudinary(pdfBuffer, offer.id);
+      return publicId;
     } catch (error) {
       logger.error('[OfferPdfService] Error generating and uploading PDF:', error);
       throw error;

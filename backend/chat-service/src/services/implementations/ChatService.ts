@@ -5,6 +5,7 @@ import { IChatRepository } from '../../repositories/interfaces/IChatRepository';
 import { TYPES } from '../../config/types';
 import { AppConfig } from '../../config/app.config';
 import { ChatResponseMapper, ConversationResponse, MessageResponse } from '../../dto/responses/chat.response';
+import { logger } from '../../utils/logger';
 
 @injectable()
 export class ChatService implements IChatService {
@@ -19,9 +20,11 @@ export class ChatService implements IChatService {
       };
 
       if (authHeaders?.Authorization) {
-        console.log('ChatService] Auth header present:', authHeaders.Authorization.substring(0, 20) + '...');
+        logger.info('Auth header present', { 
+          headerPreview: authHeaders.Authorization.substring(0, 20) + '...' 
+        });
       } else {
-        console.warn('ChatService] No Authorization header found in authHeaders');
+        logger.warn('No Authorization header found in authHeaders');
       }
       
       const axiosConfig: AxiosRequestConfig = { 
@@ -29,14 +32,41 @@ export class ChatService implements IChatService {
         ...(headers.Cookie && { withCredentials: true }),
       };
       
-      const response = await axios.get(
-        `${AppConfig.API_GATEWAY_URL}/api/applications/${applicationId}`,
-        axiosConfig,
-      );
+      // Use APPLICATION_SERVICE_URL directly instead of going through API gateway
+      // This avoids network issues in Docker and is more efficient
+      // APPLICATION_SERVICE_URL is already set correctly (http://application-service:3004 in Docker)
+      const url = `${AppConfig.APPLICATION_SERVICE_URL}/api/applications/${applicationId}`;
+      logger.info('Fetching application details', { 
+        applicationId, 
+        url,
+        headers: Object.keys(headers),
+        serviceUrl: AppConfig.APPLICATION_SERVICE_URL,
+      });
+      
+      const response = await axios.get(url, axiosConfig);
+      
+      logger.info('Application fetch response received', {
+        status: response.status,
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : [],
+      });
+      
       const applicationData = response.data?.data || response.data;
       
+      logger.info('Extracted application data', {
+        hasData: !!applicationData,
+        hasUserId: !!applicationData?.userId,
+        hasCompanyId: !!applicationData?.companyId,
+        userId: applicationData?.userId,
+        companyId: applicationData?.companyId,
+      });
+      
       if (!applicationData || !applicationData.userId || !applicationData.companyId) {
-        throw new Error('Invalid application data received');
+        logger.error('Invalid application data structure', {
+          applicationData,
+          responseData: response.data,
+        });
+        throw new Error('Invalid application data received: missing userId or companyId');
       }
       
       return {
@@ -45,7 +75,64 @@ export class ChatService implements IChatService {
         status: applicationData.status || 'PENDING',
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // Extract detailed error information from axios errors
+      let errorMessage = 'Unknown error';
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // Server responded with error status
+          const responseData = error.response.data;
+          errorMessage = `HTTP ${error.response.status}: ${
+            responseData?.message || 
+            responseData?.error?.message ||
+            responseData?.error ||
+            error.response.statusText || 
+            'Request failed'
+          }`;
+          
+          logger.error('Axios error - Response error', {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            responseData,
+            url: error.config?.url,
+            method: error.config?.method,
+          });
+        } else if (error.request) {
+          // Request was made but no response received
+          errorMessage = `No response from server: ${error.message || error.code || 'Network error'}`;
+          logger.error('Axios error - No response', {
+            message: error.message,
+            code: error.code,
+            url: error.config?.url,
+            method: error.config?.method,
+            stack: error.stack,
+          });
+        } else {
+          // Error setting up request
+          errorMessage = `Request setup failed: ${error.message || 'Unknown error'}`;
+          logger.error('Axios error - Setup failed', {
+            message: error.message,
+            stack: error.stack,
+          });
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+        logger.error('Standard error while fetching application details', {
+          message: error.message,
+          stack: error.stack,
+        });
+      } else {
+        logger.error('Unknown error type while fetching application details', {
+          error: JSON.stringify(error),
+        });
+      }
+      
+      logger.error('Failed to fetch application details', {
+        applicationId,
+        errorMessage,
+        errorType: axios.isAxiosError(error) ? 'AxiosError' : error instanceof Error ? 'Error' : 'Unknown',
+      });
+      
       throw new Error(`Failed to fetch application details: ${errorMessage}`);
     }
   }

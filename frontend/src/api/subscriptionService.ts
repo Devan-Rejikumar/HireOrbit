@@ -1,4 +1,5 @@
 import api from './axios';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 export interface SubscriptionFeature {
   id: string;
@@ -46,7 +47,7 @@ export const subscriptionService = {
   // Get available plans
   getPlans: async (userType: 'user' | 'company'): Promise<{ data: SubscriptionPlan[]; message: string }> => {
     const response = await api.get<{ success: boolean; data: { plans: SubscriptionPlan[] }; message: string }>(
-      `/subscriptions/plans?userType=${userType}`,
+      `${API_ROUTES.SUBSCRIPTIONS.PLANS}?userType=${userType}`,
     );
     // Backend returns { success: true, data: { plans: [...] }, message: "..." }
     return {
@@ -58,7 +59,7 @@ export const subscriptionService = {
   // Get subscription status
   getSubscriptionStatus: async (): Promise<{ data: SubscriptionStatusResponse; message: string }> => {
     const response = await api.get<{ data: SubscriptionStatusResponse; message: string }>(
-      '/subscriptions/status',
+      API_ROUTES.SUBSCRIPTIONS.STATUS,
     );
     return response.data;
   },
@@ -73,7 +74,7 @@ export const subscriptionService = {
       data: Subscription | { checkoutUrl: string; sessionId: string }; 
       message: string 
     }>(
-      '/subscriptions',
+      API_ROUTES.SUBSCRIPTIONS.CREATE,
       { planId, billingPeriod },
     );
     return {
@@ -85,7 +86,7 @@ export const subscriptionService = {
   // Cancel subscription
   cancelSubscription: async (subscriptionId: string): Promise<{ data: Subscription; message: string }> => {
     const response = await api.post<{ data: Subscription; message: string }>(
-      `/subscriptions/${subscriptionId}/cancel`,
+      API_ROUTES.SUBSCRIPTIONS.CANCEL(subscriptionId),
     );
     return response.data;
   },
@@ -93,7 +94,7 @@ export const subscriptionService = {
   // Upgrade subscription
   upgradeSubscription: async (subscriptionId: string, newPlanId: string): Promise<{ data: Subscription; message: string }> => {
     const response = await api.post<{ data: Subscription; message: string }>(
-      `/subscriptions/${subscriptionId}/upgrade`,
+      API_ROUTES.SUBSCRIPTIONS.UPGRADE(subscriptionId),
       { newPlanId },
     );
     return response.data;
@@ -102,7 +103,7 @@ export const subscriptionService = {
   // Check job posting limit (for companies)
   checkJobPostingLimit: async (): Promise<{ data: JobPostingLimit; message: string }> => {
     const response = await api.get<{ data: JobPostingLimit; message: string }>(
-      '/subscriptions/limits/job-posting',
+      API_ROUTES.SUBSCRIPTIONS.LIMITS.JOB_POSTING,
     );
     return response.data;
   },
@@ -110,7 +111,7 @@ export const subscriptionService = {
   // Check feature access
   checkFeatureAccess: async (featureName: string): Promise<{ data: { hasAccess: boolean; featureName: string }; message: string }> => {
     const response = await api.get<{ data: { hasAccess: boolean; featureName: string }; message: string }>(
-      `/subscriptions/features/${featureName}`,
+      API_ROUTES.SUBSCRIPTIONS.FEATURES.CHECK(featureName),
     );
     return response.data;
   },
@@ -143,7 +144,7 @@ export const subscriptionService = {
           totalPages: number;
         }; 
         message: string;
-      }>(`/admin/subscriptions/plans?${params.toString()}`);
+      }>(`${API_ROUTES.ADMIN.SUBSCRIPTIONS.PLANS.BASE}?${params.toString()}`);
       return {
         data: response.data.data?.plans || [],
         total: response.data.data?.total || 0,
@@ -157,7 +158,7 @@ export const subscriptionService = {
     // Get plan by ID
     getPlanById: async (id: string): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.get<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
-        `/admin/subscriptions/plans/${id}`,
+        API_ROUTES.ADMIN.SUBSCRIPTIONS.PLANS.DETAIL(id),
       );
       return {
         data: response.data.data?.plan,
@@ -175,7 +176,7 @@ export const subscriptionService = {
       description?: string;
     }): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.post<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
-        '/admin/subscriptions/plans',
+        API_ROUTES.ADMIN.SUBSCRIPTIONS.PLANS.BASE,
         planData,
       );
       return {
@@ -193,7 +194,7 @@ export const subscriptionService = {
       description?: string;
     }): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.put<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
-        `/admin/subscriptions/plans/${id}`,
+        API_ROUTES.ADMIN.SUBSCRIPTIONS.PLANS.DETAIL(id),
         planData,
       );
       return {
@@ -208,7 +209,7 @@ export const subscriptionService = {
       priceYearly?: number;
     }): Promise<{ data: SubscriptionPlan; message: string }> => {
       const response = await api.patch<{ success: boolean; data: { plan: SubscriptionPlan }; message: string }>(
-        `/admin/subscriptions/plans/${id}/price`,
+        API_ROUTES.ADMIN.SUBSCRIPTIONS.PLANS.PRICE(id),
         prices,
       );
       return {
@@ -220,7 +221,7 @@ export const subscriptionService = {
     // Delete plan
     deletePlan: async (id: string): Promise<{ message: string }> => {
       const response = await api.delete<{ success: boolean; message: string }>(
-        `/admin/subscriptions/plans/${id}`,
+        API_ROUTES.ADMIN.SUBSCRIPTIONS.PLANS.DETAIL(id),
       );
       return {
         message: response.data.message || '',
@@ -256,7 +257,7 @@ export const subscriptionService = {
       if (userType) params.append('userType', userType);
       
       const queryString = params.toString();
-      const url = `/admin/subscriptions/revenue${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_ROUTES.ADMIN.SUBSCRIPTIONS.REVENUE}${queryString ? `?${queryString}` : ''}`;
       
       const response = await api.get<{
         success: boolean;
@@ -334,7 +335,7 @@ export const subscriptionService = {
       if (filters?.limit) params.append('limit', filters.limit.toString());
       
       const queryString = params.toString();
-      const url = `/admin/subscriptions/transactions${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_ROUTES.ADMIN.SUBSCRIPTIONS.TRANSACTIONS.BASE}${queryString ? `?${queryString}` : ''}`;
       
       const response = await api.get<{
         success: boolean;
@@ -380,7 +381,7 @@ export const subscriptionService = {
       if (limit) params.append('limit', limit.toString());
       
       const queryString = params.toString();
-      const url = `/admin/subscriptions/transactions/sync${queryString ? `?${queryString}` : ''}`;
+      const url = `${API_ROUTES.ADMIN.SUBSCRIPTIONS.TRANSACTIONS.SYNC}${queryString ? `?${queryString}` : ''}`;
       
       const response = await api.post<{
         success: boolean;

@@ -1,5 +1,6 @@
 import api from './axios';
 import { ENV } from '../config/env';
+import { API_ROUTES } from '../constants/apiRoutes';
 
 export interface CompanyReapplication {
   companyId: string;
@@ -29,7 +30,7 @@ export const companyService = {
   getReapplicationStatus: async (companyId: string) => {
     const response = await api.get<{
       data: { status: string };
-    }>(`${ENV.COMPANY_SERVICE_URL}/companies/${companyId}/reapplication-status`);
+    }>(`${ENV.COMPANY_SERVICE_URL}${API_ROUTES.COMPANY.REAPPLICATION_STATUS(companyId)}`);
     return response.data;
   },
   
@@ -49,7 +50,7 @@ export const companyService = {
 
     const response = await api.post<{
       data: CompanyReapplication;
-    }>(`${ENV.COMPANY_SERVICE_URL}/companies/${reapplicationData.companyId}/reapply`, formData);
+    }>(`${ENV.COMPANY_SERVICE_URL}${API_ROUTES.COMPANY.REAPPLY(reapplicationData.companyId)}`, formData);
     return response.data;
   },
 
@@ -59,7 +60,7 @@ export const companyService = {
         success: boolean;
         data: { company: CompanyProfile };
         message: string;
-      }>(`/company/search?name=${encodeURIComponent(companyName)}`);
+      }>(`${API_ROUTES.COMPANY.SEARCH}?name=${encodeURIComponent(companyName)}`);
       return response.data;
     } catch (error: unknown) {
       const isAxiosError = error && typeof error === 'object' && 'response' in error;

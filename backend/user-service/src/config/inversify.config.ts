@@ -46,6 +46,9 @@ import { RedisService } from '../services/implementations/RedisService';
 import { EmailService } from '../services/implementations/EmailService';
 import { JWTService } from '../services/implementations/JWTService';
 import { CookieService } from '../services/implementations/CookieService';
+import { CloudinaryService } from '../services/CloudinaryService';
+import { logger } from '../utils/logger';
+
 
 
 import { UserController } from '../controllers/UserController';
@@ -88,6 +91,9 @@ container.bind<IAchievementRepository>(TYPES.IAchievementRepository).to(Achievem
 container.bind<IAchievementService>(TYPES.IAchievementService).to(AchievementService);
 container.bind<AchievementController>(TYPES.AchievementController).to(AchievementController);
 container.bind<CookieService>(TYPES.CookieService).to(CookieService);
+container.bind<CloudinaryService>(TYPES.CloudinaryService).toDynamicValue(() => {
+  return new CloudinaryService(logger);
+}).inSingletonScope();
 container.bind<ISkillRepository>(TYPES.ISkillRepository).to(SkillRepository);
 container.bind<SkillService>(TYPES.SkillService).to(SkillService);
 container.bind<ISkillService>(TYPES.ISkillService).to(SkillService);

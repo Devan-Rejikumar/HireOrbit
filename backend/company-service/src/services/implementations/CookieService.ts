@@ -10,53 +10,55 @@ import { AppConfig } from '../../config/app.config';
 @injectable()
 export class CookieService {
   /**
-   * Sets company access token cookie
+   * Sets access token cookie
    */
-  setCompanyAccessToken(res: Response, token: string): void {
-    res.cookie(CookieNames.COMPANY_ACCESS_TOKEN, token, {
+  setAccessToken(res: Response, token: string): void {
+    res.cookie(CookieNames.ACCESS_TOKEN, token, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
-      maxAge: CookieConfig.COMPANY_ACCESS_TOKEN_MAX_AGE,
+      maxAge: CookieConfig.ACCESS_TOKEN_MAX_AGE,
     });
   }
 
   /**
-   * Sets company refresh token cookie
+   * Sets refresh token cookie
    */
-  setCompanyRefreshToken(res: Response, token: string): void {
-    res.cookie(CookieNames.COMPANY_REFRESH_TOKEN, token, {
+  setRefreshToken(res: Response, token: string): void {
+    res.cookie(CookieNames.REFRESH_TOKEN, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      domain: AppConfig.COOKIE_DOMAIN,
+      path: '/',
+      maxAge: CookieConfig.REFRESH_TOKEN_MAX_AGE,
+    });
+  }
+
+  /**
+   * Clears access token cookie
+   */
+  clearAccessToken(res: Response): void {
+    res.clearCookie(CookieNames.ACCESS_TOKEN, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
-      maxAge: CookieConfig.COMPANY_REFRESH_TOKEN_MAX_AGE,
     });
   }
 
   /**
-   * Clears company access token cookie
+   * Clears refresh token cookie
    */
-  clearCompanyAccessToken(res: Response): void {
-    res.clearCookie(CookieNames.COMPANY_ACCESS_TOKEN, {
-      httpOnly: false,
+  clearRefreshToken(res: Response): void {
+    res.clearCookie(CookieNames.REFRESH_TOKEN, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: '/',
-    });
-  }
-
-  /**
-   * Clears company refresh token cookie
-   */
-  clearCompanyRefreshToken(res: Response): void {
-    res.clearCookie(CookieNames.COMPANY_REFRESH_TOKEN, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
     });
   }

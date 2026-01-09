@@ -252,11 +252,45 @@ export class UserService implements IUserService {
   }): Promise<UserResponse> {
     const user = await this._userRepository.createUser({
       email: userData.email,
-      password: '', // Google users don't need a password
+      password: '',
       name: userData.fullName,
-      isGoogleUser: true, // Mark as Google user
+      isGoogleUser: true, 
     });
     return mapUserToResponse(user);
+  }
+
+  async googleAuth(email: string, name?: string, _photoURL?: string): Promise<AuthResponse> {
+    let user = await this._userRepository.findByEmail(email);
+    if(!user){
+      user = await this._userRepository.createUser({
+        email,
+        password:'',
+        name:name||email.split('@')[0],
+        isGoogleUser:true,
+      });
+    }
+    if(user.isBlocked){
+      throw new AppError('Account blocked',HttpStatusCode.FORBIDDEN);
+    }
+    const tokens = this._jwtService.generateTokenPair({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      userType: UserType.INDIVIDUAL
+    });
+
+    try {
+      const refreshTokenPayload = this._jwtService.verifyRefreshToken(tokens.refreshToken);
+      await this._redisService.storeRefreshToken(
+        user.id,
+        refreshTokenPayload.tokenId,
+        tokens.refreshToken
+      );
+    } catch (_redisError) {
+      logger.warn('UserService Google auth Redis error ');
+    }
+    logger.info('Google auth successful for user:', user.email);
+    return mapUserToAuthResponse(user, tokens);
   }
 
 

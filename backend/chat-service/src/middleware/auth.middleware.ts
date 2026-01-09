@@ -17,6 +17,7 @@ export const extractUserFromHeaders = (
       userId: isCompany ? undefined : headerUserId,
       companyId: isCompany ? headerUserId : undefined,
       role: userRole,
+      email: userEmail,
     };
     
     console.log('AuthMiddleware] User extracted from headers:', {

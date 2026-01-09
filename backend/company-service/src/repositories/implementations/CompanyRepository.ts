@@ -2,15 +2,15 @@ import { injectable } from 'inversify';
 import { prisma } from '../../prisma/client';
 import { Company, CompanyProfileStep, Otp } from '@prisma/client'; 
 import { ICompanyRepository } from '../interfaces/ICompanyRepository';
-import { BaseRepository } from './BaseRepository';
+import { BaseRepository, PrismaDelegate } from './BaseRepository';
 import { PaginationResult } from '../interfaces/IBaseRepository';
 import { CompanyProfileData, CompanyProfileStepData } from '../../types/company';
 
 @injectable()
 export class CompanyRepository extends BaseRepository<Company> implements ICompanyRepository {
     
-  protected getModel() {
-    return prisma.company;
+  protected getModel(): PrismaDelegate<Company> {
+    return prisma.company as unknown as PrismaDelegate<Company>;
   }
 
   async findByEmail(email: string): Promise<Company | null> {

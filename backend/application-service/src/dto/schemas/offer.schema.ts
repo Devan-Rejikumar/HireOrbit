@@ -22,6 +22,11 @@ export const GetOffersQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+export const GenerateUploadUrlSchema = z.object({
+  offerId: z.string().uuid('Invalid offer ID format'),
+});
+
 export type CreateOfferInput = z.infer<typeof CreateOfferSchema>;
 export type GetOffersQueryInput = z.infer<typeof GetOffersQuerySchema>;
+export type GenerateUploadUrlInput = z.infer<typeof GenerateUploadUrlSchema>;
 

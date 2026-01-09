@@ -15,6 +15,7 @@ import { getUserIdFromRequest } from '../utils/requestHelpers';
 import { RequestWithUser } from '../types/express/RequestWithUser';
 import { AppError } from '../utils/errors/AppError';
 import { logger } from '../utils/logger';
+import { CloudinaryService } from '../services/CloudinaryService';
 
 @injectable()
 export class ProfileController {
@@ -22,8 +23,65 @@ export class ProfileController {
     @inject(TYPES.IProfileService) private _profileService: IProfileService,
     @inject(TYPES.IUserService) private _userService: IUserService,
     @inject(TYPES.IAchievementService) private _achievementService: IAchievementService,
-    @inject(TYPES.ICertificationService) private _certificationService: ICertificationService
+    @inject(TYPES.ICertificationService) private _certificationService: ICertificationService,
+    @inject(TYPES.CloudinaryService) private _cloudinaryService: CloudinaryService,
   ) {}
+
+  /**
+   * Normalize profile picture URL - ensures we always return a clean public URL
+   * Removes signed URL parameters and extracts public URL if needed
+   */
+  private _normalizeProfilePictureUrl(url: string | null | undefined): string | null {
+    if (!url || typeof url !== 'string') {
+      return null;
+    }
+
+    // If it's already a clean public URL (image/upload/...), return as is
+    if (url.includes('/image/upload/') && !url.includes('/image/authenticated/')) {
+      // Clean up any query parameters that might cause issues
+      try {
+        const urlObj = new URL(url);
+        // Keep only the base URL without query params
+        return `${urlObj.origin}${urlObj.pathname}`;
+      } catch {
+        return url.split('?')[0]; // Remove query params if URL parsing fails
+      }
+    }
+
+    // If it's a signed URL (contains /image/authenticated/), try to extract public URL
+    if (url.includes('/image/authenticated/')) {
+      try {
+        // Try to extract public_id from the URL
+        // Signed URLs have pattern: /image/authenticated/s--xxx--/public_id
+        const match = url.match(/\/image\/authenticated\/s--[^-]+--\/(.+)$/);
+        if (match && match[1]) {
+          const publicId = match[1].split('?')[0].split('_a=')[0]; // Remove query params
+          // Reconstruct public URL
+          return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`;
+        }
+      } catch (error) {
+        logger.warn('Failed to normalize signed profile picture URL', { url, error });
+      }
+    }
+
+    // If it's a full Cloudinary URL but malformed, try to extract public_id
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+      const uploadIndex = pathParts.indexOf('upload');
+      if (uploadIndex !== -1 && uploadIndex < pathParts.length - 1) {
+        const publicId = pathParts.slice(uploadIndex + 1).join('/').split('?')[0];
+        return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/${publicId}`;
+      }
+    } catch {
+      // If URL parsing fails, return null to avoid malformed URLs
+      logger.warn('Invalid profile picture URL format', { url });
+      return null;
+    }
+
+    // If we can't normalize it, return null to avoid errors
+    return null;
+  }
 
   async createProfile(req: Request, res: Response): Promise<void> {
     const userId = getUserIdFromRequest(req, res);
@@ -49,6 +107,11 @@ export class ProfileController {
     
     if (!profile) {
       throw new AppError(Messages.PROFILE.NOT_FOUND, HttpStatusCode.NOT_FOUND);
+    }
+    
+    // Normalize profile picture URL - ensure it's a clean public URL
+    if (profile.profilePicture) {
+      profile.profilePicture = this._normalizeProfilePictureUrl(profile.profilePicture) || null;
     }
 
     res.status(HttpStatusCode.OK).json(
@@ -95,7 +158,7 @@ export class ProfileController {
           resource_type: 'image'
         });
         profileData.profilePicture = result.secure_url;
-      } catch (cloudinaryError) {
+      } catch (_cloudinaryError) {
         throw new AppError(Messages.PROFILE.IMAGE_UPLOAD_FAILED, HttpStatusCode.INTERNAL_SERVER_ERROR);
       }
     } else {
@@ -144,6 +207,11 @@ export class ProfileController {
       throw new AppError(Messages.PROFILE.NOT_FOUND, HttpStatusCode.NOT_FOUND);
     }
 
+    // Normalize profile picture URL - ensure it's a clean public URL
+    if (profile.profilePicture) {
+      profile.profilePicture = this._normalizeProfilePictureUrl(profile.profilePicture) || null;
+    }
+
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse({ profile }, Messages.PROFILE.CURRENT_PROFILE_FETCHED_SUCCESS)
     );
@@ -163,6 +231,11 @@ export class ProfileController {
     }
     if (!fullProfile) {
       throw new AppError(Messages.PROFILE.NOT_FOUND, HttpStatusCode.NOT_FOUND);
+    }
+
+    // Normalize profile picture URL - ensure it's a clean public URL
+    if (fullProfile.profilePicture) {
+      fullProfile.profilePicture = this.normalizeProfilePictureUrl(fullProfile.profilePicture) || null;
     }
 
     const achievements = await this._achievementService.getAchievements(userId);

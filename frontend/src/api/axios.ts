@@ -11,19 +11,14 @@ const api = axios.create({
 
 const getAccessToken = (): string | null => {
   const cookies = document.cookie.split(';');
-  const role = localStorage.getItem('role');
   
-  let cookieName = 'accessToken';
-  if (role === 'admin') {
-    cookieName = 'adminAccessToken';
-  } else if (role === 'company') {
-    cookieName = 'companyAccessToken';
-  }
- 
-  let tokenCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
- 
-  if (!tokenCookie && role === 'jobseeker') {
-    tokenCookie = cookies.find(cookie => cookie.trim().startsWith('token='));
+  // All roles now use unified accessToken cookie
+  const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
+  
+  // Fallback to 'token' cookie for backward compatibility (if needed)
+  if (!tokenCookie) {
+    const fallbackToken = cookies.find(cookie => cookie.trim().startsWith('token='));
+    return fallbackToken ? fallbackToken.split('=')[1] : null;
   }
   
   return tokenCookie ? tokenCookie.split('=')[1] : null;

@@ -37,29 +37,6 @@ export class CookieService {
     });
   }
 
-  /**
-   * Sets admin access token cookie
-   */
-  setAdminAccessToken(res: Response, token: string): void {
-    res.cookie(CookieNames.ADMIN_ACCESS_TOKEN, token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: CookieConfig.ADMIN_ACCESS_TOKEN_MAX_AGE,
-    });
-  }
-
-  /**
-   * Sets admin refresh token cookie
-   */
-  setAdminRefreshToken(res: Response, token: string): void {
-    res.cookie(CookieNames.ADMIN_REFRESH_TOKEN, token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: CookieConfig.ADMIN_REFRESH_TOKEN_MAX_AGE,
-    });
-  }
 
   /**
    * Sets a generic token cookie with custom maxAge
@@ -109,27 +86,4 @@ export class CookieService {
     });
   }
 
-  /**
-   * Clears admin access token cookie
-   */
-  clearAdminAccessToken(res: Response): void {
-    res.clearCookie(CookieNames.ADMIN_ACCESS_TOKEN, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
-  }
-
-  /**
-   * Clears admin refresh token cookie
-   */
-  clearAdminRefreshToken(res: Response): void {
-    res.clearCookie(CookieNames.ADMIN_REFRESH_TOKEN, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
-  }
 }
