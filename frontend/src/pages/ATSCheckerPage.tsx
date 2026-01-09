@@ -106,7 +106,7 @@ export const ATSCheckerPage = () => {
         strengths: response.data.strengths || [],
         improvements: response.data.improvements || [],
         missingKeywords: response.data.missingKeywords || [],
-        keywordMatch: response.data.keywordMatch,
+        keywordMatch: response.data.keywordMatch || 0,
       });
       
       toast.success('Resume analysis complete!');

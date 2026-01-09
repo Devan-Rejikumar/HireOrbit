@@ -191,7 +191,7 @@ export const ChatSidebar = ({
             names[conv.id] = userName;
             
             // Extract profile picture from response
-            const profilePicture = responseData?.profile?.profilePicture || null;
+            const profilePicture = (responseData && 'profile' in responseData && responseData.profile?.profilePicture) || null;
             if (profilePicture) {
               userAvatars[conv.id] = profilePicture;
             } else {

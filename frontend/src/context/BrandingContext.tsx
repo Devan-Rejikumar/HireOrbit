@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '@/api/axios';
+import { ApiResponse } from '@/types/api';
 
 interface SiteSettings {
   logoUrl: string | null;
@@ -22,7 +23,7 @@ export const BrandingProvider: React.FC<{ children: ReactNode }> = ({ children }
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/settings');
+      const response = await api.get<ApiResponse<any>>('/settings');
       if (response.data?.success && response.data?.data) {
         setSettings({
           logoUrl: response.data.data.logoUrl || null,

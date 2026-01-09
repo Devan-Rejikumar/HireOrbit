@@ -167,7 +167,6 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
     socket,
     isConnected,
     messages,
-    messages,
     typingUsers,
     onlineUsers,
     sendMessage,

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '@/api/axios';
 import { FiUpload, FiSave, FiImage, FiType, FiFileText, FiSettings } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { ApiResponse } from '@/types/api';
 
 interface SiteSettings {
   logoUrl: string | null;
@@ -30,7 +31,7 @@ const AdminSettings: React.FC = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/settings');
+      const response = await api.get<ApiResponse<any>>('/settings');
       if (response.data?.success && response.data?.data) {
         setSettings({
           logoUrl: response.data.data.logoUrl || null,
@@ -81,7 +82,7 @@ const AdminSettings: React.FC = () => {
   const handleLogoUpload = async (base64String: string) => {
     try {
       setUploading(true);
-      const response = await api.put('/settings/logo', {
+      const response = await api.put<ApiResponse<any>>('/settings/logo', {
         logo: base64String,
       });
 
@@ -121,7 +122,7 @@ const AdminSettings: React.FC = () => {
 
     try {
       setUploading(true);
-      const response = await api.put('/settings', {
+      const response = await api.put<ApiResponse<any>>('/settings', {
         logoUrl: logoUrlInput.trim(),
       });
 
@@ -159,7 +160,7 @@ const AdminSettings: React.FC = () => {
 
     try {
       setSaving(true);
-      const response = await api.put('/settings/company-name', {
+      const response = await api.put<ApiResponse<any>>('/settings/company-name', {
         companyName: settings.companyName.trim(),
       });
 
@@ -180,7 +181,7 @@ const AdminSettings: React.FC = () => {
   const handleSaveAboutPage = async () => {
     try {
       setSaving(true);
-      const response = await api.put('/settings/about-page', {
+      const response = await api.put<ApiResponse<any>>('/settings/about-page', {
         aboutPage: settings.aboutPage || '',
       });
 
