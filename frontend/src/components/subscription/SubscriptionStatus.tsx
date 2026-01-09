@@ -1,0 +1,252 @@
+import { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { subscriptionService, SubscriptionStatusResponse } from '../../api/subscriptionService';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
+import { CheckCircle, Sparkles, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+export const SubscriptionStatus = () => {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+  const [status, setStatus] = useState<SubscriptionStatusResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isNewSubscription, setIsNewSubscription] = useState(false);
+  const navigate = useNavigate();
+  const { role } = useAuth();
+  const toastShownRef = useRef(false);
+
+  // Move dashboardPath here, before it's used
+  const dashboardPath = role === 'company' ? '/company/dashboard' : '/user/dashboard';
+
+  useEffect(() => {
+    loadStatus();
+  }, []);
+
+  const loadStatus = async () => {
+    try {
+      setLoading(true);
+      const response = await subscriptionService.getSubscriptionStatus();
+      setStatus(response.data);
+      
+      // If we have a session_id and subscription is active, it's a new subscription
+      if (sessionId && response.data.isActive && response.data.subscription && !toastShownRef.current) {
+        setIsNewSubscription(true);
+        toastShownRef.current = true; // Mark toast as shown
+        // Show success toast only once
+        toast.success('🎉 Payment successful! Your subscription is now active.');
+        // Redirect to dashboard after 3 seconds to show success message
+        setTimeout(() => {
+          navigate(dashboardPath); // Now dashboardPath is accessible
+        }, 3000);
+      }
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to load subscription status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center">Loading subscription status...</div>
+      </div>
+    );
+  }
+
+  if (!status || !status.subscription) {
+    return (
+      <div className="p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <h3 className="text-xl font-semibold mb-2">No Active Subscription</h3>
+          <p className="text-gray-600 mb-4">You don't have an active subscription plan.</p>
+          <button
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Browse Plans
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const subscription = status.subscription;
+  const isActive = status.isActive;
+  
+  // Check if subscription is cancelled or expired
+  const isCancelled = subscription.status === 'cancelled' || !isActive;
+  const expiryDate = new Date(subscription.currentPeriodEnd);
+  const now = new Date();
+  const isExpired = expiryDate <= now;
+  const needsRenewal = isCancelled || isExpired;
+
+  const handleRenew = async () => {
+    try {
+      const response = await subscriptionService.createSubscription(
+        subscription.planId,
+        subscription.billingPeriod
+      );
+      
+      // If response contains checkoutUrl, redirect to Stripe checkout
+      if (response.data && typeof response.data === 'object' && 'checkoutUrl' in response.data) {
+        const checkoutData = response.data as { checkoutUrl: string; sessionId: string };
+        window.location.href = checkoutData.checkoutUrl;
+      } else {
+        toast.success('Subscription renewed successfully');
+        loadStatus();
+      }
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { message?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.message || 'Failed to renew subscription');
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      {/* Success Banner for New Subscriptions */}
+      {isNewSubscription && isActive && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-green-900 mb-2">
+                🎉 Welcome to {subscription.plan.name}!
+              </h3>
+              <p className="text-green-800 mb-4">
+                Your payment was successful and your subscription is now active. 
+                You can start using all premium features immediately.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate(dashboardPath)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
+                  className="px-4 py-2 border border-green-600 text-green-700 rounded-lg hover:bg-green-50"
+                >
+                  View All Plans
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-2xl font-bold mb-6">Subscription Status</h2>
+      
+      <div className="bg-white border rounded-lg p-6 mb-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-xl font-semibold">{subscription.plan.name} Plan</h3>
+              {isActive && (
+                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Active
+                </span>
+              )}
+            </div>
+            <p className="text-gray-600 capitalize">{subscription.billingPeriod} billing</p>
+          </div>
+          <div className={`px-4 py-2 rounded-full ${isActive ? 'bg-green-50' : 'bg-red-50'}`}>
+            <span className={`font-semibold ${isActive ? 'text-green-600' : 'text-red-600'} capitalize`}>
+              {subscription.status}
+            </span>
+          </div>
+        </div>
+
+        {needsRenewal && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-800 font-semibold mb-1">
+                  {isExpired ? 'Your subscription has expired' : 'Your subscription is cancelled'}
+                </p>
+                <p className="text-red-700 text-sm mb-3">
+                  {isExpired 
+                    ? `Your subscription expired on ${expiryDate.toLocaleDateString()}. Renew now to continue enjoying premium features.`
+                    : 'Renew your subscription to continue enjoying premium features.'}
+                </p>
+                <button
+                  onClick={handleRenew}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Renew Subscription
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <p className="text-sm text-gray-600">Current Period Start</p>
+            <p className="font-semibold">
+              {new Date(subscription.currentPeriodStart).toLocaleDateString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">{needsRenewal ? 'Expired on' : 'Current Period End'}</p>
+            <p className="font-semibold">
+              {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        {subscription.cancelAtPeriodEnd && !needsRenewal && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <p className="text-yellow-800">
+              ⚠️ Your subscription will be cancelled at the end of the current billing period.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-4">
+          <h4 className="font-semibold mb-2">Active Features:</h4>
+          <ul className="space-y-2">
+            {status.features.length > 0 ? (
+              status.features.map((feature, index) => (
+                <li key={index} className="flex items-center">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>{feature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500">No premium features</li>
+            )}
+          </ul>
+        </div>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS_MANAGE)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Manage Subscription
+          </button>
+          <button
+            onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
+            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            View Plans
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+

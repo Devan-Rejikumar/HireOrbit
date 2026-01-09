@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(uuid())
+  name          String         
+  userType      String         
+  priceMonthly  Float?
+  priceYearly   Float?
+  stripePriceIdMonthly String?
+  stripePriceIdYearly  String?
+  features      SubscriptionFeature[]
+  subscriptions Subscription[]
+  transactions  Transaction[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([name, userType])
+}
+
+model Subscription {
+  id                  String            @id @default(uuid())
+  userId              String?           // For user subscriptions
+  companyId           String?           // For company subscriptions
+  planId              String
+  stripeSubscriptionId String           @unique
+  stripeCustomerId    String
+  status              String            // "active", "cancelled", "past_due", "trialing"
+  billingPeriod       String            // "monthly" or "yearly"
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  cancelAtPeriodEnd   Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  plan                SubscriptionPlan  @relation(fields: [planId], references: [id])
+  transactions        Transaction[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([stripeSubscriptionId])
+}
+
+model Transaction {
+  id                  String            @id @default(uuid())
+  subscriptionId      String?
+  userId              String?
+  companyId           String?
+  planId              String
+  amount              Float             // Amount in rupees
+  currency            String            @default("inr")
+  status              String            // "succeeded", "failed", "pending", "refunded"
+  stripeInvoiceId     String?           @unique
+  stripePaymentIntentId String?
+  billingPeriod       String            // "monthly" or "yearly"
+  paymentDate         DateTime
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  subscription        Subscription?     @relation(fields: [subscriptionId], references: [id])
+  plan                SubscriptionPlan  @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([paymentDate])
+  @@index([planId])
+}
+
+model SubscriptionFeature {
+  id        String            @id @default(uuid())
+  name      String            // "ats_checker", "unlimited_jobs", "featured_jobs"
+  planId    String
+  plan      SubscriptionPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([name, planId])
+}
+
+model JobPostingLimit {
+  id              String   @id @default(uuid())
+  companyId       String   @unique
+  currentCount    Int      @default(0)
+  limit           Int      // Based on subscription plan
+  resetDate       DateTime // Next reset date
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([companyId])
+}

@@ -1,0 +1,104 @@
+import 'reflect-metadata';
+import { Container } from 'inversify';
+import TYPES from './types';
+
+import { IUserRepository } from '../repositories/interfaces/IUserRepository';
+import { IAdminRepository } from '../repositories/interfaces/IAdminRepository';
+import { IProfileRepository } from '../repositories/interfaces/IProfileRepository';
+import { IResumeRepository } from '../repositories/interfaces/IResumeRepository';
+import { ICertificationRepository } from '../repositories/interfaces/ICertificationRepository';
+import { IAchievementRepository } from '../repositories/interfaces/IAchievementRepository';
+import { ICompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
+import { IJobApiRepository } from '../repositories/implementations/JobApiRepository';
+import { IApplicationApiRepository } from '../repositories/implementations/ApplicationApiRepository';
+import { ISkillRepository } from '../repositories/interfaces/ISkillRepository';
+import { ISettingsRepository } from '../repositories/interfaces/ISettingsRepository';
+
+import { UserRepository } from '../repositories/implementations/UserRepository';
+import { AdminRepository } from '../repositories/implementations/AdminRepository';
+import { ProfileRepository } from '../repositories/implementations/ProfileRepository';
+import { ResumeRepository } from '../repositories/implementations/ResumeRepository';
+import { CertificationRepository } from '../repositories/implementations/CertificationRepository';
+import { AchievementRepository } from '../repositories/implementations/AchievementRepository';
+import { CompanyApiRepository } from '../repositories/implementations/CompanyApiRepository';
+import { JobApiRepository } from '../repositories/implementations/JobApiRepository';
+import { ApplicationApiRepository } from '../repositories/implementations/ApplicationApiRepository';
+import { SkillRepository } from '../repositories/implementations/SkillRepository';
+import { SettingsRepository } from '../repositories/implementations/SettingsRepository';
+
+import { IUserService } from '../services/interfaces/IUserService';
+import { IAdminService } from '../services/interfaces/IAdminService';
+import { IProfileService } from '../services/interfaces/IProfileService';
+import { IResumeService } from '../services/interfaces/IResumeService';
+import { ICertificationService } from '../services/interfaces/ICertificationService';
+import { IAchievementService } from '../services/interfaces/IAchievementService';
+import { ISkillService } from '../services/interfaces/ISkillService';
+import { ISettingsService } from '../services/interfaces/ISettingsService';
+import { UserService } from '../services/implementations/UserService';
+import { AdminService } from '../services/implementations/AdminService';
+import { ProfileService } from '../services/implementations/ProfileService';
+import { ResumeService } from '../services/implementations/ResumeService';
+import { CertificationService } from '../services/implementations/CertificationService';
+import { AchievementService } from '../services/implementations/AchievementService';
+import { SkillService } from '../services/implementations/SkillService';
+import { SettingsService } from '../services/implementations/SettingsService';
+import { RedisService } from '../services/implementations/RedisService';
+import { EmailService } from '../services/implementations/EmailService';
+import { JWTService } from '../services/implementations/JWTService';
+import { CookieService } from '../services/implementations/CookieService';
+import { CloudinaryService } from '../services/CloudinaryService';
+import { logger } from '../utils/logger';
+
+
+
+import { UserController } from '../controllers/UserController';
+import { AdminController } from '../controllers/AdminController';
+import { ProfileController } from '../controllers/ProfileController';
+import { ResumeController } from '../controllers/ResumeController';
+import { CertificationController } from '../controllers/CertificationController';
+import { AchievementController } from '../controllers/AchievementController';
+import { SkillController } from '../controllers/SkillController';
+import { SettingsController } from '../controllers/SettingsController';
+
+
+const container = new Container();
+
+container.bind<UserService>(TYPES.UserService).to(UserService);
+container.bind<IUserService>(TYPES.IUserService).to(UserService);
+container.bind<IUserRepository>(TYPES.IUserRepository).to(UserRepository);
+container.bind<EmailService>(TYPES.EmailService).to(EmailService);
+container.bind<RedisService>(TYPES.RedisService).to(RedisService).inSingletonScope();
+container.bind<UserController>(TYPES.UserController).to(UserController);
+container.bind<AdminRepository>(TYPES.AdminRepository).to(AdminRepository);
+container.bind<IAdminRepository>(TYPES.IAdminRepository).to(AdminRepository);
+container.bind<AdminService>(TYPES.AdminService).to(AdminService);
+container.bind<IAdminService>(TYPES.IAdminService).to(AdminService);
+container.bind<AdminController>(TYPES.AdminController).to(AdminController);
+container.bind<IProfileRepository>(TYPES.IProfileRepository).to(ProfileRepository);
+container.bind<IProfileService>(TYPES.IProfileService).to(ProfileService);
+container.bind<ProfileController>(TYPES.ProfileController).to(ProfileController);
+container.bind<ICompanyApiRepository>(TYPES.ICompanyApiRepository).to(CompanyApiRepository);
+container.bind<IJobApiRepository>(TYPES.IJobApiRepository).to(JobApiRepository);
+container.bind<IApplicationApiRepository>(TYPES.IApplicationApiRepository).to(ApplicationApiRepository);
+container.bind<JWTService>(TYPES.JWTService).to(JWTService);
+container.bind<IResumeRepository>(TYPES.IResumeRepository).to(ResumeRepository);
+container.bind<IResumeService>(TYPES.IResumeService).to(ResumeService);
+container.bind<ResumeController>(TYPES.ResumeController).to(ResumeController);
+container.bind<ICertificationRepository>(TYPES.ICertificationRepository).to(CertificationRepository);
+container.bind<ICertificationService>(TYPES.ICertificationService).to(CertificationService);
+container.bind<CertificationController>(TYPES.CertificationController).to(CertificationController);
+container.bind<IAchievementRepository>(TYPES.IAchievementRepository).to(AchievementRepository);
+container.bind<IAchievementService>(TYPES.IAchievementService).to(AchievementService);
+container.bind<AchievementController>(TYPES.AchievementController).to(AchievementController);
+container.bind<CookieService>(TYPES.CookieService).to(CookieService);
+container.bind<CloudinaryService>(TYPES.CloudinaryService).toDynamicValue(() => {
+  return new CloudinaryService(logger);
+}).inSingletonScope();
+container.bind<ISkillRepository>(TYPES.ISkillRepository).to(SkillRepository);
+container.bind<SkillService>(TYPES.SkillService).to(SkillService);
+container.bind<ISkillService>(TYPES.ISkillService).to(SkillService);
+container.bind<SkillController>(TYPES.SkillController).to(SkillController);
+container.bind<ISettingsRepository>(TYPES.ISettingsRepository).to(SettingsRepository);
+container.bind<ISettingsService>(TYPES.ISettingsService).to(SettingsService);
+container.bind<SettingsController>(TYPES.SettingsController).to(SettingsController);
+export default container;
