@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Application {
+  id             String                     @id @default(cuid())
+  jobId          String
+  userId         String
+  companyId      String
+  status         ApplicationStatus          @default(PENDING)
+  coverLetter    String
+  expectedSalary String
+  availability   String
+  experience     String
+  resumeUrl      String?
+  appliedAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  atsscore       Float?
+  notes          ApplicationNotes[]
+  statusHistory  ApplicationStatusHistory[]
+  interviews     Interview[]
+  offer          Offer?
+
+  @@map("applications")
+}
+
+model ApplicationStatusHistory {
+  id            String            @id @default(cuid())
+  applicationId String
+  status        ApplicationStatus
+  changedAt     DateTime          @default(now())
+  changedBy     String
+  reason        String?
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_status_history")
+}
+
+model ApplicationNotes {
+  id            String      @id @default(cuid())
+  applicationId String
+  note          String
+  addedBy       String
+  addedAt       DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_notes")
+}
+
+model Interview {
+  id             String      @id @default(cuid())
+  applicationId  String
+  scheduledAt    DateTime
+  duration       Int
+  type           String
+  location       String?
+  meetingLink    String?
+  status         String
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  decisionReason String?
+  feedback       String?
+  decidedAt      DateTime?
+  decidedBy      String?
+  roomId         String?
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("interviews")
+}
+
+model Offer {
+  id              String      @id @default(cuid()) @db.VarChar(255)
+  applicationId   String      @unique @map("application_id") @db.VarChar(255)
+  userId          String      @map("user_id") @db.VarChar(255)
+  companyId       String      @map("company_id") @db.VarChar(255)
+  jobTitle        String      @map("job_title") @db.VarChar(255)
+  ctc             Float
+  joiningDate     DateTime    @map("joining_date") @db.Timestamp(6)
+  location        String      @db.VarChar(255)
+  offerMessage    String?     @map("offer_message")
+  offerExpiryDate DateTime    @map("offer_expiry_date") @db.Timestamp(6)
+  status          String      @default("PENDING") @map("status") @db.VarChar(50)
+  pdfPublicId     String?     @map("pdf_public_id") @db.VarChar(255)
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])
+  @@index([offerExpiryDate])
+  @@map("offers")
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}
+
+enum application_status {
+  PENDING
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  ACCEPTED
+  WITHDRAWN
+}
+
+enum offer_status {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model CompanyOfferTemplate {
+  id           String   @id @default(cuid())
+  companyId    String   @unique @map("company_id")
+  logoUrl      String?  @map("logo_url")
+  signatureUrl String?  @map("signature_url")
+  brandColor   String?  @map("brand_color")
+  fontFamily   String?  @map("font_family")
+  headerText   String?  @map("header_text") @db.Text
+  introText    String?  @map("intro_text") @db.Text
+  closingText  String?  @map("closing_text") @db.Text
+  footerText   String?  @map("footer_text") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([companyId])
+  @@map("company_offer_templates")
+}

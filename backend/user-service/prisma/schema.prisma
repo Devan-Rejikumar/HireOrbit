@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  password     String
+  name         String
+  role         String
+  isVerified   Boolean      @default(false)
+  isBlocked    Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  isGoogleUser Boolean      @default(false)
+  profile      UserProfile?
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  email     String
+  role      String
+  otp       String
+  expiresAt DateTime
+}
+
+model UserProfile {
+  id             String       @id @default(uuid())
+  userId         String       @unique
+  headline       String?
+  about          String?
+  profilePicture String?
+  location       String?
+  phone          String?
+  skills         String[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  resume         String?
+  achievements   String?
+  certifications Json?
+  education      Education[]
+  experience     Experience[]
+  user           User         @relation(fields: [userId], references: [id])
+}
+
+model Experience {
+  id            String      @id @default(uuid())
+  title         String
+  company       String
+  location      String?
+  startDate     DateTime
+  endDate       DateTime?
+  description   String?
+  isCurrentRole Boolean     @default(false)
+  profileId     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  profile       UserProfile @relation(fields: [profileId], references: [id])
+}
+
+model Education {
+  id          String      @id @default(uuid())
+  institution String
+  degree      String
+  startDate   DateTime
+  endDate     DateTime?
+  profileId   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  profile     UserProfile @relation(fields: [profileId], references: [id])
+}
+
+model Skill {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  category  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSettings {
+  id          String   @id @default(uuid())
+  logoUrl     String?
+  companyName String?  @default("Hireorbit")
+  aboutPage   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Banner {
+  id        String   @id
+  title     String
+  imageUrl  String
+  linkUrl   String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  type      String   @default("promotion")
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model ContentPage {
+  id        String   @id
+  slug      String   @unique
+  title     String
+  content   String
+  updatedAt DateTime
+  updatedBy String?
+}
