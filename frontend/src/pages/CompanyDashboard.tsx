@@ -213,11 +213,14 @@ const CompanyDashboard = () => {
         try {
           // Load applications
           const appsResponse = await api.get<{ data?: { applications?: Application[] } }>('/applications/company/applications');
-          allApplications = appsResponse.data?.data?.applications || appsResponse.data?.applications || [];
+          allApplications = appsResponse.data?.data?.applications || [];
           
           // Load interviews
           const interviewsResponse = await _interviewService.getCompanyInterviews();
-          allInterviews = interviewsResponse.data?.interviews || interviewsResponse.data || [];
+          const interviewsData = interviewsResponse.data;
+          allInterviews = (interviewsData && 'interviews' in interviewsData && Array.isArray(interviewsData.interviews)) 
+            ? interviewsData.interviews 
+            : (Array.isArray(interviewsData) ? interviewsData : []);
           allInterviews = Array.isArray(allInterviews) ? allInterviews : [];
         } catch (error) {
           // Silently handle error
@@ -379,13 +382,13 @@ const CompanyDashboard = () => {
   const loadPremiumApplications = async () => {
     try {
       const response = await api.get<{ data?: { applications?: Application[] } }>('/applications/company/applications');
-      let apps: Application[] = response.data?.data?.applications || response.data?.applications || [];
+      let apps: Application[] = response.data?.data?.applications || [];
       
       // Filter by date range
       const filterDate = getFilterDate(dateRange);
       if (filterDate) {
         apps = apps.filter((app: Application) => {
-          const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date(app.createdAt || app.updatedAt);
+          const appDate = app.appliedAt ? new Date(app.appliedAt) : new Date();
           return appDate >= filterDate;
         });
       }
@@ -399,7 +402,10 @@ const CompanyDashboard = () => {
   const loadPremiumInterviews = async () => {
     try {
       const response = await _interviewService.getCompanyInterviews();
-      const interviewsList = response.data?.interviews || response.data || [];
+      const interviewsData = response.data;
+      const interviewsList = (interviewsData && 'interviews' in interviewsData && Array.isArray(interviewsData.interviews))
+        ? interviewsData.interviews
+        : (Array.isArray(interviewsData) ? interviewsData : []);
       setPremiumInterviews(Array.isArray(interviewsList) ? interviewsList : []);
     } catch (error) {
       setPremiumInterviews([]);

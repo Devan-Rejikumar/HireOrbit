@@ -21,6 +21,7 @@ import {
   Calendar as CalendarIcon,
   Search,
   X,
+  Plus,
 } from 'lucide-react';
 import { CompanyHeader } from '@/components/CompanyHeader';
 import { useTotalUnreadCount } from '@/hooks/useChat';

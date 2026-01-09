@@ -126,9 +126,7 @@ const PostJob = () => {
         navigate(ROUTES.COMPANY_DASHBOARD);
       }, 2000);
       
-    } catch (err: unknown) {
-      const isAxiosError = err && typeof err === 'object' && 'response' in err;
-      const axiosError = isAxiosError ? (err as { response?: { data?: unknown } }) : null;
+    } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to post job';
       
       // Check if it's a job posting limit error

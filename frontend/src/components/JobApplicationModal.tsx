@@ -20,6 +20,7 @@ interface JobApplicationModalProps {
 }
 
 interface ApplicationData {
+  jobId: string;
   coverLetter: string;
   resume: File | null;
   expectedSalary: string;
@@ -47,6 +48,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
   onApplicationSubmit,
 }) => {
   const [formData, setFormData] = useState<ApplicationData>({
+    jobId,
     coverLetter: '',
     resume: null,
     expectedSalary: '',
@@ -69,6 +71,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       setSavedResume(null);
       setUseSavedResume(false);
       setFormData({
+        jobId,
         coverLetter: '',
         resume: null,
         expectedSalary: '',
@@ -188,6 +191,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       
       // Call the callback to notify parent component
       onApplicationSubmit({
+        jobId,
         coverLetter: formData.coverLetter,
         resume: formData.resume,
         expectedSalary: formData.expectedSalary,
@@ -237,6 +241,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
   const handleClose = () => {
     if (!submitting) {
       setFormData({
+        jobId,
         coverLetter: '',
         resume: null,
         expectedSalary: '',

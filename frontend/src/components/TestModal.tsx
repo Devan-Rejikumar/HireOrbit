@@ -19,7 +19,7 @@ const TestModal = () => {
     if (confirmed) {
       toast.success('Confirmed!');
     } else {
-      toast.info('Cancelled!');
+      toast('Cancelled!');
     }
   };
 

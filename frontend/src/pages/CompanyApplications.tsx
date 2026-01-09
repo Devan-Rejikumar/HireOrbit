@@ -8,6 +8,7 @@ import { CompanyHeader } from '@/components/CompanyHeader';
 import { useTotalUnreadCount } from '@/hooks/useChat';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api/axios';
+import { ApiResponse } from '@/types/api';
 import ScheduleInterviewModal from '@/components/ScheduleInterviewModal';
 import CreateOfferModal from '@/components/CreateOfferModal';
 import { _interviewService } from '@/api/interviewService';
@@ -82,7 +83,7 @@ const CompanyApplications = () => {
 
   const fetchCompanyProfile = useCallback(async () => {
     try {
-      const response = await api.get('/company/profile');
+      const response = await api.get<ApiResponse<any>>('/company/profile');
       setCompany(response.data?.data?.company || null);
     } catch (_error) {
       // Silently handle error

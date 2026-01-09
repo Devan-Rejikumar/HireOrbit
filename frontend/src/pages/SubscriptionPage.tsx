@@ -95,8 +95,8 @@ export const SubscriptionPage = () => {
       const subscription = response.data?.subscription;
       // Only set currentPlanId if subscription is active and not expired
       // This allows selection for cancelled/expired subscriptions
-      if (subscription && response.data.isActive) {
-        setCurrentPlanId(response.data.subscription.planId);
+      if (subscription && response.data.isActive && subscription) {
+        setCurrentPlanId(subscription.planId);
       } else {
         setCurrentPlanId(null); // Allow selection for cancelled/expired
       }

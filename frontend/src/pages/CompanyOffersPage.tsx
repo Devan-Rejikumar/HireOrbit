@@ -12,6 +12,7 @@ import api from '@/api/axios';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/Pagination';
+import { ApiResponse } from '@/types/api';
 
 interface CompanyProfile {
   companyName?: string;
@@ -65,7 +66,7 @@ const CompanyOffersPage = () => {
 
   const fetchCompanyProfile = async () => {
     try {
-      const response = await api.get('/company/profile');
+      const response = await api.get<ApiResponse<any>>('/company/profile');
       setCompany(response.data?.data?.company || null);
     } catch (_error) {
       // Silently handle error

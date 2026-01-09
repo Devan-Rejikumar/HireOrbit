@@ -236,7 +236,7 @@ const MySchedule = () => {
                   >
                     <Icon className="h-5 w-5" />
                     <span className="flex-1">{item.label}</span>
-                    {item.badge && item.badge > 0 && (
+                    {'badge' in item && item.badge !== undefined && item.badge > 0 && (
                       <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
                         {item.badge > 9 ? '9+' : item.badge}
                       </span>
