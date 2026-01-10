@@ -29,7 +29,7 @@ export const useWebSocket = (recipientId: string) => {
 
     if (!recipientId) return;
 
-    const newSocket = io(ENV.NOTIFICATION_SERVICE_URL, {
+    const newSocket = io(ENV.NOTIFICATION_SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: true,
     });
