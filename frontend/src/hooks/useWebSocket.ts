@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { ENV } from '../config/env';
+import { createSocketConnection } from '../utils/socketUtils';
 
 interface RealTimeNotificationData {
   type: 'APPLICATION_RECEIVED' | 'STATUS_UPDATED' | 'APPLICATION_WITHDRAWN';
@@ -30,7 +31,7 @@ export const useWebSocket = (recipientId: string) => {
     if (!recipientId) return;
 
     console.log('🔌 Notification Socket connecting to:', ENV.NOTIFICATION_SOCKET_URL);
-    const newSocket = io(ENV.NOTIFICATION_SOCKET_URL, {
+    const newSocket = createSocketConnection(ENV.NOTIFICATION_SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: true,
     });

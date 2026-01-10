@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 import { useUserConversations, useCompanyConversations } from '@/hooks/useChat';
 import { MessageResponse, ConversationResponse } from '@/api/chatService';
 import { ENV } from '../config/env';
+import { createSocketConnection } from '../utils/socketUtils';
 
 interface GlobalChatContextType {
   isConnected: boolean;
@@ -48,7 +49,7 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
 
     // Only create socket if it doesn't exist
     if (!socketRef.current) {
-      const newSocket = io(chatSocketUrl, {
+      const newSocket = createSocketConnection(chatSocketUrl, {
         transports: ['websocket'],
         autoConnect: true,
         reconnection: true,

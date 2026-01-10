@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { MessageResponse, ConversationResponse } from '@/api/chatService';
 import { ENV } from '../config/env';
+import { createSocketConnection } from '../utils/socketUtils';
 
 export interface TypingData {
   userId: string;
@@ -30,7 +31,7 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
 
     const chatSocketUrl = ENV.CHAT_SOCKET_URL;
     console.log('💬 Chat Socket connecting to:', chatSocketUrl);
-    const newSocket = io(chatSocketUrl, {
+    const newSocket = createSocketConnection(chatSocketUrl, {
       transports: ['websocket'],
       autoConnect: true,
     });

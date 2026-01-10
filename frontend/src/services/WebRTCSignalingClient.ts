@@ -3,7 +3,7 @@
  * Manages WebSocket connection for WebRTC signaling
  */
 
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import {
   WebRTCEvent,
   JoinRoomData,
@@ -12,6 +12,7 @@ import {
   IceCandidateData,
   PeerInfo,
 } from '@/types/webrtc.types';
+import { createSocketConnection } from '@/utils/socketUtils';
 
 export class WebRTCSignalingClient {
   private socket: Socket | null = null;
@@ -48,7 +49,7 @@ export class WebRTCSignalingClient {
         const cleanUrl = this.signalingServerUrl.replace(/\/$/, '');
         console.log('📹 WebRTC Signaling Socket connecting to:', cleanUrl);
 
-        this.socket = io(cleanUrl, {
+        this.socket = createSocketConnection(cleanUrl, {
           transports: ['websocket', 'polling'], // Allow fallback to polling
           autoConnect: true,
           reconnection: true,
