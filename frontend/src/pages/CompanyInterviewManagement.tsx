@@ -17,6 +17,7 @@ import {
   Eye,
   X,
   CheckCircle,
+  Building2,
 } from 'lucide-react';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { useAuth } from '@/context/AuthContext';
