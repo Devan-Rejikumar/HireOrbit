@@ -1,7 +1,7 @@
 /**
  * Application Configuration
- * Required values are validated
- * Optional integrations are allowed to be undefined
+ * Required values are validated for production
+ * Optional integrations use sensible defaults
  */
 
 const requireEnv = (key: string): string => {
@@ -14,18 +14,18 @@ const requireEnv = (key: string): string => {
 
 export const AppConfig = {
   // ===== Runtime =====
-  PORT: requireEnv('PORT'),
-  SERVICE_NAME: requireEnv('SERVICE_NAME'),
+  PORT: process.env.PORT || '3004',
+  SERVICE_NAME: process.env.SERVICE_NAME || 'application-service',
 
-  // ===== Core service URLs (REQUIRED) =====
-  JOB_SERVICE_URL: requireEnv('JOB_SERVICE_URL'),
-  USER_SERVICE_URL: requireEnv('USER_SERVICE_URL'),
-  SUBSCRIPTION_SERVICE_URL: requireEnv('SUBSCRIPTION_SERVICE_URL'),
-  CHAT_SERVICE_URL: requireEnv('CHAT_SERVICE_URL'),
-  API_GATEWAY_URL: requireEnv('API_GATEWAY_URL'),
+  // ===== Core service URLs =====
+  JOB_SERVICE_URL: process.env.JOB_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3002',
+  USER_SERVICE_URL: process.env.USER_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3009',
+  SUBSCRIPTION_SERVICE_URL: process.env.SUBSCRIPTION_SERVICE_URL || 'http://localhost:3005',
+  CHAT_SERVICE_URL: process.env.CHAT_SERVICE_URL || 'http://localhost:4007',
+  API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://localhost:4001',
 
   // ===== Optional =====
-  FRONTEND_URL: process.env.FRONTEND_URL,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://ho.devanarayanan.site',
   LOKI_HOST: process.env.LOKI_HOST,
 
   // ===== HTTP =====
@@ -33,10 +33,9 @@ export const AppConfig = {
     ? parseInt(process.env.HTTP_CLIENT_TIMEOUT, 10)
     : 5000,
 
-  // ===== WebRTC (OPTIONAL BY DESIGN) =====
-  STUN_SERVER_URL: process.env.STUN_SERVER_URL,
-  TURN_SERVER_URL: process.env.TURN_SERVER_URL,
-  TURN_USERNAME: process.env.TURN_USERNAME,
-  TURN_CREDENTIAL: process.env.TURN_CREDENTIAL,
+  // ===== WebRTC =====
+  STUN_SERVER_URL: process.env.STUN_SERVER_URL || 'stun:stun.l.google.com:19302',
+  TURN_SERVER_URL: process.env.TURN_SERVER_URL || '',
+  TURN_USERNAME: process.env.TURN_USERNAME || '',
+  TURN_CREDENTIAL: process.env.TURN_CREDENTIAL || '',
 } as const;
-

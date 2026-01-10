@@ -43,11 +43,12 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
     }
 
     // Connect to chat service WebSocket
-    const chatServiceUrl = ENV.CHAT_SERVICE_URL;
-    
+    const chatSocketUrl = ENV.CHAT_SOCKET_URL;
+    console.log('🌐 Global Chat Socket connecting to:', chatSocketUrl);
+
     // Only create socket if it doesn't exist
     if (!socketRef.current) {
-      const newSocket = io(chatServiceUrl, {
+      const newSocket = io(chatSocketUrl, {
         transports: ['websocket'],
         autoConnect: true,
         reconnection: true,

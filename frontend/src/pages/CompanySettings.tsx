@@ -1,22 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
-  Home,
-  MessageSquare,
-  User,
-  Users,
-  GraduationCap,
-  CreditCard,
-  HelpCircle,
-  Bell,
-  Settings,
-  LogOut,
-  Building2,
-  Plus,
-  Calendar as CalendarIcon,
   Save,
   Mail,
   Phone,
@@ -27,9 +14,14 @@ import {
   Type,
   Eye as EyeIcon,
   X,
+  Settings,
+  Building2,
+  GraduationCap,
+  Users,
+  Bell,
 } from 'lucide-react';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
-import { Logo } from '@/components/Logo';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import api from '@/api/axios';
 import { offerTemplateService, CompanyOfferTemplate, UpdateTemplateInput, PreviewOfferData } from '@/api/offerTemplateService';
 import toast from 'react-hot-toast';
@@ -53,6 +45,7 @@ interface Company {
 
 const CompanySettings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
@@ -75,7 +68,7 @@ const CompanySettings = () => {
   useEffect(() => {
     fetchCompanyProfile();
     fetchTemplate();
-  }, []);
+  }, [location.pathname]);
 
   const fetchTemplate = async () => {
     try {
@@ -208,195 +201,8 @@ const CompanySettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            {/* Company Logo */}
-            <Logo size="md" textClassName="text-gray-900" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
-            
-            {/* Company Info */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Company</span>
-              <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
-                {company?.logo ? (
-                  <img 
-                    src={company.logo} 
-                    alt={company.companyName || 'Company logo'} 
-                    className="w-6 h-6 rounded object-cover"
-                  />
-                ) : (
-                  <Building2 className="h-4 w-4 text-gray-500" />
-                )}
-                <span className="font-bold text-purple-700">{company?.companyName || 'Company'}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Post Job Button */}
-            <div className="flex items-center gap-2">
-              <Button 
-                className={`px-4 py-2 ${
-                  company?.profileCompleted && company?.isVerified
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                }`}
-                onClick={() => {
-                  if (company?.profileCompleted && company?.isVerified) {
-                    navigate(ROUTES.COMPANY_POST_JOB);
-                  }
-                }}
-                disabled={!company?.profileCompleted || !company?.isVerified}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Post a job
-              </Button>
-              
-              {/* Notification message when button is disabled */}
-              {(!company?.profileCompleted || !company?.isVerified) && (
-                <div className="flex items-center gap-2">
-                  <div className="text-xs text-gray-500 max-w-xs">
-                    {!company?.profileCompleted 
-                      ? 'Complete your profile to post jobs'
-                      : !company?.isVerified 
-                        ? 'Awaiting admin approval to post jobs'
-                        : 'Complete profile and get approval to post jobs'
-                    }
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(ROUTES.COMPANY_REVIEW_STATUS)}
-                    className="text-xs px-2 py-1 border-blue-300 text-blue-600 hover:bg-blue-50"
-                  >
-                    Check Status
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            {/* Notification Bell */}
-            <div className="relative">
-              <Bell className="h-6 w-6 text-gray-600 hover:text-gray-900 cursor-pointer" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-            </div>
-            
-            {/* Logout Button */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleLogout}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-            
-          </div>
-        </div>
-      </header>
-
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative overflow-y-auto hide-scrollbar">
-          <nav className="p-6">
-            <div className="space-y-1 mb-8">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <Home className="h-5 w-5" />
-                Dashboard
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <MessageSquare className="h-5 w-5" />
-                Messages
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <Building2 className="h-5 w-5" />
-                Company Profile
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <User className="h-5 w-5" />
-                All Applicants
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_JOBS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <GraduationCap className="h-5 w-5" />
-                Job Listing
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                <span className="flex flex-col leading-tight">
-                  <span>Interview</span>
-                  <span>Management</span>
-                </span>
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_OFFERS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <FileText className="h-5 w-5" />
-                Offer Letters
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <CreditCard className="h-5 w-5" />
-                Plans & Billing
-              </button>
-            </div>
-            
-            <div className="space-y-1">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium w-full text-left">
-                <Settings className="h-5 w-5" />
-                Settings
-              </button>
-              <a href="#" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                <HelpCircle className="h-5 w-5" />
-                Help Center
-              </a>
-            </div>
-            
-            {/* Company Info */}
-            <div className="mt-8">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                {company?.logo ? (
-                  <img 
-                    src={company.logo} 
-                    alt={company.companyName || 'Company logo'} 
-                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <Building2 className="h-4 w-4 text-purple-600" />
-                  </div>
-                )}
-                <div>
-                  <div className="text-sm font-medium">{company?.companyName || 'Company'}</div>
-                  <div className="text-xs text-gray-500">{company?.email || 'email@company.com'}</div>
-                </div>
-              </div>
-            </div>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-6xl mx-auto">
+    <CompanyLayout company={company}>
+      <div className="max-w-6xl mx-auto">
             {/* Page Header */}
             <div className="mb-8">
               <div className="flex items-center gap-4 mb-4">
@@ -788,8 +594,6 @@ const CompanySettings = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </main>
       </div>
 
       {/* Preview Modal */}
@@ -831,7 +635,7 @@ const CompanySettings = () => {
           fetchCompanyProfile(); // Refresh data
         }}
       />
-    </div>
+    </CompanyLayout>
   );
 };
 
