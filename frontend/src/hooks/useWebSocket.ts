@@ -29,7 +29,8 @@ export const useWebSocket = (recipientId: string) => {
 
     if (!recipientId) return;
 
-    const newSocket = io("wss://api.devanarayanan.site/notification-socket", {
+    console.log('🔌 Notification Socket connecting to:', ENV.NOTIFICATION_SOCKET_URL);
+    const newSocket = io(ENV.NOTIFICATION_SOCKET_URL, {
       transports: ['websocket'],
       autoConnect: true,
     });

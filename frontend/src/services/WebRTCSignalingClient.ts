@@ -46,7 +46,8 @@ export class WebRTCSignalingClient {
 
         // Ensure URL doesn't have trailing slash for Socket.IO
         const cleanUrl = this.signalingServerUrl.replace(/\/$/, '');
-        
+        console.log('📹 WebRTC Signaling Socket connecting to:', cleanUrl);
+
         this.socket = io(cleanUrl, {
           transports: ['websocket', 'polling'], // Allow fallback to polling
           autoConnect: true,
