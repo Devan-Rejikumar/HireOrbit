@@ -1,4 +1,4 @@
-import { env } from './env';
+import { AppConfig } from './env';
 interface ServiceConfig {
   url: string;
   healthCheck: string;
@@ -7,50 +7,50 @@ interface ServiceConfig {
 }
 export const services = {
   user: {
-    url: env.USER_SERVICE_URL,
-    healthCheck: `${env.USER_SERVICE_URL}/health`,
+    url: AppConfig.services.user,
+    healthCheck: `${AppConfig.services.user}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig,
   
   company: {
-    url: env.COMPANY_SERVICE_URL,
-    healthCheck: `${env.COMPANY_SERVICE_URL}/health`,
+    url: AppConfig.services.company,
+    healthCheck: `${AppConfig.services.company}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig,
   
   job: {
-    url: env.JOB_SERVICE_URL,
-    healthCheck: `${env.JOB_SERVICE_URL}/health`,
+    url: AppConfig.services.job,
+    healthCheck: `${AppConfig.services.job}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig,
   
   application: {
-    url: env.APPLICATION_SERVICE_URL,
-    healthCheck: `${env.APPLICATION_SERVICE_URL}/health`,
+    url: AppConfig.services.application,
+    healthCheck: `${AppConfig.services.application}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig,
 
   notification: {
-    url: env.NOTIFICATION_SERVICE_URL,
-    healthCheck: `${env.NOTIFICATION_SERVICE_URL}/health`,
+    url: AppConfig.services.notification,
+    healthCheck: `${AppConfig.services.notification}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig,
 
   chat: {
-    url: env.CHAT_SERVICE_URL,
-    healthCheck: `${env.CHAT_SERVICE_URL}/health`,
+    url: AppConfig.services.chat,
+    healthCheck: `${AppConfig.services.chat}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig,
 
   subscription: {
-    url: env.SUBSCRIPTION_SERVICE_URL,
-    healthCheck: `${env.SUBSCRIPTION_SERVICE_URL}/health`,
+    url: AppConfig.services.subscription,
+    healthCheck: `${AppConfig.services.subscription}/health`,
     timeout: 5000,
     retries: 3
   } as ServiceConfig

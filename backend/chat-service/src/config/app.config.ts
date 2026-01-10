@@ -1,18 +1,58 @@
-/**
- * Application Configuration
- * Non-sensitive configuration values with safe defaults
- * Sensitive values (secrets, passwords) should be in .env file
- */
-import 'dotenv-flow/config';
-
 export const AppConfig = {
-  PORT: process.env.PORT || '4007',
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
-  LOKI_HOST: process.env.LOKI_HOST || 'http://localhost:3100',
-  API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://localhost:4000',
-  APPLICATION_SERVICE_URL: process.env.APPLICATION_SERVICE_URL || 'http://localhost:3004',
-  KAFKA_BROKERS: process.env.KAFKA_BROKERS || 'localhost:9092',
-  MONGODB_URI: process.env.MONGODB_URI || '',
+  service: {
+    name: required('SERVICE_NAME'),
+    version: required('SERVICE_VERSION'),
+    nodeEnv: required('NODE_ENV'),
+    port: number('PORT'),
+  },
+
+  kafka: {
+    clientId: required('KAFKA_CLIENT_ID'),
+    brokers: list('KAFKA_BROKERS'),
+    groupId: required('KAFKA_GROUP_ID'),
+  },
+
+  mongo: {
+    uri: required('MONGODB_URI'),
+  },
+
+  services: {
+    applicationServiceUrl: required('APPLICATION_SERVICE_URL'),
+  },
+
+  frontend: {
+    url: required('FRONTEND_URL'),
+  },
+
+  logging: {
+    lokiHost: optional('LOKI_HOST'),
+  },
 } as const;
 
-console.log(AppConfig);
+function required(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+}
+
+function optional(key: string): string | undefined {
+  return process.env[key];
+}
+
+function number(key: string): number {
+  const value = required(key);
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) {
+    throw new Error(`Environment variable ${key} must be a number`);
+  }
+  return parsed;
+}
+
+function list(key: string): string[] {
+  return required(key)
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean);
+}

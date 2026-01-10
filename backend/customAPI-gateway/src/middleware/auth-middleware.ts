@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken';
 import { HttpStatusCode } from '../enums/HttpStatusCode';
 import { RequestWithUser } from '../types/express/RequestWithUser';
 import { CommonMessages } from '../constants/CommonMessages';
-import { env } from '../config/env';
+import { AppConfig } from '../config/env';
+
 
 const USER_ID_HEADER = 'x-user-id';
 const USER_EMAIL_HEADER = 'x-user-email';
@@ -54,7 +55,11 @@ export const Authenticate = (req: Request, res: Response, next: NextFunction): v
   }
 
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: string; email: string; role: string };
+    const decoded = jwt.verify(
+  token,
+  AppConfig.auth.jwtSecret
+) as { userId: string; email: string; role: string };
+
     const authReq = req as RequestWithUser;
     authReq.user = {
       userId: decoded.userId,

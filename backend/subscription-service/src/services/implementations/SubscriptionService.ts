@@ -241,7 +241,7 @@ export class SubscriptionService implements ISubscriptionService {
         companyId: input.companyId || '',
       });
 
-      const frontendUrl = AppConfig.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = AppConfig.FRONTEND_URL;
       const successUrl = `${frontendUrl}/subscriptions/status?session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${frontendUrl}/subscriptions?canceled=true`;
 

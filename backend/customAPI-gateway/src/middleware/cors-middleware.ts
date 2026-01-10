@@ -1,8 +1,11 @@
+import { AppConfig } from '../config';
 import { Request, Response, NextFunction } from 'express';
 
 const allowedOrigins = [
-  'http://localhost:5173'
+  'https://ho.devanarayanan.site',
+  'https://app.devanarayanan.site',
 ];
+
 
 export const corsMiddleware = (
   req: Request,

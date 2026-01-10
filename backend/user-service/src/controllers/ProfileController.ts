@@ -235,7 +235,7 @@ export class ProfileController {
 
     // Normalize profile picture URL - ensure it's a clean public URL
     if (fullProfile.profilePicture) {
-      fullProfile.profilePicture = this.normalizeProfilePictureUrl(fullProfile.profilePicture) || null;
+      fullProfile.profilePicture = this._normalizeProfilePictureUrl(fullProfile.profilePicture) || null;
     }
 
     const achievements = await this._achievementService.getAchievements(userId);

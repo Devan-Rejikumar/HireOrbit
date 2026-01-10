@@ -1,7 +1,7 @@
 import { ServiceProxyFactory } from './ServiceProxyFactory';
-import { env } from '../config/env';
+import { AppConfig } from '../config/env';
 
 export const notificationServiceProxy = ServiceProxyFactory.createProxy({
-  serviceUrl: env.NOTIFICATION_SERVICE_URL,
+  serviceUrl: AppConfig.services.notification,
   serviceName: 'notification'
 });

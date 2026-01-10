@@ -1,13 +1,19 @@
 import { v2 as cloudinary } from 'cloudinary';
 import path from 'path';
-import dotenv from 'dotenv';
 import { logger } from '../utils/logger';
 import { Messages } from '../constants/Messages';
 
-dotenv.config();
+/* ------------------------------------------------------------------ */
+/*  ENV LOADING (DEV ONLY)                                             */
+/* ------------------------------------------------------------------ */
+
+if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('dotenv').config();
+}
 
 /* ------------------------------------------------------------------ */
-/*  CONFIG                                                            */
+/*  CONFIG VALIDATION                                                  */
 /* ------------------------------------------------------------------ */
 
 if (
@@ -95,22 +101,24 @@ export const uploadOfferPdfToCloudinary = async (
   publicId: string
 ): Promise<{ publicId: string }> => {
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'raw',
-        type: 'authenticated',
-        public_id: publicId,
-        overwrite: false,
-      },
-      (error, result) => {
-        if (error || !result?.public_id) {
-          return reject(
-            error || new Error(Messages.CLOUDINARY.UPLOAD_FAILED)
-          );
+    cloudinary.uploader
+      .upload_stream(
+        {
+          resource_type: 'raw',
+          type: 'authenticated',
+          public_id: publicId,
+          overwrite: false,
+        },
+        (error, result) => {
+          if (error || !result?.public_id) {
+            return reject(
+              error || new Error(Messages.CLOUDINARY.UPLOAD_FAILED)
+            );
+          }
+          resolve({ publicId: result.public_id });
         }
-        resolve({ publicId: result.public_id });
-      }
-    ).end(fileBuffer);
+      )
+      .end(fileBuffer);
   });
 };
 
@@ -153,5 +161,5 @@ export const generateSignedAccessUrl = (
   return { signedUrl, expiresAt };
 };
 
-
 export default cloudinary;
+

@@ -1,19 +1,28 @@
-# ------------------ Builder ------------------
+# ---------- Builder ----------
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependency manifests
 COPY package.json package-lock.json ./
-
-# Deterministic install
 RUN npm ci
 
-# Copy source code
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
 
-# Build TypeScript → JavaScript
 RUN npm run build
+
+
+# ---------- Runtime ----------
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
+
+RUN test -f dist/server.js
 
 ENV NODE_ENV=production
 

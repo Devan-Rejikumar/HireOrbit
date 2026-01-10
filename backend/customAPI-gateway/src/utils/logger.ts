@@ -1,26 +1,55 @@
-import { createLogger, format, transports } from 'winston';
+import winston from 'winston';
 import LokiTransport from 'winston-loki';
-import { env } from '../config/env';
+import { AppConfig } from '../config/env';
 
-const { combine, timestamp, printf, colorize, json } = format;
-const serviceName = 'api-gateway';
+const { combine, timestamp, printf, colorize, json } = winston.format;
 
+const serviceName = AppConfig.service.name;
+
+/**
+ * Console log format
+ */
 const consoleFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} [${serviceName}] ${level}: ${message}`;
 });
 
-export const logger = createLogger({
-  level: env.LOG_LEVEL || 'info',
-  format: combine(timestamp(), json()),
-  defaultMeta: { service: serviceName },
-  transports: [
-    new transports.Console({
-      format: combine(colorize(), timestamp(), consoleFormat),
-    }),
+/**
+ * Transport list (stdout always enabled)
+ */
+const transportList: winston.transport[] = [
+  new winston.transports.Console({
+    format: combine(
+      colorize(),
+      timestamp(),
+      consoleFormat
+    ),
+  }),
+];
+
+/**
+ * Optional Loki transport
+ */
+if (AppConfig.logging.lokiHost) {
+  transportList.push(
     new LokiTransport({
-      host: process.env.LOKI_URL || 'http://localhost:3100',
-      labels: { service: serviceName },
+      host: AppConfig.logging.lokiHost,
+      labels: {
+        service: serviceName,
+        version: AppConfig.service.version,
+      },
       json: true,
-    }),
-  ],
+    })
+  );
+}
+
+/**
+ * Logger instance
+ */
+export const logger = winston.createLogger({
+  level: 'info',
+  defaultMeta: {
+    service: serviceName,
+  },
+  format: combine(timestamp(), json()),
+  transports: transportList,
 });

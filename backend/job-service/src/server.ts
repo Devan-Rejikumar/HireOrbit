@@ -6,7 +6,12 @@ import container from './config/inversify.config';
 import TYPES from './config/types';
 import { JobUnlistCronService } from './services/implementations/JobUnlistCronService';
 
+if (!AppConfig.PORT) {
+  throw new Error('PORT is not defined');
+}
+
 const PORT = parseInt(AppConfig.PORT, 10);
+
 
 const jobUnlistCronService = container.get<JobUnlistCronService>(TYPES.JobUnlistCronService);
 

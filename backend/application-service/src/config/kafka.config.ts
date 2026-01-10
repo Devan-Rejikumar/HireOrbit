@@ -1,33 +1,17 @@
 import { Kafka } from 'kafkajs';
 
-const getBrokers = (): string[] => {
-  const brokerEnv = process.env.KAFKA_BROKERS;
+const broker = process.env.KAFKA_BROKER;
 
-  if (!brokerEnv || brokerEnv.trim() === '') {
-    console.log('[Kafka] Using default broker: localhost:9092');
-    return ['localhost:9092'];
-  }
+if (!broker) {
+  throw new Error('KAFKA_BROKER is not defined');
+}
 
-  const brokers = brokerEnv.split(',').map(b => b.trim()).filter(b => {
-    const parts = b.split(':');
-    if (parts.length !== 2) return false;
-    const port = parseInt(parts[1], 10);
-    return !isNaN(port) && port > 0 && port < 65536;
-  });
-  
-  if (brokers.length === 0) {
-    console.warn(`[Kafka] Invalid KAFKA_BROKERS: "${brokerEnv}", using default: localhost:9092`);
-    return ['localhost:9092'];
-  }
-  
-  console.log(`[Kafka] Using brokers: ${brokers.join(', ')}`);
-  return brokers;
-};
-
-export const kafka = new Kafka({
+const kafka = new Kafka({
   clientId: 'application-service',
-  brokers: getBrokers(),
+  brokers: [broker],
 });
 
 export const producer = kafka.producer();
-export const consumer = kafka.consumer({ groupId: 'application-group' });
+export const consumer = kafka.consumer({
+  groupId: 'application-service-group',
+});

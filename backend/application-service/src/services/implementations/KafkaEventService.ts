@@ -35,7 +35,8 @@ export class KafkaEventService implements IEventService {
   async subscribe<T>(event: string, handler: (data: T) => Promise<void>): Promise<void> {
     await consumer.subscribe({ topic: event });
     await consumer.run({
-      eachMessage: async ({ message }) => {
+      eachMessage: async ({ message }: { message: any }) => {
+
         const data = JSON.parse(message.value?.toString() || '{}') as T;
         await handler(data);
       },

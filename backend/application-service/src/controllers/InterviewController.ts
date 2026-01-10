@@ -228,11 +228,13 @@ export class InterviewController {
 
     await this._interviewService.getInterviewById(interviewId);
 
-    const iceServers: RTCIceServer[] = [
-      {
-        urls: AppConfig.STUN_SERVER_URL,
-      },
-    ];
+const iceServers: RTCIceServer[] = [];
+
+if (AppConfig.STUN_SERVER_URL) {
+  iceServers.push({
+    urls: AppConfig.STUN_SERVER_URL,
+  });
+}
 
     if (AppConfig.TURN_SERVER_URL) {
       iceServers.push({

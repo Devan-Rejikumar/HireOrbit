@@ -95,5 +95,6 @@ export const ROUTES = {
         '/api/company/reset-password',
         '/api/industries',
         '/api/subscriptions/plans',
+        '/api/subscriptions/webhook',
     ]
 };

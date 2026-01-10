@@ -20,7 +20,7 @@ export class JobServiceClient {
 
   constructor() {
     const config: HttpClientConfig = {
-      baseUrl: AppConfig.JOB_SERVICE_URL,
+      baseUrl: AppConfig.services.jobServiceUrl,
       timeout: 5000,
       retries: 3,
       logger: {

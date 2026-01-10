@@ -30,7 +30,8 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: AppConfig.FRONTEND_URL,
+    origin: AppConfig.frontend.url,
+
     methods: ['GET', 'POST'],
   },
 });
@@ -38,7 +39,7 @@ const io = new Server(server, {
 app.use(helmet());
 
 app.use(cors({
-  origin: AppConfig.FRONTEND_URL,
+  origin: AppConfig.frontend.url,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-user-email', 'x-user-role'],

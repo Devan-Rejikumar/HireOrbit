@@ -24,7 +24,8 @@ export class ApplicationServiceClient {
 
   constructor() {
     const config: HttpClientConfig = {
-      baseUrl: AppConfig.APPLICATION_SERVICE_URL,
+      baseUrl: AppConfig.services.applicationServiceUrl,
+
       timeout: 5000,
       retries: 3,
       logger: {

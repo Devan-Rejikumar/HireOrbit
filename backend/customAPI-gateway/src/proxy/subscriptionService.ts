@@ -1,7 +1,7 @@
 import { ServiceProxyFactory } from './ServiceProxyFactory';
-import { env } from '../config/env';
+import { AppConfig } from '../config/env';
 
 export const subscriptionServiceProxy = ServiceProxyFactory.createProxy({
-  serviceUrl: env.SUBSCRIPTION_SERVICE_URL,
+  serviceUrl: AppConfig.services.subscription,
   serviceName: 'subscription'
 });

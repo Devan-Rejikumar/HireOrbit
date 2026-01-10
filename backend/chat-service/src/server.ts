@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { container } from './config/inversify.config';
-import { connectMongoDB } from './config/mongodb.config';
 import { consumer } from './config/kafka.config';
 import { IChatService } from './services/interfaces/IChatService';
 import { ApplicationServiceClient } from './services/implementations/ApplicationServiceClient';
@@ -27,11 +26,13 @@ import { WebRTCEvent } from './constants/webrtc.events';
 import { serializeRoom } from './utils/webrtc.utils';
 import { Messages } from './constants/Messages';
 import { AppConfig } from './config/app.config';
+import { connectMongoDB } from './config/mongodb.config';
 
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: AppConfig.FRONTEND_URL,
+    origin: AppConfig.frontend.url,
+
     methods: ['GET', 'POST'],
   },
 });
@@ -41,6 +42,10 @@ const onlineUsers = new Map<string, Set<string>>();
 const socketToUserId = new Map<string, string>();
 
 io.on('connection', (socket) => {
+  console.log(`[CHAT-SERVICE] Socket connected: ${socket.id}`);
+  console.log(`[CHAT-SERVICE] Client IP: ${socket.handshake.address}`);
+  console.log(`[CHAT-SERVICE] Transport: ${socket.conn.transport.name}`);
+  
   socket.on('register-user', (data: { userId: string }) => {
     const { userId } = data;
     if (!userId) return;
@@ -69,6 +74,7 @@ io.on('connection', (socket) => {
   
   socket.on('join-conversation', (conversationId: string) => {
     socket.join(conversationId);
+    console.log(`[CHAT-SERVICE] Socket ${socket.id} joined conversation: ${conversationId}`);
 
     const userId = socketToUserId.get(socket.id);
     if (userId) {
@@ -96,6 +102,7 @@ io.on('connection', (socket) => {
   
   socket.on('leave-conversation', (conversationId: string) => {
     socket.leave(conversationId);
+    console.log(`[CHAT-SERVICE] Socket ${socket.id} left conversation: ${conversationId}`);
   });
   
   socket.on('send-message', async (data: unknown) => {
@@ -401,8 +408,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
-
+  socket.on('disconnect', (reason) => {
+    console.log(`[CHAT-SERVICE] Socket disconnected: ${socket.id}, reason: ${reason}`);
+    
     const userId = socketToUserId.get(socket.id);
     if (userId) {
       const userSockets = onlineUsers.get(userId);
@@ -486,9 +494,10 @@ async function initializeKafkaConsumer(): Promise<void> {
 
 async function initializeServices(): Promise<void> {
   try {
+    // Connect to MongoDB first
     await connectMongoDB();
-    console.log('MongoDB connected successfully');
     
+    // Then initialize Kafka consumer
     await initializeKafkaConsumer();
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

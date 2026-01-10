@@ -1,11 +1,10 @@
 import app from './app';
-import { PORT, NODE_ENV } from './config';
+import { AppConfig } from './config';
 import { logger } from './utils/logger';
 
-const server = app.listen(PORT, () => {
-  logger.info(`API Gateway started successfully!, Server running on port ${PORT}`);
-  logger.info(`Health check: http://localhost:${PORT}/health`);
-  logger.info(`Metrics: http://localhost:${PORT}/metrics`);
+const server = app.listen(AppConfig.service.port, () => {
+  logger.info(`API Gateway started successfully!, Server running on port ${AppConfig.service.port}`);
+
 });
 
 export const gracefulShutdown = (signal: string) => {

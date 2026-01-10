@@ -215,11 +215,17 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      # Stripe CLI requires STRIPE_API_KEY (your Stripe secret key)
+      # Make sure STRIPE_SECRET_KEY is set in your .env file
+      - STRIPE_API_KEY=${STRIPE_SECRET_KEY:-}
     depends_on:
       - subscription-service
     networks:
       - backend
-    command: ["listen", "--forward-to", "subscription-service:3005/api/subscriptions/webhook"]
+    # Forward Stripe webhooks to the subscription service
+    # Note: Requires STRIPE_SECRET_KEY in .env file for authentication
+    command: ["listen", "--forward-to", "http://subscription-service:3005/api/subscriptions/webhook"]
     
 
   application-service:
@@ -297,6 +303,27 @@ services:
     networks:
       - backend
 
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Mount nginx configuration
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # Mount Let's Encrypt certificates
+      - ./certbot/conf:/etc/letsencrypt:ro
+      # Mount certbot webroot for ACME challenges
+      - ./certbot/www:/var/www/certbot:ro
+      # Nginx logs
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - api-gateway
+    networks:
+      - backend
+
 networks:
   backend:
     driver: bridge
@@ -307,3 +334,4 @@ volumes:
   loki_data:
   prometheus_data:
   grafana_data:
+  nginx_logs:

@@ -3,7 +3,8 @@ import { AppConfig } from './app.config';
 
 export const connectMongoDB = async (): Promise<void> => {
   try {
-    const mongoUri = AppConfig.MONGODB_URI || process.env.MONGODB_URI;
+    const mongoUri = AppConfig.mongo.uri;
+
     
     if (!mongoUri) {
       throw new Error('MONGODB_URI is not configured. Please set it in .env file.');

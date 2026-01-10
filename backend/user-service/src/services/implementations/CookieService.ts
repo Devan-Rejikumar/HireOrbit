@@ -14,9 +14,9 @@ export class CookieService {
    */
   setAccessToken(res: Response, token: string): void {
     res.cookie(CookieNames.ACCESS_TOKEN, token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
       domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
       maxAge: CookieConfig.ACCESS_TOKEN_MAX_AGE,
@@ -29,8 +29,8 @@ export class CookieService {
   setRefreshToken(res: Response, token: string): void {
     res.cookie(CookieNames.REFRESH_TOKEN, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
       maxAge: CookieConfig.REFRESH_TOKEN_MAX_AGE,
@@ -43,9 +43,11 @@ export class CookieService {
    */
   setToken(res: Response, token: string, maxAge: number): void {
     res.cookie(CookieNames.TOKEN, token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      domain: AppConfig.COOKIE_DOMAIN,
+      path: '/',
       maxAge: maxAge,
     });
   }
@@ -55,9 +57,9 @@ export class CookieService {
    */
   clearCookie(res: Response, name: string): void {
     res.clearCookie(name, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
+      domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
     });
   }
@@ -67,9 +69,9 @@ export class CookieService {
    */
   clearAccessToken(res: Response): void {
     res.clearCookie(CookieNames.ACCESS_TOKEN, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
+      domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
     });
   }
@@ -79,9 +81,9 @@ export class CookieService {
    */
   clearRefreshToken(res: Response): void {
     res.clearCookie(CookieNames.REFRESH_TOKEN, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
+      domain: AppConfig.COOKIE_DOMAIN,
       path: '/',
     });
   }

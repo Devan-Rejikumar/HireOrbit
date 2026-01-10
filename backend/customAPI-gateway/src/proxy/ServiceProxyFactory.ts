@@ -77,8 +77,41 @@ export class ServiceProxyFactory {
       },
 
       userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+        // Forward all response headers from the proxied service
+        const headers = proxyRes.headers;
+        if (headers) {
+          Object.keys(headers).forEach(headerName => {
+            const headerValue = headers[headerName];
+            // Set-Cookie headers are arrays, handle them specially
+            if (headerName.toLowerCase() === 'set-cookie' && Array.isArray(headerValue)) {
+              // Remove any existing Set-Cookie headers
+              userRes.removeHeader('Set-Cookie');
+              // Append each cookie header individually
+              // Express 4.17+ supports appendHeader, otherwise use res.append()
+              headerValue.forEach(cookie => {
+                if (typeof (userRes as any).appendHeader === 'function') {
+                  (userRes as any).appendHeader('Set-Cookie', cookie);
+                } else if (typeof userRes.append === 'function') {
+                  userRes.append('Set-Cookie', cookie);
+                } else {
+                  // Fallback: manually append to raw headers
+                  const res = userRes as any;
+                  if (!res._headers) res._headers = {};
+                  if (!res._headers['set-cookie']) res._headers['set-cookie'] = [];
+                  res._headers['set-cookie'].push(cookie);
+                }
+              });
+            } else if (headerValue !== undefined) {
+              userRes.setHeader(headerName, headerValue);
+            }
+          });
+        }
+
         if (enableLogging) {
-          logger.info(`[${serviceName.toUpperCase()}-PROXY] JSON response:`, { statusCode: proxyRes.statusCode });
+          logger.info(`[${serviceName.toUpperCase()}-PROXY] JSON response:`, { 
+            statusCode: proxyRes.statusCode,
+            hasSetCookie: !!headers?.['set-cookie']
+          });
         }
         return proxyResData;
       },
@@ -117,8 +150,41 @@ export class ServiceProxyFactory {
       },
 
       userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+        // Forward all response headers from the proxied service
+        const headers = proxyRes.headers;
+        if (headers) {
+          Object.keys(headers).forEach(headerName => {
+            const headerValue = headers[headerName];
+            // Set-Cookie headers are arrays, handle them specially
+            if (headerName.toLowerCase() === 'set-cookie' && Array.isArray(headerValue)) {
+              // Remove any existing Set-Cookie headers
+              userRes.removeHeader('Set-Cookie');
+              // Append each cookie header individually
+              // Express 4.17+ supports appendHeader, otherwise use res.append()
+              headerValue.forEach(cookie => {
+                if (typeof (userRes as any).appendHeader === 'function') {
+                  (userRes as any).appendHeader('Set-Cookie', cookie);
+                } else if (typeof userRes.append === 'function') {
+                  userRes.append('Set-Cookie', cookie);
+                } else {
+                  // Fallback: manually append to raw headers
+                  const res = userRes as any;
+                  if (!res._headers) res._headers = {};
+                  if (!res._headers['set-cookie']) res._headers['set-cookie'] = [];
+                  res._headers['set-cookie'].push(cookie);
+                }
+              });
+            } else if (headerValue !== undefined) {
+              userRes.setHeader(headerName, headerValue);
+            }
+          });
+        }
+
         if (enableLogging) {
-          logger.info(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Upload response:`, { statusCode: proxyRes.statusCode });
+          logger.info(`[${serviceName.toUpperCase()}-MULTIPART-PROXY] Upload response:`, { 
+            statusCode: proxyRes.statusCode,
+            hasSetCookie: !!headers?.['set-cookie']
+          });
         }
         return proxyResData;
       },

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { env } from '../config/env';
+import { AppConfig } from '../config/env';
 import { HttpStatusCode } from '../enums/HttpStatusCode';
 import { CommonMessages } from '../constants/CommonMessages';
 
@@ -8,8 +8,9 @@ const requestCounts = new Map<string, { count: number; resetTime: number }>();
 export const rateLimiterMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const clientId = req.ip || 'unknown';
   const now = Date.now();
-  const rateLimitWindowMs = env.RATE_LIMIT_WINDOW_MS;
-  const rateLimitMaxRequests = env.RATE_LIMIT_MAX_REQUESTS;
+  const rateLimitWindowMs = AppConfig.rateLimit.windowMs;
+  const rateLimitMaxRequests = AppConfig.rateLimit.maxRequests;
+
 
   let clientData = requestCounts.get(clientId);
   

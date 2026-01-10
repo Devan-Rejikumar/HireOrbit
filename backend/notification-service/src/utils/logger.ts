@@ -1,26 +1,26 @@
-import { createLogger, format, transports } from 'winston';
-import LokiTransport from 'winston-loki';
-import { AppConfig } from '../config/app.config';
+import winston from 'winston'
+import LokiTransport from 'winston-loki'
+import { AppConfig } from '../config/app.config'
 
-const { combine, timestamp, printf, colorize, json } = format;
-const serviceName = 'notification-service'; 
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: winston.format.simple(),
+  }),
+]
 
-const consoleFormat = printf(({ level, message, timestamp }) => {
-  return `${timestamp} [${serviceName}] ${level}: ${message}`;
-});
-
-export const logger = createLogger({
-  level: 'info',
-  format: combine(timestamp(), json()),
-  defaultMeta: { service: serviceName },
-  transports: [
-    new transports.Console({
-      format: combine(colorize(), timestamp(), consoleFormat),
-    }),
+if (AppConfig.logging.lokiHost) {
+  transports.push(
     new LokiTransport({
-      host: AppConfig.LOKI_HOST, 
-      labels: { service: serviceName },
-      json: true,
-    }),
-  ],
-});
+      host: AppConfig.logging.lokiHost,
+      labels: {
+        service: AppConfig.service.name,
+        version: AppConfig.service.version,
+      },
+    })
+  )
+}
+
+export const logger = winston.createLogger({
+  level: 'info',
+  transports,
+})

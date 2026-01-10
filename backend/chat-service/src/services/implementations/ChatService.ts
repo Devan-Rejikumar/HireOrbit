@@ -35,12 +35,14 @@ export class ChatService implements IChatService {
       // Use APPLICATION_SERVICE_URL directly instead of going through API gateway
       // This avoids network issues in Docker and is more efficient
       // APPLICATION_SERVICE_URL is already set correctly (http://application-service:3004 in Docker)
-      const url = `${AppConfig.APPLICATION_SERVICE_URL}/api/applications/${applicationId}`;
+      const url = `${AppConfig.services.applicationServiceUrl
+}/api/applications/${applicationId}`;
       logger.info('Fetching application details', { 
         applicationId, 
         url,
         headers: Object.keys(headers),
-        serviceUrl: AppConfig.APPLICATION_SERVICE_URL,
+        serviceUrl: AppConfig.services.applicationServiceUrl
+,
       });
       
       const response = await axios.get(url, axiosConfig);
