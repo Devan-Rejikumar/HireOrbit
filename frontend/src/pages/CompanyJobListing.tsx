@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,6 +71,7 @@ interface Company {
 
 const CompanyJobListing = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { company: authCompany } = useAuth();
   const [company, setCompany] = useState<Company & { logo?: string } | null>(null);
 
@@ -123,7 +124,7 @@ const CompanyJobListing = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [location.pathname]);
 
   const fetchJobs = async () => {
     try {
@@ -267,14 +268,22 @@ const CompanyJobListing = () => {
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_DASHBOARD
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <Home className="h-5 w-5" />
                 Dashboard
               </button>
               <button 
                 onClick={() => navigate(ROUTES.CHAT)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left relative"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left relative ${
+                  location.pathname === ROUTES.CHAT
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <MessageSquare className="h-5 w-5" />
                 <span className="flex-1">Messages</span>
@@ -284,21 +293,46 @@ const CompanyJobListing = () => {
                   </span>
                 )}
               </button>
-              <button onClick={() => navigate('/company/dashboard')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_DASHBOARD
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Building2 className="h-5 w-5" />
                 Company Profile
               </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_APPLICATIONS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <User className="h-5 w-5" />
                 All Applicants
               </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_JOBS)} className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate(ROUTES.COMPANY_JOBS)} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_JOBS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Briefcase className="h-5 w-5" />
                 Job Listing
               </button>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-start gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_INTERVIEWS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <span className="flex flex-col leading-tight">
@@ -308,14 +342,22 @@ const CompanyJobListing = () => {
               </button>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_OFFERS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_OFFERS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <FileText className="h-5 w-5" />
                 Offer Letters
               </button>
               <button 
                 onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.SUBSCRIPTIONS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing
@@ -324,7 +366,14 @@ const CompanyJobListing = () => {
             
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_SETTINGS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Settings className="h-5 w-5" />
                 Settings
               </button>
