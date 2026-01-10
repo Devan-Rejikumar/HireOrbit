@@ -28,8 +28,8 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
     
     if (!conversationId) return;
 
-    const chatServiceUrl = ENV.CHAT_SERVICE_URL;
-    const newSocket = io(chatServiceUrl, {
+    const chatSocketUrl = ENV.CHAT_SOCKET_URL;
+    const newSocket = io(chatSocketUrl, {
       transports: ['websocket'],
       autoConnect: true,
     });
