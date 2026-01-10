@@ -148,6 +148,7 @@ const CompanyOffersPage = () => {
   });
 
   return (
+    <>
     <CompanyLayout>
       <div className="mb-6">
         <div className="flex justify-between items-center flex-wrap gap-4">
@@ -318,6 +319,7 @@ const CompanyOffersPage = () => {
           isUser={false}
         />
       )}
+    </>
   );
 };
 

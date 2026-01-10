@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, Loader2, Search, Filter, ChevronUp, ChevronDown, Calendar, User, X, MessageCircle, FileText } from 'lucide-react';
+import { Users, Download, Eye, Loader2, Search, Filter, ChevronUp, ChevronDown, Calendar, User, X, MessageCircle, FileText, Settings } from 'lucide-react';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api/axios';
@@ -126,10 +126,9 @@ const CompanyApplications = () => {
       await checkSubscriptionStatus();
       await fetchApplications(true); // Show loading bar on initial load
       await fetchInterviewsForApplications();
-      await fetchCompanyProfile();
     };
     initialize();
-  }, [checkSubscriptionStatus, fetchApplications, fetchInterviewsForApplications, fetchCompanyProfile, location.pathname]);
+  }, [checkSubscriptionStatus, fetchApplications, fetchInterviewsForApplications, location.pathname]);
   useEffect(() => {
     // Refetch applications when ATS score filter changes (only if subscription status is known)
     // Only refetch if initial load is complete (loading is false)
@@ -767,9 +766,6 @@ const CompanyApplications = () => {
               </div>
             </div>
           )}
-
-        </main>
-      </div>
 
       {/* Schedule Interview Modal */}
       {schedulingApp && (

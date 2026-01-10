@@ -14,6 +14,11 @@ import {
   Type,
   Eye as EyeIcon,
   X,
+  Settings,
+  Building2,
+  GraduationCap,
+  Users,
+  Bell,
 } from 'lucide-react';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
 import { CompanyLayout } from '@/components/CompanyLayout';
@@ -589,8 +594,6 @@ const CompanySettings = () => {
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </main>
       </div>
 
       {/* Preview Modal */}

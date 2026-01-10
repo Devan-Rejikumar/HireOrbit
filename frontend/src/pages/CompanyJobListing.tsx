@@ -14,6 +14,8 @@ import {
   Search,
   X,
   Plus,
+  FileText,
+  Building2,
 } from 'lucide-react';
 import { CompanyLayout } from '@/components/CompanyLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -512,8 +514,6 @@ const CompanyJobListing = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
-        </main>
       </div>
 
       {/* Modals */}
