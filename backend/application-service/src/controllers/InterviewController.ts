@@ -247,7 +247,7 @@ if (AppConfig.STUN_SERVER_URL) {
     const webrtcConfig = {
       interviewId: interviewId, 
       roomId: interviewId, 
-      signalingServerUrl: AppConfig.CHAT_SERVICE_URL,
+      signalingServerUrl: AppConfig.EXTERNAL_CHAT_SOCKET_URL,
       iceServers,
     };
 

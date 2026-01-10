@@ -24,6 +24,10 @@ export const AppConfig = {
   CHAT_SERVICE_URL: process.env.CHAT_SERVICE_URL || 'http://localhost:4007',
   API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://localhost:4001',
 
+  // ===== External WebSocket URLs (for frontend connections) =====
+  // These are the external URLs that frontend clients use to connect via nginx proxy
+  EXTERNAL_CHAT_SOCKET_URL: process.env.EXTERNAL_CHAT_SOCKET_URL || 'wss://api.devanarayanan.site/chat-socket',
+
   // ===== Optional =====
   FRONTEND_URL: process.env.FRONTEND_URL || 'https://ho.devanarayanan.site',
   LOKI_HOST: process.env.LOKI_HOST,
