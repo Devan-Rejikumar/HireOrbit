@@ -194,7 +194,7 @@ const PostJob = () => {
             <div className="mt-6">
               <Button
                 variant="outline"
-                onClick={() => navigate('/company/dashboard')}
+                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                 className="flex items-center gap-2 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -544,7 +544,7 @@ const PostJob = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => navigate('/company/dashboard')}
+                      onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
                       className="flex-1 h-12 rounded-xl border-gray-200 hover:bg-gray-50 transition-all duration-200"
                     >
                       Cancel

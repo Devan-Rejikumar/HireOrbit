@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,24 +12,14 @@ import {
   Edit, 
   Trash2, 
   User,
-  Building2,
   Filter,
   Search,
-  Home,
-  MessageSquare,
-  Briefcase,
-  Calendar as CalendarIcon,
-  CreditCard,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
   Eye,
   X,
   CheckCircle,
+  Building2,
 } from 'lucide-react';
-import { CompanyHeader } from '@/components/CompanyHeader';
-import { useTotalUnreadCount } from '@/hooks/useChat';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { useAuth } from '@/context/AuthContext';
 import { _interviewService, InterviewWithDetails, UpdateInterviewData, InterviewDecisionData } from '@/api/interviewService';
 import toast from 'react-hot-toast';
@@ -56,6 +46,7 @@ interface CompanyProfileResponse {
 
 const CompanyInterviewManagement = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { company: authCompany } = useAuth();
   const [interviews, setInterviews] = useState<InterviewWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,18 +64,12 @@ const CompanyInterviewManagement = () => {
   const [selectedDecision, setSelectedDecision] = useState<'SELECTED' | 'REJECTED' | null>(null);
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [company, setCompany] = useState<CompanyProfile & { id?: string; logo?: string } | null>(null);
-
-  // Get total unread message count
-  const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
-    authCompany?.id || null,
-  );
 
   useEffect(() => {
     fetchInterviews();
     fetchCompanyProfile();
-  }, []);
+  }, [location.pathname]);
 
   const fetchCompanyProfile = async () => {
     try {
@@ -291,121 +276,7 @@ const CompanyInterviewManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <CompanyHeader company={company} />
-
-      <div className="flex min-h-screen relative">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10">
-          <nav className="p-6">
-            <div className="space-y-1 mb-8">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <Home className="h-5 w-5" />
-                Dashboard
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.CHAT)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left relative"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span className="flex-1">Messages</span>
-                {totalUnreadMessages > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
-                    {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
-                  </span>
-                )}
-              </button>
-              <button onClick={() => navigate('/company/dashboard')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Building2 className="h-5 w-5" />
-                Company Profile
-              </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <User className="h-5 w-5" />
-                All Applicants
-              </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_JOBS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Briefcase className="h-5 w-5" />
-                Job Listing
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-start gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left"
-              >
-                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                <span className="flex flex-col leading-tight">
-                  <span>Interview</span>
-                  <span>Management</span>
-                </span>
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_OFFERS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <FileText className="h-5 w-5" />
-                Offer Letters
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <CreditCard className="h-5 w-5" />
-                Plans & Billing
-              </button>
-            </div>
-            
-            <div className="space-y-1">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Settings className="h-5 w-5" />
-                Settings
-              </button>
-            </div>
-            
-            {/* Company Info */}
-            <div className="mt-8">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-                {company?.logo ? (
-                  <img 
-                    src={company.logo} 
-                    alt={company.companyName || 'Company logo'} 
-                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                    <Building2 className="h-4 w-4 text-white" />
-                  </div>
-                )}
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
-                  <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
-                </div>
-              </div>
-            </div>
-          </nav>
-        </aside>
-
-        {/* Toggle Sidebar Button */}
-        <button
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 ${
-            isSidebarCollapsed ? 'left-0' : 'left-64'
-          }`}
-          aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-        >
-          {isSidebarCollapsed ? (
-            <ChevronRight className="h-5 w-5 text-gray-600" />
-          ) : (
-            <ChevronLeft className="h-5 w-5 text-gray-600" />
-          )}
-        </button>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6 pt-[84px] ml-64">
+    <CompanyLayout company={company}>
           <div className="mb-6">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Interview Management</h1>
@@ -902,9 +773,7 @@ const CompanyInterviewManagement = () => {
               </div>
             </div>
           )}
-        </main>
-      </div>
-    </div>
+    </CompanyLayout>
   );
 };
 
