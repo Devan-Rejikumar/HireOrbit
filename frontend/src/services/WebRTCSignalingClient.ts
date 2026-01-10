@@ -126,12 +126,14 @@ export class WebRTCSignalingClient {
           reject(new Error(error.message || error.error || 'Unknown signaling error'));
         });
 
-        this.socket.on('connect_error', () => {
+        this.socket.on('connect_error', (error) => {
+          console.log('📹 WebRTC Signaling Socket CONNECT_ERROR:', error);
           // Don't reject immediately - let reconnection attempts happen
           // Only reject if all reconnection attempts fail
         });
 
         this.socket.on('disconnect', (reason: string) => {
+          console.log('📹 WebRTC Signaling Socket DISCONNECTED:', reason);
           if (reason === 'io server disconnect') {
             // Server disconnected, reject immediately
             cleanup();
@@ -139,8 +141,13 @@ export class WebRTCSignalingClient {
           }
         });
 
+        this.socket.on('error', (error) => {
+          console.log('📹 WebRTC Signaling Socket ERROR:', error);
+        });
+
         // Handle reconnection failure
         this.socket.io.on('reconnect_failed', () => {
+          console.log('📹 WebRTC Signaling Socket RECONNECT_FAILED');
           cleanup();
           reject(new Error(`Failed to connect to signaling server at ${cleanUrl}. Please check:\n1. Chat service is running on port 4007\n2. No firewall blocking the connection\n3. Correct URL in configuration`));
         });
