@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,7 @@ interface CompanyProfileResponse {
 const CompanyDashboard = () => {
   const { logout, isAuthenticated, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileStep, setProfileStep] = useState<ProfileStep | null>(null);
@@ -180,7 +181,11 @@ const CompanyDashboard = () => {
     fetchCompanyProfile();
     fetchJobCount();
     loadSubscriptionStatus();
-  }, []);
+    // Reset to overview when navigating to dashboard
+    if (location.pathname === ROUTES.COMPANY_DASHBOARD) {
+      setActiveSection('overview');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (activeSection === 'overview' && company?.id) {
@@ -695,7 +700,12 @@ const CompanyDashboard = () => {
   };
 
   const handleCompanyProfileClick = () => {
-    setIsCompanyDetailsOpen(true);
+    // If on dashboard, show modal. Otherwise navigate to dashboard first
+    if (location.pathname === ROUTES.COMPANY_DASHBOARD) {
+      setIsCompanyDetailsOpen(true);
+    } else {
+      navigate(ROUTES.COMPANY_DASHBOARD);
+    }
   };
 
   const handleJobListingClick = () => {
@@ -703,24 +713,30 @@ const CompanyDashboard = () => {
   };
 
   const handleMessagesClick = async () => {
-    // Simple: Mark all conversations as read when Messages is clicked
-    if (company?.id && allConversations.length > 0) {
-      // Mark all conversations as read (don't check unread count - just mark all)
-      const markAllPromises = allConversations.map(conv =>
-        markAsReadMutation.mutateAsync({
-          conversationId: conv.id,
-          userId: company.id,
-        }),
-      );
+    // If we're on dashboard, show messages section. Otherwise navigate to dashboard first
+    if (location.pathname === ROUTES.COMPANY_DASHBOARD) {
+      // Simple: Mark all conversations as read when Messages is clicked
+      if (company?.id && allConversations.length > 0) {
+        // Mark all conversations as read (don't check unread count - just mark all)
+        const markAllPromises = allConversations.map(conv =>
+          markAsReadMutation.mutateAsync({
+            conversationId: conv.id,
+            userId: company.id,
+          }),
+        );
+        
+        // Don't wait for all to complete - just start them
+        Promise.all(markAllPromises).catch(() => {
+          // Silently handle error
+        });
+      }
       
-      // Don't wait for all to complete - just start them
-      Promise.all(markAllPromises).catch(() => {
-        // Silently handle error
-      });
+      // Set active section to messages
+      setActiveSection('messages');
+    } else {
+      // Navigate to dashboard, then show messages
+      navigate(ROUTES.COMPANY_DASHBOARD);
     }
-    
-    // Set active section to messages
-    setActiveSection('messages');
   };
 
   const handleSelectConversation = (conversation: ConversationResponse) => {
@@ -892,9 +908,15 @@ const CompanyDashboard = () => {
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
-                onClick={() => setActiveSection('overview')}
+                onClick={() => {
+                  if (location.pathname !== ROUTES.COMPANY_DASHBOARD) {
+                    navigate(ROUTES.COMPANY_DASHBOARD);
+                  } else {
+                    setActiveSection('overview');
+                  }
+                }}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium w-full text-left ${
-                  activeSection === 'overview'
+                  location.pathname === ROUTES.COMPANY_DASHBOARD && activeSection === 'overview'
                     ? 'bg-purple-50 text-purple-700'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
@@ -918,21 +940,46 @@ const CompanyDashboard = () => {
                   </span>
                 )}
               </button>
-              <button onClick={handleCompanyProfileClick} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={handleCompanyProfileClick} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_DASHBOARD && isCompanyDetailsOpen
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Building2 className="h-5 w-5" />
                 Company Profile
               </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_APPLICATIONS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <User className="h-5 w-5" />
                 All Applicants
               </button>
-              <button onClick={handleJobListingClick} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={handleJobListingClick} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_JOBS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Briefcase className="h-5 w-5" />
                 Job Listing
               </button>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-start gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_INTERVIEWS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <span className="flex flex-col leading-tight">
@@ -942,14 +989,22 @@ const CompanyDashboard = () => {
               </button>
               <button 
                 onClick={() => navigate(ROUTES.COMPANY_OFFERS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_OFFERS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <FileText className="h-5 w-5" />
                 Offer Letters
               </button>
               <button 
                 onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.SUBSCRIPTIONS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 <CreditCard className="h-5 w-5" />
                 Plans & Billing
@@ -958,7 +1013,14 @@ const CompanyDashboard = () => {
             
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+              <button 
+                onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  location.pathname === ROUTES.COMPANY_SETTINGS
+                    ? 'bg-purple-50 text-purple-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
                 <Settings className="h-5 w-5" />
                 Settings
               </button>

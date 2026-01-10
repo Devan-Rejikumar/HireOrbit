@@ -105,7 +105,7 @@ export const CheckoutPage = () => {
   // Sidebar items based on role
   const sidebarItems = role === 'company' 
     ? [
-      { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/company/dashboard' },
+      { id: 'dashboard', label: 'Dashboard', icon: Home, path: ROUTES.COMPANY_DASHBOARD },
       { id: 'jobs', label: 'My Jobs', icon: Briefcase, path: '/company/jobs' },
       { id: 'applications', label: 'Applications', icon: User, path: '/company/applications' },
       { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/messages', badge: totalUnreadMessages },

@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, Download, Eye, Loader2, Search, Filter, ChevronUp, ChevronDown, Calendar, Home, MessageSquare, Building2, Briefcase, Calendar as CalendarIcon, CreditCard, Settings, ChevronLeft, ChevronRight, User, X, MessageCircle, FileText } from 'lucide-react';
-import { CompanyHeader } from '@/components/CompanyHeader';
-import { useTotalUnreadCount } from '@/hooks/useChat';
+import { Users, Download, Eye, Loader2, Search, Filter, ChevronUp, ChevronDown, Calendar, User, X, MessageCircle, FileText, Settings } from 'lucide-react';
+import { CompanyLayout } from '@/components/CompanyLayout';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api/axios';
 import { ApiResponse } from '@/types/api';
@@ -46,6 +45,7 @@ interface Application {
 
 const CompanyApplications = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // ADD THIS LINE
   const { company: authCompany } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,32 +63,11 @@ const CompanyApplications = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [schedulingApp, setSchedulingApp] = useState<Application | null>(null);
   const [applicationsWithInterviews, setApplicationsWithInterviews] = useState<Set<string>>(new Set());
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    // Default to collapsed on mobile, open on desktop
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 1024; // lg breakpoint
-    }
-    return true;
-  });
   const [company, setCompany] = useState<{ id?: string; companyName?: string; email?: string; profileCompleted?: boolean; isVerified?: boolean; logo?: string } | null>(null);
   const [showActionsModal, setShowActionsModal] = useState(false);
   const [selectedAppForActions, setSelectedAppForActions] = useState<Application | null>(null);
   const [showCreateOfferModal, setShowCreateOfferModal] = useState(false);
   const [selectedAppForOffer, setSelectedAppForOffer] = useState<Application | null>(null);
-
-  // Get total unread message count
-  const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(
-    authCompany?.id || null,
-  );
-
-  const fetchCompanyProfile = useCallback(async () => {
-    try {
-      const response = await api.get<ApiResponse<any>>('/company/profile');
-      setCompany(response.data?.data?.company || null);
-    } catch (_error) {
-      // Silently handle error
-    }
-  }, []);
 
   const checkSubscriptionStatus = useCallback(async () => {
     try {
@@ -147,11 +126,9 @@ const CompanyApplications = () => {
       await checkSubscriptionStatus();
       await fetchApplications(true); // Show loading bar on initial load
       await fetchInterviewsForApplications();
-      await fetchCompanyProfile();
     };
     initialize();
-  }, [checkSubscriptionStatus, fetchInterviewsForApplications, fetchCompanyProfile]);
-
+  }, [checkSubscriptionStatus, fetchApplications, fetchInterviewsForApplications, location.pathname]);
   useEffect(() => {
     // Refetch applications when ATS score filter changes (only if subscription status is known)
     // Only refetch if initial load is complete (loading is false)
@@ -356,151 +333,18 @@ const CompanyApplications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <CompanyHeader company={company} />
-
-      <div className="flex min-h-screen relative">
-        {/* Sidebar */}
-        <aside className={`w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10 ${isSidebarCollapsed ? '-translate-x-full' : 'translate-x-0'} lg:translate-x-0`}>
-          <nav className="p-6">
-            <div className="space-y-1 mb-8">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <Home className="h-5 w-5" />
-                Dashboard
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.CHAT)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left relative"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span className="flex-1">Messages</span>
-                {totalUnreadMessages > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
-                    {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
-                  </span>
-                )}
-              </button>
-              <button onClick={() => navigate('/company/dashboard')} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Building2 className="h-5 w-5" />
-                Company Profile
-              </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left">
-                <User className="h-5 w-5" />
-                All Applicants
-              </button>
-              <button onClick={() => navigate(ROUTES.COMPANY_JOBS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Briefcase className="h-5 w-5" />
-                Job Listing
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className="flex items-start gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                <span className="flex flex-col leading-tight">
-                  <span>Interview</span>
-                  <span>Management</span>
-                </span>
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.COMPANY_OFFERS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <FileText className="h-5 w-5" />
-                My Offers
-              </button>
-              <button 
-                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
-              >
-                <CreditCard className="h-5 w-5" />
-                Plans & Billing
-              </button>
-            </div>
-            
-            <div className="space-y-1">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
-              <button onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                <Settings className="h-5 w-5" />
-                Settings
-              </button>
-            </div>
-            
-            {/* Company Info */}
-            <div className="mt-8">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-                {company?.logo ? (
-                  <img 
-                    src={company.logo} 
-                    alt={company.companyName || 'Company logo'} 
-                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                    <Building2 className="h-4 w-4 text-white" />
-                  </div>
-                )}
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{company?.companyName || 'Company'}</div>
-                  <div className="text-xs text-purple-600">{company?.email || 'email@company.com'}</div>
-                </div>
-              </div>
-            </div>
-          </nav>
-        </aside>
-
-        {/* Toggle Sidebar Button */}
-        <button
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className={`fixed top-[84px] z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 lg:block ${
-            isSidebarCollapsed ? 'left-0' : 'left-64'
-          }`}
-          aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-        >
-          {isSidebarCollapsed ? (
-            <ChevronRight className="h-5 w-5 text-gray-600" />
-          ) : (
-            <ChevronLeft className="h-5 w-5 text-gray-600" />
-          )}
-        </button>
-        
-        {/* Mobile Menu Overlay */}
-        {!isSidebarCollapsed && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-[5] lg:hidden"
-            onClick={() => setIsSidebarCollapsed(true)}
-          />
-        )}
-        
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsSidebarCollapsed(false)}
-          className={`fixed top-[84px] left-2 z-50 bg-white border border-gray-200 rounded-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 lg:hidden ${
-            isSidebarCollapsed ? 'block' : 'hidden'
-          }`}
-          aria-label="Show sidebar"
-        >
-          <ChevronRight className="h-5 w-5 text-gray-600" />
-        </button>
-
-        {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6 pt-20 md:pt-[84px] lg:ml-64">
-          <div className="mb-4 md:mb-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-              <div>
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Total Applicants: {applications.length}</h1>
-                <p className="text-sm md:text-base text-gray-600">Manage and review your job applications</p>
-              </div>
-            </div>
+    <CompanyLayout company={company}>
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+          <div>
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Total Applicants: {applications.length}</h1>
+            <p className="text-sm md:text-base text-gray-600">Manage and review your job applications</p>
           </div>
+        </div>
+      </div>
 
-          {/* Search and Filters Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
+      {/* Search and Filters Section */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 md:p-4 mb-4 md:mb-6">
             <div className="flex flex-col gap-3 md:gap-4">
               {/* Search Bar */}
               <div className="flex-1 w-full">
@@ -923,9 +767,6 @@ const CompanyApplications = () => {
             </div>
           )}
 
-        </main>
-      </div>
-
       {/* Schedule Interview Modal */}
       {schedulingApp && (
         <ScheduleInterviewModal
@@ -1027,7 +868,7 @@ const CompanyApplications = () => {
           }}
         />
       )}
-    </div>
+    </CompanyLayout>
   );
 };
 

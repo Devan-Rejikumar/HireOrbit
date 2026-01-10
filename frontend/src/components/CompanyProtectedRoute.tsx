@@ -1,28 +1,50 @@
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const CompanyProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, role } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Set loading to false after initial mount
+    // Reset when location changes (client-side navigation)
+    setIsAuthChecked(false);
+
+    const storedRole = localStorage.getItem('role');
+    
+    if (!storedRole) {
+      setIsAuthChecked(true);
+      return;
+    }
+    
+    // If already authenticated, allow immediately
+    if (isAuthenticated && role === 'company') {
+      setIsAuthChecked(true);
+      return;
+    }
+    
+    // Wait for auth to load with timeout
     const timer = setTimeout(() => {
-      setLoading(false);
-    }, 100);
+      setIsAuthChecked(true);
+    }, 800);
     
     return () => clearTimeout(timer);
-  }, []); // Empty deps - only run once on mount
+  }, [isAuthenticated, role, location.pathname]); // ADD location.pathname
 
-  // Show loading on initial mount
-  if (loading) {
-    return <div>Loading...</div>;
+  if (!isAuthChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
   
-  // Check auth and redirect if needed
   if (!isAuthenticated || role !== 'company') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
   
   return <>{children}</>;
