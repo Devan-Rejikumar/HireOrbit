@@ -1,35 +1,9 @@
-import axios from 'axios';
+import api from './axios';
 import { ENV } from '../config/env';
 import { HTTP_STATUS } from '../constants/statusCodes';
 import { API_ROUTES } from '../constants/apiRoutes';
 
-// Create a separate axios instance for chat service
-const chatApi = axios.create({
-  baseURL: `${ENV.CHAT_SERVICE_URL}/api/chat`,
-  withCredentials: true,
-});
-
-// Add auth token interceptor
-chatApi.interceptors.request.use(
-  (config) => {
-    const cookies = document.cookie.split(';');
-    const tokenCookie = cookies.find(cookie => cookie.trim().startsWith('accessToken='));
-    const token = tokenCookie ? tokenCookie.split('=')[1] : null;
-    
-    if (token) {
-      config.headers = config.headers ?? {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
-    if (!(config.data instanceof FormData)) {
-      config.headers = config.headers ?? {};
-      config.headers['Content-Type'] = 'application/json';
-    }
-    
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
+const CHAT_API_BASE_URL = ENV.API_BASE_URL;
 
 export interface ConversationResponse {
   id: string;
@@ -86,30 +60,30 @@ export interface UnreadCountResponse {
 
 export const _chatService = {
   getUserConversations: async (userId: string): Promise<ConversationResponse[]> => {
-    const response = await chatApi.get<ConversationListResponse>(
-      API_ROUTES.CHAT.USER_CONVERSATIONS(userId),
+    const response = await api.get<ConversationListResponse>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.USER_CONVERSATIONS(userId)}`,
     );
     return response.data.data.conversations;
   },
 
   getCompanyConversations: async (companyId: string): Promise<ConversationResponse[]> => {
-    const response = await chatApi.get<ConversationListResponse>(
-      API_ROUTES.CHAT.COMPANY_CONVERSATIONS(companyId),
+    const response = await api.get<ConversationListResponse>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.COMPANY_CONVERSATIONS(companyId)}`,
     );
     return response.data.data.conversations;
   },
 
   getConversation: async (conversationId: string): Promise<ConversationResponse> => {
-    const response = await chatApi.get<ConversationResponseData>(
-      API_ROUTES.CHAT.CONVERSATION(conversationId),
+    const response = await api.get<ConversationResponseData>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.CONVERSATION(conversationId)}`,
     );
     return response.data.data;
   },
 
   getConversationByApplication: async (applicationId: string): Promise<ConversationResponse | null> => {
     try {
-      const response = await chatApi.get<ConversationResponseData>(
-        API_ROUTES.CHAT.CONVERSATION_BY_APPLICATION(applicationId),
+      const response = await api.get<ConversationResponseData>(
+        `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.CONVERSATION_BY_APPLICATION(applicationId)}`,
       );
       return response.data.data;
     } catch (error: unknown) {
@@ -127,8 +101,8 @@ export const _chatService = {
     limit?: number,
     skip?: number,
   ): Promise<MessageResponse[]> => {
-    const response = await chatApi.get<MessageListResponse>(
-      API_ROUTES.CHAT.MESSAGES(conversationId),
+    const response = await api.get<MessageListResponse>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.MESSAGES(conversationId)}`,
       {
         params: { limit, skip },
       },
@@ -137,14 +111,14 @@ export const _chatService = {
   },
 
   markAsRead: async (conversationId: string, userId: string): Promise<void> => {
-    await chatApi.post(API_ROUTES.CHAT.MARK_AS_READ(conversationId), {
+    await api.post(`${CHAT_API_BASE_URL}${API_ROUTES.CHAT.MARK_AS_READ(conversationId)}`, {
       userId,
     });
   },
 
   getUnreadCount: async (conversationId: string, userId: string): Promise<number> => {
-    const response = await chatApi.get<UnreadCountResponse>(
-      API_ROUTES.CHAT.UNREAD_COUNT(conversationId),
+    const response = await api.get<UnreadCountResponse>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.UNREAD_COUNT(conversationId)}`,
       {
         params: { userId },
       },
@@ -153,15 +127,15 @@ export const _chatService = {
   },
 
   getTotalUnreadCount: async (userId: string): Promise<number> => {
-    const response = await chatApi.get<UnreadCountResponse>(
-      API_ROUTES.CHAT.TOTAL_UNREAD_COUNT(userId),
+    const response = await api.get<UnreadCountResponse>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.TOTAL_UNREAD_COUNT(userId)}`,
     );
     return response.data.data.unreadCount;
   },
 
   getConversationsWithUnread: async (userId: string): Promise<ConversationResponse[]> => {
-    const response = await chatApi.get<ConversationListResponse>(
-      API_ROUTES.CHAT.CONVERSATIONS_WITH_UNREAD(userId),
+    const response = await api.get<ConversationListResponse>(
+      `${CHAT_API_BASE_URL}${API_ROUTES.CHAT.CONVERSATIONS_WITH_UNREAD(userId)}`,
     );
     return response.data.data.conversations;
   },
