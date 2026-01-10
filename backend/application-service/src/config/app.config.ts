@@ -8,7 +8,7 @@ import 'dotenv-flow/config';
 export const AppConfig = {
   PORT: process.env.PORT || '3004',
   SUBSCRIPTION_SERVICE_URL: process.env.SUBSCRIPTION_SERVICE_URL || 'http://localhost:3005',
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'https://ho.devanarayanan.site',
   LOKI_HOST: process.env.LOKI_HOST || 'http://localhost:3100',
   JOB_SERVICE_URL: process.env.JOB_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3002',
   USER_SERVICE_URL: process.env.USER_SERVICE_URL || process.env.API_GATEWAY_URL || 'http://localhost:3009',
