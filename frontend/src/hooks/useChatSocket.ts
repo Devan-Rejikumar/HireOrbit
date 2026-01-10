@@ -28,7 +28,8 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
     
     if (!conversationId) return;
 
-    const chatSocketUrl = "wss://api.devanarayanan.site/chat-socket";
+    const chatSocketUrl = ENV.CHAT_SOCKET_URL;
+    console.log('💬 Chat Socket connecting to:', chatSocketUrl);
     const newSocket = io(chatSocketUrl, {
       transports: ['websocket'],
       autoConnect: true,
