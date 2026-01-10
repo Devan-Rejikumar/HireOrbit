@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,6 +46,7 @@ interface Application {
 
 const CompanyApplications = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // ADD THIS LINE
   const { company: authCompany } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,8 +151,7 @@ const CompanyApplications = () => {
       await fetchCompanyProfile();
     };
     initialize();
-  }, [checkSubscriptionStatus, fetchInterviewsForApplications, fetchCompanyProfile]);
-
+  }, [checkSubscriptionStatus, fetchInterviewsForApplications, fetchCompanyProfile, location.pathname]); // ADD location.pathname
   useEffect(() => {
     // Refetch applications when ATS score filter changes (only if subscription status is known)
     // Only refetch if initial load is complete (loading is false)
