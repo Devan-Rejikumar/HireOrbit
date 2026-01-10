@@ -151,7 +151,7 @@ const CompanyApplications = () => {
       await fetchCompanyProfile();
     };
     initialize();
-  }, [checkSubscriptionStatus, fetchInterviewsForApplications, fetchCompanyProfile, location.pathname]); // ADD location.pathname
+  }, [checkSubscriptionStatus, fetchApplications, fetchInterviewsForApplications, fetchCompanyProfile, location.pathname]);
   useEffect(() => {
     // Refetch applications when ATS score filter changes (only if subscription status is known)
     // Only refetch if initial load is complete (loading is false)
