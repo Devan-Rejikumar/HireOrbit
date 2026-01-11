@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   User,
   MapPin,
@@ -12,6 +13,10 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
+  Home,
+  Search,
+  MessageSquare,
+  ArrowLeft,
 } from 'lucide-react';
 import api from '../api/axios';
 import Header from '@/components/Header';
@@ -129,6 +134,7 @@ interface ProfileResponse {
 }
 
 const UserProfile = () => {
+  const navigate = useNavigate();
   const [profileData, setProfileData] = useState<ProfileResponse['data'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -350,40 +356,49 @@ const UserProfile = () => {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-14 sm:pt-16 pb-20 lg:pb-8">
+        {/* Back Button for Mobile */}
+        <button
+          onClick={() => navigate('/user/dashboard')}
+          className="lg:hidden fixed top-16 left-4 z-40 bg-white shadow-lg rounded-full p-2.5 border border-gray-200 hover:bg-gray-50 transition-all duration-200"
+          aria-label="Back to dashboard"
+        >
+          <ArrowLeft className="h-5 w-5 text-gray-700" />
+        </button>
+
+        <div className="max-w-6xl mx-auto py-4 sm:py-6 lg:py-8 px-4 sm:px-6">
           {/* Profile Header Card */}
-          <div className="bg-white rounded-2xl shadow-xl mb-8 overflow-hidden border border-gray-100">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl mb-4 sm:mb-6 lg:mb-8 overflow-hidden border border-gray-100">
             {/* Cover Photo */}
-            <div className="h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
+            <div className="h-28 sm:h-36 lg:h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
               <div className="absolute inset-0 bg-black/10"></div>
             </div>
 
-            <div className="px-8 pb-8">
-              <div className="flex items-start -mt-20 mb-6">
+            <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
+              <div className="flex flex-col lg:flex-row lg:items-start -mt-12 sm:-mt-16 lg:-mt-20 mb-4 sm:mb-6">
                 {/* Profile Picture */}
-                <div className="relative">
-                  <div className="w-40 h-40 bg-white rounded-2xl border-4 border-white shadow-xl flex items-center justify-center">
+                <div className="relative flex-shrink-0">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 bg-white rounded-xl sm:rounded-2xl border-4 border-white shadow-xl flex items-center justify-center">
                     {profile.profilePicture ? (
                       <img
                         src={profile.profilePicture}
                         alt={user.username}
-                        className="w-full h-full rounded-xl object-cover"
+                        className="w-full h-full rounded-lg sm:rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                        <User className="h-20 w-20 text-white" />
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+                        <User className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 text-white" />
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Profile Completion Card - Circular Gauge */}
-                <div className="ml-auto mt-16">
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
+                {/* Profile Completion Card - Circular Gauge (Hidden on small mobile, shown on tablet+) */}
+                <div className="hidden sm:block lg:ml-auto mt-4 lg:mt-16">
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 border border-gray-200 shadow-lg">
                     <div className="text-center">
                       {/* Circular Gauge */}
-                      <div className="relative w-56 h-36 mx-auto mb-4">
+                      <div className="relative w-36 h-24 sm:w-44 sm:h-28 lg:w-56 lg:h-36 mx-auto mb-2 sm:mb-4">
                         <svg className="w-full h-full" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
                           <defs>
                             <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -482,11 +497,11 @@ const UserProfile = () => {
                         </svg>
                         
                         {/* Center Text */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
-                          <div className="text-5xl font-bold text-gray-900 mb-1">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pt-6 sm:pt-8 lg:pt-10">
+                          <div className="text-2xl sm:text-3xl lg:text-5xl font-bold text-gray-900 mb-0.5 sm:mb-1">
                             {completionPercentage}
                           </div>
-                          <div className="text-lg font-semibold text-gray-800 mb-1">
+                          <div className="text-xs sm:text-sm lg:text-lg font-semibold text-gray-800 mb-0.5 sm:mb-1">
                             {completionPercentage === 100 
                               ? 'Complete' 
                               : completionPercentage >= 70 
@@ -495,10 +510,10 @@ const UserProfile = () => {
                                   ? 'In progress'
                                   : 'Getting started'}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-[10px] sm:text-xs lg:text-sm text-gray-500 hidden sm:block">
                             {completionPercentage === 100 
-                              ? '🎉 Perfect profile!' 
-                              : 'Keep going — you\'re on track'}
+                              ? 'Perfect profile!' 
+                              : 'Keep going'}
                           </div>
                         </div>
                       </div>
@@ -507,65 +522,81 @@ const UserProfile = () => {
                 </div>
               </div>
 
+              {/* Mobile: Simple Progress Bar */}
+              <div className="sm:hidden mb-4">
+                <div className="bg-gray-100 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-700">Profile Completion</span>
+                    <span className="text-lg font-bold text-purple-600">{completionPercentage}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-500"
+                      style={{ width: `${completionPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Profile Info */}
-              <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <div className="mb-4 sm:mb-6">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
                   {user.username}
                 </h1>
-                <p className="text-xl text-gray-600 mb-4 font-medium">
+                <p className="text-sm sm:text-lg lg:text-xl text-gray-600 mb-3 sm:mb-4 font-medium">
                   {profile.headline || 'Add a professional headline'}
                 </p>
 
-                <div className="flex flex-wrap items-center gap-6 text-gray-600">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-6 text-gray-600">
                   {profile.location && (
-                    <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
-                      <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                      <span className="font-medium">{profile.location}</span>
+                    <div className="flex items-center bg-gray-50 px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
+                      <span className="text-xs sm:text-sm lg:text-base font-medium">{profile.location}</span>
                     </div>
                   )}
-                  <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
-                    <Mail className="h-5 w-5 mr-2 text-blue-600" />
-                    <span className="font-medium">{user.email}</span>
+                  <div className="flex items-center bg-gray-50 px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl">
+                    <Mail className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
+                    <span className="text-xs sm:text-sm lg:text-base font-medium truncate max-w-[140px] sm:max-w-none">{user.email}</span>
                   </div>
-                  <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-xl">
+                  <div className="flex items-center gap-2 bg-gray-50 px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl">
                     <div className="flex items-center">
                       {user.isVerified ? (
                         <>
-                          <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-                          <span className="font-medium text-green-600">Email Verified</span>
+                          <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-green-600" />
+                          <span className="text-xs sm:text-sm lg:text-base font-medium text-green-600">Verified</span>
                         </>
                       ) : (
                         <>
-                          <AlertCircle className="h-5 w-5 mr-2 text-orange-600" />
-                          <span className="font-medium text-orange-600">Email Not Verified</span>
+                          <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-orange-600" />
+                          <span className="text-xs sm:text-sm lg:text-base font-medium text-orange-600 hidden sm:inline">Not Verified</span>
                         </>
                       )}
                     </div>
                     {!user.isVerified && (
                       <button
                         onClick={() => setIsVerificationModalOpen(true)}
-                        className="text-sm bg-orange-600 text-white px-3 py-1 rounded-lg hover:bg-orange-700 transition-colors"
+                        className="text-[10px] sm:text-xs lg:text-sm bg-orange-600 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-md sm:rounded-lg hover:bg-orange-700 transition-colors"
                       >
-                        Verify Now
+                        Verify
                       </button>
                     )}
                   </div>
                   {profile.phone && (
-                    <div className="flex items-center bg-gray-50 px-4 py-2 rounded-xl">
-                      <Phone className="h-5 w-5 mr-2 text-blue-600" />
-                      <span className="font-medium">{profile.phone}</span>
+                    <div className="flex items-center bg-gray-50 px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl">
+                      <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-600" />
+                      <span className="text-xs sm:text-sm lg:text-base font-medium">{profile.phone}</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
+              <div className="flex gap-2 sm:gap-4">
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                  className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center justify-center text-sm sm:text-base"
                 >
-                  <Edit className="h-5 w-5 mr-2" />
+                  <Edit className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                   Edit Profile
                 </button>
               </div>
@@ -575,17 +606,17 @@ const UserProfile = () => {
           {/* Profile Content */}
           <>
             {/* About Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mr-4">
-                    <User className="h-6 w-6 text-blue-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">About</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">About</h2>
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-xl p-6">
-                <p className="text-gray-700 leading-relaxed text-lg">
+              <div className="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-6">
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700 leading-relaxed">
                   {profile.about ||
                   'Add a summary to highlight your personality or work experience'}
                 </p>
@@ -593,13 +624,13 @@ const UserProfile = () => {
             </div>
 
             {/* Resume Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl flex items-center justify-center mr-4">
-                    <Briefcase className="h-6 w-6 text-green-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Resume</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Resume</h2>
                 </div>
               </div>
             
@@ -612,70 +643,72 @@ const UserProfile = () => {
             </div>
 
             {/* Experience Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center mr-4">
-                    <Briefcase className="h-6 w-6 text-purple-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Experience</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Experience</h2>
                 </div>
                 <button
                   onClick={() => {
                     setEditingExperience(null);
                     setIsExperienceModalOpen(true);
                   }}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center justify-center text-sm sm:text-base"
                 >
-                  <Briefcase className="h-5 w-5 mr-2" />
+                  <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                 Add Experience
                 </button>
               </div>
 
               {(!profile.experience || profile.experience.length === 0) ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Briefcase className="h-8 w-8 text-gray-400" />
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-lg mb-2">No experience added yet</p>
-                  <p className="text-gray-400 text-sm">Add your work experience to showcase your professional journey</p>
+                  <p className="text-gray-500 text-sm sm:text-lg mb-1 sm:mb-2">No experience added yet</p>
+                  <p className="text-gray-400 text-xs sm:text-sm px-4">Add your work experience to showcase your professional journey</p>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-6 lg:space-y-8">
                   {profile.experience?.map((exp, index) => (
                     <div
                       key={exp.id}
-                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-4 sm:pt-6 lg:pt-8' : ''}`}
                     >
                       <div className="flex items-start">
-                        <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                          <Briefcase className="h-8 w-8 text-purple-600" />
+                        <div className="hidden sm:flex w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl lg:rounded-2xl items-center justify-center mr-4 lg:mr-6 flex-shrink-0 shadow-lg">
+                          <Briefcase className="h-6 w-6 lg:h-8 lg:w-8 text-purple-600" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1">
                                 {exp.title}
                               </h3>
-                              <p className="text-lg text-gray-600 font-medium mb-2">{exp.company}</p>
+                              <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-medium mb-1 sm:mb-2">{exp.company}</p>
                               {exp.location && (
-                                <div className="flex items-center text-gray-500 mb-3">
-                                  <MapPin className="h-4 w-4 mr-1" />
-                                  <span className="text-sm">{exp.location}</span>
+                                <div className="flex items-center text-gray-500 mb-2 sm:mb-3">
+                                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                  <span className="text-xs sm:text-sm">{exp.location}</span>
                                 </div>
                               )}
-                              <div className="flex items-center text-sm text-gray-500 mb-4">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                <span className="font-medium">
-                                  {formatDate(exp.startDate)} -{' '}
-                                  {exp.isCurrentRole
-                                    ? 'Present'
-                                    : exp.endDate
-                                      ? formatDate(exp.endDate)
-                                      : 'Present'}
-                                </span>
-                                <span className="mx-3 text-gray-300">•</span>
-                                <span className="font-medium">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-500 mb-2 sm:mb-4">
+                                <div className="flex items-center">
+                                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                  <span className="font-medium">
+                                    {formatDate(exp.startDate)} -{' '}
+                                    {exp.isCurrentRole
+                                      ? 'Present'
+                                      : exp.endDate
+                                        ? formatDate(exp.endDate)
+                                        : 'Present'}
+                                  </span>
+                                </div>
+                                <span className="text-gray-300 hidden sm:inline">•</span>
+                                <span className="font-medium text-purple-600">
                                   {calculateDuration(
                                     exp.startDate,
                                     exp.isCurrentRole ? undefined : exp.endDate,
@@ -688,14 +721,14 @@ const UserProfile = () => {
                                 setEditingExperience(exp);
                                 setIsExperienceModalOpen(true);
                               }}
-                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="text-gray-400 hover:text-gray-600 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
                             >
-                              <Edit className="h-5 w-5" />
+                              <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                             </button>
                           </div>
                           {exp.description && (
-                            <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                              <p className="text-gray-700 leading-relaxed">
+                            <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 mt-2 sm:mt-4">
+                              <p className="text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed">
                                 {exp.description}
                               </p>
                             </div>
@@ -709,54 +742,54 @@ const UserProfile = () => {
             </div>
 
             {/* Education Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl flex items-center justify-center mr-4">
-                    <GraduationCap className="h-6 w-6 text-indigo-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Education</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Education</h2>
                 </div>
                 <button
                   onClick={() => {
                     setEditingEducation(null);
                     setIsEducationModalOpen(true);
                   }}
-                  className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                  className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center justify-center text-sm sm:text-base"
                 >
-                  <GraduationCap className="h-5 w-5 mr-2" />
+                  <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                 Add Education
                 </button>
               </div>
 
               {(!profile.education || profile.education.length === 0) ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <GraduationCap className="h-8 w-8 text-gray-400" />
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <GraduationCap className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-lg mb-2">No education added yet</p>
-                  <p className="text-gray-400 text-sm">Add your educational background to showcase your qualifications</p>
+                  <p className="text-gray-500 text-sm sm:text-lg mb-1 sm:mb-2">No education added yet</p>
+                  <p className="text-gray-400 text-xs sm:text-sm px-4">Add your educational background to showcase your qualifications</p>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-6 lg:space-y-8">
                   {profile.education?.map((edu, index) => (
                     <div
                       key={edu.id}
-                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-4 sm:pt-6 lg:pt-8' : ''}`}
                     >
                       <div className="flex items-start">
-                        <div className="w-16 h-16 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                          <GraduationCap className="h-8 w-8 text-indigo-600" />
+                        <div className="hidden sm:flex w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl lg:rounded-2xl items-center justify-center mr-4 lg:mr-6 flex-shrink-0 shadow-lg">
+                          <GraduationCap className="h-6 w-6 lg:h-8 lg:w-8 text-indigo-600" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1">
                                 {edu.institution}
                               </h3>
-                              <p className="text-lg text-gray-600 font-medium mb-3">{edu.degree}</p>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <Calendar className="h-4 w-4 mr-2" />
+                              <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-medium mb-2 sm:mb-3">{edu.degree}</p>
+                              <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                 <span className="font-medium">
                                   {formatDate(edu.startDate)} -{' '}
                                   {edu.endDate
@@ -770,9 +803,9 @@ const UserProfile = () => {
                                 setEditingEducation(edu);
                                 setIsEducationModalOpen(true);
                               }}
-                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="text-gray-400 hover:text-gray-600 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
                             >
-                              <Edit className="h-5 w-5" />
+                              <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                             </button>
                           </div>
                         </div>
@@ -784,37 +817,37 @@ const UserProfile = () => {
             </div>
 
             {/* Skills Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-100 to-red-100 rounded-xl flex items-center justify-center mr-4">
-                    <Award className="h-6 w-6 text-orange-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-orange-100 to-red-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <Award className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Skills</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Skills</h2>
                 </div>
                 <button
                   onClick={() => setIsSkillsModalOpen(true)}
-                  className="bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-xl hover:from-orange-700 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                  className="w-full sm:w-auto bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:from-orange-700 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center justify-center text-sm sm:text-base"
                 >
-                  <Award className="h-5 w-5 mr-2" />
+                  <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                 Add Skills
                 </button>
               </div>
 
               {(!profile.skills || profile.skills.length === 0) ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Award className="h-8 w-8 text-gray-400" />
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-lg mb-2">No skills added yet</p>
-                  <p className="text-gray-400 text-sm">Add your skills to showcase your expertise</p>
+                  <p className="text-gray-500 text-sm sm:text-lg mb-1 sm:mb-2">No skills added yet</p>
+                  <p className="text-gray-400 text-xs sm:text-sm px-4">Add your skills to showcase your expertise</p>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2 sm:gap-3">
                   {profile.skills?.map((skill, index) => (
                     <span
                       key={index}
-                      className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-4 py-2 rounded-xl text-sm font-semibold border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200"
+                      className="bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold border border-orange-200 shadow-sm hover:shadow-md transition-all duration-200"
                     >
                       {skill}
                     </span>
@@ -824,64 +857,66 @@ const UserProfile = () => {
             </div>
 
             {/* Certifications Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-100 to-green-100 rounded-xl flex items-center justify-center mr-4">
-                    <Award className="h-6 w-6 text-emerald-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-emerald-100 to-green-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <Award className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Certifications</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Certifications</h2>
                 </div>
                 <button
                   onClick={() => {
                     setEditingCertification(null);
                     setIsCertificationModalOpen(true);
                   }}
-                  className="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-6 py-3 rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                  className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-green-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center justify-center text-sm sm:text-base"
                 >
-                  <Award className="h-5 w-5 mr-2" />
+                  <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                 Add Certification
                 </button>
               </div>
 
               {(!profile || !profile.certifications || !Array.isArray(profile.certifications) || profile.certifications.length === 0) ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Award className="h-8 w-8 text-gray-400" />
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-lg mb-2">No certifications added yet</p>
-                  <p className="text-gray-400 text-sm">Add your professional certifications to enhance your profile</p>
+                  <p className="text-gray-500 text-sm sm:text-lg mb-1 sm:mb-2">No certifications added yet</p>
+                  <p className="text-gray-400 text-xs sm:text-sm px-4">Add your professional certifications to enhance your profile</p>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-6 lg:space-y-8">
                   {profile.certifications?.map((cert, index) => (
                     <div
                       key={cert.id}
-                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-4 sm:pt-6 lg:pt-8' : ''}`}
                     >
                       <div className="flex items-start">
-                        <div className="w-16 h-16 bg-gradient-to-r from-emerald-100 to-green-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                          <Award className="h-8 w-8 text-emerald-600" />
+                        <div className="hidden sm:flex w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-emerald-100 to-green-100 rounded-xl lg:rounded-2xl items-center justify-center mr-4 lg:mr-6 flex-shrink-0 shadow-lg">
+                          <Award className="h-6 w-6 lg:h-8 lg:w-8 text-emerald-600" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1">
                                 {cert.name}
                               </h3>
-                              <p className="text-lg text-gray-600 font-medium mb-3">{cert.issuer}</p>
-                              <div className="flex items-center text-sm text-gray-500 mb-3">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                <span className="font-medium">Issued: {formatDate(cert.issue_date)}</span>
+                              <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-medium mb-2 sm:mb-3">{cert.issuer}</p>
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
+                                <div className="flex items-center">
+                                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                  <span className="font-medium">Issued: {formatDate(cert.issue_date)}</span>
+                                </div>
                                 {cert.expiry_date && (
                                   <>
-                                    <span className="mx-3 text-gray-300">•</span>
-                                    <span className="font-medium">Expires: {formatDate(cert.expiry_date)}</span>
+                                    <span className="text-gray-300 hidden sm:inline">•</span>
+                                    <span className="font-medium text-orange-600">Expires: {formatDate(cert.expiry_date)}</span>
                                   </>
                                 )}
                               </div>
                               {cert.credential_id && (
-                                <div className="flex items-center text-sm text-gray-500 mb-3">
+                                <div className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
                                   <span className="font-medium">ID: {cert.credential_id}</span>
                                 </div>
                               )}
@@ -890,9 +925,9 @@ const UserProfile = () => {
                                   href={cert.credential_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium text-sm mb-3 bg-emerald-50 px-3 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
+                                  className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium text-xs sm:text-sm mb-2 sm:mb-3 bg-emerald-50 px-2 sm:px-3 py-1 rounded-md sm:rounded-lg hover:bg-emerald-100 transition-colors"
                                 >
-                                  <ExternalLink className="h-4 w-4 mr-1" />
+                                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                                 View Credential
                                 </a>
                               )}
@@ -902,15 +937,15 @@ const UserProfile = () => {
                                 setEditingCertification(cert);
                                 setIsCertificationModalOpen(true);
                               }}
-                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="text-gray-400 hover:text-gray-600 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
                               title="Edit certification"
                             >
-                              <Edit className="h-5 w-5" />
+                              <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                             </button>
                           </div>
                           {cert.description && (
-                            <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                              <p className="text-gray-700 leading-relaxed">
+                            <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 mt-2 sm:mt-4">
+                              <p className="text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed">
                                 {cert.description}
                               </p>
                             </div>
@@ -924,54 +959,54 @@ const UserProfile = () => {
             </div>
 
             {/* Achievements Section */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-8">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 lg:p-8 border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 lg:mb-8">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl flex items-center justify-center mr-4">
-                    <Award className="h-6 w-6 text-yellow-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                    <Award className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Achievements</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Achievements</h2>
                 </div>
                 <button
                   onClick={() => {
                     setEditingAchievement(null);
                     setIsAchievementModalOpen(true);
                   }}
-                  className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                  className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl hover:from-yellow-700 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold flex items-center justify-center text-sm sm:text-base"
                 >
-                  <Award className="h-5 w-5 mr-2" />
+                  <Award className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                 Add Achievement
                 </button>
               </div>
 
               {(!profile || !profile.achievements || !Array.isArray(profile.achievements) || profile.achievements.length === 0) ? (
-                <div className="text-center py-12 bg-gray-50 rounded-xl">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Award className="h-8 w-8 text-gray-400" />
+                <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg sm:rounded-xl">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <Award className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-lg mb-2">No achievements added yet</p>
-                  <p className="text-gray-400 text-sm">Add your achievements to showcase your accomplishments</p>
+                  <p className="text-gray-500 text-sm sm:text-lg mb-1 sm:mb-2">No achievements added yet</p>
+                  <p className="text-gray-400 text-xs sm:text-sm px-4">Add your achievements to showcase your accomplishments</p>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-4 sm:space-y-6 lg:space-y-8">
                   {profile.achievements?.map((achievement, index) => (
                     <div
                       key={achievement.id}
-                      className={`${index !== 0 ? 'border-t border-gray-200 pt-8' : ''}`}
+                      className={`${index !== 0 ? 'border-t border-gray-200 pt-4 sm:pt-6 lg:pt-8' : ''}`}
                     >
                       <div className="flex items-start">
-                        <div className="w-16 h-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl flex items-center justify-center mr-6 flex-shrink-0 shadow-lg">
-                          <Award className="h-8 w-8 text-yellow-600" />
+                        <div className="hidden sm:flex w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl lg:rounded-2xl items-center justify-center mr-4 lg:mr-6 flex-shrink-0 shadow-lg">
+                          <Award className="h-6 w-6 lg:h-8 lg:w-8 text-yellow-600" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1">
                                 {achievement.title}
                               </h3>
-                              <p className="text-lg text-gray-600 font-medium mb-3">{achievement.category}</p>
-                              <div className="flex items-center text-sm text-gray-500 mb-4">
-                                <Calendar className="h-4 w-4 mr-2" />
+                              <p className="text-sm sm:text-base lg:text-lg text-gray-600 font-medium mb-2 sm:mb-3">{achievement.category}</p>
+                              <div className="flex items-center text-xs sm:text-sm text-gray-500 mb-2 sm:mb-4">
+                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                 <span className="font-medium">{formatDate(achievement.date)}</span>
                               </div>
                             </div>
@@ -980,14 +1015,14 @@ const UserProfile = () => {
                                 setEditingAchievement(achievement);
                                 setIsAchievementModalOpen(true);
                               }}
-                              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              className="text-gray-400 hover:text-gray-600 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
                               title="Edit achievement"
                             >
-                              <Edit className="h-5 w-5" />
+                              <Edit className="h-4 w-4 sm:h-5 sm:w-5" />
                             </button>
                           </div>
-                          <div className="bg-gray-50 rounded-xl p-4 mt-4">
-                            <p className="text-gray-700 leading-relaxed">
+                          <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 mt-2 sm:mt-4">
+                            <p className="text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed">
                               {achievement.description}
                             </p>
                           </div>
@@ -1001,6 +1036,51 @@ const UserProfile = () => {
           </>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+        <div className="flex items-center justify-around py-2">
+          <button
+            onClick={() => navigate('/user/dashboard')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors min-w-[60px] text-gray-500"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Home</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/jobs')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+          >
+            <Search className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Jobs</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/profile')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors min-w-[60px] text-blue-600"
+          >
+            <User className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Profile</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/messages')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Messages</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/applied-jobs')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+          >
+            <Briefcase className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Applied</span>
+          </button>
+        </div>
+      </nav>
 
       <EditProfileModal
         isOpen={isEditModalOpen}
@@ -1087,4 +1167,5 @@ const UserProfile = () => {
   );
 };
 
+export default UserProfile;
 export default UserProfile;
