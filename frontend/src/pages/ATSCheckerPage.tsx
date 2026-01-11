@@ -6,6 +6,7 @@ import { subscriptionService, SubscriptionStatusResponse } from '@/api/subscript
 import { atsService } from '@/api/atsService';
 import { FileCheck, Upload, Sparkles, ArrowLeft, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Header from '@/components/Header';
 
 interface ATSAnalysis {
   score: number;
@@ -144,31 +145,9 @@ export const ATSCheckerPage = () => {
     const expiryDate = new Date(subscriptionStatus.subscription.currentPeriodEnd);
     return (
       <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => navigate(ROUTES.USER_DASHBOARD)}
-                  className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </button>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                    <FileCheck className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">ATS Score Checker</h1>
-                    <p className="text-sm text-gray-600">Optimize your resume for job applications</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        <Header />
 
-        <main className="max-w-4xl mx-auto p-6">
+        <main className="max-w-4xl mx-auto p-6 pt-20 sm:pt-24">
           <div className="bg-white rounded-lg shadow-sm border border-red-200 p-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -211,32 +190,9 @@ export const ATSCheckerPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate(ROUTES.USER_DASHBOARD)}
-                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                  <FileCheck className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">ATS Score Checker</h1>
-                  <p className="text-sm text-gray-600">Optimize your resume for job applications</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <main className="max-w-6xl mx-auto p-6">
+      <main className="max-w-6xl mx-auto p-6 pt-20 sm:pt-24">
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6 mb-6">
           <div className="flex items-start gap-3">
             <Sparkles className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />

@@ -36,6 +36,7 @@ import { _applicationService, Application } from '@/api/applicationService';
 import api from '@/api/axios';
 import type { User } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import Header from '@/components/Header';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -449,67 +450,11 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {activeSection === 'applied-jobs' ? 'Applied Jobs' : 'Dashboard'}
-              </h1>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {/* Subscription Status Badge */}
-              <SubscriptionStatusBadge userType="user" />
-              
-              {/* Refresh Button - Only show on overview */}
-              {activeSection === 'overview' && (
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 disabled:opacity-50"
-                  title="Refresh Dashboard"
-                >
-                  <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
-                </button>
-              )}
-              
-              {/* Search Jobs */}
-              <button 
-                onClick={() => navigate(ROUTES.JOBS)} 
-                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                title="Search Jobs"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-              
-              {/* Notification Bell */}
-              <NotificationBell />
-              
-              {/* Messages Dropdown */}
-              {user?.id && (
-                <MessagesDropdown userId={user.id} />
-              )}
-              
-              {/* Logout Button */}
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleLogout}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <div className="flex min-h-screen relative">
+      <div className="flex min-h-screen relative pt-14 sm:pt-16">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 sticky top-[73px] self-start h-[calc(100vh-73px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 sticky top-14 sm:top-16 self-start h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <nav className="p-6">
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
