@@ -58,11 +58,15 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
       });
 
       newSocket.on('connect', () => {
+        console.log('[GlobalChat] WebSocket connected');
         setIsConnected(true);
         
-        // Register user as online
+        // Register user as online AND join their personal room for new-conversation events
         if (currentUserId) {
           newSocket.emit('register-user', { userId: currentUserId });
+          // Also join the user's personal room to receive new-conversation notifications
+          newSocket.emit('join-conversation', currentUserId);
+          console.log('[GlobalChat] Registered user and joined personal room:', currentUserId);
         }
       });
 
@@ -76,6 +80,8 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
 
       // Listen for new messages from ANY conversation
       newSocket.on('new-message', (message: MessageResponse) => {
+        console.log('[GlobalChat] New message received:', message.conversationId);
+        
         // Optimize: Update messages cache directly instead of invalidating
         queryClient.setQueryData(['messages', message.conversationId], (oldData: MessageResponse[] | undefined) => {
           if (!oldData) return [message];
@@ -100,6 +106,20 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'none' });
         queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'none' });
         queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId], refetchType: 'none' });
+      });
+
+      // Listen for new conversation events (when status changes to SHORTLISTED)
+      newSocket.on('new-conversation', (conversation: ConversationResponse) => {
+        console.log('[GlobalChat] New conversation created:', conversation.id);
+        
+        // Join the new conversation room immediately
+        newSocket.emit('join-conversation', conversation.id);
+        joinedConversationsRef.current.add(conversation.id);
+        
+        // Invalidate conversations list to show the new conversation
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['conversations', 'user'] });
+        queryClient.invalidateQueries({ queryKey: ['conversations', 'company'] });
       });
 
       socketRef.current = newSocket;

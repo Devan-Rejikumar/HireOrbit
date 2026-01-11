@@ -117,7 +117,8 @@ export const useChatSocket = (conversationId: string | null, currentUserId?: str
       }));
     });
 
-    newSocket.on('message-error', () => {
+    newSocket.on('message-error', (error: { error: string; details?: string }) => {
+      console.error('[CHAT] Message send error:', error.error, error.details || '');
     });
 
     setSocket(newSocket);
