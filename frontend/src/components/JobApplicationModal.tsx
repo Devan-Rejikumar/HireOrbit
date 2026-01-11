@@ -116,8 +116,13 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       }
     }
 
+    // Cover Letter validation - minimum 10 characters (matches backend)
     if (!formData.coverLetter.trim()) {
       newErrors.coverLetter = 'Cover letter is required';
+    } else if (formData.coverLetter.trim().length < 10) {
+      newErrors.coverLetter = 'Cover letter must be at least 10 characters';
+    } else if (formData.coverLetter.trim().length > 5000) {
+      newErrors.coverLetter = 'Cover letter must be less than 5000 characters';
     }
 
     // Resume validation: either use saved resume OR upload new one
@@ -131,8 +136,14 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       }
     }
 
+    // Expected Salary validation - basic format check
     if (!formData.expectedSalary.trim()) {
       newErrors.expectedSalary = 'Expected salary is required';
+    } else {
+      const salaryRegex = /[\d,.-]/;
+      if (!salaryRegex.test(formData.expectedSalary)) {
+        newErrors.expectedSalary = 'Please enter a valid salary format (e.g., ₹5,00,000 - ₹6,00,000)';
+      }
     }
 
     if (!formData.availability.trim()) {
@@ -257,24 +268,24 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Apply for Job</h2>
-            <p className="text-gray-600 mt-1">{jobTitle} at {companyName}</p>
+            <p className="text-gray-600 mt-1 text-sm">{jobTitle} at {companyName}</p>
           </div>
           <button
             onClick={handleClose}
             disabled={submitting}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
           >
             <X size={24} />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 bg-white">
           
           <ExperienceSelector
             value={formData.experience}
@@ -289,9 +300,26 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
               value={formData.coverLetter}
               onChange={(e) => handleInputChange('coverLetter', e.target.value)}
               placeholder="Tell us why you're interested in this position..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              rows={4}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                errors.coverLetter ? 'border-red-300' : 'border-gray-300'
+              }`}
+              rows={5}
+              maxLength={5000}
             />
+            <div className="flex justify-between items-center mt-1">
+              {errors.coverLetter && (
+                <p className="text-xs text-red-600">{errors.coverLetter}</p>
+              )}
+              <p className={`text-xs ml-auto ${
+                formData.coverLetter.length < 10 
+                  ? 'text-red-600' 
+                  : formData.coverLetter.length > 5000 
+                    ? 'text-red-600' 
+                    : 'text-gray-500'
+              }`}>
+                {formData.coverLetter.length}/5000 characters (minimum 10)
+              </p>
+            </div>
           </FormField>
 
           {/* Resume Selection */}
@@ -368,7 +396,9 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
               value={formData.expectedSalary}
               onChange={(e) => handleInputChange('expectedSalary', e.target.value)}
               placeholder="e.g., ₹5,00,000 - ₹6,00,000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.expectedSalary ? 'border-red-300' : 'border-gray-300'
+              }`}
             />
           </FormField>
 
@@ -377,7 +407,9 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
             <select
               value={formData.availability}
               onChange={(e) => handleInputChange('availability', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.availability ? 'border-red-300' : 'border-gray-300'
+              }`}
             >
               <option value="">Select availability</option>
               <option value="immediate">Immediate</option>
@@ -389,21 +421,31 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
           </FormField>
 
           {/* Submit Button */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+              className="px-5 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 transition-colors font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-sm hover:shadow-md"
             >
-              {submitting ? 'Submitting...' : 'Submit Application'}
+              {submitting ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting...
+                </span>
+              ) : (
+                'Submit Application'
+              )}
             </button>
           </div>
         </form>

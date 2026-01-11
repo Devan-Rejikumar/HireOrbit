@@ -143,6 +143,16 @@ button:focus-visible {
   }
 }
 
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Custom Animations */
 @keyframes fade-in {
   from {
