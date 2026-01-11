@@ -41,6 +41,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
   const [isGeneratingOTP, setIsGeneratingOTP] = useState(false);
   const [logoImage, setLogoImage] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Sync role state with initialRole prop when it changes
@@ -171,10 +172,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
   };
 
 
-  const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast.error('Please select a valid image file');
       return;
@@ -188,6 +186,35 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
     setLogoImage(file);
     const url = URL.createObjectURL(file);
     setLogoPreview(url);
+  };
+
+  const handleLogoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const handleRemoveLogo = () => {
@@ -370,62 +397,88 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
                   </div>
                   
                   {/* Company Logo Upload */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Logo (Optional)
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Company Logo <span className="text-gray-400 font-normal">(Optional)</span>
                     </label>
-                    <div className="flex items-center space-x-4">
-                      <div className="relative group">
-                        <div 
-                          className="w-20 h-20 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer hover:border-purple-400 transition-colors"
-                          onClick={() => logoInputRef.current?.click()}
-                        >
-                          {logoPreview ? (
-                            <img
-                              src={logoPreview}
-                              alt="Company logo preview"
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Building2 className="h-8 w-8 text-gray-400" />
-                          )}
-                        </div>
-                        
-                        {logoPreview && (
-                          <button
-                            type="button"
-                            onClick={handleRemoveLogo}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => !logoPreview && logoInputRef.current?.click()}
+                      className={`
+                        relative w-full border-2 border-dashed rounded-xl p-6 transition-all duration-200
+                        ${isDragging 
+                          ? 'border-purple-500 bg-purple-50/50 scale-[1.02]' 
+                          : 'border-gray-300 bg-gray-50/50 hover:border-purple-400 hover:bg-purple-50/30'
+                        }
+                        ${logoPreview ? 'cursor-default' : 'cursor-pointer'}
+                      `}
+                    >
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoSelect}
+                        className="hidden"
+                      />
                       
-                      <div className="flex-1">
-                        <input
-                          ref={logoInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoSelect}
-                          className="hidden"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => logoInputRef.current?.click()}
-                          className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                        >
-                          {logoImage ? 'Change Logo' : 'Upload Logo'}
-                        </button>
-                        <p className="text-xs text-gray-500 mt-1">
-                          JPG, PNG up to 5MB
-                        </p>
-                        {logoImage && (
-                          <p className="text-xs text-green-600 mt-1">
-                            ✓ {logoImage.name} selected
-                          </p>
-                        )}
-                      </div>
+                      {logoPreview ? (
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="relative">
+                            <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200 bg-white shadow-md">
+                              <img
+                                src={logoPreview}
+                                alt="Company logo preview"
+                                className="w-full h-full object-contain p-2"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveLogo();
+                              }}
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-700">{logoImage?.name}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {(logoImage ? (logoImage.size / 1024 / 1024).toFixed(2) : '0')} MB
+                            </p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                logoInputRef.current?.click();
+                              }}
+                              className="mt-2 text-sm text-purple-600 hover:text-purple-700 font-medium"
+                            >
+                              Change Logo
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center space-y-3 py-4">
+                          <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
+                            <Upload className="h-8 w-8 text-purple-600" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-gray-700 mb-1">
+                              {isDragging ? 'Drop your logo here' : 'Upload Company Logo'}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Drag and drop or click to browse
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              JPG, PNG up to 5MB
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>
