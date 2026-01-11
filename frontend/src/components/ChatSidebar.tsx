@@ -236,20 +236,22 @@ export const ChatSidebar = ({
   };
 
   return (
-    <div className="h-full w-full bg-white border-r border-gray-200 flex flex-col">
-      {/* Header */}
-      <div className="px-4 py-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-gray-700" />
-          <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
-        </div>
+    <div className="h-full w-full bg-white flex flex-col">
+      {/* Header - Desktop only (mobile has its own in MessagesPage) */}
+      <div className="hidden lg:flex px-4 py-4 border-b border-gray-200 bg-white items-center gap-2">
+        <MessageCircle className="w-5 h-5 text-gray-700" />
+        <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
       </div>
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         {conversations.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <p>No conversations yet</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 px-6 py-12">
+            <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <MessageCircle className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-base font-medium text-gray-700 mb-1">No conversations yet</p>
+            <p className="text-sm text-gray-500 text-center">Your messages with employers will appear here</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -263,50 +265,60 @@ export const ChatSidebar = ({
                 <button
                   key={conversation.id}
                   onClick={() => onSelectConversation(conversation)}
-                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                    isSelected ? 'bg-blue-50 border-l-4 border-blue-600' : ''
+                  className={`w-full px-3 sm:px-4 py-3 sm:py-4 text-left transition-all duration-200 active:bg-gray-100 ${
+                    isSelected 
+                      ? 'bg-blue-50 border-l-4 border-blue-600' 
+                      : 'hover:bg-gray-50 border-l-4 border-transparent'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
                     {/* Avatar with company logo or user profile image */}
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden">
-                      {role === 'jobseeker' && companyLogo && !imageErrors.has(conversation.id) ? (
-                        <img 
-                          src={companyLogo} 
-                          alt={participantNames[conversation.id] || 'Company'} 
-                          className="w-full h-full object-cover"
-                          onError={() => {
-                            setImageErrors(prev => new Set(prev).add(conversation.id));
-                          }}
-                        />
-                      ) : role === 'company' && userAvatar && !imageErrors.has(conversation.id) ? (
-                        <img 
-                          src={userAvatar} 
-                          alt={participantNames[conversation.id] || 'User'} 
-                          className="w-full h-full object-cover"
-                          onError={() => {
-                            setImageErrors(prev => new Set(prev).add(conversation.id));
-                          }}
-                        />
-                      ) : (
-                        role === 'jobseeker' ? (
-                          <Building2 className="w-6 h-6 text-gray-600" />
+                    <div className="relative flex-shrink-0">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden">
+                        {role === 'jobseeker' && companyLogo && !imageErrors.has(conversation.id) ? (
+                          <img 
+                            src={companyLogo} 
+                            alt={participantNames[conversation.id] || 'Company'} 
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              setImageErrors(prev => new Set(prev).add(conversation.id));
+                            }}
+                          />
+                        ) : role === 'company' && userAvatar && !imageErrors.has(conversation.id) ? (
+                          <img 
+                            src={userAvatar} 
+                            alt={participantNames[conversation.id] || 'User'} 
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              setImageErrors(prev => new Set(prev).add(conversation.id));
+                            }}
+                          />
                         ) : (
-                          <User className="w-6 h-6 text-gray-600" />
-                        )
+                          role === 'jobseeker' ? (
+                            <Building2 className="w-6 h-6 text-gray-600" />
+                          ) : (
+                            <User className="w-6 h-6 text-gray-600" />
+                          )
+                        )}
+                      </div>
+                      {/* Online indicator */}
+                      {unreadCount > 0 && (
+                        <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center lg:hidden">
+                          <span className="text-[8px] text-white font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                        </div>
                       )}
                     </div>
 
                     {/* Conversation Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className={`text-sm font-medium truncate ${
+                      <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+                        <p className={`text-sm sm:text-base font-semibold truncate ${
                           unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'
                         }`}>
                           {participantNames[conversation.id] || `Application #${conversation.applicationId.substring(0, 8)}`}
                         </p>
                         {conversation.lastMessage && (
-                          <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                          <span className="text-[10px] sm:text-xs text-gray-500 flex-shrink-0 ml-2">
                             {formatTime(conversation.lastMessage.timestamp)}
                           </span>
                         )}
@@ -314,20 +326,27 @@ export const ChatSidebar = ({
                       
                       {conversation.lastMessage ? (
                         <div className="flex items-center justify-between">
-                          <p className={`text-sm truncate ${
+                          <p className={`text-xs sm:text-sm truncate ${
                             unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
                           }`}>
-                            {truncateMessage(conversation.lastMessage.content)}
+                            {truncateMessage(conversation.lastMessage.content, 40)}
                           </p>
                           {unreadCount > 0 && (
-                            <span className="ml-2 flex-shrink-0 bg-blue-600 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                            <span className="hidden lg:flex ml-2 flex-shrink-0 bg-blue-600 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center items-center justify-center">
                               {unreadCount > 9 ? '9+' : unreadCount}
                             </span>
                           )}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-400 italic">No messages yet</p>
+                        <p className="text-xs sm:text-sm text-gray-400 italic">No messages yet</p>
                       )}
+                    </div>
+
+                    {/* Chevron for mobile */}
+                    <div className="lg:hidden flex-shrink-0 text-gray-400">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </div>
                   </div>
                 </button>

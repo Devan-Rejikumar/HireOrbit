@@ -310,12 +310,12 @@ export const ChatWindow = ({
         )}
       </div>
 
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-white shadow-sm relative z-10">
+      {/* Header - Hidden on mobile (MessagesPage provides mobile header) */}
+      <div className="hidden lg:block px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white shadow-sm relative z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Avatar with company logo or user avatar - show opposite of current user */}
-            <div className="w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
               {role === 'jobseeker' && companyLogo && !logoError ? (
                 <img 
                   src={companyLogo} 
@@ -339,17 +339,17 @@ export const ChatWindow = ({
                 />
               ) : (
                 role === 'jobseeker' ? (
-                  <Building2 className="w-5 h-5 text-gray-600" />
+                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                 ) : (
-                  <User className="w-5 h-5 text-gray-600" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                 )
               )}
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{otherParticipantName}</h3>
-              <div className="flex items-center gap-2 mt-0.5">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{otherParticipantName}</h3>
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
                 <div className={`w-2 h-2 rounded-full ${isOtherParticipantOnline ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                <span className="text-xs text-gray-500">{isOtherParticipantOnline ? 'Active now' : 'Offline'}</span>
+                <span className="text-[10px] sm:text-xs text-gray-500">{isOtherParticipantOnline ? 'Active now' : 'Offline'}</span>
               </div>
             </div>
           </div>
@@ -357,7 +357,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 relative z-10 hide-scrollbar">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 space-y-3 sm:space-y-4 relative z-10 hide-scrollbar">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Loading messages...</div>
@@ -408,11 +408,11 @@ export const ChatWindow = ({
                   return (
                     <div
                       key={message.id}
-                      className={`flex items-end gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}
+                      className={`flex items-end gap-1.5 sm:gap-2 ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2 sm:mb-4`}
                     >
                       {/* Avatar for received messages - show company logo or user avatar */}
                       {!isOwnMessage && (
-                        <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {role === 'jobseeker' && companyLogo && !logoError ? (
                             <img 
                               src={companyLogo} 
@@ -428,31 +428,31 @@ export const ChatWindow = ({
                               onError={() => setAvatarError(true)}
                             />
                           ) : role === 'jobseeker' ? (
-                            <Building2 className="w-4 h-4 text-gray-600" />
+                            <Building2 className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                           ) : (
-                            <User className="w-4 h-4 text-gray-600" />
+                            <User className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
                           )}
                         </div>
                       )}
                     
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl ${
+                      <div className={`max-w-[75%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl ${
                         isOwnMessage
                           ? 'bg-blue-600 text-white rounded-tr-sm'
                           : 'bg-gray-100 text-gray-900 rounded-tl-sm'
                       }`}>
-                        <p className="text-sm break-words leading-relaxed">{message.content}</p>
-                        <div className={`flex items-center gap-1.5 mt-1.5 ${
+                        <p className="text-[13px] sm:text-sm break-words leading-relaxed">{message.content}</p>
+                        <div className={`flex items-center gap-1 sm:gap-1.5 mt-1 sm:mt-1.5 ${
                           isOwnMessage ? 'text-blue-100' : 'text-gray-500'
                         }`}>
-                          <span className="text-xs">
+                          <span className="text-[10px] sm:text-xs">
                             {formatMessageTime(message.createdAt)}
                           </span>
                           {isOwnMessage && (
                             <div className="flex items-center">
                               {isRead ? (
-                                <CheckCheck className="w-3.5 h-3.5" />
+                                <CheckCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                               ) : (
-                                <Check className="w-3.5 h-3.5" />
+                                <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                               )}
                             </div>
                           )}
@@ -461,11 +461,11 @@ export const ChatWindow = ({
                     
                       {/* Avatar for sent messages - show current user's icon */}
                       {isOwnMessage && (
-                        <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0">
                           {role === 'jobseeker' ? (
-                            <User className="w-4 h-4 text-blue-600" />
+                            <User className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                           ) : (
-                            <Building2 className="w-4 h-4 text-blue-600" />
+                            <Building2 className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                           )}
                         </div>
                       )}
@@ -513,7 +513,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-gray-200 px-4 py-4 bg-white relative z-10">
+      <div className="border-t border-gray-200 px-3 sm:px-4 py-3 sm:py-4 bg-white relative z-10 safe-area-pb">
         <div className="flex items-end gap-2">
           <div className="flex-1 bg-gray-50 rounded-full border border-gray-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
             <textarea
@@ -528,18 +528,18 @@ export const ChatWindow = ({
               placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
               disabled={!isConnected}
               rows={1}
-              className="w-full px-5 py-3 resize-none focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed bg-transparent"
-              style={{ minHeight: '44px', maxHeight: '120px' }}
+              className="w-full px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base resize-none focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed bg-transparent"
+              style={{ minHeight: '40px', maxHeight: '100px' }}
             />
           </div>
           <button
             type="button"
             onClick={handleSendMessage}
             disabled={!messageInput.trim() || !isConnected || isLoading}
-            className="w-11 h-11 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm hover:shadow-md disabled:hover:shadow-sm"
+            className="w-10 h-10 sm:w-11 sm:h-11 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm hover:shadow-md disabled:hover:shadow-sm flex-shrink-0"
             title="Send message"
           >
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>

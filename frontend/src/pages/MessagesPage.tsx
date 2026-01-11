@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, LogOut, Search } from 'lucide-react';
+import { MessageSquare, Search, ArrowLeft, Home, Briefcase, User } from 'lucide-react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount, useUserConversations, useMessages, useMarkAsRead } from '@/hooks/useChat';
@@ -10,9 +9,10 @@ import { ChatSidebar } from '@/components/ChatSidebar';
 import { ChatWindow } from '@/components/ChatWindow';
 import { ConversationResponse } from '@/api/chatService';
 import api from '@/api/axios';
+import Header from '@/components/Header';
 
 const MessagesPage = () => {
-  const { user, logout, role } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   useTotalUnreadCount(user?.id || null);
   const [selectedConversation, setSelectedConversation] = useState<ConversationResponse | null>(null);
@@ -142,11 +142,6 @@ const MessagesPage = () => {
     );
   }
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/', { replace: true });
-  };
-
   const handleSelectConversation = (conversation: ConversationResponse) => {
     setSelectedConversation(conversation);
     if (currentUserId) {
@@ -162,80 +157,111 @@ const MessagesPage = () => {
     // No action needed - WebSocket handles real-time updates
   };
 
+  // Handle back button on mobile
+  const handleBackToList = () => {
+    setSelectedConversation(null);
+  };
+
   
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-            </div>
-            
+      {/* Desktop Header - Hidden on mobile when chat is open */}
+      <div className={`${selectedConversation ? 'hidden lg:block' : 'block'}`}>
+        <Header />
+      </div>
+
+      {/* Mobile Chat Header - Only shown when chat is open */}
+      {selectedConversation && (
+        <header className="lg:hidden bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+          <div className="px-4 py-3">
             <div className="flex items-center gap-3">
               <button 
-                onClick={() => navigate('/jobs')} 
-                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                title="Search Jobs"
+                onClick={handleBackToList}
+                className="p-2 -ml-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Back to conversations"
               >
-                <Search className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5" />
               </button>
-              
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base font-semibold text-gray-900 truncate">{otherParticipantName || 'Chat'}</h1>
+                <p className="text-xs text-gray-500">Tap for info</p>
+              </div>
               <NotificationBell />
-              
-              {user?.id && (
-                <MessagesDropdown userId={user.id} />
-              )}
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleLogout}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      {/* Main Content - Full Width Messages Interface */}
+      {/* Main Content */}
       <main className="flex-1">
         {role === 'jobseeker' && (
-          <div className="h-[calc(100vh-68px)] flex">
-            {/* Chat Sidebar */}
-            <div className="w-1/3 border-r border-gray-200 bg-white">
-              <ChatSidebar
-                conversations={conversations}
-                selectedConversationId={selectedConversation?.id || null}
-                currentUserId={currentUserId}
-                onSelectConversation={handleSelectConversation}
-                role={role}
-              />
+          <div className="h-screen lg:h-[calc(100vh-64px)] lg:pt-16 flex relative">
+            {/* Chat Sidebar - Full screen on mobile, sidebar on desktop */}
+            <div className={`
+              ${selectedConversation ? 'hidden lg:block' : 'block'}
+              w-full lg:w-80 xl:w-96 
+              bg-white border-r border-gray-200
+              fixed lg:sticky top-14 sm:top-16 lg:top-0 
+              left-0 right-0 lg:right-auto
+              h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] lg:h-full
+              z-30 lg:z-0
+              overflow-hidden
+            `}>
+              {/* Mobile Search Header */}
+              <div className="lg:hidden px-4 py-3 border-b border-gray-200 bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => navigate('/jobs')} 
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    >
+                      <Search className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="h-[calc(100%-60px)] lg:h-full overflow-hidden">
+                <ChatSidebar
+                  conversations={conversations}
+                  selectedConversationId={selectedConversation?.id || null}
+                  currentUserId={currentUserId}
+                  onSelectConversation={handleSelectConversation}
+                  role={role}
+                />
+              </div>
             </div>
 
-            {/* Chat Window */}
-            <div className="flex-1 bg-white">
+            {/* Chat Window - Full screen on mobile, main area on desktop */}
+            <div className={`
+              ${selectedConversation ? 'block' : 'hidden lg:block'}
+              flex-1 bg-white
+              fixed lg:relative 
+              inset-0 lg:inset-auto
+              ${selectedConversation ? 'pt-14' : ''} lg:pt-0
+              z-20 lg:z-0
+            `}>
               {selectedConversation ? (
-                <ChatWindow
-                  conversationId={selectedConversation.id}
-                  currentUserId={currentUserId}
-                  messages={messages}
-                  isLoading={messagesLoading}
-                  onSendMessage={handleSendMessage}
-                  otherParticipantName={otherParticipantName}
-                  otherParticipantId={selectedConversation.companyId}
-                />
+                <div className="h-full">
+                  <ChatWindow
+                    conversationId={selectedConversation.id}
+                    currentUserId={currentUserId}
+                    messages={messages}
+                    isLoading={messagesLoading}
+                    onSendMessage={handleSendMessage}
+                    otherParticipantName={otherParticipantName}
+                    otherParticipantId={selectedConversation.companyId}
+                  />
+                </div>
               ) : (
-                <div className="h-full flex items-center justify-center bg-gray-50">
-                  <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
-                      <MessageSquare className="w-8 h-8 text-white" />
+                <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+                  <div className="text-center px-6">
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                      <MessageSquare className="w-10 h-10 text-white" />
                     </div>
-                    <p className="text-gray-500 text-lg">Select a conversation to start chatting</p>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Your Messages</h2>
+                    <p className="text-gray-500 max-w-sm">Select a conversation from the sidebar to start chatting with employers</p>
                   </div>
                 </div>
               )}
@@ -243,6 +269,55 @@ const MessagesPage = () => {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation - Only show when on conversation list */}
+      {!selectedConversation && (
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+          <div className="flex items-center justify-around py-2">
+            <button
+              onClick={() => navigate('/user/dashboard')}
+              className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors min-w-[60px] text-gray-500"
+            >
+              <Home className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Home</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/jobs')}
+              className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+            >
+              <Search className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Jobs</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/applied-jobs')}
+              className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+            >
+              <Briefcase className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Applied</span>
+            </button>
+            
+            <button
+              className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors min-w-[60px] text-blue-600"
+            >
+              <MessageSquare className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Messages</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px] mt-0.5 font-medium">Profile</span>
+            </button>
+          </div>
+        </nav>
+      )}
+
+      {/* Bottom padding for mobile nav when on list view */}
+      {!selectedConversation && <div className="lg:hidden h-16" />}
     </div>
   );
 };
