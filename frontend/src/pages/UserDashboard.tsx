@@ -545,13 +545,6 @@ const UserDashboard = () => {
                 <span className="text-sm sm:text-base">Settings</span>
                 <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-400" />
               </button>
-              <button 
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-xl w-full text-left transition-all duration-200 group"
-              >
-                <LogOut className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Logout</span>
-              </button>
             </div>
             
             {/* Desktop: User Info at bottom */}

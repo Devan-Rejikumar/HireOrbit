@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Clock, MapPin, Video, Phone, Loader2, CheckCircle, XCircle, User, MessageSquare, Lock, LogOut, Home, Search, Briefcase, Settings, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Calendar, Clock, MapPin, Video, Phone, Loader2, CheckCircle, XCircle, User, MessageSquare, Lock, Home, Search, Briefcase, Settings, ChevronLeft, ChevronRight, FileText, Menu, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { _interviewService, InterviewWithDetails } from '@/api/interviewService';
@@ -14,7 +14,7 @@ import ChangePasswordModal from '@/components/ChangePasswordModal';
 import Header from '@/components/Header';
 
 const MySchedule = () => {
-  const { user, role, logout } = useAuth();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [interviews, setInterviews] = useState<InterviewWithDetails[]>([]);
@@ -28,6 +28,7 @@ const MySchedule = () => {
   const itemsPerPage = 10;
   const { data: totalUnreadMessages = 0 } = useTotalUnreadCount(user?.id || null);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (role !== 'jobseeker') {
@@ -100,11 +101,6 @@ const MySchedule = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/', { replace: true });
-  };
-
   const sidebarItems = [
     { id: 'overview', label: 'Overview', icon: Home, path: '/user/dashboard' },
     { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
@@ -116,6 +112,7 @@ const MySchedule = () => {
   ];
 
   const handleSidebarClick = (item: typeof sidebarItems[0]) => {
+    setIsSidebarOpen(false);
     if (item.path) {
       navigate(item.path);
     } else if (item.id === 'password') {
@@ -180,12 +177,51 @@ const MySchedule = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="flex min-h-screen pt-14 sm:pt-16">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="lg:hidden fixed top-16 left-4 z-40 bg-white shadow-lg rounded-full p-2.5 border border-gray-200 hover:bg-gray-50 transition-all duration-200"
+        aria-label="Toggle menu"
+      >
+        {isSidebarOpen ? <X className="h-5 w-5 text-gray-700" /> : <Menu className="h-5 w-5 text-gray-700" />}
+      </button>
+
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30 pt-14"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex min-h-screen relative pt-14 sm:pt-16">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 sticky top-14 sm:top-16 self-start h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <nav className="p-6">
-            <div className="space-y-1 mb-8">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
+        <aside className={`
+          fixed lg:sticky top-14 sm:top-16 left-0 z-40 lg:z-0
+          w-72 lg:w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200 
+          h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto 
+          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+          <nav className="p-4 sm:p-6">
+            {/* Mobile: User Info at top */}
+            <div className="lg:hidden mb-6 pt-2">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-white font-bold text-lg">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-base font-semibold text-gray-900 truncate">{user?.username || 'User'}</div>
+                  <div className="text-sm text-blue-600 truncate">{user?.email || 'email@example.com'}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1 mb-6">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Main</h3>
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.id);
@@ -194,16 +230,18 @@ const MySchedule = () => {
                   <button
                     key={item.id}
                     onClick={() => handleSidebarClick(item)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left relative transition-all duration-200 group ${
                       active
-                        ? 'bg-blue-50 text-blue-700 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium shadow-md'
+                        : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="flex-1">{item.label}</span>
+                    <Icon className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : ''}`} />
+                    <span className="flex-1 text-sm sm:text-base">{item.label}</span>
                     {'badge' in item && item.badge !== undefined && item.badge > 0 && (
-                      <span className="bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                      <span className={`text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center ${
+                        active ? 'bg-white text-blue-600' : 'bg-red-500 text-white'
+                      }`}>
                         {item.badge > 9 ? '9+' : item.badge}
                       </span>
                     )}
@@ -212,19 +250,19 @@ const MySchedule = () => {
               })}
             </div>
             
-            <div className="space-y-1">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Settings</h3>
+            <div className="space-y-1 mb-6">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Settings</h3>
               <button 
-                className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left"
+                className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-xl w-full text-left transition-all duration-200 group"
               >
-                <Settings className="h-5 w-5" />
-                Settings
+                <Settings className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Settings</span>
               </button>
             </div>
             
-            {/* User Info */}
-            <div className="mt-8">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-300">
+            {/* Desktop: User Info at bottom */}
+            <div className="hidden lg:block mt-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-300">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
                   <span className="text-white font-semibold">
                     {user?.username?.charAt(0).toUpperCase()}
@@ -240,35 +278,35 @@ const MySchedule = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 pl-10 lg:pl-0">
           {/* Header */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">My Schedule</h1>
-                <p className="text-gray-600">Manage your upcoming and past interviews</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Schedule</h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Manage your upcoming and past interviews</p>
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-xs sm:text-sm text-gray-500">
                 {totalInterviews} interview{totalInterviews !== 1 ? 's' : ''}
               </div>
             </div>
 
             {/* Search and Filter */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search by job title, company, or status..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Status</option>
                 <option value="PENDING">Pending</option>
@@ -565,18 +603,18 @@ const MySchedule = () => {
 
           {/* Pagination */}
           {!loading && filteredInterviews.length > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
+              <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalInterviews)} of {totalInterviews} interviews
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-              Previous
+                  <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
             
                 <div className="flex items-center gap-1">
@@ -596,7 +634,7 @@ const MySchedule = () => {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-2 rounded-lg transition-colors ${
+                        className={`px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                           currentPage === pageNum
                             ? 'bg-blue-600 text-white font-semibold'
                             : 'border border-gray-300 hover:bg-gray-50'
@@ -611,16 +649,69 @@ const MySchedule = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 sm:gap-2"
                 >
-              Next
-                  <ChevronRight className="h-4 w-4" />
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                 </button>
               </div>
             </div>
           )}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+        <div className="flex items-center justify-around py-2">
+          <button
+            onClick={() => navigate('/user/dashboard')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors min-w-[60px] text-gray-500"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Home</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/jobs')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+          >
+            <Search className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Jobs</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/applied-jobs')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px]"
+          >
+            <Briefcase className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Applied</span>
+          </button>
+          
+          <button
+            onClick={() => navigate('/messages')}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg text-gray-500 transition-colors min-w-[60px] relative"
+          >
+            <MessageSquare className="h-5 w-5" />
+            {totalUnreadMessages > 0 && (
+              <span className="absolute top-0 right-2 bg-red-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center">
+                {totalUnreadMessages > 9 ? '9+' : totalUnreadMessages}
+              </span>
+            )}
+            <span className="text-[10px] mt-0.5 font-medium">Messages</span>
+          </button>
+          
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors min-w-[60px] text-blue-600"
+          >
+            <Calendar className="h-5 w-5" />
+            <span className="text-[10px] mt-0.5 font-medium">Schedule</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Bottom padding for mobile nav */}
+      <div className="lg:hidden h-16" />
 
       {/* Change Password Modal */}
       <ChangePasswordModal

@@ -192,13 +192,13 @@ export const ATSCheckerPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <main className="max-w-6xl mx-auto p-6 pt-20 sm:pt-24">
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start gap-3">
-            <Sparkles className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />
+      <main className="max-w-6xl mx-auto p-4 sm:p-6 pt-20 sm:pt-24">
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 flex-shrink-0 mt-1" />
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">How it works</h2>
-              <p className="text-gray-700 text-sm">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">How it works</h2>
+              <p className="text-gray-700 text-xs sm:text-sm">
                 Upload your resume and paste the job description. Our AI-powered ATS checker will analyze 
                 your resume's compatibility with the job requirements and provide actionable insights to improve your match score.
               </p>
@@ -206,13 +206,13 @@ export const ATSCheckerPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Input Section */}
           <div className="space-y-6">
             {/* Resume Upload */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Your Resume</h3>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-colors">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Upload Your Resume</h3>
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 sm:p-8 text-center hover:border-purple-400 transition-colors">
                 <input
                   type="file"
                   accept=".pdf,.docx,.doc"
@@ -224,16 +224,16 @@ export const ATSCheckerPage = () => {
                   htmlFor="resume-upload"
                   className="cursor-pointer flex flex-col items-center"
                 >
-                  <Upload className="h-12 w-12 text-gray-400 mb-4" />
+                  <Upload className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
                   {resumeFile ? (
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{resumeFile.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">Click to change</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[200px] sm:max-w-none">{resumeFile.name}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">Click to change</p>
                     </div>
                   ) : (
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Click to upload resume</p>
-                      <p className="text-xs text-gray-500 mt-1">PDF or DOCX format</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">Click to upload resume</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-1">PDF or DOCX format</p>
                     </div>
                   )}
                 </label>
@@ -241,20 +241,20 @@ export const ATSCheckerPage = () => {
             </div>
 
             {/* Job Description */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Description</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Job Description</h3>
               <textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste the job description here..."
-                className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full h-48 sm:h-64 p-3 sm:p-4 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
               />
             </div>
 
             <button
               onClick={handleAnalyze}
               disabled={analyzing || !resumeFile || !jobDescription.trim()}
-              className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
             >
               {analyzing ? (
                 <>
@@ -275,10 +275,10 @@ export const ATSCheckerPage = () => {
             {score !== null && analysis ? (
               <>
                 {/* Score Card */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">ATS Match Score</h3>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">ATS Match Score</h3>
                   <div className="text-center">
-                    <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full text-4xl font-bold ${
+                    <div className={`inline-flex items-center justify-center w-24 h-24 sm:w-32 sm:h-32 rounded-full text-2xl sm:text-4xl font-bold ${
                       score >= 90 ? 'bg-green-100 text-green-700' :
                         score >= 75 ? 'bg-blue-100 text-blue-700' :
                           score >= 60 ? 'bg-yellow-100 text-yellow-700' :
@@ -286,7 +286,7 @@ export const ATSCheckerPage = () => {
                     }`}>
                       {score}%
                     </div>
-                    <p className="mt-4 text-sm text-gray-600">
+                    <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600">
                       {score >= 90 ? 'Excellent match!' :
                         score >= 75 ? 'Good match' :
                           score >= 60 ? 'Fair match' :
@@ -296,14 +296,14 @@ export const ATSCheckerPage = () => {
                 </div>
 
                 {/* Strengths */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                     Strengths
                   </h3>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5 sm:space-y-2">
                     {analysis.strengths.map((strength: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                      <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
                         <span className="text-green-500 mt-1">✓</span>
                         <span>{strength}</span>
                       </li>
@@ -312,14 +312,14 @@ export const ATSCheckerPage = () => {
                 </div>
 
                 {/* Improvements */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                     Areas for Improvement
                   </h3>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5 sm:space-y-2">
                     {analysis.improvements.map((improvement: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                      <li key={index} className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
                         <span className="text-yellow-500 mt-1">•</span>
                         <span>{improvement}</span>
                       </li>
@@ -329,13 +329,13 @@ export const ATSCheckerPage = () => {
 
                 {/* Missing Keywords */}
                 {analysis.missingKeywords && analysis.missingKeywords.length > 0 && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Missing Keywords</h3>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Missing Keywords</h3>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {analysis.missingKeywords.map((keyword: string, index: number) => (
                         <span
                           key={index}
-                          className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium"
+                          className="px-2 sm:px-3 py-0.5 sm:py-1 bg-red-100 text-red-700 rounded-full text-xs sm:text-sm font-medium"
                         >
                           {keyword}
                         </span>
@@ -345,9 +345,9 @@ export const ATSCheckerPage = () => {
                 )}
               </>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                <FileCheck className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Upload your resume and job description to get started</p>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
+                <FileCheck className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base text-gray-500">Upload your resume and job description to get started</p>
               </div>
             )}
           </div>
