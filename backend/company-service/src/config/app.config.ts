@@ -25,6 +25,7 @@ export const AppConfig = {
   OTP_MAX_VALUE: parseInt(process.env.OTP_MAX_VALUE || '900000'),
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY || '15m',
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+  BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS || '10'),
 } as const;
 
 console.log(AppConfig);

@@ -1,6 +1,7 @@
 import { injectable, inject } from 'inversify';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import TYPES from '../../config/types';
 import { ICompanyRepository } from '../../repositories/interfaces/ICompanyRepository';
 import { ICompanyService } from '../interfaces/ICompanyService';
@@ -12,6 +13,9 @@ import { PaginationResult } from '../../repositories/interfaces/IBaseRepository'
 import { CompanyAuthResponse, CompanyResponse } from '../../dto/responses/company.response';
 import { mapCompaniesToResponse, mapCompanyToAuthResponse, mapCompanyToResponse } from '../../dto/mappers/company.mapper';
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, OTP_MIN_VALUE, OTP_MAX_VALUE, OTP_EXPIRY_SECONDS } from '../../constants/TimeConstants';
+import { AppConfig } from '../../config/app.config';
+import { AppError } from '../../utils/errors/AppError';
+import { HttpStatusCode } from '../../enums/StatusCodes';
 
 interface CompanyTokenPayload extends JwtPayload {
   userId: string;
@@ -33,10 +37,11 @@ export class CompanyService implements ICompanyService {
 
   async register(email: string, password: string, companyName: string, logo?: string): Promise<CompanyResponse> {
     const existingCompany = await this._companyRepository.findByEmail(email);
-    if (existingCompany) throw new Error('Company already exists');
+    if (existingCompany) throw new AppError('Company already exists', HttpStatusCode.CONFLICT);
+    const hashed = await bcrypt.hash(password, AppConfig.BCRYPT_ROUNDS);
     const company = await this._companyRepository.create({
       email,
-      password: password,
+      password: hashed,
       companyName,
       logo: logo || undefined,
     });
@@ -48,10 +53,11 @@ export class CompanyService implements ICompanyService {
    * @param password 
    * @returns 
    */
-  async login(email: string, _password: string): Promise<CompanyAuthResponse> {
-    
+  async login(email: string, password: string): Promise<CompanyAuthResponse> {
     const company = await this._companyRepository.findByEmail(email);
-    if (!company) throw new Error('Invalid credentials');
+    if (!company) throw new AppError('Invalid credentials', HttpStatusCode.UNAUTHORIZED);
+    const valid = await bcrypt.compare(password, company.password);
+    if (!valid) throw new AppError('Invalid credentials', HttpStatusCode.UNAUTHORIZED);
     const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
       userId: company.id,
       companyId: company.id,
