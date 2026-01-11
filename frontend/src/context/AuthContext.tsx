@@ -73,16 +73,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [role, setRole] = useState<Role>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Proactively refresh token if refreshToken exists in cookies
+  const refreshTokenIfExists = async (userRole: Role): Promise<boolean> => {
+    try {
+      let refreshEndpoint = '/users/refresh-token';
+      
+      if (userRole === 'company') {
+        refreshEndpoint = '/company/refresh-token';
+      } else if (userRole === 'admin') {
+        refreshEndpoint = '/users/admin/refresh-token';
+      }
+      
+      // Call refresh token endpoint - if refreshToken exists in cookies, it will return new accessToken
+      const response = await api.post(refreshEndpoint, {}, { withCredentials: true });
+      
+      // If successful, new accessToken is set in cookies automatically
+      return response.status === 200;
+    } catch (error) {
+      // Refresh token doesn't exist or is invalid
+      return false;
+    }
+  };
 
   useEffect(() => {
-    const storedRole = localStorage.getItem('role') as Role | null;
-    if (storedRole) {
-      setRole(storedRole);
-    }
+    const initializeAuth = async () => {
+      setIsInitializing(true);
+      const storedRole = localStorage.getItem('role') as Role | null;
+      
+      if (storedRole) {
+        // Try to refresh token first if refreshToken exists in cookies
+        const tokenRefreshed = await refreshTokenIfExists(storedRole);
+        
+        if (tokenRefreshed) {
+          // Token refreshed successfully, set role and fetch user data
+          setRole(storedRole);
+        } else {
+          // No valid refresh token, clear everything
+          setRole(null);
+          setUser(null);
+          setCompany(null);
+          localStorage.removeItem('role');
+        }
+      }
+      
+      setIsInitializing(false);
+    };
+    
+    initializeAuth();
   }, []);
 
   useEffect(() => {
     const fetchAuth = async () => {
+      if (!role) return;
+      
       try {
         if (role === 'admin') {
           const res = await api.get<ApiResponse<AdminMeResponse>>('/users/admin/me');
@@ -111,8 +156,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // For network errors, keep the user logged in
       }
     };
-    if (role) fetchAuth();
-  }, [role]);
+    
+    if (role && !isInitializing) {
+      fetchAuth();
+    }
+  }, [role, isInitializing]);
 
   const login = async (loginRole: Role) => {
     setRole(loginRole);
