@@ -217,16 +217,28 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       let errorMessage = 'Failed to submit application. Please try again.';
       
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { message?: string }; status?: number } };
-        if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message;
+        const axiosError = error as { response?: { data?: { message?: string; error?: string }; status?: number } };
+        const message = axiosError.response?.data?.message || axiosError.response?.data?.error;
+        
+        if (message) {
+          errorMessage = message;
+          // Check if it's an "already applied" error
+          if (message.toLowerCase().includes('already applied') || message.toLowerCase().includes('already applied for this job')) {
+            errorMessage = 'You have already applied for this job';
+          }
         } else if (axiosError.response?.status === 400) {
-          errorMessage = 'Application deadline has passed or invalid application data.';
+          errorMessage = 'Invalid application data. Please check your inputs.';
         }
       } else if (error instanceof Error) {
         errorMessage = error.message;
+        if (errorMessage.toLowerCase().includes('already applied')) {
+          errorMessage = 'You have already applied for this job';
+        }
       } else if (typeof error === 'object' && error !== null && 'message' in error) {
         errorMessage = String((error as { message: unknown }).message);
+        if (errorMessage.toLowerCase().includes('already applied')) {
+          errorMessage = 'You have already applied for this job';
+        }
       }
       
       toast.error(errorMessage);
