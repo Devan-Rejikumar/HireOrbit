@@ -19,15 +19,16 @@ type RegisterResponse = { error?: string };
 
 interface RegisterFormProps {
   onRoleChange?: (role: 'jobseeker' | 'company') => void;
+  initialRole?: 'jobseeker' | 'company';
 }
 
-function RegisterForm({ onRoleChange }: RegisterFormProps) {
+function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormProps) {
   const navigate = useNavigate();
   const { isAuthenticated, role: userRole, login } = useAuth();
   
   const { signInWithGoogle, loading: googleLoading } = useGoogleAuth();
 
-  const [role, setRole] = useState<Role>('jobseeker');
+  const [role, setRole] = useState<Role>(initialRole);
   const [name, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
@@ -41,6 +42,14 @@ function RegisterForm({ onRoleChange }: RegisterFormProps) {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Sync role state with initialRole prop when it changes
+  useEffect(() => {
+    if (initialRole && initialRole !== role) {
+      setRole(initialRole);
+      onRoleChange?.(initialRole);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRole]);
   
   // Disabled auto-navigation to allow error visibility during Google signup debugging
   // useEffect(() => {

@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PostJobModal from './PostJobModal';
+import { useAuth } from '@/context/AuthContext';
+import { ROUTES } from '@/constants/routes';
+import LogoutRequiredModal from './LogoutRequiredModal';
 
 const Hero = () => {
   const [searchData, setSearchData] = useState({
@@ -11,7 +14,9 @@ const Hero = () => {
     location: '',
   });
   const [showPostJobModal, setShowPostJobModal] = useState(false);
+  const [showLogoutRequiredModal, setShowLogoutRequiredModal] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, role } = useAuth();
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -24,6 +29,21 @@ const Hero = () => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handlePostJobClick = () => {
+    if (isAuthenticated) {
+      if (role === 'company') {
+        // User is already logged in as company - redirect to post job page
+        navigate(ROUTES.COMPANY_POST_JOB);
+      } else {
+        // User is logged in as jobseeker or admin - show logout required message
+        setShowLogoutRequiredModal(true);
+      }
+    } else {
+      // Not authenticated - show registration modal
+      setShowPostJobModal(true);
     }
   };
 
@@ -93,7 +113,7 @@ const Hero = () => {
                   Post your job openings and find the perfect candidates
                 </p>
                 <Button 
-                  onClick={() => setShowPostJobModal(true)}
+                  onClick={handlePostJobClick}
                   className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-bold py-4 px-8 text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center space-x-2 mx-auto"
                 >
                   <Building2 className="h-6 w-6" />
@@ -147,6 +167,11 @@ const Hero = () => {
       <PostJobModal
         isOpen={showPostJobModal}
         onClose={() => setShowPostJobModal(false)}
+      />
+      
+      <LogoutRequiredModal
+        isOpen={showLogoutRequiredModal}
+        onClose={() => setShowLogoutRequiredModal(false)}
       />
     </section>
   );

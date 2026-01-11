@@ -1,8 +1,29 @@
 import RegisterForm from '@/components/RegisterForm';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const RegisterPage = () => {
-  const [selectedRole, setSelectedRole] = useState<'jobseeker' | 'company'>('jobseeker');
+  const [searchParams] = useSearchParams();
+  const roleParam = searchParams.get('role');
+  
+  // Initialize role from query parameter, default to 'jobseeker'
+  const getInitialRole = (): 'jobseeker' | 'company' => {
+    if (roleParam === 'company') {
+      return 'company';
+    }
+    return 'jobseeker';
+  };
+  
+  const [selectedRole, setSelectedRole] = useState<'jobseeker' | 'company'>(getInitialRole());
+
+  // Update role if query parameter changes
+  useEffect(() => {
+    if (roleParam === 'company') {
+      setSelectedRole('company');
+    } else if (roleParam === 'jobseeker') {
+      setSelectedRole('jobseeker');
+    }
+  }, [roleParam]);
 
   const getRoleContent = () => {
     if (selectedRole === 'jobseeker') {
@@ -93,7 +114,10 @@ const RegisterPage = () => {
               <span className="ml-2 text-xl font-bold text-gray-800">HireOrbit</span>
             </div>
           </div>
-          <RegisterForm onRoleChange={setSelectedRole} />
+          <RegisterForm 
+            onRoleChange={setSelectedRole} 
+            initialRole={selectedRole}
+          />
         </div>
       </div>
     </div>

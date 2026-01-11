@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Building2, User, ArrowRight, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { ROUTES } from '@/constants/routes';
 
 interface PostJobModalProps {
   isOpen: boolean;
@@ -9,17 +11,34 @@ interface PostJobModalProps {
 
 const PostJobModal: React.FC<PostJobModalProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { isAuthenticated, role } = useAuth();
+
+  // Handle authenticated users (defensive check)
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      if (role === 'company') {
+        // User is logged in as company - redirect to post job page
+        onClose();
+        navigate(ROUTES.COMPANY_POST_JOB);
+      }
+      // If user is logged in as jobseeker/admin, this modal shouldn't be shown
+      // (Hero.tsx handles this case), but if it is, close it
+      else if (role === 'jobseeker' || role === 'admin') {
+        onClose();
+      }
+    }
+  }, [isOpen, isAuthenticated, role, navigate, onClose]);
 
   if (!isOpen) return null;
 
   const handleCompanyRegister = () => {
     onClose();
-    navigate('/register');
+    navigate(`${ROUTES.REGISTER}?role=company`);
   };
 
   const handleUserRegister = () => {
     onClose();
-    navigate('/register');
+    navigate(ROUTES.REGISTER);
   };
 
   return (
