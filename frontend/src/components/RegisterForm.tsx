@@ -33,6 +33,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -70,10 +71,39 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
   //   }
   // }, [isAuthenticated, userRole, navigate]);
 
+  const validatePassword = (passwordValue: string): boolean => {
+    if (passwordValue.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return false;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordValue)) {
+      setPasswordError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      return false;
+    }
+    setPasswordError('');
+    return true;
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    if (newPassword.length > 0) {
+      validatePassword(newPassword);
+    } else {
+      setPasswordError('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    
+    if (!validatePassword(password)) {
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -238,6 +268,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
     setCompanyName('');
     setEmail('');
     setPassword('');
+    setPasswordError('');
     setError('');
     setSuccess('');
     if (logoPreview && logoPreview.startsWith('blob:')) {
@@ -431,11 +462,26 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   required
-                  className="border-0 border-b-2 border-gray-300 rounded-none px-0 py-4 text-base focus:border-teal-400 focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 hover:border-gray-400"
+                  className={`border-0 border-b-2 rounded-none px-0 py-4 text-base focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 ${
+                    passwordError 
+                      ? 'border-red-400 focus:border-red-400 hover:border-red-400' 
+                      : 'border-gray-300 focus:border-teal-400 hover:border-gray-400'
+                  }`}
                   placeholder="Password"
                 />
+                {passwordError && (
+                  <p className="text-xs text-red-600 mt-1">{passwordError}</p>
+                )}
+                {!passwordError && password.length > 0 && (
+                  <p className="text-xs text-green-600 mt-1">Password meets requirements</p>
+                )}
+                {password.length === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Password must be at least 8 characters with uppercase, lowercase, and number
+                  </p>
+                )}
               </div>
             </div>
 
