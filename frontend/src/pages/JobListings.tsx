@@ -281,18 +281,20 @@ const JobListings = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="bg-white shadow-sm pt-14 sm:pt-16">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Find Your Dream Job</h1>
-          <p className="text-gray-600 mt-2">Discover opportunities that match your skills</p>
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-800 pt-14 sm:pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center">Find Your Dream Job</h1>
+          <p className="text-gray-200 mt-2 text-sm sm:text-base text-center">Discover opportunities that match your skills</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        {/* Search Card */}
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6 -mt-6 relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Job Title</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Job Title</label>
               <AutocompleteInput
                 value={searchFilters.title}
                 onChange={(value) => setSearchFilters(prev => ({ ...prev, title: value }))}
@@ -300,7 +302,7 @@ const JobListings = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Company</label>
               <AutocompleteInput
                 value={searchFilters.company}
                 onChange={(value) => setSearchFilters(prev => ({ ...prev, company: value }))}
@@ -308,7 +310,7 @@ const JobListings = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Location</label>
               <AutocompleteInput
                 value={searchFilters.location}
                 onChange={(value) => setSearchFilters(prev => ({ ...prev, location: value }))}
@@ -316,11 +318,11 @@ const JobListings = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Job Type</label>
               <select
                 value={searchFilters.jobType}
                 onChange={(e) => setSearchFilters(prev => ({ ...prev, jobType: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Types</option>
                 <option value="full-time">Full Time</option>
@@ -331,16 +333,16 @@ const JobListings = () => {
             </div>
           </div>
           
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
             <button
               onClick={handleSearch}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center font-medium shadow-md hover:shadow-lg"
             >
               <Search className="h-4 w-4 mr-2" />
               Search Jobs
             </button>
             {searchError && (
-              <p className="text-red-600 text-sm">{searchError}</p>
+              <p className="text-red-600 text-xs sm:text-sm text-center sm:text-left">{searchError}</p>
             )}
           </div>
         </div>
@@ -349,44 +351,44 @@ const JobListings = () => {
         <div className="lg:hidden mb-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center text-gray-600 hover:text-gray-800 bg-white px-4 py-2 rounded-lg border border-gray-300"
+            className="flex items-center text-gray-700 hover:text-gray-900 bg-white px-4 py-2.5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
           >
             <Filter className="h-4 w-4 mr-2" />
-            Filters
-            {Object.values(searchFilters).some(filter => filter) && (
-              <span className="ml-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                {Object.values(searchFilters).filter(filter => filter).length}
+            <span className="text-sm font-medium">Filters</span>
+            {(searchFilters.experienceLevel.length > 0 || searchFilters.education.length > 0 || searchFilters.workLocation.length > 0 || searchFilters.jobType) && (
+              <span className="ml-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                {searchFilters.experienceLevel.length + searchFilters.education.length + searchFilters.workLocation.length + (searchFilters.jobType ? 1 : 0)}
               </span>
             )}
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           {/* Filter Sidebar */}
-          <div className={`lg:w-1/4 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <div className={`w-full lg:w-1/4 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 sticky top-20 lg:top-24">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Filters</h3>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="lg:hidden text-gray-400 hover:text-gray-600"
+                  className="lg:hidden text-gray-400 hover:text-gray-600 p-1"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
               
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Job Type Filter */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Job Type</h4>
-                  <div className="space-y-2">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">Job Type</h4>
+                  <div className="space-y-1.5 sm:space-y-2">
                     {[
                       { value: 'full-time', label: 'Full Time' },
                       { value: 'part-time', label: 'Part Time' },
                       { value: 'contract', label: 'Contract' },
                       { value: 'internship', label: 'Internship' },
                     ].map((type) => (
-                      <label key={type.value} className="flex items-center">
+                      <label key={type.value} className="flex items-center cursor-pointer group">
                         <input
                           type="checkbox"
                           value={type.value}
@@ -397,7 +399,7 @@ const JobListings = () => {
                           }))}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="ml-2 text-sm text-gray-700">{type.label}</span>
+                        <span className="ml-2 text-xs sm:text-sm text-gray-700 group-hover:text-gray-900">{type.label}</span>
                       </label>
                     ))}
                   </div>
@@ -405,15 +407,15 @@ const JobListings = () => {
 
                 {/* Experience Level Filter */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Experience Level</h4>
-                  <div className="space-y-2">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">Experience Level</h4>
+                  <div className="space-y-1.5 sm:space-y-2">
                     {[
-                      { value: 'entry', label: 'Entry Level (0-2 years)' },
-                      { value: 'mid', label: 'Mid Level (3-5 years)' },
-                      { value: 'senior', label: 'Senior Level (6-10 years)' },
-                      { value: 'executive', label: 'Executive (10+ years)' },
+                      { value: 'entry', label: 'Entry (0-2 yrs)' },
+                      { value: 'mid', label: 'Mid (3-5 yrs)' },
+                      { value: 'senior', label: 'Senior (6-10 yrs)' },
+                      { value: 'executive', label: 'Executive (10+ yrs)' },
                     ].map((level) => (
-                      <label key={level.value} className="flex items-center">
+                      <label key={level.value} className="flex items-center cursor-pointer group">
                         <input
                           type="checkbox"
                           value={level.value}
@@ -429,7 +431,7 @@ const JobListings = () => {
                           }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="ml-2 text-sm text-gray-700">{level.label}</span>
+                        <span className="ml-2 text-xs sm:text-sm text-gray-700 group-hover:text-gray-900">{level.label}</span>
                       </label>
                     ))}
                   </div>
@@ -437,14 +439,14 @@ const JobListings = () => {
 
                 {/* Work Location Filter */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Work Location</h4>
-                  <div className="space-y-2">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">Work Location</h4>
+                  <div className="space-y-1.5 sm:space-y-2">
                     {[
                       { value: 'remote', label: 'Remote' },
                       { value: 'hybrid', label: 'Hybrid' },
                       { value: 'onsite', label: 'On-site' },
                     ].map((type) => (
-                      <label key={type.value} className="flex items-center">
+                      <label key={type.value} className="flex items-center cursor-pointer group">
                         <input
                           type="checkbox"
                           value={type.value}
@@ -460,7 +462,7 @@ const JobListings = () => {
                           }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="ml-2 text-sm text-gray-700">{type.label}</span>
+                        <span className="ml-2 text-xs sm:text-sm text-gray-700 group-hover:text-gray-900">{type.label}</span>
                       </label>
                     ))}
                   </div>
@@ -469,7 +471,7 @@ const JobListings = () => {
                 {/* Clear Filters */}
                 <button
                   onClick={clearFilters}
-                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-xs sm:text-sm font-medium"
                 >
                   Clear All Filters
                 </button>
@@ -478,91 +480,131 @@ const JobListings = () => {
           </div>
 
           {/* Job Listings */}
-          <div className="lg:w-3/4">
-            <div className="space-y-4">
+          <div className="w-full lg:w-3/4">
+            <div className="space-y-3 sm:space-y-4">
               {loading ? (
-                <div className="text-center py-8">Loading jobs...</div>
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Loading jobs...</span>
+                </div>
               ) : paginatedJobs.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  {searchFilters.title || searchFilters.company || searchFilters.location || searchFilters.jobType 
-                    ? 'No jobs found matching your search criteria' 
-                    : 'Enter search criteria to find jobs'}
+                <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+                  <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-sm sm:text-base">
+                    {searchFilters.title || searchFilters.company || searchFilters.location || searchFilters.jobType 
+                      ? 'No jobs found matching your search criteria' 
+                      : 'Enter search criteria to find jobs'}
+                  </p>
                 </div>
               ) : (
                 paginatedJobs.map((job) => (
-                  <div key={job.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                  <div key={job.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-all duration-200">
+                    {/* Job Header */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors truncate">
                           {job.title}
                         </h3>
-                        <div className="flex items-center text-gray-600 mb-3">
-                          <Briefcase className="h-4 w-4 mr-2" />
-                          <span className="font-medium mr-4">{job.company}</span>
-                          <MapPin className="h-4 w-4 mr-2" />
-                          <span>{job.location}</span>
-                        </div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {job.jobType}
-                          </span>
-                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {job.experienceLevel}
-                          </span>
-                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {job.education}
-                          </span>
-                          <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {job.workLocation}
-                          </span>
-                          {job.salary && (
-                            <span className="text-green-600 font-semibold">₹ {job.salary.toLocaleString()}</span>
-                          )}
-                          <span className="text-gray-500 text-sm">
-                            {new Date(job.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
-                    
-                        <div className="mb-4">
-                          <span className="text-sm text-gray-600">
-                            <strong>Application Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}
-                          </span>
-                        </div>
-                    
-                        {job.requirements.length > 0 && (
-                          <div className="mb-6">
-                            <div className="flex flex-wrap gap-2">
-                              {job.requirements.slice(0, 4).map((req, index) => (
-                                <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                                  {req}
-                                </span>
-                              ))}
-                              {job.requirements.length > 4 && (
-                                <span className="text-gray-500 text-sm px-3 py-1">
-                              +{job.requirements.length - 4} more
-                                </span>
-                              )}
-                            </div>
+                        {/* Company & Location */}
+                        <div className="flex flex-wrap items-center text-gray-600 text-sm sm:text-base gap-x-4 gap-y-1 mb-3">
+                          <div className="flex items-center">
+                            <Briefcase className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                            <span className="font-medium truncate">{job.company}</span>
                           </div>
-                        )}
+                          <div className="flex items-center">
+                            <MapPin className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">{job.location}</span>
+                          </div>
+                        </div>
                       </div>
-                  
-                      <div className="ml-6 flex flex-col space-y-3">
+                      
+                      {/* Action Buttons - Desktop */}
+                      <div className="hidden sm:flex flex-col space-y-2 flex-shrink-0">
                         <Link 
                           to={`/jobs/${job.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm whitespace-nowrap"
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                      View Details
+                          <Eye className="h-4 w-4 mr-1.5" />
+                          View Details
                         </Link>
                         <button
                           onClick={() => handleApply(job)}
-                          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium text-sm shadow-sm hover:shadow-md"
                         >
-                      Apply Now
+                          Apply Now
                         </button>
                       </div>
+                    </div>
+
+                    {/* Tags - Responsive Grid */}
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
+                      <span className="bg-blue-100 text-blue-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium">
+                        {job.jobType}
+                      </span>
+                      <span className="bg-green-100 text-green-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium">
+                        {job.experienceLevel}
+                      </span>
+                      <span className="bg-purple-100 text-purple-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium hidden xs:inline-block">
+                        {job.education}
+                      </span>
+                      <span className="bg-orange-100 text-orange-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium">
+                        {job.workLocation}
+                      </span>
+                    </div>
+
+                    {/* Salary & Date */}
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 text-xs sm:text-sm">
+                      {job.salary && (
+                        <span className="text-green-600 font-semibold">₹ {job.salary.toLocaleString()}</span>
+                      )}
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-500">
+                        Posted: {new Date(job.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    {/* Description */}
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{job.description}</p>
+                
+                    {/* Deadline */}
+                    <div className="mb-3 text-xs sm:text-sm">
+                      <span className="text-gray-600">
+                        <strong>Deadline:</strong> {new Date(job.applicationDeadline).toLocaleDateString()}
+                      </span>
+                    </div>
+                
+                    {/* Requirements Tags */}
+                    {job.requirements.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                          {job.requirements.slice(0, 3).map((req, index) => (
+                            <span key={index} className="bg-gray-100 text-gray-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">
+                              {req}
+                            </span>
+                          ))}
+                          {job.requirements.length > 3 && (
+                            <span className="text-gray-500 text-xs sm:text-sm px-2 py-0.5">
+                              +{job.requirements.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons - Mobile Only */}
+                    <div className="flex sm:hidden gap-2 mt-4 pt-4 border-t border-gray-100">
+                      <Link 
+                        to={`/jobs/${job.id}`}
+                        className="flex-1 text-center border border-blue-600 text-blue-600 py-2.5 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors"
+                      >
+                        View Details
+                      </Link>
+                      <button
+                        onClick={() => handleApply(job)}
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                      >
+                        Apply Now
+                      </button>
                     </div>
                   </div>
                 ))
@@ -571,40 +613,52 @@ const JobListings = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-8 flex justify-center">
-                <nav className="flex items-center space-x-2">
+              <div className="mt-6 sm:mt-8 flex justify-center">
+                <nav className="flex items-center space-x-1 sm:space-x-2">
                   <button
                     onClick={handlePreviousPage}
                     disabled={!hasPreviousPage}
-                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="px-2 sm:px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
+                    <ChevronLeft className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Previous</span>
                   </button>
               
                   <div className="flex space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                          page === currentPage
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
+                    {/* Show limited pages on mobile */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // On mobile, show only current page and adjacent pages
+                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+                        if (!isMobile || totalPages <= 5) return true;
+                        return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+                      })
+                      .map((page, index, arr) => (
+                        <React.Fragment key={page}>
+                          {index > 0 && arr[index - 1] !== page - 1 && (
+                            <span className="px-2 py-2 text-gray-400 text-sm">...</span>
+                          )}
+                          <button
+                            onClick={() => handlePageChange(page)}
+                            className={`px-2.5 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium min-w-[32px] ${
+                              page === currentPage
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      ))}
                   </div>
               
                   <button
                     onClick={handleNextPage}
                     disabled={!hasNextPage}
-                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="px-2 sm:px-4 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm"
                   >
-                Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="h-4 w-4 sm:ml-1" />
                   </button>
                 </nav>
               </div>
@@ -612,8 +666,8 @@ const JobListings = () => {
 
             {/* Results Summary */}
             {allJobs.length > 0 && (
-              <div className="mt-4 text-center text-gray-600 text-sm">
-            Showing {Math.min((currentPage - 1) * jobsPerPage + 1, allJobs.length)}-{Math.min(currentPage * jobsPerPage, allJobs.length)} of {allJobs.length} jobs
+              <div className="mt-3 sm:mt-4 text-center text-gray-500 text-xs sm:text-sm">
+                Showing {Math.min((currentPage - 1) * jobsPerPage + 1, allJobs.length)}-{Math.min(currentPage * jobsPerPage, allJobs.length)} of {allJobs.length} jobs
               </div>
             )}
           </div>
