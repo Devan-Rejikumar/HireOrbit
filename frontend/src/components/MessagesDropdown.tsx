@@ -163,7 +163,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
   };
 
   const handleConversationClick = (conversation: ConversationResponse) => {
-    navigate(`/chat?applicationId=${conversation.applicationId}`);
+    navigate(`/messages`);
   };
 
   const truncateMessage = (message: string, maxLength: number = 50) => {
@@ -275,7 +275,7 @@ export const MessagesDropdown: React.FC<MessagesDropdownProps> = ({ userId }) =>
         {conversations.length > 0 && (
           <div className="p-2 border-t border-gray-200">
             <button
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate('/messages')}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2"
             >
               View all messages →
