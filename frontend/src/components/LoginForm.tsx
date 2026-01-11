@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/constants/routes';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
@@ -19,10 +19,19 @@ interface LoginFormProps {
 
 const LoginForm = ({ onRoleChange }: LoginFormProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const roleParam = searchParams.get('role');
   const { login, isAuthenticated, role: userRole } = useAuth();
   const { signInWithGoogle, loading: googleLoading } = useGoogleAuth();
   
-  const [role, setRole] = useState<'jobseeker' | 'company'>('jobseeker');
+  const getInitialRole = (): 'jobseeker' | 'company' => {
+    if (roleParam === 'company') {
+      return 'company';
+    }
+    return 'jobseeker';
+  };
+  
+  const [role, setRole] = useState<'jobseeker' | 'company'>(getInitialRole());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,6 +42,16 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
 
+  // Update role when query parameter changes
+  useEffect(() => {
+    if (roleParam === 'company') {
+      setRole('company');
+      onRoleChange?.('company');
+    } else if (roleParam === 'jobseeker') {
+      setRole('jobseeker');
+      onRoleChange?.('jobseeker');
+    }
+  }, [roleParam, onRoleChange]);
 
   // Disabled auto-navigation to allow error visibility during Google signin debugging
   // useEffect(() => {

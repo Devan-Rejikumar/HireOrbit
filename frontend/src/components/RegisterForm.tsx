@@ -240,8 +240,8 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
           resetForm();
           setShowOTPVerification(false);
           setTimeout(() => {
-            navigate(ROUTES.LOGIN);
-          }, 1500); 
+            navigate(`${ROUTES.LOGIN}?role=jobseeker`);
+          }, 300); 
         }
       } else {
         // Convert logo to base64 if selected
@@ -273,8 +273,8 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
           setLogoPreview(null);
           setShowOTPVerification(false);
           setTimeout(() => {
-            navigate(`${ROUTES.LOGIN}?type=company`);
-          }, 1500);
+            navigate(`${ROUTES.LOGIN}?role=company`);
+          }, 300);
         }
       }
     } catch (err: unknown) {
