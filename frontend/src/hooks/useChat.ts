@@ -117,7 +117,7 @@ export const useTotalUnreadCount = (userId: string | null) => {
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     // Disable refetch on window focus to prevent reloads during chat/video calls
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Use cached data if available
+    refetchOnMount: true, // Fetch on mount to ensure queries are active for real-time updates
   });
 };
 
@@ -132,7 +132,7 @@ export const useConversationsWithUnread = (userId: string | null) => {
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     // Disable refetch on window focus to prevent reloads during chat/video calls
     refetchOnWindowFocus: false,
-    refetchOnMount: false, // Use cached data if available
+    refetchOnMount: true, // Fetch on mount to ensure queries are active for real-time updates
   });
 };
 

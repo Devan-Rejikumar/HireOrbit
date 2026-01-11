@@ -67,6 +67,11 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
           // Also join the user's personal room to receive new-conversation notifications
           newSocket.emit('join-conversation', currentUserId);
           console.log('[GlobalChat] Registered user and joined personal room:', currentUserId);
+          
+          // Invalidate unread count queries on connect to ensure they fetch immediately
+          // This ensures header badge updates work from the moment user logs in
+          queryClient.invalidateQueries({ queryKey: ['total-unread-count', currentUserId], refetchType: 'active' });
+          queryClient.invalidateQueries({ queryKey: ['conversations-with-unread', currentUserId], refetchType: 'active' });
         }
       });
 
@@ -102,20 +107,66 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
           );
         });
         
+        // Also update conversations-with-unread cache to reflect new message
+        queryClient.setQueryData(['conversations-with-unread', currentUserId], (oldData: ConversationResponse[] | undefined) => {
+          if (!oldData) {
+            // If cache doesn't exist, invalidate to trigger fetch
+            queryClient.invalidateQueries({ queryKey: ['conversations-with-unread', currentUserId], refetchType: 'active' });
+            return oldData;
+          }
+          // Update the conversation's last message and unread count
+          return oldData.map(conv => {
+            if (conv.id === message.conversationId) {
+              const currentUnread = conv.unreadCount[currentUserId || ''] || 0;
+              return {
+                ...conv,
+                lastMessage: message,
+                lastMessageAt: message.createdAt,
+                unreadCount: {
+                  ...conv.unreadCount,
+                  [currentUserId || '']: message.senderId !== currentUserId ? currentUnread + 1 : currentUnread,
+                },
+              };
+            }
+            return conv;
+          });
+        });
+        
         // Invalidate and REFETCH unread counts so header updates in real-time
         // Use refetchType: 'active' to refetch queries that are currently being used
-        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'active' });
-        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'active' });
-        queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId], refetchType: 'active' });
+        // This ensures header badge updates immediately when messages arrive
+        if (currentUserId) {
+          queryClient.invalidateQueries({ queryKey: ['total-unread-count', currentUserId], refetchType: 'active' });
+          queryClient.invalidateQueries({ queryKey: ['conversations-with-unread', currentUserId], refetchType: 'active' });
+          queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId], refetchType: 'active' });
+        }
       });
 
       // Listen for messages-read event to update unread counts when user reads messages
       newSocket.on('messages-read', (data: { conversationId: string; userId: string }) => {
         console.log('[GlobalChat] Messages marked as read:', data.conversationId);
         
+        // Update conversations-with-unread cache to reflect read status
+        queryClient.setQueryData(['conversations-with-unread', data.userId], (oldData: ConversationResponse[] | undefined) => {
+          if (!oldData) return oldData;
+          // Update the conversation's unread count to 0
+          return oldData.map(conv => {
+            if (conv.id === data.conversationId) {
+              return {
+                ...conv,
+                unreadCount: {
+                  ...conv.unreadCount,
+                  [data.userId]: 0,
+                },
+              };
+            }
+            return conv;
+          });
+        });
+        
         // Refetch unread counts to update header badge
-        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'active' });
-        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['total-unread-count', data.userId], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread', data.userId], refetchType: 'active' });
         queryClient.invalidateQueries({ queryKey: ['unread-count', data.conversationId], refetchType: 'active' });
       });
 
@@ -131,6 +182,12 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
         queryClient.invalidateQueries({ queryKey: ['conversations', 'user'] });
         queryClient.invalidateQueries({ queryKey: ['conversations', 'company'] });
+        
+        // Also invalidate unread count queries to ensure header updates
+        if (currentUserId) {
+          queryClient.invalidateQueries({ queryKey: ['total-unread-count', currentUserId], refetchType: 'active' });
+          queryClient.invalidateQueries({ queryKey: ['conversations-with-unread', currentUserId], refetchType: 'active' });
+        }
       });
 
       socketRef.current = newSocket;
