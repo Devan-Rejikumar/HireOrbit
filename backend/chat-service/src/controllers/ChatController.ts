@@ -8,6 +8,7 @@ import { getMessagesSchema } from '../dto/schemas/chat.schema';
 import { buildSuccessResponse } from 'hireorbit-shared-dto';
 import { Messages } from '../constants/Messages';
 import { AppError } from '../utils/errors/AppError';
+import { io } from '../server';
 
 @injectable()
 export class ChatController {
@@ -138,6 +139,13 @@ export class ChatController {
     }
     
     await this._chatService.markAsRead(conversationId, userId);
+    
+    // Emit WebSocket event so other clients/tabs get notified
+    io.to(conversationId).emit('messages-read', {
+      conversationId,
+      userId,
+    });
+    
     res.status(HttpStatusCode.OK).json(
       buildSuccessResponse(null, Messages.CHAT.MARKED_AS_READ),
     );

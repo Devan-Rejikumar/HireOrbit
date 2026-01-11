@@ -56,7 +56,9 @@ io.on('connection', (socket) => {
     onlineUsers.get(userId)!.add(socket.id);
     socketToUserId.set(socket.id, userId);
     
-    console.log(`[SERVER] User ${userId} registered as online (socket: ${socket.id})`);
+    // Join the user's personal room to receive new-conversation events
+    socket.join(userId);
+    console.log(`[CHAT-SERVICE] User ${userId} registered and joined personal room (socket: ${socket.id})`);
 
     socket.rooms.forEach(roomId => {
       if (roomId !== socket.id) { 
@@ -472,16 +474,27 @@ async function initializeKafkaConsumer(): Promise<void> {
             const { userId, companyId } = applicationData.data || applicationData;
 
             if (userId && companyId) {
-              await _chatService.createConversationFromApplication(
+              const conversation = await _chatService.createConversationFromApplication(
                 eventData.applicationId,
                 userId,
                 companyId,
               );
+              
+              // Notify both user and company about the new conversation
+              // so they can join the room and receive real-time messages
+              console.log('[CHAT-SERVICE] New conversation created, notifying participants:', {
+                conversationId: conversation.id,
+                userId,
+                companyId,
+              });
+              
+              io.to(userId).emit('new-conversation', conversation);
+              io.to(companyId).emit('new-conversation', conversation);
             }
           }
         } catch (error: unknown) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          
+          console.error('[CHAT-SERVICE] Error processing status update:', errorMessage);
         }
       },
     });

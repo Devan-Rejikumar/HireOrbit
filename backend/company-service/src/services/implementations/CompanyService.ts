@@ -56,8 +56,26 @@ export class CompanyService implements ICompanyService {
   async login(email: string, password: string): Promise<CompanyAuthResponse> {
     const company = await this._companyRepository.findByEmail(email);
     if (!company) throw new AppError('Invalid credentials', HttpStatusCode.UNAUTHORIZED);
-    const valid = await bcrypt.compare(password, company.password);
+    
+    let valid = false;
+    
+    // Check if password is already hashed (bcrypt hashes start with $2a$ or $2b$)
+    if (company.password.startsWith('$2a$') || company.password.startsWith('$2b$')) {
+      // Password is hashed - use bcrypt compare
+      valid = await bcrypt.compare(password, company.password);
+    } else {
+      // Password is plain text (legacy) - do direct comparison and rehash
+      if (password === company.password) {
+        valid = true;
+        // Rehash the password for future logins
+        const hashedPassword = await bcrypt.hash(password, AppConfig.BCRYPT_ROUNDS);
+        await this._companyRepository.updatePassword(company.id, hashedPassword);
+        console.log('[CompanyService] Password rehashed for company:', email);
+      }
+    }
+    
     if (!valid) throw new AppError('Invalid credentials', HttpStatusCode.UNAUTHORIZED);
+    
     const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
       userId: company.id,
       companyId: company.id,

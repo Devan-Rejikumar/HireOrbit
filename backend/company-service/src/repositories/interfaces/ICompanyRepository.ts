@@ -24,5 +24,6 @@ export interface ICompanyRepository extends IBaseRepository<Company> {
   searchCompanyByName(companyName:string):Promise<Company | null>;
   getTotalCompanyCount(): Promise<number>;
   getCompanyStatisticsByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month' | 'year'): Promise<Array<{ date: string; count: number }>>;
+  updatePassword(companyId: string, hashedPassword: string): Promise<Company>;
 
 }

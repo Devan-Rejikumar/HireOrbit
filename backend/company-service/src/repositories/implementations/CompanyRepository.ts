@@ -126,6 +126,10 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
     });
   }
 
+  async updatePassword(companyId: string, hashedPassword: string): Promise<Company> {
+    return this.update(companyId, { password: hashedPassword });
+  }
+
   async getTotalCompanyCount(): Promise<number> {
     return prisma.company.count();
   }
