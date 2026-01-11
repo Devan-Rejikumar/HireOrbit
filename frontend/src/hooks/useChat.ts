@@ -80,12 +80,12 @@ export const useMarkAsRead = () => {
     mutationFn: ({ conversationId, userId }: { conversationId: string; userId: string }) =>
       _chatService.markAsRead(conversationId, userId),
     onSuccess: (_, variables) => {
-      // Use refetchType: 'none' to prevent refetches during active chat/video calls
+      // Use refetchType: 'active' to update header badge when messages are read
       queryClient.invalidateQueries({ queryKey: ['messages', variables.conversationId], refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: ['unread-count'], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['conversations'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'active' });
+      queryClient.invalidateQueries({ queryKey: ['unread-count'], refetchType: 'active' });
     },
   });
 };

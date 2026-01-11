@@ -102,10 +102,21 @@ export const GlobalChatProvider: React.FC<GlobalChatProviderProps> = ({ children
           );
         });
         
-        // Only invalidate unread counts (these are lightweight queries and won't cause reloads)
-        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'none' });
-        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'none' });
-        queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId], refetchType: 'none' });
+        // Invalidate and REFETCH unread counts so header updates in real-time
+        // Use refetchType: 'active' to refetch queries that are currently being used
+        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['unread-count', message.conversationId], refetchType: 'active' });
+      });
+
+      // Listen for messages-read event to update unread counts when user reads messages
+      newSocket.on('messages-read', (data: { conversationId: string; userId: string }) => {
+        console.log('[GlobalChat] Messages marked as read:', data.conversationId);
+        
+        // Refetch unread counts to update header badge
+        queryClient.invalidateQueries({ queryKey: ['total-unread-count'], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['conversations-with-unread'], refetchType: 'active' });
+        queryClient.invalidateQueries({ queryKey: ['unread-count', data.conversationId], refetchType: 'active' });
       });
 
       // Listen for new conversation events (when status changes to SHORTLISTED)
