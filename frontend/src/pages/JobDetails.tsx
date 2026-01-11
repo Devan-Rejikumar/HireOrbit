@@ -146,6 +146,12 @@ const JobDetails = () => {
       return;
     }
 
+    // Check if user has already applied
+    if (applied) {
+      toast.error('You have already applied for this job');
+      return;
+    }
+
     // Check if application deadline has passed
     if (job?.applicationDeadline) {
       const deadline = new Date(job.applicationDeadline);
