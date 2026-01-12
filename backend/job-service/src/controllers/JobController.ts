@@ -69,7 +69,7 @@ export class JobController {
         const limit = limitData.data?.limit || 0;
         throw new AppError(
           `Job posting limit reached. You have posted ${limit} jobs. ${remaining === 0 ? 'Please upgrade your plan to post more jobs.' : `${remaining} jobs remaining.`}`,
-          HttpStatusCode.FORBIDDEN,
+          HttpStatusCode.PAYMENT_REQUIRED,
         );
       }
     } catch (error: unknown) {
