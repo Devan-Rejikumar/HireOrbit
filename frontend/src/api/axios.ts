@@ -75,6 +75,21 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
     
+    // Handle 429 Too Many Requests - show modal
+    if (error.response?.status === HTTP_STATUS.TOO_MANY_REQUESTS) {
+      const retryAfter = error.response.headers['retry-after'] || 
+                        error.response.data?.retryAfter || 
+                        60; // Default 60 seconds
+      
+      // Dispatch custom event to show rate limit modal
+      window.dispatchEvent(new CustomEvent('rate-limit-exceeded', {
+        detail: { retryAfter: parseInt(retryAfter.toString(), 10) }
+      }));
+      
+      // Don't retry automatically - let user wait
+      return Promise.reject(error);
+    }
+    
     if ((error.response?.status === HTTP_STATUS.UNAUTHORIZED || error.response?.status === HTTP_STATUS.FORBIDDEN) && !originalRequest._retry) {
       originalRequest._retry = true;
       const isAuthEndpoint = originalRequest.url?.includes('/login') || 

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { NotificationProvider } from './context/NotificationContext';
@@ -12,6 +12,7 @@ import AdminAuthProtected from './components/AdminAuthProtected';
 import LoadingScreen from './components/LoadingScreen';
 import { useLoadingState } from './hooks/useLoadingState';
 import { ROUTES } from './constants/routes';
+import RateLimitModal from './components/RateLimitModal';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import Index from './pages/Index';
@@ -236,9 +237,29 @@ const AppContent = () => {
 };
 
 function App() {
+  const [rateLimitModalOpen, setRateLimitModalOpen] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(60);
+
+  useEffect(() => {
+    const handleRateLimit = (event: CustomEvent<{ retryAfter: number }>) => {
+      setRetryAfter(event.detail.retryAfter);
+      setRateLimitModalOpen(true);
+    };
+    
+    window.addEventListener('rate-limit-exceeded', handleRateLimit as EventListener);
+    return () => {
+      window.removeEventListener('rate-limit-exceeded', handleRateLimit as EventListener);
+    };
+  }, []);
+
   return (
     <Router>
       <AppWithNotifications />
+      <RateLimitModal 
+        isOpen={rateLimitModalOpen}
+        retryAfter={retryAfter}
+        onClose={() => setRateLimitModalOpen(false)}
+      />
       <Toaster 
         position="top-right"
         toastOptions={{
