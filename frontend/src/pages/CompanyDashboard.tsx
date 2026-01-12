@@ -1709,8 +1709,17 @@ const CompanyDashboard = () => {
                         <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                         <p className="text-gray-500 mb-4">No jobs posted yet</p>
                         <Button 
-                          onClick={() => navigate(ROUTES.COMPANY_POST_JOB)}
-                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                          onClick={() => {
+                            if (company?.profileCompleted && company?.isVerified) {
+                              navigate(ROUTES.COMPANY_POST_JOB);
+                            }
+                          }}
+                          className={`${
+                            company?.profileCompleted && company?.isVerified
+                              ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          }`}
+                          disabled={!company?.profileCompleted || !company?.isVerified}
                         >
                           <Plus className="h-4 w-4 mr-2" />
                       Post Your First Job

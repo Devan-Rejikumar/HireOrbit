@@ -363,8 +363,17 @@ const CompanyJobListing = () => {
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No jobs posted yet</h3>
                     <p className="text-gray-600 mb-6">Create your first job posting to start attracting candidates.</p>
                     <Button 
-                      onClick={() => navigate(ROUTES.COMPANY_POST_JOB)} 
-                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={() => {
+                        if (company?.profileCompleted && company?.isVerified) {
+                          navigate(ROUTES.COMPANY_POST_JOB);
+                        }
+                      }}
+                      className={`${
+                        company?.profileCompleted && company?.isVerified
+                          ? 'bg-purple-600 hover:bg-purple-700'
+                          : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      }`}
+                      disabled={!company?.profileCompleted || !company?.isVerified}
                     >
                       <Plus className="h-4 w-4 mr-2" />
                     Post Your First Job
