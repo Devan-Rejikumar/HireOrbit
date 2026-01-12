@@ -105,8 +105,22 @@ api.interceptors.response.use(
           return api(originalRequest);
         }
       } catch (refreshError) {
-        localStorage.removeItem('role');
-        window.location.href = ROUTES.LOGIN;
+        // Only logout if refresh token is truly invalid (401/403)
+        // Don't logout on network errors or temporary failures
+        const isAxiosRefreshError = refreshError && typeof refreshError === 'object' && 'response' in refreshError;
+        const axiosRefreshError = isAxiosRefreshError 
+          ? (refreshError as { response?: { status?: number } }) 
+          : null;
+        
+        const isAuthFailure = axiosRefreshError?.response?.status === HTTP_STATUS.UNAUTHORIZED || 
+                              axiosRefreshError?.response?.status === HTTP_STATUS.FORBIDDEN;
+        
+        if (isAuthFailure) {
+          // Refresh token is invalid/expired - logout
+          localStorage.removeItem('role');
+          window.location.href = ROUTES.LOGIN;
+        }
+        // For network errors, just reject - user stays logged in, can retry
       }
     }
     
