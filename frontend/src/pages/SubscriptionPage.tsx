@@ -120,8 +120,9 @@ export const SubscriptionPage = () => {
     }
   }, [role, fetchCompanyProfile]);
 
-  const handleSelectPlan = async (_planId: string, _billingPeriod: 'monthly' | 'yearly') => {
-    // This function is not used, navigation happens in SubscriptionCard
+  const handleSelectPlan = async (planId: string, billingPeriod: 'monthly' | 'yearly') => {
+    // Navigate to checkout page with planId and billingPeriod as query parameters
+    navigate(`${ROUTES.SUBSCRIPTIONS_CHECKOUT}?planId=${planId}&billingPeriod=${billingPeriod}`);
   };
 
   const handleLogout = async () => {
