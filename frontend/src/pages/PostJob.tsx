@@ -33,6 +33,9 @@ const PostJob = () => {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitError, setLimitError] = useState('');
   
+  // Get today's date in YYYY-MM-DD format for date input min attribute
+  const today = new Date().toISOString().split('T')[0];
+  
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     description: '',
@@ -437,6 +440,7 @@ const PostJob = () => {
                         value={formData.applicationDeadline}
                         onChange={(e) => handleInputChange('applicationDeadline', e.target.value)}
                         className="h-12 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500/20 transition-all duration-200"
+                        min={today}
                         required
                       />
                     </div>

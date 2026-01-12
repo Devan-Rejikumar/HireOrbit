@@ -71,6 +71,21 @@ const EditJobModal: React.FC<EditJobModalProps> = ({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Calculate min date: allow existing deadline if it's in the past, otherwise use today
+  const minDate = job?.applicationDeadline 
+    ? (() => {
+        try {
+          const existingDeadline = new Date(job.applicationDeadline).toISOString().split('T')[0];
+          return existingDeadline < today ? existingDeadline : today;
+        } catch {
+          return today;
+        }
+      })()
+    : today;
+
   useEffect(() => {
     if (job) {
       // Clear any previous messages when opening modal
@@ -339,6 +354,7 @@ const EditJobModal: React.FC<EditJobModalProps> = ({
                 type="date"
                 value={formData.applicationDeadline}
                 onChange={(e) => handleInputChange('applicationDeadline', e.target.value)}
+                min={minDate}
                 required
               />
             </div>
