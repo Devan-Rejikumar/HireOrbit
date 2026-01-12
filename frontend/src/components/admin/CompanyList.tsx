@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check, Search, Filter } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Clock, Check, Search, Filter, Ban, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/api/axios';
 
@@ -172,6 +172,64 @@ const CompanyList = () => {
     }
   };
 
+  const handleBlock = async (companyId: string) => {
+    try {
+      setActionLoading(companyId);
+      await api.patch(`/company/companies/${companyId}/block`);
+      
+      // Update the company status in the list
+      setCompanies(companies => 
+        companies.map(c => 
+          c.id === companyId 
+            ? { ...c, isBlocked: true }
+            : c,
+        ),
+      );
+      
+      // Update company details if modal is open
+      if (companyDetails?.id === companyId) {
+        setCompanyDetails({ ...companyDetails, isBlocked: true });
+      }
+      
+      toast.success('Company blocked successfully!');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to block company');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUnblock = async (companyId: string) => {
+    try {
+      setActionLoading(companyId);
+      await api.patch(`/company/companies/${companyId}/unblock`);
+      
+      // Update the company status in the list
+      setCompanies(companies => 
+        companies.map(c => 
+          c.id === companyId 
+            ? { ...c, isBlocked: false }
+            : c,
+        ),
+      );
+      
+      // Update company details if modal is open
+      if (companyDetails?.id === companyId) {
+        setCompanyDetails({ ...companyDetails, isBlocked: false });
+      }
+      
+      toast.success('Company unblocked successfully!');
+    } catch (error: unknown) {
+      const isAxiosError = error && typeof error === 'object' && 'response' in error;
+      const axiosError = isAxiosError ? (error as { response?: { data?: { error?: string } } }) : null;
+      toast.error(axiosError?.response?.data?.error || 'Failed to unblock company');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const openRejectModal = (company: Company) => {
     setSelectedCompany(company);
     setShowModal(true);
@@ -206,6 +264,9 @@ const CompanyList = () => {
   };
 
   const getStatusBadge = (company: Company) => {
+    if (company.isBlocked) {
+      return <span className="flex items-center text-red-600"><Ban className="w-4 h-4 mr-1" />Blocked</span>;
+    }
     if (!company.profileCompleted) {
       return <span className="flex items-center text-yellow-600"><Clock className="w-4 h-4 mr-1" />Incomplete</span>;
     }
@@ -356,7 +417,7 @@ const CompanyList = () => {
                       {getStatusBadge(company)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      {company.profileCompleted && !company.isVerified && !company.rejectionReason && (
+                      {company.profileCompleted && !company.isVerified && !company.rejectionReason && !company.isBlocked && (
                         <>
                           <button
                             onClick={() => handleApprove(company.id)}
@@ -379,6 +440,33 @@ const CompanyList = () => {
                             Reject
                           </button>
                         </>
+                      )}
+                      {company.isBlocked ? (
+                        <button
+                          onClick={() => handleUnblock(company.id)}
+                          disabled={actionLoading === company.id}
+                          className="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                        >
+                          {actionLoading === company.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                          ) : (
+                            <Unlock className="w-4 h-4 mr-1" />
+                          )}
+                          Unblock
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleBlock(company.id)}
+                          disabled={actionLoading === company.id}
+                          className="inline-flex items-center px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                        >
+                          {actionLoading === company.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                          ) : (
+                            <Ban className="w-4 h-4 mr-1" />
+                          )}
+                          Block
+                        </button>
                       )}
                       <button
                         onClick={() => handleViewCompany(company)}
@@ -584,9 +672,19 @@ const CompanyList = () => {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">Account Status</label>
-                      <p className="text-gray-900">
-                        {companyDetails.isBlocked ? 'Blocked' : 'Active'}
-                      </p>
+                      <div className="mt-1">
+                        {companyDetails.isBlocked ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <Ban className="w-4 h-4 mr-1" />
+                            Blocked
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Active
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">Registration Date</label>
@@ -618,7 +716,7 @@ const CompanyList = () => {
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-8 pt-6 border-t">
-                {companyDetails.profileCompleted && !companyDetails.isVerified && !companyDetails.rejectionReason && (
+                {companyDetails.profileCompleted && !companyDetails.isVerified && !companyDetails.rejectionReason && !companyDetails.isBlocked && (
                   <>
                     <button
                       onClick={() => {
@@ -642,6 +740,31 @@ const CompanyList = () => {
                       Reject Company
                     </button>
                   </>
+                )}
+                {companyDetails.isBlocked ? (
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleUnblock(companyDetails.id);
+                    }}
+                    disabled={actionLoading === companyDetails.id}
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    <Unlock className="w-4 h-4 mr-2" />
+                    Unblock Company
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleBlock(companyDetails.id);
+                    }}
+                    disabled={actionLoading === companyDetails.id}
+                    className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50"
+                  >
+                    <Ban className="w-4 h-4 mr-2" />
+                    Block Company
+                  </button>
                 )}
                 <button
                   onClick={() => setShowDetailsModal(false)}
