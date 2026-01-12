@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Briefcase, CheckCircle, AlertCircle, Plus, X, Building2, MapPin, DollarSign, Calendar, GraduationCap, Users, Clock, Target, Star, CreditCard } from 'lucide-react';
 import api from '@/api/axios';
+import { CreateJobFormSchema } from '@/schemas/job.schema';
 
 interface JobFormData {
   title: string;
@@ -81,45 +82,34 @@ const PostJob = () => {
     }
   };
 
-  const parseSalary = (salaryInput: string): number | null => {
-    if (!salaryInput || salaryInput.trim() === '') {
-      return null;
-    }
-    
-    const trimmed = salaryInput.trim();
-    
-    // Check if it's a range (contains dash)
-    if (trimmed.includes('-')) {
-      const parts = trimmed.split('-').map(part => part.trim());
-      if (parts.length === 2) {
-        const min = parseInt(parts[0]);
-        const max = parseInt(parts[1]);
-        if (!isNaN(min) && !isNaN(max)) {
-          // Return the average of the range
-          return Math.round((min + max) / 2);
-        }
-      }
-    }
-    
-    // Try to parse as single number
-    const parsed = parseInt(trimmed);
-    return isNaN(parsed) ? null : parsed;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSuccess('');
 
+    // Zod validation
+    const validationResult = CreateJobFormSchema.safeParse({
+      ...formData,
+      requirements: formData.requirements.filter(req => req.trim() !== ''),
+      benefits: formData.benefits.filter(benefit => benefit.trim() !== ''),
+    });
+
+    if (!validationResult.success) {
+      // Format Zod errors for display
+      const errorMessages = validationResult.error.errors.map(err => {
+        const field = err.path.join('.');
+        // Capitalize first letter and add field name if not in message
+        const message = err.message;
+        return field ? `${field}: ${message}` : message;
+      });
+      setError(errorMessages.join('. '));
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      // Filter out empty requirements and benefits
-      const cleanedData = {
-        ...formData,
-        requirements: formData.requirements.filter(req => req.trim() !== ''),
-        benefits: formData.benefits.filter(benefit => benefit.trim() !== ''),
-        salary: parseSalary(formData.salary),
-      };
+      const cleanedData = validationResult.data;
 
       await api.post('/jobs', cleanedData);
       setSuccess('Job posted successfully!');
@@ -247,6 +237,7 @@ const PostJob = () => {
                         onChange={(e) => handleInputChange('title', e.target.value)}
                         placeholder="e.g. Senior Software Engineer"
                         className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                        maxLength={200}
                         required
                       />
                     </div>
@@ -263,6 +254,7 @@ const PostJob = () => {
                         onChange={(e) => handleInputChange('company', e.target.value)}
                         placeholder="Your company name"
                         className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                        maxLength={200}
                         required
                       />
                     </div>
@@ -279,6 +271,7 @@ const PostJob = () => {
                         onChange={(e) => handleInputChange('location', e.target.value)}
                         placeholder="e.g. New York, NY or Remote"
                         className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                        maxLength={200}
                         required
                       />
                     </div>
@@ -327,6 +320,8 @@ const PostJob = () => {
                       placeholder="Describe the role, responsibilities, and what you're looking for..."
                       rows={6}
                       className="rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 transition-all duration-200 resize-none"
+                      minLength={50}
+                      maxLength={5000}
                       required
                     />
                   </div>
@@ -482,6 +477,7 @@ const PostJob = () => {
                             onChange={(e) => handleArrayChange('requirements', index, e.target.value)}
                             placeholder={`Requirement ${index + 1}`}
                             className="rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500/20 transition-all duration-200"
+                            maxLength={500}
                             required={index === 0}
                           />
                           {formData.requirements.length > 1 && (
@@ -524,6 +520,7 @@ const PostJob = () => {
                             onChange={(e) => handleArrayChange('benefits', index, e.target.value)}
                             placeholder={`Benefit ${index + 1}`}
                             className="rounded-xl border-gray-200 focus:border-orange-500 focus:ring-orange-500/20 transition-all duration-200"
+                            maxLength={500}
                           />
                           {formData.benefits.length > 1 && (
                             <Button
