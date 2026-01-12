@@ -246,4 +246,35 @@ export class JobRepository implements IJobRepository {
     });
   }
 
+  async bulkUpdateListingStatus(companyId: string, isListed: boolean): Promise<{ count: number }> {
+    const whereClause: any = {
+      companyId,
+      isActive: true,
+    };
+    
+    // When unlisting (isListed = false), only update currently listed jobs
+    // When listing (isListed = true), only update currently unlisted jobs
+    if (!isListed) {
+      whereClause.isListed = true;
+    } else {
+      whereClause.isListed = false;
+    }
+
+    const updateData: any = {
+      isListed,
+    };
+    
+    // Only update listedAt when listing jobs
+    if (isListed) {
+      updateData.listedAt = new Date();
+    }
+
+    const result = await this.prisma.job.updateMany({
+      where: whereClause,
+      data: updateData,
+    });
+    
+    return { count: result.count };
+  }
+
 }

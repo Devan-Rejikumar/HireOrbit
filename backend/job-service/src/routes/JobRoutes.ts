@@ -26,5 +26,6 @@ router.get(JOB_ROUTES.GET_REPORTED_JOBS, authenticateToken, asyncHandler((req, r
 router.get(JOB_ROUTES.GET_TOTAL_JOB_COUNT, asyncHandler((req, res) => jobController.getTotalJobCount(req, res)));
 router.get(JOB_ROUTES.GET_JOB_STATISTICS_TIME_SERIES, asyncHandler((req, res) => jobController.getJobStatisticsByTimePeriod(req, res)));
 router.get(JOB_ROUTES.GET_TOP_COMPANIES, asyncHandler((req, res) => jobController.getTopCompaniesByJobCount(req, res)));
+router.patch(JOB_ROUTES.BULK_UPDATE_JOB_LISTING_BY_COMPANY, asyncHandler((req, res) => jobController.bulkUpdateJobListingByCompany(req, res)));
 
 export default router;

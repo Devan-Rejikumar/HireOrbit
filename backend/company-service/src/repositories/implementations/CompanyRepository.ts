@@ -94,11 +94,13 @@ export class CompanyRepository extends BaseRepository<Company> implements ICompa
   }
 
   async getAllCompaniesForAdmin(): Promise<Company[]> {
-    return this.findMany({ isBlocked: false });
+    // Admin should see ALL companies including blocked ones
+    return this.findMany({});
   }
 
   async getAllCompaniesForAdminWithPagination(page: number, limit: number): Promise<PaginationResult<Company>> {
-    return this.findWithPagination(page, limit, { isBlocked: false });
+    // Admin should see ALL companies including blocked ones
+    return this.findWithPagination(page, limit, {});
   }
 
   async approveCompany(companyId: string, adminId: string): Promise<Company> {

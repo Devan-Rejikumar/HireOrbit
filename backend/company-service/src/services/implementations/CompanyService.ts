@@ -76,6 +76,11 @@ export class CompanyService implements ICompanyService {
     
     if (!valid) throw new AppError('Invalid credentials', HttpStatusCode.UNAUTHORIZED);
     
+    // Check if company is blocked
+    if (company.isBlocked) {
+      throw new AppError('Your company account has been blocked. Please contact support for assistance.', HttpStatusCode.FORBIDDEN);
+    }
+    
     const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
       userId: company.id,
       companyId: company.id,
@@ -92,6 +97,15 @@ export class CompanyService implements ICompanyService {
     try {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as CompanyTokenPayload;
 
+      // Check if company is blocked before issuing new token
+      const company = await this._companyRepository.findById(decoded.companyId);
+      if (!company) {
+        throw new AppError('Company not found', HttpStatusCode.UNAUTHORIZED);
+      }
+      if (company.isBlocked) {
+        throw new AppError('Your company account has been blocked. Please contact support for assistance.', HttpStatusCode.FORBIDDEN);
+      }
+
       const tokenPayload: Omit<CompanyTokenPayload, 'iat' | 'exp'> = {
         userId: decoded.companyId,
         companyId: decoded.companyId,
@@ -102,7 +116,10 @@ export class CompanyService implements ICompanyService {
 
       const newAccessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
       return { accessToken: newAccessToken };
-    } catch {
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new Error('Invalid refresh token');
     }
   }
@@ -157,9 +174,29 @@ export class CompanyService implements ICompanyService {
 
   async blockCompany(id: string): Promise<void> {
     await this._companyRepository.blockCompany(id);
+    // Unlist all jobs for this company
+    try {
+      const result = await this._jobServiceClient.bulkUpdateJobListing(id, false);
+      if (result.count > 0) {
+        console.log(`Unlisted ${result.count} job(s) for blocked company ${id}`);
+      }
+    } catch (error) {
+      console.error(`Failed to unlist jobs for blocked company ${id}:`, error);
+      // Don't throw - blocking company should succeed even if job unlisting fails
+    }
   }
   async unblockCompany(id: string): Promise<void> {
     await this._companyRepository.unblockCompany(id);
+    // Re-list all jobs for this company (only those that were previously unlisted)
+    try {
+      const result = await this._jobServiceClient.bulkUpdateJobListing(id, true);
+      if (result.count > 0) {
+        console.log(`Re-listed ${result.count} job(s) for unblocked company ${id}`);
+      }
+    } catch (error) {
+      console.error(`Failed to re-list jobs for unblocked company ${id}:`, error);
+      // Don't throw - unblocking company should succeed even if job listing fails
+    }
   }
 
   async completeProfile(companyId: string, profileData: CompanyProfileData): Promise<CompanyResponse> {

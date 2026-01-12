@@ -38,5 +38,18 @@ export class JobServiceClient {
       return 0;
     }
   }
+
+  async bulkUpdateJobListing(companyId: string, isListed: boolean): Promise<{ count: number }> {
+    try {
+      const data = await this.httpClient.patch<{ success: boolean; data: { count: number } }>(
+        `/api/jobs/company/${companyId}/bulk-listing`,
+        { isListed }
+      );
+      return data.data || { count: 0 };
+    } catch (error: unknown) {
+      logger.error(`JobServiceClient: Error bulk updating job listing for company ${companyId}:`, error);
+      return { count: 0 };
+    }
+  }
 }
 

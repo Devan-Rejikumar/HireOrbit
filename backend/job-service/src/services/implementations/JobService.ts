@@ -135,4 +135,8 @@ export class JobService implements IJobService {
     
     return mapJobToResponse(updatedJob);
   }
+
+  async bulkUpdateJobListingByCompany(companyId: string, isListed: boolean): Promise<{ count: number }> {
+    return await this._jobRepository.bulkUpdateListingStatus(companyId, isListed);
+  }
 }

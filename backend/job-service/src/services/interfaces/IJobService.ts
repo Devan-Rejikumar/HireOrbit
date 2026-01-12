@@ -16,4 +16,5 @@ export interface IJobService {
   getJobStatisticsByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month'): Promise<Array<{ date: string; count: number }>>;
   getTopCompaniesByJobCount(limit: number): Promise<Array<{ companyId: string; companyName: string; jobCount: number }>>;
   toggleJobListing(jobId: string, companyId: string, isListed: boolean, authToken?: string): Promise<JobResponse>;
+  bulkUpdateJobListingByCompany(companyId: string, isListed: boolean): Promise<{ count: number }>;
 }

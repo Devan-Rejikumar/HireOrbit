@@ -335,4 +335,32 @@ export class JobController {
       buildSuccessResponse({ job }, Messages.JOB.LISTING_TOGGLED_SUCCESS),
     );
   }
+
+  async bulkUpdateJobListingByCompany(req: Request, res: Response): Promise<void> {
+    const { companyId } = req.params;
+    const { isListed } = req.body;
+
+    if (!companyId) {
+      throw new AppError(
+        Messages.VALIDATION.COMPANY_ID_REQUIRED,
+        ValidationStatusCode.MISSING_REQUIRED_FIELDS,
+      );
+    }
+
+    if (typeof isListed !== 'boolean') {
+      throw new AppError(
+        'isListed must be a boolean',
+        ValidationStatusCode.VALIDATION_ERROR,
+      );
+    }
+
+    const result = await this._jobService.bulkUpdateJobListingByCompany(companyId, isListed);
+    
+    res.status(JobStatusCode.JOB_UPDATED).json(
+      buildSuccessResponse(
+        result, 
+        `Successfully ${isListed ? 'listed' : 'unlisted'} ${result.count} job(s)`
+      ),
+    );
+  }
 }

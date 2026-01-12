@@ -16,4 +16,5 @@ export interface IJobRepository {
   getJobStatisticsByTimePeriod(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month'): Promise<Array<{ date: string; count: number }>>;
   getTopCompaniesByJobCount(limit: number): Promise<Array<{ companyId: string; companyName: string; jobCount: number }>>;
   updateListingStatus(jobId: string, isListed: boolean, listedAt: Date): Promise<Job>;
+  bulkUpdateListingStatus(companyId: string, isListed: boolean): Promise<{ count: number }>;
 }
