@@ -287,89 +287,84 @@ const AdminStatistics: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header with Title and Time Filter */}
-      <div className="flex items-center justify-between">
-        <div className="flex-1"></div>
-        <div className="flex-1 flex justify-center">
-          <h2 className="text-2xl font-bold text-white">Admin Dashboard</h2>
-        </div>
-        <div className="flex-1 flex justify-end">
-          <div className="flex items-center gap-4">
-            <label className="text-gray-300 font-medium">Time Period:</label>
-            <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-              className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="week">Week</option>
-              <option value="month">Month</option>
-              <option value="year">Year</option>
-            </select>
-          </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-white">Admin Dashboard</h2>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <label className="text-sm sm:text-base text-gray-300 font-medium">Time Period:</label>
+          <select
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
+            className="bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+          >
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+          </select>
         </div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-blue-500 hover:bg-gray-750 transition-all duration-200">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl border-l-4 border-blue-500 hover:bg-gray-750 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Total Users</p>
-              <p className="text-3xl font-bold text-white mt-2">
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Total Users</p>
+              <p className="text-xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">
                 {statistics?.totalUsers.toLocaleString() || '0'}
               </p>
             </div>
-            <FiUsers className="h-10 w-10 text-blue-400" />
+            <FiUsers className="h-8 w-8 sm:h-10 sm:w-10 text-blue-400" />
           </div>
         </div>
 
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-purple-500 hover:bg-gray-750 transition-all duration-200">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl border-l-4 border-purple-500 hover:bg-gray-750 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Total Companies</p>
-              <p className="text-3xl font-bold text-white mt-2">
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Total Companies</p>
+              <p className="text-xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">
                 {statistics?.totalCompanies.toLocaleString() || '0'}
               </p>
             </div>
-            <FiHome className="h-10 w-10 text-purple-400" />
+            <FiHome className="h-8 w-8 sm:h-10 sm:w-10 text-purple-400" />
           </div>
         </div>
 
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-green-500 hover:bg-gray-750 transition-all duration-200">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl border-l-4 border-green-500 hover:bg-gray-750 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Active Jobs</p>
-              <p className="text-3xl font-bold text-white mt-2">
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Active Jobs</p>
+              <p className="text-xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">
                 {statistics?.totalJobs.toLocaleString() || '0'}
               </p>
             </div>
-            <FiBriefcase className="h-10 w-10 text-green-400" />
+            <FiBriefcase className="h-8 w-8 sm:h-10 sm:w-10 text-green-400" />
           </div>
         </div>
 
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border-l-4 border-yellow-500 hover:bg-gray-750 transition-all duration-200">
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl border-l-4 border-yellow-500 hover:bg-gray-750 transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Total Revenue</p>
-              <p className="text-3xl font-bold text-white mt-2">
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Total Revenue</p>
+              <p className="text-xl sm:text-3xl font-bold text-white mt-1 sm:mt-2">
                 ₹{totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
-            <span className="text-4xl text-yellow-400 font-bold">₹</span>
+            <span className="text-2xl sm:text-4xl text-yellow-400 font-bold">₹</span>
           </div>
         </div>
       </div>
 
       {/* Chart */}
       {chartData ? (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-          <div style={{ height: '400px' }}>
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl">
+          <div className="h-64 sm:h-80 lg:h-96">
             <Bar data={chartData} options={chartOptions} />
           </div>
         </div>
       ) : statistics && statistics.dateRange ? (
-        <div className="bg-gray-800 p-8 rounded-lg text-center border border-gray-700">
-          <p className="text-gray-300 text-lg mb-2">No registrations found</p>
-          <p className="text-gray-400 text-sm">
+        <div className="bg-gray-800 p-4 sm:p-8 rounded-lg text-center border border-gray-700">
+          <p className="text-gray-300 text-base sm:text-lg mb-2">No registrations found</p>
+          <p className="text-gray-400 text-xs sm:text-sm">
             No users or companies registered from {formatDateRange(statistics.dateRange.startDate, statistics.dateRange.endDate)}
           </p>
         </div>
@@ -377,87 +372,87 @@ const AdminStatistics: React.FC = () => {
 
       {/* Top Companies, Top Applicants, and Top Jobs */}
       {statistics && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Top Companies */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl">
+            <h3 className="text-base sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
               <FiHome className="text-purple-400" />
               Top 5 Companies
             </h3>
             {statistics.topCompanies && statistics.topCompanies.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {statistics.topCompanies.map((company, index) => (
-                  <div key={company.companyId} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                  <div key={company.companyId} className="flex items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-base">
                         {index + 1}
                       </div>
-                      <div>
-                        <p className="text-white font-medium">{company.companyName}</p>
-                        <p className="text-gray-400 text-sm">{company.jobCount} {company.jobCount === 1 ? 'job' : 'jobs'}</p>
+                      <div className="min-w-0">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{company.companyName}</p>
+                        <p className="text-gray-400 text-xs sm:text-sm">{company.jobCount} {company.jobCount === 1 ? 'job' : 'jobs'}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-center py-4">No companies found</p>
+              <p className="text-gray-400 text-center py-4 text-sm">No companies found</p>
             )}
           </div>
 
           {/* Top Applicants */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl">
+            <h3 className="text-base sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
               <FiUsers className="text-blue-400" />
               Top 5 Users
             </h3>
             {statistics.topApplicants && statistics.topApplicants.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {statistics.topApplicants.map((applicant, index) => (
-                  <div key={applicant.userId} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                  <div key={applicant.userId} className="flex items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-base">
                         {index + 1}
                       </div>
-                      <div>
-                        <p className="text-white font-medium">{applicant.userName}</p>
-                        <p className="text-gray-400 text-sm">{applicant.userEmail}</p>
-                        <p className="text-gray-500 text-xs mt-1">{applicant.applicationCount} {applicant.applicationCount === 1 ? 'application' : 'applications'}</p>
+                      <div className="min-w-0">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{applicant.userName}</p>
+                        <p className="text-gray-400 text-xs sm:text-sm truncate">{applicant.userEmail}</p>
+                        <p className="text-gray-500 text-xs mt-0.5 sm:mt-1">{applicant.applicationCount} {applicant.applicationCount === 1 ? 'application' : 'applications'}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-center py-4">No applicants found</p>
+              <p className="text-gray-400 text-center py-4 text-sm">No applicants found</p>
             )}
           </div>
 
           {/* Top Jobs */}
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-xl md:col-span-2 lg:col-span-1">
+            <h3 className="text-base sm:text-xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
               <FiBriefcase className="text-green-400" />
               Top 5 Jobs
             </h3>
             {statistics.topJobs && statistics.topJobs.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {statistics.topJobs.map((job, index) => (
-                  <div key={job.jobId} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                  <div key={job.jobId} className="flex items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-base">
                         {index + 1}
                       </div>
-                      <div>
-                        <p className="text-white font-medium">{job.jobTitle}</p>
-                        <p className="text-gray-400 text-sm">{job.companyName}</p>
-                        <p className="text-gray-500 text-xs mt-1">{job.applicationCount} {job.applicationCount === 1 ? 'application' : 'applications'}</p>
+                      <div className="min-w-0">
+                        <p className="text-white font-medium text-sm sm:text-base truncate">{job.jobTitle}</p>
+                        <p className="text-gray-400 text-xs sm:text-sm truncate">{job.companyName}</p>
+                        <p className="text-gray-500 text-xs mt-0.5 sm:mt-1">{job.applicationCount} {job.applicationCount === 1 ? 'application' : 'applications'}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-center py-4">No jobs found</p>
+              <p className="text-gray-400 text-center py-4 text-sm">No jobs found</p>
             )}
           </div>
         </div>
