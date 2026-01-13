@@ -38,7 +38,13 @@ export interface CompanyRegistrationStep2 {
     size: string;
     website?: string;
     description: string;
-    headquarters: string;
+    headquarters?: string;
+    // Optional fields
+    foundedYear?: number;
+    phone?: string;
+    linkedinUrl?: string;
+    businessType?: string;
+    logo?: string;
   }
   
 export interface CompanyRegistrationStep3 {

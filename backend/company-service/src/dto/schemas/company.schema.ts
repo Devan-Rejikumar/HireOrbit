@@ -54,9 +54,15 @@ export const CompanyVerifyOTPSchema = z.object({
 export const CompanyStep2Schema = z.object({
   industry: z.string().min(1, 'Industry is required'),
   size: z.string().min(1, 'Company size is required'),
-  website: z.string().url('Invalid website URL').optional(),
+  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
   description: z.string().min(1, 'Description is required'),
-  headquarters: z.string().min(1, 'Headquarters is required'),
+  headquarters: z.string().optional().or(z.literal('')),
+  // Optional fields that were missing - now they will be saved
+  foundedYear: z.number().min(1800, 'Founded year must be at least 1800').optional(),
+  phone: z.string().max(20, 'Phone number too long').optional().or(z.literal('')),
+  linkedinUrl: z.string().url('Invalid LinkedIn URL').optional().or(z.literal('')),
+  businessType: z.string().max(100, 'Business type too long').optional().or(z.literal('')),
+  logo: z.string().optional().or(z.literal('')),
 });
 export const CompanyStep3Schema = z.object({
   contactPersonName: z.string().min(1, 'Contact person name is required'),
