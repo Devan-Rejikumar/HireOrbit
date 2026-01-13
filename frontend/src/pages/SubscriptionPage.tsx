@@ -15,6 +15,8 @@ import {
   CreditCard,
   Building2,
   Calendar as CalendarIcon,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTotalUnreadCount } from '@/hooks/useChat';
@@ -37,6 +39,7 @@ export const SubscriptionPage = () => {
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState<CompanyProfile | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -148,6 +151,7 @@ export const SubscriptionPage = () => {
     ];
 
   const handleSidebarClick = (item: typeof sidebarItems[0]) => {
+    setIsMobileMenuOpen(false);
     if (item.path) {
       navigate(item.path);
     }
@@ -196,39 +200,83 @@ export const SubscriptionPage = () => {
       {role === 'company' ? (
         <CompanyHeader company={company} onLogout={handleLogout} />
       ) : (
-        <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
+        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 fixed top-0 left-0 right-0 z-20">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2 sm:gap-8">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
               {/* Company Logo */}
-              <Logo size="md" textClassName="text-gray-900" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
+              <Logo size="md" textClassName="text-gray-900 hidden sm:block" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {/* Logout Button */}
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleLogout}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-2 sm:px-3"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
         </header>
       )}
 
-      <div className="flex min-h-screen relative">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <div className="flex min-h-screen relative pt-14 sm:pt-16">
         {/* Sidebar */}
         {role === 'company' ? (
-          <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10">
-            <nav className="p-6">
+          <aside className={`
+            fixed lg:sticky top-14 sm:top-16 left-0 z-40 lg:z-0
+            w-72 lg:w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200 
+            h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto 
+            [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+            transform transition-transform duration-300 ease-in-out
+            ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}>
+            <nav className="p-4 sm:p-6">
+              {/* Mobile: Company Info at top */}
+              <div className="lg:hidden mb-6 pt-2">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+                  {company?.logo ? (
+                    <img 
+                      src={company.logo} 
+                      alt={company.companyName || 'Company logo'} 
+                      className="w-10 h-10 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                      <Building2 className="h-5 w-5 text-white" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-gray-900 truncate">{company?.companyName || 'Company'}</div>
+                    <div className="text-xs text-purple-600 truncate">{company?.email || 'email@company.com'}</div>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1 mb-8">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
                 <button 
-                  onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_DASHBOARD); }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.COMPANY_DASHBOARD
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -238,8 +286,8 @@ export const SubscriptionPage = () => {
                   Dashboard
                 </button>
                 <button 
-                  onClick={() => navigate(ROUTES.CHAT)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left relative ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.CHAT); }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left relative transition-all duration-200 ${
                     location.pathname === ROUTES.CHAT
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -254,8 +302,8 @@ export const SubscriptionPage = () => {
                   )}
                 </button>
                 <button 
-                  onClick={() => navigate(ROUTES.COMPANY_DASHBOARD)} 
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_DASHBOARD); }} 
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.COMPANY_DASHBOARD
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -265,8 +313,8 @@ export const SubscriptionPage = () => {
                   Company Profile
                 </button>
                 <button 
-                  onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} 
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_APPLICATIONS); }} 
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.COMPANY_APPLICATIONS
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -276,8 +324,8 @@ export const SubscriptionPage = () => {
                   All Applicants
                 </button>
                 <button 
-                  onClick={() => navigate(ROUTES.COMPANY_JOBS)} 
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_JOBS); }} 
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.COMPANY_JOBS
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -287,22 +335,19 @@ export const SubscriptionPage = () => {
                   Job Listing
                 </button>
                 <button 
-                  onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                  className={`flex items-start gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_INTERVIEWS); }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.COMPANY_INTERVIEWS
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                  <span className="flex flex-col leading-tight">
-                    <span>Interview</span>
-                    <span>Management</span>
-                  </span>
+                  <CalendarIcon className="h-5 w-5" />
+                  Interview Management
                 </button>
                 <button 
-                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.SUBSCRIPTIONS); }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.SUBSCRIPTIONS
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -316,8 +361,8 @@ export const SubscriptionPage = () => {
               <div className="space-y-1">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
                 <button 
-                  onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_SETTINGS); }} 
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                     location.pathname === ROUTES.COMPANY_SETTINGS
                       ? 'bg-purple-50 text-purple-700 font-medium'
                       : 'text-gray-700 hover:bg-gray-50'
@@ -328,8 +373,8 @@ export const SubscriptionPage = () => {
                 </button>
               </div>
               
-              {/* Company Info */}
-              <div className="mt-8">
+              {/* Desktop: Company Info at bottom */}
+              <div className="hidden lg:block mt-8">
                 <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
                   {company?.logo ? (
                     <img 
@@ -351,8 +396,28 @@ export const SubscriptionPage = () => {
             </nav>
           </aside>
         ) : (
-          <aside className="w-64 bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10">
-            <nav className="p-6">
+          <aside className={`
+            fixed lg:sticky top-14 sm:top-16 left-0 z-40 lg:z-0
+            w-72 lg:w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200 
+            h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto 
+            [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+            transform transition-transform duration-300 ease-in-out
+            ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}>
+            <nav className="p-4 sm:p-6">
+              {/* Mobile: User Info at top */}
+              <div className="lg:hidden mb-6 pt-2">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-gray-900 truncate">{user?.username || 'User'}</div>
+                    <div className="text-xs text-purple-600 truncate">{user?.email || 'email@user.com'}</div>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1 mb-8">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
                 {sidebarItems.map((item) => {
@@ -363,7 +428,7 @@ export const SubscriptionPage = () => {
                     <button
                       key={item.id}
                       onClick={() => handleSidebarClick(item)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                         isActive
                           ? 'bg-purple-50 text-purple-700 font-medium'
                           : 'text-gray-700 hover:bg-gray-50'
@@ -384,35 +449,36 @@ export const SubscriptionPage = () => {
               <div className="space-y-1">
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Subscription</h3>
                 <button 
-                  onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                  className="flex items-center gap-3 px-3 py-2 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left"
+                  onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.SUBSCRIPTIONS); }}
+                  className="flex items-center gap-3 px-3 py-2.5 bg-purple-50 text-purple-700 font-medium rounded-lg w-full text-left transition-all duration-200"
                 >
                   <CreditCard className="h-5 w-5" />
                   Plans & Billing
                 </button>
               </div>
-            </nav>
-            
-            <div className="absolute bottom-6 left-6 right-6">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
-                  <User className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-900">{user?.username || 'User'}</div>
-                  <div className="text-xs text-purple-600">{user?.email || 'email@user.com'}</div>
+              
+              {/* Desktop: User Info at bottom */}
+              <div className="hidden lg:block mt-8">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{user?.username || 'User'}</div>
+                    <div className="text-xs text-purple-600">{user?.email || 'email@user.com'}</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            </nav>
           </aside>
         )}
 
         {/* Main Content */}
-        <main className="flex-1 pt-[84px] ml-64 h-[calc(100vh-68px)] overflow-y-auto hide-scrollbar">
-          <div className="h-full flex flex-col justify-center p-4 md:p-5">
+        <main className="flex-1 p-4 sm:p-6 min-w-0">
+          <div className="h-full flex flex-col justify-center">
             <div className="w-full max-w-6xl mx-auto">
               {/* Page Title and Description */}
-              <div className="text-center mb-3 md:mb-4">
+              <div className="text-center mb-4 sm:mb-6">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Plans & Pricing</h1>
                 <p className="text-gray-600 max-w-2xl mx-auto text-xs md:text-sm">
                   Choose the plan that fits your needs. All plans include essential features to get you started.
