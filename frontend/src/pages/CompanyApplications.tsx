@@ -194,6 +194,9 @@ const CompanyApplications = () => {
       )
     );
     
+    // Show toast IMMEDIATELY (optimistic feedback)
+    toast.success(`Application status updated to ${newStatus}`);
+    
     try {
       await api.put(`/applications/${applicationId}/status`, { 
         status: newStatus,
@@ -201,9 +204,8 @@ const CompanyApplications = () => {
       });
       // Silently refresh in background without showing loading bar
       fetchApplications(false); 
-      toast.success(`Application status updated to ${newStatus}`);
     } catch (error) {
-      // Revert optimistic update on error
+      // Revert optimistic update on error and show error toast
       fetchApplications(false);
       const axiosError = error as { response?: { data?: { message?: string } } };
       toast.error(axiosError?.response?.data?.message || 'Failed to update application status');
