@@ -288,40 +288,26 @@ const CompanyProfileSetup = () => {
 
   // Validation function for Step 2
   const validateStep2 = (): boolean => {
-    const errors: { description?: string; foundedYear?: string; phone?: string } = {};
+    let hasRequiredErrors = false;
 
-    // Validate description
+    // Validate description (REQUIRED)
     if (!formData.description || formData.description.trim().length === 0) {
-      errors.description = 'Company description is required. Please tell us about your company.';
+      hasRequiredErrors = true;
     } else if (formData.description.trim().length < 50) {
-      const remaining = 50 - formData.description.trim().length;
-      errors.description = `Description is too short. You need ${remaining} more character${remaining !== 1 ? 's' : ''} (minimum 50 characters).`;
+      hasRequiredErrors = true;
     } else if (formData.description.length > 500) {
-      errors.description = `Description is too long. Please reduce by ${formData.description.length - 500} character${formData.description.length - 500 !== 1 ? 's' : ''} (maximum 500 characters).`;
+      hasRequiredErrors = true;
     }
 
-    // Validate founded year (if provided)
-    if (formData.foundedYear !== undefined && formData.foundedYear !== null) {
-      const currentYear = new Date().getFullYear();
-      if (formData.foundedYear < 1800) {
-        errors.foundedYear = `Invalid year. Please enter a year between 1800 and ${currentYear}.`;
-      } else if (formData.foundedYear > currentYear) {
-        errors.foundedYear = `Year cannot be in the future. Please enter a year up to ${currentYear}.`;
-      } else if (!Number.isInteger(formData.foundedYear)) {
-        errors.foundedYear = 'Please enter a valid year (whole number only).';
-      }
+    // Check other required fields
+    if (!formData.industry || !formData.size) {
+      hasRequiredErrors = true;
     }
 
-    // Validate phone (if provided)
-    if (formData.phone && formData.phone.trim() !== '') {
-      const phoneError = validateIndianPhone(formData.phone);
-      if (phoneError) {
-        errors.phone = phoneError;
-      }
-    }
+    // Note: Founded Year and Phone are OPTIONAL - they don't block submission
+    // Inline errors will still show for user guidance
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return !hasRequiredErrors;
   };
 
   const handleStep2Submit = async (e: React.FormEvent) => {
@@ -580,19 +566,15 @@ const CompanyProfileSetup = () => {
         )}
       </div>
 
-      {/* Validation Errors Summary */}
-      {((Object.keys(validationErrors).length > 0 && 
-         (!!validationErrors.description || 
-          (formData.foundedYear !== undefined && !!validationErrors.foundedYear) ||
-          (formData.phone && formData.phone.trim() !== '' && !!validationErrors.phone))) ||
-        !formData.industry || 
+      {/* Validation Errors Summary - Only for required fields */}
+      {(!formData.industry || 
         !formData.size || 
         !formData.description || 
         (formData.description && formData.description.trim().length < 50)) && (
         <Alert className="mb-4 border-red-200 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            <div className="font-semibold mb-2">Please fix the following errors to continue:</div>
+            <div className="font-semibold mb-2">Please fix the following required fields:</div>
             <ul className="list-disc list-inside space-y-1 text-sm">
               {!formData.industry && (
                 <li>• <strong>Industry:</strong> Please select an industry from the dropdown</li>
@@ -605,15 +587,6 @@ const CompanyProfileSetup = () => {
               )}
               {formData.description && formData.description.trim().length < 50 && (
                 <li>• <strong>Company Description:</strong> Must be at least 50 characters (you have {formData.description.trim().length}, need {50 - formData.description.trim().length} more)</li>
-              )}
-              {validationErrors.description && (
-                <li>• <strong>Company Description:</strong> {validationErrors.description}</li>
-              )}
-              {validationErrors.foundedYear && formData.foundedYear !== undefined && (
-                <li>• <strong>Founded Year:</strong> {validationErrors.foundedYear}</li>
-              )}
-              {validationErrors.phone && formData.phone && formData.phone.trim() !== '' && (
-                <li>• <strong>Phone Number:</strong> {validationErrors.phone}</li>
               )}
             </ul>
           </AlertDescription>
@@ -628,11 +601,7 @@ const CompanyProfileSetup = () => {
           !formData.industry ||
           !formData.size ||
           !formData.description ||
-          (formData.description && formData.description.trim().length < 50) ||
-          // Only check validation errors for required fields or fields that have values
-          !!validationErrors.description ||
-          (formData.foundedYear !== undefined && !!validationErrors.foundedYear) ||
-          (formData.phone && formData.phone.trim() !== '' && !!validationErrors.phone)
+          (formData.description && formData.description.trim().length < 50)
         }
       >
         {loading ? (
