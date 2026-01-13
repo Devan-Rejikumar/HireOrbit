@@ -300,20 +300,20 @@ const CompanyList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Company Management</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-white">Company Management</h2>
         <button
           onClick={fetchAllCompanies}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 shadow-md"
+          className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 shadow-md text-sm sm:text-base"
         >
           Refresh
         </button>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-gray-800 rounded-lg shadow-xl p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -322,21 +322,21 @@ const CompanyList = () => {
                 placeholder="Search companies by name, email, contact person, or industry..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 text-sm sm:text-base"
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-300">Filter:</span>
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="mt-4 border-t border-gray-700 pt-4">
-          <div className="flex flex-wrap gap-2">
+        <div className="mt-3 sm:mt-4 border-t border-gray-700 pt-3 sm:pt-4">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {[
-              { key: 'all', label: 'All Companies', count: companies.length },
+              { key: 'all', label: 'All', count: companies.length },
               { key: 'pending', label: 'Pending', count: companies.filter(c => c.profileCompleted && !c.isVerified && !c.rejectionReason).length },
               { key: 'approved', label: 'Approved', count: companies.filter(c => c.isVerified).length },
               { key: 'rejected', label: 'Rejected', count: companies.filter(c => c.rejectionReason).length },
@@ -344,14 +344,15 @@ const CompanyList = () => {
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key as CompanyStatus)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                   statusFilter === tab.key
                     ? 'bg-purple-600 text-white border border-purple-500'
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {tab.label}
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.key === 'all' ? 'All' : tab.label.slice(0, 3)}</span>
+                <span className={`ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full text-xs ${
                   statusFilter === tab.key
                     ? 'bg-purple-500 text-white'
                     : 'bg-gray-600 text-gray-300'
@@ -366,16 +367,16 @@ const CompanyList = () => {
 
 
       {filteredCompanies.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-lg shadow-xl">
-          <CheckCircle className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">
+        <div className="text-center py-8 sm:py-12 bg-gray-800 rounded-lg shadow-xl">
+          <CheckCircle className="w-12 h-12 sm:w-16 sm:h-16 text-purple-400 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
             {searchTerm ? 'No companies found matching your search.' : 
               statusFilter === 'pending' ? 'No Pending Applications!' :
                 statusFilter === 'approved' ? 'No Approved Companies' :
                   statusFilter === 'rejected' ? 'No Rejected Companies' :
                     'No Companies Found'}
           </h3>
-          <p className="text-gray-300">
+          <p className="text-gray-300 text-sm sm:text-base px-4">
             {searchTerm ? 'Try adjusting your search terms.' :
               statusFilter === 'pending' ? 'All company applications have been processed.' :
                 statusFilter === 'approved' ? 'No companies have been approved yet.' :
@@ -422,22 +423,22 @@ const CompanyList = () => {
                           <button
                             onClick={() => handleApprove(company.id)}
                             disabled={actionLoading === company.id}
-                            className="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                            className="inline-flex items-center px-2 sm:px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 disabled:opacity-50 shadow-md text-xs sm:text-sm"
                           >
                             {actionLoading === company.id ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                              <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
                             ) : (
-                              <Check className="w-4 h-4 mr-1" />
+                              <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             )}
-                            Approve
+                            <span className="hidden sm:inline">Approve</span>
                           </button>
                           <button
                             onClick={() => openRejectModal(company)}
                             disabled={actionLoading === company.id}
-                            className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                            className="inline-flex items-center px-2 sm:px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50 shadow-md text-xs sm:text-sm"
                           >
-                            <X className="w-4 h-4 mr-1" />
-                            Reject
+                            <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                            <span className="hidden sm:inline">Reject</span>
                           </button>
                         </>
                       )}
@@ -445,40 +446,40 @@ const CompanyList = () => {
                         <button
                           onClick={() => handleUnblock(company.id)}
                           disabled={actionLoading === company.id}
-                          className="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                          className="inline-flex items-center px-2 sm:px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 disabled:opacity-50 shadow-md text-xs sm:text-sm"
                         >
                           {actionLoading === company.id ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
                           ) : (
-                            <Unlock className="w-4 h-4 mr-1" />
+                            <Unlock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           )}
-                          Unblock
+                          <span className="hidden sm:inline">Unblock</span>
                         </button>
                       ) : (
                         <button
                           onClick={() => handleBlock(company.id)}
                           disabled={actionLoading === company.id}
-                          className="inline-flex items-center px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                          className="inline-flex items-center px-2 sm:px-3 py-1 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-all duration-200 disabled:opacity-50 shadow-md text-xs sm:text-sm"
                         >
                           {actionLoading === company.id ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
                           ) : (
-                            <Ban className="w-4 h-4 mr-1" />
+                            <Ban className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           )}
-                          Block
+                          <span className="hidden sm:inline">Block</span>
                         </button>
                       )}
                       <button
                         onClick={() => handleViewCompany(company)}
                         disabled={detailsLoading}
-                        className="inline-flex items-center px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+                        className="inline-flex items-center px-2 sm:px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 shadow-md text-xs sm:text-sm"
                       >
                         {detailsLoading ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                          <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
                         ) : (
-                          <Eye className="w-4 h-4 mr-1" />
+                          <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         )}
-                        View
+                        <span className="hidden sm:inline">View</span>
                       </button>
                     </td>
                   </tr>
