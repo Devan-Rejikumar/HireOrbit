@@ -91,8 +91,8 @@ const AppliedJobsPage = () => {
           <nav className="p-4 sm:p-6">
             {/* Mobile: User Info at top */}
             <div className="lg:hidden mb-6 pt-2">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
                   <span className="text-white font-bold text-lg">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
@@ -116,7 +116,7 @@ const AppliedJobsPage = () => {
                     onClick={() => handleSidebarClick(item)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left relative transition-all duration-200 group ${
                       active
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium shadow-md'
+                        ? 'bg-blue-600 text-white font-medium shadow-md'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
@@ -148,8 +148,8 @@ const AppliedJobsPage = () => {
             
             {/* Desktop: User Info at bottom */}
             <div className="hidden lg:block mt-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-300">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-md transition-all duration-300">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
                   <span className="text-white font-semibold">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
