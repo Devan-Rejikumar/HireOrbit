@@ -174,65 +174,65 @@ const AdminSkills: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Skill Management</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Skill Management</h1>
       </div>
 
-      <div className="bg-gray-800 rounded-xl p-6 shadow-lg border border-purple-500/20">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+      <div className="bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg border border-purple-500/20">
+        <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
           <FiPlus className="text-purple-400" />
           {editingSkill ? 'Edit Skill' : 'Add New Skill'}
         </h2>
 
         {error && (
-          <div className="mb-4 px-4 py-2 rounded-md bg-red-900/40 border border-red-500 text-red-200 text-sm">
+          <div className="mb-4 px-3 sm:px-4 py-2 rounded-md bg-red-900/40 border border-red-500 text-red-200 text-xs sm:text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <form onSubmit={handleCreateOrUpdate} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Skill Name</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1">Skill Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. JavaScript"
-              className="w-full px-3 py-2 rounded-md bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 rounded-md bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
               maxLength={100}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Category (optional)</label>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1">Category (optional)</label>
             <input
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               placeholder="e.g. Programming Language"
-              className="w-full px-3 py-2 rounded-md bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 rounded-md bg-gray-900 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
               maxLength={100}
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {editingSkill && (
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 rounded-md border border-gray-600 text-gray-200 hover:bg-gray-700 flex items-center gap-2"
+                className="px-3 sm:px-4 py-2 rounded-md border border-gray-600 text-gray-200 hover:bg-gray-700 flex items-center gap-1 sm:gap-2 text-sm"
                 disabled={loading}
               >
                 <FiX />
-                Cancel
+                <span className="hidden sm:inline">Cancel</span>
               </button>
             )}
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
+              className="px-3 sm:px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 flex items-center gap-1 sm:gap-2 text-sm"
             >
               <FiPlus />
-              {editingSkill ? 'Update Skill' : 'Add Skill'}
+              {editingSkill ? 'Update' : 'Add'}
             </button>
           </div>
         </form>
@@ -304,7 +304,7 @@ const AdminSkills: React.FC = () => {
               </table>
             </div>
             {totalPages > 1 && (
-              <div className="flex items-center justify-between bg-gray-800 rounded-lg p-3 border-t border-gray-700">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-800 rounded-lg p-3 border-t border-gray-700">
                 <div className="text-xs text-gray-400">
                   Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, totalSkills)} of {totalSkills} skills
                 </div>
@@ -312,10 +312,10 @@ const AdminSkills: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-2 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="px-2 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-xs"
                   >
                     <FiChevronLeft className="h-3 w-3" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
                   </button>
                   <div className="flex items-center gap-0.5">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -333,7 +333,7 @@ const AdminSkills: React.FC = () => {
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                          className={`px-2 py-1.5 rounded-lg text-xs transition-colors ${
                             currentPage === pageNum
                               ? 'bg-purple-600 text-white font-semibold'
                               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -347,9 +347,9 @@ const AdminSkills: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-2 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="px-2 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-xs"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
                     <FiChevronRight className="h-3 w-3" />
                   </button>
                 </div>
