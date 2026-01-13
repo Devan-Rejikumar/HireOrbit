@@ -210,27 +210,27 @@ const AdminSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
           <FiSettings className="text-purple-400" />
           Branding & Company Settings
         </h2>
 
         {/* Logo Upload Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <FiImage className="text-purple-400" size={20} />
-            <h3 className="text-xl font-semibold text-white">Company Logo</h3>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <FiImage className="text-purple-400" size={18} />
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Company Logo</h3>
           </div>
-          <p className="text-gray-400 mb-4 text-sm">
+          <p className="text-gray-400 mb-3 sm:mb-4 text-xs sm:text-sm">
             Upload your company logo (PNG, JPG, or SVG) or enter a logo URL. This logo will be displayed across the platform in headers and chat watermark.
           </p>
 
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {/* Logo Preview */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 bg-gray-700 rounded-lg border-2 border-gray-600 flex items-center justify-center overflow-hidden">
+            <div className="flex-shrink-0 w-full sm:w-auto">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-700 rounded-lg border-2 border-gray-600 flex items-center justify-center overflow-hidden mx-auto sm:mx-0">
                 {logoPreview ? (
                   <img
                     src={logoPreview}
@@ -239,7 +239,7 @@ const AdminSettings: React.FC = () => {
                   />
                 ) : (
                   <div className="text-center text-gray-500">
-                    <FiImage size={32} className="mx-auto mb-2" />
+                    <FiImage size={28} className="mx-auto mb-2" />
                     <p className="text-xs">No Logo</p>
                   </div>
                 )}
@@ -247,28 +247,30 @@ const AdminSettings: React.FC = () => {
             </div>
 
             {/* Upload Controls */}
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 space-y-3 sm:space-y-4 w-full">
               {/* Toggle between upload and URL */}
               <div className="flex gap-2">
                 <button
                   onClick={() => setUseUrlInput(false)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-sm ${
                     !useUrlInput
                       ? 'bg-purple-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  Upload File
+                  <span className="hidden sm:inline">Upload File</span>
+                  <span className="sm:hidden">Upload</span>
                 </button>
                 <button
                   onClick={() => setUseUrlInput(true)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors text-sm ${
                     useUrlInput
                       ? 'bg-purple-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  Enter URL
+                  <span className="hidden sm:inline">Enter URL</span>
+                  <span className="sm:hidden">URL</span>
                 </button>
               </div>
 
@@ -285,9 +287,9 @@ const AdminSettings: React.FC = () => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
                   >
-                    <FiUpload size={18} />
+                    <FiUpload size={16} />
                     {uploading ? 'Uploading...' : logoPreview ? 'Change Logo' : 'Upload Logo'}
                   </button>
                   <p className="text-gray-400 text-xs mt-2">
@@ -297,20 +299,20 @@ const AdminSettings: React.FC = () => {
               ) : (
                 /* URL Input */
                 <div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       value={logoUrlInput}
                       onChange={(e) => setLogoUrlInput(e.target.value)}
                       placeholder="https://example.com/logo.png"
-                      className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
                     />
                     <button
                       onClick={handleLogoUrlSave}
                       disabled={uploading || !logoUrlInput.trim()}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm whitespace-nowrap"
                     >
-                      <FiSave size={18} />
+                      <FiSave size={16} />
                       {uploading ? 'Saving...' : 'Save URL'}
                     </button>
                   </div>
@@ -344,56 +346,56 @@ const AdminSettings: React.FC = () => {
         </div>
 
         {/* Company Name Section */}
-        <div className="mb-8 border-t border-gray-700 pt-6">
-          <div className="flex items-center gap-3 mb-4">
-            <FiType className="text-purple-400" size={20} />
-            <h3 className="text-xl font-semibold text-white">Company Name</h3>
+        <div className="mb-6 sm:mb-8 border-t border-gray-700 pt-4 sm:pt-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <FiType className="text-purple-400" size={18} />
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Company Name</h3>
           </div>
-          <p className="text-gray-400 mb-4 text-sm">
+          <p className="text-gray-400 mb-3 sm:mb-4 text-xs sm:text-sm">
             Set the company name that will be displayed as a fallback when no logo is available.
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <input
               type="text"
               value={settings.companyName || ''}
               onChange={handleCompanyNameChange}
               placeholder="Enter company name"
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
             />
             <button
               onClick={handleSaveCompanyName}
               disabled={saving}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
             >
-              <FiSave size={18} />
+              <FiSave size={16} />
               {saving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>
 
         {/* About Page Section */}
-        <div className="border-t border-gray-700 pt-6">
-          <div className="flex items-center gap-3 mb-4">
-            <FiFileText className="text-purple-400" size={20} />
-            <h3 className="text-xl font-semibold text-white">About Page Content</h3>
+        <div className="border-t border-gray-700 pt-4 sm:pt-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <FiFileText className="text-purple-400" size={18} />
+            <h3 className="text-lg sm:text-xl font-semibold text-white">About Page Content</h3>
           </div>
-          <p className="text-gray-400 mb-4 text-sm">
+          <p className="text-gray-400 mb-3 sm:mb-4 text-xs sm:text-sm">
             Edit the content that will be displayed on the public About page. You can use plain text or HTML.
           </p>
           <textarea
             value={settings.aboutPage || ''}
             onChange={handleAboutPageChange}
             placeholder="Enter about page content..."
-            rows={12}
-            className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y font-mono text-sm"
+            rows={8}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y font-mono text-xs sm:text-sm"
           />
-          <div className="mt-4">
+          <div className="mt-3 sm:mt-4">
             <button
               onClick={handleSaveAboutPage}
               disabled={saving}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
             >
-              <FiSave size={18} />
+              <FiSave size={16} />
               {saving ? 'Saving...' : 'Save About Page'}
             </button>
           </div>
