@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, Users, Briefcase, Plus, LogOut, UserCheck, MapPin, Edit, Trash2, ChevronLeft, ChevronRight, TrendingUp, Calendar, CheckCircle, AlertCircle, Settings, BarChart3, Eye, FileText, Star, Mail, Home, MessageSquare, User, GraduationCap, Clock, CreditCard, Bell, ChevronDown, ArrowRight, Calendar as CalendarIcon, RefreshCw, XCircle, Search, Lock } from 'lucide-react';
+import { Building2, Users, Briefcase, Plus, LogOut, UserCheck, MapPin, Edit, Trash2, ChevronLeft, ChevronRight, TrendingUp, Calendar, CheckCircle, AlertCircle, Settings, BarChart3, Eye, FileText, Star, Mail, Home, MessageSquare, User, GraduationCap, Clock, CreditCard, Bell, ChevronDown, ArrowRight, Calendar as CalendarIcon, RefreshCw, XCircle, Search, Lock, Menu, X } from 'lucide-react';
 import api from '@/api/axios';
 import EditJobModal from '@/components/EditJobModal';
 import EditCompanyProfileModal from '@/components/EditCompanyProfileModal';
@@ -132,6 +132,7 @@ const CompanyDashboard = () => {
   const [isMessagesSidebarOpen, setIsMessagesSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<ConversationResponse | null>(null);
   const [otherParticipantName, setOtherParticipantName] = useState<string>('');
   
@@ -798,15 +799,24 @@ const CompanyDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 fixed top-0 left-0 right-0 z-20">
+      <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 fixed top-0 left-0 right-0 z-20">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-8">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
             {/* Company Logo */}
-            <Logo size="md" textClassName="text-gray-900" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
+            <Logo size="md" textClassName="text-gray-900 hidden sm:block" iconClassName="bg-gradient-to-br from-purple-600 to-indigo-600" fallbackIcon="letter" />
             
-            {/* Company Info */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Company</span >
+            {/* Company Info - Hidden on mobile */}
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-sm text-gray-600">Company</span>
               <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
                 {company?.logo ? (
                   <img 
@@ -822,9 +832,11 @@ const CompanyDashboard = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            {/* Subscription Status Badge */}
-            <SubscriptionStatusBadge userType="company" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Subscription Status Badge - Hidden on small mobile */}
+            <div className="hidden sm:block">
+              <SubscriptionStatusBadge userType="company" />
+            </div>
             
             {/* Refresh Button - Only show on overview */}
             {activeSection === 'overview' && (
@@ -841,7 +853,7 @@ const CompanyDashboard = () => {
             {/* Post Job Button */}
             <div className="flex items-center gap-2">
               <Button 
-                className={`px-4 py-2 ${
+                className={`px-2 sm:px-4 py-2 text-sm ${
                   company?.profileCompleted && company?.isVerified
                     ? 'bg-purple-600 hover:bg-purple-700 text-white'
                     : 'bg-gray-400 text-gray-200 cursor-not-allowed'
@@ -853,13 +865,13 @@ const CompanyDashboard = () => {
                 }}
                 disabled={!company?.profileCompleted || !company?.isVerified}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Post a job
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Post a job</span>
               </Button>
               
-              {/* Notification message when button is disabled */}
+              {/* Notification message when button is disabled - Hidden on mobile */}
               {(!company?.profileCompleted || !company?.isVerified) && (
-                <div className="flex items-center gap-2">
+                <div className="hidden lg:flex items-center gap-2">
                   <div className="text-xs text-gray-500 max-w-xs">
                     {!company?.profileCompleted 
                       ? 'Complete your profile to post jobs'
@@ -882,40 +894,78 @@ const CompanyDashboard = () => {
             
             {/* Notification Bell */}
             <div className="relative">
-              <Bell className="h-6 w-6 text-gray-600 hover:text-gray-900 cursor-pointer" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600 hover:text-gray-900 cursor-pointer" />
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
             </div>
             
-            {/* Logout Button */}
+            {/* Logout Button - Icon only on mobile */}
             <Button 
               variant="outline" 
               size="sm"
               onClick={handleLogout}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="border-gray-300 text-gray-700 hover:bg-gray-50 px-2 sm:px-3"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
             
           </div>
         </div>
       </header>
 
-      <div className="flex min-h-screen relative">
-        {/* Sidebar */}
-        <aside className={`${isSidebarCollapsed ? 'hidden' : 'w-64'} bg-white shadow-sm border-r border-gray-200 fixed top-[68px] left-0 bottom-0 overflow-y-auto hide-scrollbar transition-all duration-300 z-10`}>
-          <nav className="p-6">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <div className="flex min-h-screen relative pt-14 sm:pt-16">
+        {/* Sidebar - Desktop: always visible, Mobile: slide-out overlay */}
+        <aside className={`
+          fixed lg:sticky top-14 sm:top-16 left-0 z-40 lg:z-0
+          w-72 lg:w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200 
+          h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto 
+          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isSidebarCollapsed ? 'lg:hidden' : ''}
+        `}>
+          <nav className="p-4 sm:p-6">
+            {/* Mobile: Company Info at top */}
+            <div className="lg:hidden mb-6 pt-2">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+                {company?.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={company.companyName || 'Company logo'} 
+                    className="w-10 h-10 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center shadow-sm">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">{company?.companyName || 'Company'}</div>
+                  <div className="text-xs text-purple-600 truncate">{company?.email || 'email@company.com'}</div>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               <button 
                 onClick={() => {
+                  setIsMobileMenuOpen(false);
                   if (location.pathname !== ROUTES.COMPANY_DASHBOARD) {
                     navigate(ROUTES.COMPANY_DASHBOARD);
                   } else {
                     setActiveSection('overview');
                   }
                 }}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium w-full text-left ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_DASHBOARD && activeSection === 'overview'
                     ? 'bg-purple-50 text-purple-700'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -925,8 +975,8 @@ const CompanyDashboard = () => {
                 Dashboard
               </button>
               <button 
-                onClick={handleMessagesClick}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left relative ${
+                onClick={() => { setIsMobileMenuOpen(false); handleMessagesClick(); }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left relative transition-all duration-200 ${
                   activeSection === 'messages'
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -941,8 +991,8 @@ const CompanyDashboard = () => {
                 )}
               </button>
               <button 
-                onClick={handleCompanyProfileClick} 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); handleCompanyProfileClick(); }} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_DASHBOARD && isCompanyDetailsOpen
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -952,8 +1002,8 @@ const CompanyDashboard = () => {
                 Company Profile
               </button>
               <button 
-                onClick={() => navigate(ROUTES.COMPANY_APPLICATIONS)} 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_APPLICATIONS); }} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_APPLICATIONS
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -963,8 +1013,8 @@ const CompanyDashboard = () => {
                 All Applicants
               </button>
               <button 
-                onClick={handleJobListingClick} 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); handleJobListingClick(); }} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_JOBS
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -974,22 +1024,19 @@ const CompanyDashboard = () => {
                 Job Listing
               </button>
               <button 
-                onClick={() => navigate(ROUTES.COMPANY_INTERVIEWS)}
-                className={`flex items-start gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_INTERVIEWS); }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_INTERVIEWS
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <CalendarIcon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                <span className="flex flex-col leading-tight">
-                  <span>Interview</span>
-                  <span>Management</span>
-                </span>
+                <CalendarIcon className="h-5 w-5" />
+                Interview Management
               </button>
               <button 
-                onClick={() => navigate(ROUTES.COMPANY_OFFERS)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_OFFERS); }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_OFFERS
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -999,8 +1046,8 @@ const CompanyDashboard = () => {
                 Offer Letters
               </button>
               <button 
-                onClick={() => navigate(ROUTES.SUBSCRIPTIONS)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.SUBSCRIPTIONS); }}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.SUBSCRIPTIONS
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -1014,8 +1061,8 @@ const CompanyDashboard = () => {
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Setting</h3>
               <button 
-                onClick={() => navigate(ROUTES.COMPANY_SETTINGS)} 
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left ${
+                onClick={() => { setIsMobileMenuOpen(false); navigate(ROUTES.COMPANY_SETTINGS); }} 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                   location.pathname === ROUTES.COMPANY_SETTINGS
                     ? 'bg-purple-50 text-purple-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -1026,8 +1073,8 @@ const CompanyDashboard = () => {
               </button>
             </div>
             
-            {/* Company Info */}
-            <div className="mt-8">
+            {/* Desktop: Company Info at bottom */}
+            <div className="hidden lg:block mt-8">
               <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-300">
                 {company?.logo ? (
                   <img 
@@ -1049,11 +1096,11 @@ const CompanyDashboard = () => {
           </nav>
         </aside>
 
-        {/* Toggle Sidebar Button - Only show in messages section */}
+        {/* Toggle Sidebar Button - Only show in messages section on desktop */}
         {activeSection === 'messages' && (
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 ${
+            className={`hidden lg:block absolute top-1/2 -translate-y-1/2 z-50 bg-white border border-gray-200 rounded-r-lg p-2 shadow-md hover:shadow-lg transition-all duration-300 hover:bg-gray-50 ${
               isSidebarCollapsed ? 'left-0' : 'left-64'
             }`}
             aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
@@ -1067,11 +1114,11 @@ const CompanyDashboard = () => {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 p-6 pt-[84px] ${isSidebarCollapsed ? 'ml-0' : 'ml-64'}`}>
+        <main className={`flex-1 p-4 sm:p-6 min-w-0 ${isSidebarCollapsed ? 'lg:ml-0' : 'lg:ml-0'}`}>
           {activeSection === 'messages' && company?.id ? (
-            <div className="h-[calc(100vh-68px)] flex -m-6">
-              {/* Chat Sidebar */}
-              <div className="w-1/3 border-r border-gray-200 bg-white">
+            <div className="h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)] flex flex-col lg:flex-row -m-4 sm:-m-6">
+              {/* Chat Sidebar - Full width on mobile when no conversation selected */}
+              <div className={`${selectedConversation ? 'hidden lg:block' : 'block'} w-full lg:w-1/3 border-r border-gray-200 bg-white h-full`}>
                 <ChatSidebar
                   conversations={allConversations}
                   selectedConversationId={selectedConversation?.id || null}
@@ -1081,25 +1128,39 @@ const CompanyDashboard = () => {
                 />
               </div>
 
-              {/* Chat Window */}
-              <div className="flex-1 bg-white">
+              {/* Chat Window - Full width on mobile when conversation selected */}
+              <div className={`${selectedConversation ? 'block' : 'hidden lg:block'} flex-1 bg-white h-full`}>
                 {selectedConversation ? (
-                  <ChatWindow
-                    conversationId={selectedConversation.id}
-                    currentUserId={company.id}
-                    messages={messages}
-                    isLoading={messagesLoading}
-                    onSendMessage={handleSendMessage}
-                    otherParticipantName={otherParticipantName}
-                    otherParticipantId={selectedConversation.userId}
-                  />
+                  <div className="h-full flex flex-col">
+                    {/* Mobile back button */}
+                    <div className="lg:hidden flex items-center gap-3 p-3 border-b border-gray-200 bg-white">
+                      <button
+                        onClick={() => setSelectedConversation(null)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <ChevronLeft className="h-5 w-5 text-gray-600" />
+                      </button>
+                      <span className="font-medium text-gray-900">{otherParticipantName || 'Chat'}</span>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <ChatWindow
+                        conversationId={selectedConversation.id}
+                        currentUserId={company.id}
+                        messages={messages}
+                        isLoading={messagesLoading}
+                        onSendMessage={handleSendMessage}
+                        otherParticipantName={otherParticipantName}
+                        otherParticipantId={selectedConversation.userId}
+                      />
+                    </div>
+                  </div>
                 ) : (
                   <div className="h-full flex items-center justify-center bg-gray-50">
                     <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center">
-                        <MessageSquare className="w-8 h-8 text-white" />
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 flex items-center justify-center">
+                        <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                       </div>
-                      <p className="text-gray-500 text-lg">Select a conversation to start chatting</p>
+                      <p className="text-gray-500 text-sm sm:text-lg">Select a conversation to start chatting</p>
                     </div>
                   </div>
                 )}
@@ -1108,25 +1169,25 @@ const CompanyDashboard = () => {
           ) : (
             <>
               {/* Dashboard Header */}
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Good morning, {company?.companyName || 'Company'}.</h1>
-                <p className="text-gray-600 mb-4">Here is your job listings statistic report from {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.</p>
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Good morning, {company?.companyName || 'Company'}.</h1>
+                <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Here is your job listings statistic report from {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.</p>
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 </div>
               </div>
 
               {/* Profile Completion Alert */}
               {needsProfileCompletion && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">Complete Your Company Profile</h3>
-                      <p className="text-sm text-gray-600">Your profile needs to be completed and approved before you can post jobs.</p>
+                      <h3 className="font-medium text-gray-900 text-sm sm:text-base">Complete Your Company Profile</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">Your profile needs to be completed and approved before you can post jobs.</p>
                     </div>
-                    <Button onClick={handleCompleteProfile} className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                    <Button onClick={handleCompleteProfile} className="bg-yellow-600 hover:bg-yellow-700 text-white text-sm w-full sm:w-auto">
                       <UserCheck className="h-4 w-4 mr-2" />
                   Complete Profile
                     </Button>
@@ -1219,8 +1280,8 @@ const CompanyDashboard = () => {
               </div>
 
               {/* Premium Statistics Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
                   <div className="flex items-center gap-2 text-gray-600 mb-1">
                     <Briefcase className="h-4 w-4" />
                     <span className="text-xs font-medium">Total Apps</span>
@@ -1416,50 +1477,50 @@ const CompanyDashboard = () => {
               </div>
 
               {/* Key Metrics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 {/* New candidates */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 group">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-4 sm:p-6 flex items-center justify-between hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 group">
                   <div>
-                    <div className="text-3xl font-bold text-blue-900 mb-1">{dashboardStats.newCandidates}</div>
-                    <div className="text-blue-700 font-medium">New candidates to review</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-900 mb-1">{dashboardStats.newCandidates}</div>
+                    <div className="text-sm sm:text-base text-blue-700 font-medium">New candidates to review</div>
                   </div>
-                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Users className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                 </div>
             
                 {/* Schedule for today */}
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-emerald-100 transition-all duration-300 group">
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 p-4 sm:p-6 flex items-center justify-between hover:shadow-lg hover:shadow-emerald-100 transition-all duration-300 group">
                   <div>
-                    <div className="text-3xl font-bold text-emerald-900 mb-1">{dashboardStats.scheduleToday}</div>
-                    <div className="text-emerald-700 font-medium">Schedule for today</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-emerald-900 mb-1">{dashboardStats.scheduleToday}</div>
+                    <div className="text-sm sm:text-base text-emerald-700 font-medium">Schedule for today</div>
                   </div>
-                  <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <CalendarIcon className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                 </div>
             
                 {/* Messages received */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-6 flex items-center justify-between hover:shadow-lg hover:shadow-purple-100 transition-all duration-300 group">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 p-4 sm:p-6 flex items-center justify-between hover:shadow-lg hover:shadow-purple-100 transition-all duration-300 group">
                   <div>
-                    <div className="text-3xl font-bold text-purple-900 mb-1">{dashboardStats.messagesReceived}</div>
-                    <div className="text-purple-700 font-medium">Messages received</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-purple-900 mb-1">{dashboardStats.messagesReceived}</div>
+                    <div className="text-sm sm:text-base text-purple-700 font-medium">Messages received</div>
                   </div>
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <MessageSquare className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                 </div>
               </div>
 
               {/* Job Statistics Section */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6 mb-8">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-4 sm:p-6 mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-                      <BarChart3 className="h-6 w-6 text-purple-600" />
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   Job Statistics
                     </h2>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       {timeFilter === 'Week' 
                         ? 'Showing job statistics for this week'
                         : timeFilter === 'Month'
@@ -1467,9 +1528,9 @@ const CompanyDashboard = () => {
                           : 'Showing job statistics for last year'}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2">
                     <button
-                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${
                         timeFilter === 'Week' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
                       }`}
                       onClick={() => setTimeFilter('Week')}
@@ -1477,7 +1538,7 @@ const CompanyDashboard = () => {
                   Week
                     </button>
                     <button
-                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${
                         timeFilter === 'Month' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
                       }`}
                       onClick={() => setTimeFilter('Month')}
@@ -1485,7 +1546,7 @@ const CompanyDashboard = () => {
                   Month
                     </button>
                     <button
-                      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium ${
                         timeFilter === 'Year' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-50'
                       }`}
                       onClick={() => setTimeFilter('Year')}
@@ -1496,9 +1557,9 @@ const CompanyDashboard = () => {
                 </div>
             
                 {/* Tabs */}
-                <div className="flex gap-4 mb-6">
+                <div className="flex gap-2 sm:gap-4 mb-4 sm:mb-6 overflow-x-auto">
                   <button
-                    className={`pb-2 text-sm font-medium border-b-2 ${
+                    className={`pb-2 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap ${
                       activeTab === 'Overview' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
                     }`}
                     onClick={() => setActiveTab('Overview')}
@@ -1506,7 +1567,7 @@ const CompanyDashboard = () => {
                 Overview
                   </button>
                   <button
-                    className={`pb-2 text-sm font-medium border-b-2 ${
+                    className={`pb-2 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap ${
                       activeTab === 'Jobs View' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
                     }`}
                     onClick={() => setActiveTab('Jobs View')}
@@ -1514,7 +1575,7 @@ const CompanyDashboard = () => {
                 Jobs View
                   </button>
                   <button
-                    className={`pb-2 text-sm font-medium border-b-2 ${
+                    className={`pb-2 text-xs sm:text-sm font-medium border-b-2 whitespace-nowrap ${
                       activeTab === 'Jobs Applied' ? 'border-purple-500 text-purple-700' : 'border-transparent text-gray-600'
                     }`}
                     onClick={() => setActiveTab('Jobs Applied')}
@@ -1524,10 +1585,10 @@ const CompanyDashboard = () => {
                 </div>
 
                 {/* Chart Area */}
-                <div className="flex gap-6">
+                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                   <div className="flex-1">
                     {/* Bar chart for Job Applied per month */}
-                    <div className="h-64">
+                    <div className="h-48 sm:h-64">
                       {currentPlan !== 'free' ? (
                         <Bar 
                           data={jobAppliedChartData} 
@@ -1549,33 +1610,33 @@ const CompanyDashboard = () => {
                       ) : (
                         <div className="h-full bg-gray-50 rounded-lg flex items-center justify-center">
                           <div className="text-center">
-                            <Lock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-500">Upgrade to view chart</p>
+                            <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">Upgrade to view chart</p>
                           </div>
                         </div>
                       )}
                     </div>
                 
                     {/* Legend */}
-                    <div className="flex gap-6 mt-4">
+                    <div className="flex gap-4 sm:gap-6 mt-3 sm:mt-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-purple-500 rounded"></div>
-                        <span className="text-sm text-gray-600">Job Applied</span>
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 bg-purple-500 rounded"></div>
+                        <span className="text-xs sm:text-sm text-gray-600">Job Applied</span>
                       </div>
                     </div>
                   </div>
               
                   {/* Job Applied Card */}
-                  <div className="w-64 space-y-4">
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <FileText className="h-6 w-6 text-purple-600" />
-                        <span className="font-medium text-gray-900">Job Applied</span>
+                  <div className="w-full lg:w-64 space-y-4">
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+                      <div className="flex items-center gap-3 mb-2 sm:mb-3">
+                        <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                        <span className="font-medium text-gray-900 text-sm sm:text-base">Job Applied</span>
                       </div>
-                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                         {currentPlan !== 'free' ? dashboardStats.jobApplied : '—'}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs sm:text-sm text-gray-600">
                     Total applications received
                       </div>
                     </div>
@@ -1584,10 +1645,10 @@ const CompanyDashboard = () => {
               </div>
 
               {/* Bottom Section */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Applicants Summary */}
                 <div className="lg:col-span-1">
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6 relative">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-4 sm:p-6 relative">
                     {currentPlan === 'free' && (
                       <div className="absolute inset-0 bg-white bg-opacity-95 rounded-xl flex items-center justify-center z-10">
                         <div className="text-center">
@@ -1658,46 +1719,46 @@ const CompanyDashboard = () => {
 
                 {/* Job Updates - Extended */}
                 <div className="lg:col-span-1">
-                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-purple-600" />
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                     Job Updates
                       </h3>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         {/* Pagination Controls */}
                         {jobs.length > jobUpdatesPageSize && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <button
                               onClick={() => goToJobUpdatesPage(jobUpdatesPage - 1)}
                               disabled={jobUpdatesPage <= 1}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors ${
                                 jobUpdatesPage <= 1 
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                   : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
                               }`}
                             >
-                              <ChevronLeft className="h-4 w-4" />
+                              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
-                            <span className="text-xs text-gray-500 px-2">
+                            <span className="text-xs text-gray-500 px-1 sm:px-2">
                               {jobUpdatesPage} / {jobUpdatesTotalPages}
                             </span>
                             <button
                               onClick={() => goToJobUpdatesPage(jobUpdatesPage + 1)}
                               disabled={jobUpdatesPage >= jobUpdatesTotalPages}
-                              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-colors ${
                                 jobUpdatesPage >= jobUpdatesTotalPages 
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                   : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
                               }`}
                             >
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
                           </div>
                         )}
                         <button 
                           onClick={handleJobListingClick}
-                          className="text-sm text-purple-600 hover:text-purple-700 cursor-pointer"
+                          className="text-xs sm:text-sm text-purple-600 hover:text-purple-700 cursor-pointer"
                         >
                       View All →
                         </button>
@@ -1705,16 +1766,16 @@ const CompanyDashboard = () => {
                     </div>
                 
                     {jobs.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-500 mb-4">No jobs posted yet</p>
+                      <div className="text-center py-6 sm:py-8">
+                        <Briefcase className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3" />
+                        <p className="text-sm text-gray-500 mb-4">No jobs posted yet</p>
                         <Button 
                           onClick={() => {
                             if (company?.profileCompleted && company?.isVerified) {
                               navigate(ROUTES.COMPANY_POST_JOB);
                             }
                           }}
-                          className={`${
+                          className={`text-sm ${
                             company?.profileCompleted && company?.isVerified
                               ? 'bg-purple-600 hover:bg-purple-700 text-white'
                               : 'bg-gray-400 text-gray-200 cursor-not-allowed'
@@ -1726,7 +1787,7 @@ const CompanyDashboard = () => {
                         </Button>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-3 sm:gap-4">
                         {/* Paginated Company Jobs */}
                         {paginatedJobUpdates.map((job) => (
                           <div key={job.id} className="p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
