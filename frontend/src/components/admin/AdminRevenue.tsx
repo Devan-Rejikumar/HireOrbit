@@ -385,21 +385,21 @@ const AdminRevenue: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Revenue Dashboard</h2>
-            <p className="text-gray-400">Track subscription revenue and transactions</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Revenue Dashboard</h2>
+            <p className="text-sm sm:text-base text-gray-400">Track subscription revenue and transactions</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-400 font-medium">Time Period:</label>
+              <label className="text-xs sm:text-sm text-gray-400 font-medium">Time:</label>
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="bg-gray-800 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-base"
               >
                 <option value="day">Day</option>
                 <option value="week">Week</option>
@@ -411,11 +411,12 @@ const AdminRevenue: React.FC = () => {
             <button
               onClick={handleSyncTransactions}
               disabled={syncing}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 text-xs sm:text-sm"
               title="Sync missing transactions from Stripe"
             >
               <FiRefreshCw className={syncing ? 'animate-spin' : ''} />
-              Sync from Stripe
+              <span className="hidden sm:inline">Sync from Stripe</span>
+              <span className="sm:hidden">Sync</span>
             </button>
             <button
               onClick={() => {
@@ -423,64 +424,64 @@ const AdminRevenue: React.FC = () => {
                 fetchTransactions(1);
               }}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50 text-xs sm:text-sm"
             >
               <FiRefreshCw className={refreshing ? 'animate-spin' : ''} />
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-600/20 rounded-lg">
-              <FiDollarSign className="text-2xl text-purple-400" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="p-2 sm:p-3 bg-purple-600/20 rounded-lg">
+              <FiDollarSign className="text-lg sm:text-2xl text-purple-400" />
             </div>
           </div>
-          <h3 className="text-gray-400 text-sm mb-1">Total Revenue</h3>
-          <p className="text-2xl font-bold text-white">
+          <h3 className="text-gray-400 text-xs sm:text-sm mb-1">Total Revenue</h3>
+          <p className="text-lg sm:text-2xl font-bold text-white">
             {statistics ? formatCurrency(statistics.totalRevenue) : '₹0.00'}
           </p>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-600/20 rounded-lg">
-              <FiUsers className="text-2xl text-blue-400" />
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="p-2 sm:p-3 bg-blue-600/20 rounded-lg">
+              <FiUsers className="text-lg sm:text-2xl text-blue-400" />
             </div>
           </div>
-          <h3 className="text-gray-400 text-sm mb-1">User Revenue</h3>
-          <p className="text-2xl font-bold text-white">
+          <h3 className="text-gray-400 text-xs sm:text-sm mb-1">User Revenue</h3>
+          <p className="text-lg sm:text-2xl font-bold text-white">
             {statistics ? formatCurrency(statistics.revenueByUserType.user) : '₹0.00'}
           </p>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-green-600/20 rounded-lg">
-              <FiHome className="text-2xl text-green-400" />
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="p-2 sm:p-3 bg-green-600/20 rounded-lg">
+              <FiHome className="text-lg sm:text-2xl text-green-400" />
             </div>
           </div>
-          <h3 className="text-gray-400 text-sm mb-1">Company Revenue</h3>
-          <p className="text-2xl font-bold text-white">
+          <h3 className="text-gray-400 text-xs sm:text-sm mb-1">Company Revenue</h3>
+          <p className="text-lg sm:text-2xl font-bold text-white">
             {statistics ? formatCurrency(statistics.revenueByUserType.company) : '₹0.00'}
           </p>
         </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Over Time */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Revenue Over Time</h3>
-          <div className="h-64">
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Revenue Over Time</h3>
+          <div className="h-48 sm:h-64">
             {timeChartData ? (
               <Line data={timeChartData} options={lineChartOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                 No revenue data available
               </div>
             )}
@@ -488,13 +489,13 @@ const AdminRevenue: React.FC = () => {
         </div>
 
         {/* Revenue by User Type */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Revenue by User Type</h3>
-          <div className="h-64">
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Revenue by User Type</h3>
+          <div className="h-48 sm:h-64">
             {userTypeChartData ? (
               <Doughnut data={userTypeChartData} options={doughnutOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                 No revenue data available
               </div>
             )}
