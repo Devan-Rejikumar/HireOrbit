@@ -601,7 +601,7 @@ const CompanyProfileSetup = () => {
           !formData.industry ||
           !formData.size ||
           !formData.description ||
-          (formData.description && formData.description.trim().length < 50)
+          (!!formData.description && formData.description.trim().length < 50)
         }
       >
         {loading ? (
