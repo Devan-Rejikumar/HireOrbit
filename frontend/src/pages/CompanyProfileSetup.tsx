@@ -79,6 +79,12 @@ const CompanyProfileSetup = () => {
   });
   const [industryCategories, setIndustryCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    description?: string;
+    foundedYear?: string;
+    phone?: string;
+    contactPersonPhone?: string;
+  }>({});
   useEffect(() => {
     // Fetch industry categories
     const fetchCategories = async () => {
@@ -181,6 +187,42 @@ const CompanyProfileSetup = () => {
   }, [isNavigating, checkProfileStep]);
 
 
+  // Indian phone number validation function
+  const validateIndianPhone = (phone: string | undefined): string | undefined => {
+    if (!phone || phone.trim() === '') return undefined; // Allow empty for optional fields
+    
+    // Remove spaces, dashes, parentheses for validation
+    const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // Check if it starts with +91 or 0, then remove country code/leading zero
+    let digits = cleaned;
+    if (cleaned.startsWith('+91')) {
+      digits = cleaned.substring(3);
+    } else if (cleaned.startsWith('91') && cleaned.length === 12) {
+      digits = cleaned.substring(2);
+    } else if (cleaned.startsWith('0') && cleaned.length === 11) {
+      digits = cleaned.substring(1);
+    }
+    
+    // Mobile number validation (10 digits starting with 6-9)
+    if (digits.length === 10 && /^[6-9]/.test(digits)) {
+      if (!/^\d{10}$/.test(digits)) {
+        return 'Invalid mobile number. Must be 10 digits starting with 6, 7, 8, or 9';
+      }
+      return undefined; // Valid
+    }
+    
+    // Landline validation (area code + number, total 8-12 digits)
+    if (digits.length >= 8 && digits.length <= 12) {
+      if (!/^\d{8,12}$/.test(digits)) {
+        return 'Invalid landline number';
+      }
+      return undefined; // Valid
+    }
+    
+    return 'Please enter a valid Indian phone number (e.g., +91 9876543210 or 9876543210)';
+  };
+
   const handleInputChange = (
     field: keyof CompanyData,
     value: string | number | undefined,
@@ -189,12 +231,83 @@ const CompanyProfileSetup = () => {
       ...prev,
       [field]: value,
     }));
+    
+    // Validate phone numbers in real-time
+    if (field === 'phone' && typeof value === 'string') {
+      const error = validateIndianPhone(value);
+      setValidationErrors(prev => ({ ...prev, phone: error }));
+    } else if (field === 'contactPersonPhone' && typeof value === 'string') {
+      const error = validateIndianPhone(value);
+      setValidationErrors(prev => ({ ...prev, contactPersonPhone: error }));
+    } else if (field === 'phone' || field === 'contactPersonPhone') {
+      // Clear error when field is cleared
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    // Clear description error when user starts typing
+    if (field === 'description' && validationErrors.description) {
+      setValidationErrors(prev => ({ ...prev, description: undefined }));
+    }
+    
+    // Clear foundedYear error when user starts typing
+    if (field === 'foundedYear' && validationErrors.foundedYear) {
+      setValidationErrors(prev => ({ ...prev, foundedYear: undefined }));
+    }
+  };
+
+  // Validation function for Step 2
+  const validateStep2 = (): boolean => {
+    const errors: { description?: string; foundedYear?: string; phone?: string } = {};
+
+    // Validate description
+    if (!formData.description || formData.description.trim().length === 0) {
+      errors.description = 'Company description is required';
+    } else if (formData.description.trim().length < 50) {
+      errors.description = `Company description must be at least 50 characters (currently ${formData.description.trim().length})`;
+    } else if (formData.description.length > 500) {
+      errors.description = `Company description must not exceed 500 characters (currently ${formData.description.length})`;
+    }
+
+    // Validate founded year (if provided)
+    if (formData.foundedYear !== undefined && formData.foundedYear !== null) {
+      const currentYear = new Date().getFullYear();
+      if (formData.foundedYear < 1800) {
+        errors.foundedYear = 'Founded year must be at least 1800';
+      } else if (formData.foundedYear > currentYear) {
+        errors.foundedYear = `Founded year cannot be greater than ${currentYear}`;
+      } else if (!Number.isInteger(formData.foundedYear)) {
+        errors.foundedYear = 'Founded year must be a whole number';
+      }
+    }
+
+    // Validate phone (if provided)
+    if (formData.phone && formData.phone.trim() !== '') {
+      const phoneError = validateIndianPhone(formData.phone);
+      if (phoneError) {
+        errors.phone = phoneError;
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setValidationErrors({});
+
+    // Validate before submitting
+    if (!validateStep2()) {
+      setError('Please fix the validation errors before continuing');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const step2Data = {
@@ -225,10 +338,36 @@ const CompanyProfileSetup = () => {
     }
   };
 
+  // Validation function for Step 3
+  const validateStep3 = (): boolean => {
+    const errors: { contactPersonPhone?: string } = {};
+
+    // Validate contact person phone (required in step 3)
+    if (!formData.contactPersonPhone || formData.contactPersonPhone.trim() === '') {
+      errors.contactPersonPhone = 'Contact person phone number is required';
+    } else {
+      const phoneError = validateIndianPhone(formData.contactPersonPhone);
+      if (phoneError) {
+        errors.contactPersonPhone = phoneError;
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleStep3Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setValidationErrors({});
+
+    // Validate before submitting
+    if (!validateStep3()) {
+      setError('Please fix the validation errors before continuing');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const step3Data = {
@@ -317,7 +456,14 @@ const CompanyProfileSetup = () => {
               )
             }
             placeholder="2020"
+            className={validationErrors.foundedYear ? 'border-red-500 focus:ring-red-500' : ''}
           />
+          {validationErrors.foundedYear && (
+            <p className="text-xs text-red-500 mt-1">{validationErrors.foundedYear}</p>
+          )}
+          <p className="text-xs text-gray-500">
+            Optional: Year your company was founded (1800 - {new Date().getFullYear()})
+          </p>
         </div>
 
         {/* Headquarters */}
@@ -339,8 +485,16 @@ const CompanyProfileSetup = () => {
             type="tel"
             value={formData.phone}
             onChange={(e) => handleInputChange('phone', e.target.value)}
-            placeholder="+1 (555) 123-4567"
+            placeholder="+91 9876543210 or 9876543210"
+            className={validationErrors.phone ? 'border-red-500 focus:ring-red-500' : ''}
+            maxLength={15}
           />
+          {validationErrors.phone && (
+            <p className="text-xs text-red-500 mt-1">{validationErrors.phone}</p>
+          )}
+          <p className="text-xs text-gray-500">
+            Optional: Indian phone number (mobile: 10 digits starting with 6-9, or landline with area code)
+          </p>
         </div>
 
         {/* Business Type */}
@@ -381,10 +535,22 @@ const CompanyProfileSetup = () => {
           placeholder="Tell us about your company, mission, and what makes you unique..."
           rows={4}
           required
+          className={validationErrors.description ? 'border-red-500 focus:ring-red-500' : ''}
+          maxLength={500}
         />
-        <p className="text-xs text-gray-500">
-          {formData.description?.length || 0}/500 characters
-        </p>
+        <div className="flex justify-between items-center">
+          <p className="text-xs text-gray-500">
+            {formData.description?.length || 0}/500 characters
+            {formData.description && formData.description.trim().length < 50 && (
+              <span className="text-orange-500 ml-1">
+              (Minimum 50 characters required)
+            </span>
+            )}
+          </p>
+        </div>
+        {validationErrors.description && (
+          <p className="text-xs text-red-500 mt-1">{validationErrors.description}</p>
+        )}
       </div>
 
       <Button
@@ -394,7 +560,9 @@ const CompanyProfileSetup = () => {
           loading ||
           !formData.industry ||
           !formData.size ||
-          !formData.description
+          !formData.description ||
+          (formData.description && formData.description.trim().length < 50) ||
+          Object.keys(validationErrors).length > 0
         }
       >
         {loading ? (
@@ -465,7 +633,7 @@ const CompanyProfileSetup = () => {
 
         {/* Contact Person Phone */}
         <div className="space-y-2">
-          <Label htmlFor="contactPersonPhone">Contact Phone</Label>
+          <Label htmlFor="contactPersonPhone">Contact Phone *</Label>
           <Input
             id="contactPersonPhone"
             type="tel"
@@ -473,8 +641,17 @@ const CompanyProfileSetup = () => {
             onChange={(e) =>
               handleInputChange('contactPersonPhone', e.target.value)
             }
-            placeholder="+1 (555) 123-4567"
+            placeholder="+91 9876543210 or 9876543210"
+            required
+            className={validationErrors.contactPersonPhone ? 'border-red-500 focus:ring-red-500' : ''}
+            maxLength={15}
           />
+          {validationErrors.contactPersonPhone && (
+            <p className="text-xs text-red-500 mt-1">{validationErrors.contactPersonPhone}</p>
+          )}
+          <p className="text-xs text-gray-500">
+            Indian phone number (mobile: 10 digits starting with 6-9, or landline with area code)
+          </p>
         </div>
       </div>
 
@@ -496,7 +673,9 @@ const CompanyProfileSetup = () => {
             loading ||
             !formData.contactPersonName ||
             !formData.contactPersonTitle ||
-            !formData.contactPersonEmail
+            !formData.contactPersonEmail ||
+            !formData.contactPersonPhone ||
+            !!validationErrors.contactPersonPhone
           }
         >
           {loading ? (
