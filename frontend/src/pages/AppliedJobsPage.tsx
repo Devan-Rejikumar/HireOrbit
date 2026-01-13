@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { User, Calendar, MessageSquare, Lock, Home, Search, Briefcase, Settings, FileText, Menu, X, ChevronRight, Sparkles } from 'lucide-react';
-import { NotificationBell } from '@/components/NotificationBell';
-import { MessagesDropdown } from '@/components/MessagesDropdown';
+import { User, Calendar, MessageSquare, Lock, Home, Search, Briefcase, Settings, FileText, Menu, X, ChevronRight } from 'lucide-react';
 import { useTotalUnreadCount } from '@/hooks/useChat';
 import AppliedJobs from '@/components/AppliedJobs';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
@@ -22,7 +19,7 @@ const AppliedJobsPage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -61,38 +58,40 @@ const AppliedJobsPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed top-16 left-4 z-40 bg-white shadow-lg rounded-full p-2.5 border border-gray-200 hover:bg-gray-50 transition-all duration-200"
-        aria-label="Toggle menu"
-      >
-        {isSidebarOpen ? <X className="h-5 w-5 text-gray-700" /> : <Menu className="h-5 w-5 text-gray-700" />}
-      </button>
-
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-30 pt-14"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      <div className="flex min-h-screen relative pt-14 sm:pt-16">
-        {/* Sidebar */}
+      <div className="flex min-h-screen pt-14 sm:pt-16">
+        {/* Sidebar - Desktop: always visible, Mobile: slide-out overlay */}
         <aside className={`
-          fixed lg:sticky top-14 sm:top-16 left-0 z-40 lg:z-0
+          fixed lg:sticky top-14 sm:top-16 left-0 z-50 lg:z-0
           w-72 lg:w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200 
           h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] overflow-y-auto 
           [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
           transform transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
-          <nav className="p-4 sm:p-6">
+          {/* Mobile close button */}
+          <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-100">
+            <span className="font-semibold text-gray-900">Menu</span>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
+          </div>
+
+          <nav className="p-4 lg:p-6">
             {/* Mobile: User Info at top */}
-            <div className="lg:hidden mb-6 pt-2">
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm">
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
+            <div className="lg:hidden mb-6">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold text-lg">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
@@ -114,14 +113,14 @@ const AppliedJobsPage = () => {
                   <button
                     key={item.id}
                     onClick={() => handleSidebarClick(item)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left relative transition-all duration-200 group ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left transition-all duration-200 group ${
                       active
                         ? 'bg-blue-600 text-white font-medium shadow-md'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     <Icon className={`h-5 w-5 flex-shrink-0 ${active ? 'text-white' : ''}`} />
-                    <span className="flex-1 text-sm sm:text-base">{item.label}</span>
+                    <span className="flex-1 text-sm">{item.label}</span>
                     {'badge' in item && item.badge !== undefined && item.badge > 0 && (
                       <span className={`text-xs font-semibold rounded-full px-2 py-0.5 min-w-[20px] text-center ${
                         active ? 'bg-white text-blue-600' : 'bg-red-500 text-white'
@@ -141,7 +140,7 @@ const AppliedJobsPage = () => {
                 className="flex items-center gap-3 px-3 py-2.5 text-gray-700 hover:bg-gray-100 rounded-xl w-full text-left transition-all duration-200 group"
               >
                 <Settings className="h-5 w-5 flex-shrink-0" />
-                <span className="text-sm sm:text-base">Settings</span>
+                <span className="text-sm">Settings</span>
                 <ChevronRight className="h-4 w-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-400" />
               </button>
             </div>
@@ -149,7 +148,7 @@ const AppliedJobsPage = () => {
             {/* Desktop: User Info at bottom */}
             <div className="hidden lg:block mt-6 pt-6 border-t border-gray-200">
               <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200 hover:shadow-md transition-all duration-300">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">
                     {user?.username?.charAt(0).toUpperCase()}
                   </span>
@@ -164,8 +163,8 @@ const AppliedJobsPage = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
-          <div className="pl-8 lg:pl-0">
+        <main className="flex-1 min-w-0 pb-20 lg:pb-0">
+          <div className="p-4 sm:p-6 lg:p-8">
             <AppliedJobs userId={user.id} />
           </div>
         </main>
@@ -221,9 +220,6 @@ const AppliedJobsPage = () => {
         </div>
       </nav>
 
-      {/* Bottom padding for mobile nav */}
-      <div className="lg:hidden h-16" />
-
       {/* Change Password Modal */}
       <ChangePasswordModal
         isOpen={isChangePasswordModalOpen}
@@ -234,4 +230,3 @@ const AppliedJobsPage = () => {
 };
 
 export default AppliedJobsPage;
-
