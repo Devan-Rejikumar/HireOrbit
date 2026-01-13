@@ -207,7 +207,7 @@ const CompanyProfileSetup = () => {
     // Mobile number validation (10 digits starting with 6-9)
     if (digits.length === 10 && /^[6-9]/.test(digits)) {
       if (!/^\d{10}$/.test(digits)) {
-        return 'Invalid mobile number. Must be 10 digits starting with 6, 7, 8, or 9';
+        return 'Invalid mobile number. Must be exactly 10 digits starting with 6, 7, 8, or 9 (e.g., 9876543210)';
       }
       return undefined; // Valid
     }
@@ -215,12 +215,21 @@ const CompanyProfileSetup = () => {
     // Landline validation (area code + number, total 8-12 digits)
     if (digits.length >= 8 && digits.length <= 12) {
       if (!/^\d{8,12}$/.test(digits)) {
-        return 'Invalid landline number';
+        return 'Invalid landline number. Must be 8-12 digits with area code (e.g., 022-12345678)';
       }
       return undefined; // Valid
     }
     
-    return 'Please enter a valid Indian phone number (e.g., +91 9876543210 or 9876543210)';
+    // Provide helpful error message
+    if (digits.length < 8) {
+      return `Phone number is too short. You entered ${digits.length} digit${digits.length !== 1 ? 's' : ''}. Mobile numbers need 10 digits (e.g., 9876543210).`;
+    } else if (digits.length > 12) {
+      return `Phone number is too long. You entered ${digits.length} digits. Maximum is 12 digits for landline numbers.`;
+    } else if (digits.length === 10 && !/^[6-9]/.test(digits)) {
+      return 'Mobile numbers must start with 6, 7, 8, or 9. Please check your number.';
+    }
+    
+    return 'Please enter a valid Indian phone number. Examples: +91 9876543210, 9876543210, or 022-12345678';
   };
 
   const handleInputChange = (
@@ -234,11 +243,29 @@ const CompanyProfileSetup = () => {
     
     // Validate phone numbers in real-time
     if (field === 'phone' && typeof value === 'string') {
-      const error = validateIndianPhone(value);
-      setValidationErrors(prev => ({ ...prev, phone: error }));
+      if (value.trim() === '') {
+        // Clear error when phone is cleared (it's optional)
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.phone;
+          return newErrors;
+        });
+      } else {
+        const error = validateIndianPhone(value);
+        setValidationErrors(prev => ({ ...prev, phone: error }));
+      }
     } else if (field === 'contactPersonPhone' && typeof value === 'string') {
-      const error = validateIndianPhone(value);
-      setValidationErrors(prev => ({ ...prev, contactPersonPhone: error }));
+      if (value.trim() === '') {
+        // Clear error when contactPersonPhone is cleared
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.contactPersonPhone;
+          return newErrors;
+        });
+      } else {
+        const error = validateIndianPhone(value);
+        setValidationErrors(prev => ({ ...prev, contactPersonPhone: error }));
+      }
     } else if (field === 'phone' || field === 'contactPersonPhone') {
       // Clear error when field is cleared
       setValidationErrors(prev => {
@@ -265,22 +292,23 @@ const CompanyProfileSetup = () => {
 
     // Validate description
     if (!formData.description || formData.description.trim().length === 0) {
-      errors.description = 'Company description is required';
+      errors.description = 'Company description is required. Please tell us about your company.';
     } else if (formData.description.trim().length < 50) {
-      errors.description = `Company description must be at least 50 characters (currently ${formData.description.trim().length})`;
+      const remaining = 50 - formData.description.trim().length;
+      errors.description = `Description is too short. You need ${remaining} more character${remaining !== 1 ? 's' : ''} (minimum 50 characters).`;
     } else if (formData.description.length > 500) {
-      errors.description = `Company description must not exceed 500 characters (currently ${formData.description.length})`;
+      errors.description = `Description is too long. Please reduce by ${formData.description.length - 500} character${formData.description.length - 500 !== 1 ? 's' : ''} (maximum 500 characters).`;
     }
 
     // Validate founded year (if provided)
     if (formData.foundedYear !== undefined && formData.foundedYear !== null) {
       const currentYear = new Date().getFullYear();
       if (formData.foundedYear < 1800) {
-        errors.foundedYear = 'Founded year must be at least 1800';
+        errors.foundedYear = `Invalid year. Please enter a year between 1800 and ${currentYear}.`;
       } else if (formData.foundedYear > currentYear) {
-        errors.foundedYear = `Founded year cannot be greater than ${currentYear}`;
+        errors.foundedYear = `Year cannot be in the future. Please enter a year up to ${currentYear}.`;
       } else if (!Number.isInteger(formData.foundedYear)) {
-        errors.foundedYear = 'Founded year must be a whole number';
+        errors.foundedYear = 'Please enter a valid year (whole number only).';
       }
     }
 
@@ -299,11 +327,10 @@ const CompanyProfileSetup = () => {
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setValidationErrors({});
 
-    // Validate before submitting
+    // Validate before submitting - this will set validation errors
     if (!validateStep2()) {
-      setError('Please fix the validation errors before continuing');
+      setError('Please fix all validation errors below before continuing');
       return;
     }
 
@@ -344,7 +371,7 @@ const CompanyProfileSetup = () => {
 
     // Validate contact person phone (required in step 3)
     if (!formData.contactPersonPhone || formData.contactPersonPhone.trim() === '') {
-      errors.contactPersonPhone = 'Contact person phone number is required';
+      errors.contactPersonPhone = 'Contact person phone number is required. Please enter a valid Indian phone number.';
     } else {
       const phoneError = validateIndianPhone(formData.contactPersonPhone);
       if (phoneError) {
@@ -553,16 +580,59 @@ const CompanyProfileSetup = () => {
         )}
       </div>
 
+      {/* Validation Errors Summary */}
+      {((Object.keys(validationErrors).length > 0 && 
+         (!!validationErrors.description || 
+          (formData.foundedYear !== undefined && !!validationErrors.foundedYear) ||
+          (formData.phone && formData.phone.trim() !== '' && !!validationErrors.phone))) ||
+        !formData.industry || 
+        !formData.size || 
+        !formData.description || 
+        (formData.description && formData.description.trim().length < 50)) && (
+        <Alert className="mb-4 border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            <div className="font-semibold mb-2">Please fix the following errors to continue:</div>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {!formData.industry && (
+                <li>• <strong>Industry:</strong> Please select an industry from the dropdown</li>
+              )}
+              {!formData.size && (
+                <li>• <strong>Company Size:</strong> Please select a company size from the dropdown</li>
+              )}
+              {!formData.description && (
+                <li>• <strong>Company Description:</strong> Description is required</li>
+              )}
+              {formData.description && formData.description.trim().length < 50 && (
+                <li>• <strong>Company Description:</strong> Must be at least 50 characters (you have {formData.description.trim().length}, need {50 - formData.description.trim().length} more)</li>
+              )}
+              {validationErrors.description && (
+                <li>• <strong>Company Description:</strong> {validationErrors.description}</li>
+              )}
+              {validationErrors.foundedYear && formData.foundedYear !== undefined && (
+                <li>• <strong>Founded Year:</strong> {validationErrors.foundedYear}</li>
+              )}
+              {validationErrors.phone && formData.phone && formData.phone.trim() !== '' && (
+                <li>• <strong>Phone Number:</strong> {validationErrors.phone}</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Button
         type="submit"
-        className="w-full bg-purple-600 hover:bg-purple-700"
+        className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={
           loading ||
           !formData.industry ||
           !formData.size ||
           !formData.description ||
           (formData.description && formData.description.trim().length < 50) ||
-          Object.keys(validationErrors).length > 0
+          // Only check validation errors for required fields or fields that have values
+          !!validationErrors.description ||
+          (formData.foundedYear !== undefined && !!validationErrors.foundedYear) ||
+          (formData.phone && formData.phone.trim() !== '' && !!validationErrors.phone)
         }
       >
         {loading ? (
@@ -654,6 +724,37 @@ const CompanyProfileSetup = () => {
           </p>
         </div>
       </div>
+
+      {/* Validation Errors Summary for Step 3 */}
+      {((!formData.contactPersonName || 
+         !formData.contactPersonTitle || 
+         !formData.contactPersonEmail || 
+         !formData.contactPersonPhone ||
+         !!validationErrors.contactPersonPhone)) && (
+        <Alert className="mb-4 border-red-200 bg-red-50">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            <div className="font-semibold mb-2">Please fix the following errors to continue:</div>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {!formData.contactPersonName && (
+                <li>• <strong>Contact Person Name:</strong> Please enter the contact person's name</li>
+              )}
+              {!formData.contactPersonTitle && (
+                <li>• <strong>Job Title:</strong> Please select a job title from the dropdown</li>
+              )}
+              {!formData.contactPersonEmail && (
+                <li>• <strong>Contact Email:</strong> Please enter a valid email address</li>
+              )}
+              {!formData.contactPersonPhone && (
+                <li>• <strong>Contact Phone:</strong> Please enter a valid Indian phone number</li>
+              )}
+              {validationErrors.contactPersonPhone && (
+                <li>• <strong>Contact Phone:</strong> {validationErrors.contactPersonPhone}</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex gap-3">
         <Button
