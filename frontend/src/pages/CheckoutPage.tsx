@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount } from '@/hooks/useChat';
-import { useState } from 'react';
+
 
 export const CheckoutPage = () => {
   const { role, user, company, logout } = useAuth();
