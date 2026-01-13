@@ -164,8 +164,10 @@ const AppliedJobsPage = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 pl-10 lg:pl-0">
-          <AppliedJobs userId={user.id} />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
+          <div className="pl-8 lg:pl-0">
+            <AppliedJobs userId={user.id} />
+          </div>
         </main>
       </div>
 
