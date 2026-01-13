@@ -52,6 +52,7 @@ interface AuthContextType {
   login: (role: Role) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  isInitializing: boolean;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setCompany: React.Dispatch<React.SetStateAction<Company | null>>;
   setRole: React.Dispatch<React.SetStateAction<Role>>;
@@ -64,6 +65,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: async () => {},
   isAuthenticated: false,
+  isInitializing: true,
   setUser: () => {},
   setCompany: () => {},
   setRole: () => {},
@@ -206,7 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user || !!company;
 
   return (
-    <AuthContext.Provider value={{ user, company, role, login, logout, isAuthenticated, setUser, setCompany, setRole }}>
+    <AuthContext.Provider value={{ user, company, role, login, logout, isAuthenticated, isInitializing, setUser, setCompany, setRole }}>
       {children}
     </AuthContext.Provider>
   );
