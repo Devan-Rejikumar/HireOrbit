@@ -564,19 +564,24 @@ export class ApplicationService implements IApplicationService {
       userEmail: 'user@example.com',
     };
 
-    try {
-      const userData = await this._userServiceClient.getUserById(userId);
-      if (userData.data?.user) {
-        externalData.userName = userData.data.user.username || userData.data.user.name || 'User Name';
-        externalData.userEmail = userData.data.user.email || 'user@example.com';
-      }
-    } catch (error) {
-      logger.error(`Error fetching user details for ${userId}:`, error);
+    // Run BOTH calls in PARALLEL instead of sequential for faster response
+    const [userResult, jobResult] = await Promise.allSettled([
+      this._userServiceClient.getUserById(userId),
+      this._jobServiceClient.getJobById(jobId),
+    ]);
+
+    // Process user data
+    if (userResult.status === 'fulfilled' && userResult.value?.data?.user) {
+      externalData.userName = userResult.value.data.user.username || userResult.value.data.user.name || 'User Name';
+      externalData.userEmail = userResult.value.data.user.email || 'user@example.com';
+    } else if (userResult.status === 'rejected') {
+      logger.error(`Error fetching user details for ${userId}:`, userResult.reason);
     }
 
-    try {
-      const jobData = await this._jobServiceClient.getJobById(jobId);
-      if (jobData.data?.job || jobData.job) {
+    // Process job data
+    if (jobResult.status === 'fulfilled') {
+      const jobData = jobResult.value;
+      if (jobData?.data?.job || jobData?.job) {
         externalData.jobTitle = jobData.data?.job?.title || 
                                jobData.data?.title || 
                                jobData.job?.title || 
@@ -586,8 +591,8 @@ export class ApplicationService implements IApplicationService {
                                    jobData.job?.company ||
                                    'Company Name';
       }
-    } catch (error) {
-      logger.error(`Error fetching job details for ${jobId}:`, error);
+    } else if (jobResult.status === 'rejected') {
+      logger.error(`Error fetching job details for ${jobId}:`, jobResult.reason);
     }
 
     return externalData;
