@@ -154,8 +154,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     
     // Navigate based on notification type
     if (notification.type === 'STATUS_UPDATED') {
-      // Navigate to profile page with applied jobs tab
-      navigate('/profile#applied-jobs');
+      // Navigate directly to applied jobs page
+      navigate('/applied-jobs');
     } else if (
       notification.type === 'INTERVIEW_CONFIRMED') {
       // Navigate to schedule page for interview details
