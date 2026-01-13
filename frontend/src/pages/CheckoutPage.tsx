@@ -17,11 +17,14 @@ import {
   CreditCard,
   Check,
   ArrowLeft,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { MessagesDropdown } from '@/components/MessagesDropdown';
 import { useTotalUnreadCount } from '@/hooks/useChat';
+import { useState } from 'react';
 
 export const CheckoutPage = () => {
   const { role, user, company, logout } = useAuth();
@@ -33,6 +36,7 @@ export const CheckoutPage = () => {
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Automatically determine userType based on role
   const userType: 'user' | 'company' = role === 'company' ? 'company' : 'user';
@@ -120,6 +124,7 @@ export const CheckoutPage = () => {
     ];
 
   const handleSidebarClick = (item: typeof sidebarItems[0]) => {
+    setIsMobileMenuOpen(false);
     if (item.path) {
       navigate(item.path);
     }
@@ -215,9 +220,17 @@ export const CheckoutPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
               <button
                 onClick={() => navigate('/subscriptions')}
                 className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
@@ -225,13 +238,13 @@ export const CheckoutPage = () => {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Checkout</h1>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button 
                 onClick={() => navigate(ROUTES.JOBS)} 
-                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                className="hidden sm:block p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                 title="Search Jobs"
               >
                 <Search className="h-5 w-5" />
@@ -240,27 +253,65 @@ export const CheckoutPage = () => {
               <NotificationBell />
               
               {(user?.id || company?.id) && (
-                <MessagesDropdown userId={user?.id || company?.id || ''} />
+                <div className="hidden sm:block">
+                  <MessagesDropdown userId={user?.id || company?.id || ''} />
+                </div>
               )}
               
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleLogout}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-2 sm:px-3"
               >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                <LogOut className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       <div className="flex min-h-screen">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 relative">
-          <nav className="p-6">
+        <aside className={`
+          fixed lg:sticky top-0 lg:top-16 left-0 z-40 lg:z-0
+          w-72 lg:w-64 bg-white shadow-lg lg:shadow-sm border-r border-gray-200 
+          h-screen lg:h-[calc(100vh-4rem)] overflow-y-auto 
+          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+          transform transition-transform duration-300 ease-in-out
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+          <nav className="p-4 sm:p-6 pt-6">
+            {/* Mobile: User Info at top */}
+            <div className="lg:hidden mb-6">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-white font-semibold">
+                    {role === 'company' 
+                      ? company?.companyName?.charAt(0).toUpperCase() || 'C'
+                      : user?.username?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    {role === 'company' ? company?.companyName || 'Company' : user?.username || 'User'}
+                  </div>
+                  <div className="text-xs text-blue-600 truncate">
+                    {role === 'company' ? company?.email || '' : user?.email || ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-1 mb-8">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Main</h3>
               {sidebarItems.map((item) => {
@@ -271,7 +322,7 @@ export const CheckoutPage = () => {
                   <button
                     key={item.id}
                     onClick={() => handleSidebarClick(item)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg w-full text-left transition-colors ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-all duration-200 ${
                       isActive
                         ? 'bg-blue-50 text-blue-700 font-medium'
                         : 'text-gray-700 hover:bg-gray-50'
@@ -292,53 +343,53 @@ export const CheckoutPage = () => {
             <div className="space-y-1">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Subscription</h3>
               <button 
-                onClick={() => navigate('/subscriptions')}
-                className="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-700 font-medium rounded-lg w-full text-left"
+                onClick={() => { setIsMobileMenuOpen(false); navigate('/subscriptions'); }}
+                className="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-700 font-medium rounded-lg w-full text-left transition-all duration-200"
               >
                 <CreditCard className="h-5 w-5" />
                 Plans & Pricing
               </button>
             </div>
-          </nav>
-          
-          {/* User Info at Bottom */}
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
-                <span className="text-white font-semibold">
-                  {role === 'company' 
-                    ? company?.companyName?.charAt(0).toUpperCase() || 'C'
-                    : user?.username?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">
-                  {role === 'company' ? company?.companyName || 'Company' : user?.username || 'User'}
+
+            {/* Desktop: User Info at Bottom */}
+            <div className="hidden lg:block mt-8">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-white font-semibold">
+                    {role === 'company' 
+                      ? company?.companyName?.charAt(0).toUpperCase() || 'C'
+                      : user?.username?.charAt(0).toUpperCase() || 'U'}
+                  </span>
                 </div>
-                <div className="text-xs text-blue-600 truncate">
-                  {role === 'company' ? company?.email || '' : user?.email || ''}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    {role === 'company' ? company?.companyName || 'Company' : user?.username || 'User'}
+                  </div>
+                  <div className="text-xs text-blue-600 truncate">
+                    {role === 'company' ? company?.email || '' : user?.email || ''}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </nav>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Subscription</h1>
-              <p className="text-gray-600">Review your plan details and confirm your subscription</p>
+            <div className="mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Complete Your Subscription</h1>
+              <p className="text-sm sm:text-base text-gray-600">Review your plan details and confirm your subscription</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Plan Summary Card */}
               <div className="lg:col-span-2">
-                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-1">{plan.name} Plan</h2>
-                      <p className="text-gray-600 text-sm">
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{plan.name} Plan</h2>
+                      <p className="text-gray-600 text-xs sm:text-sm">
                         {plan.name.toLowerCase() === 'free' 
                           ? 'Perfect for getting started'
                           : plan.name.toLowerCase() === 'basic'
@@ -346,25 +397,25 @@ export const CheckoutPage = () => {
                             : 'For fast-growing businesses'}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-4xl font-bold text-gray-900">{formattedPrice}</div>
+                    <div className="text-left sm:text-right">
+                      <div className="text-3xl sm:text-4xl font-bold text-gray-900">{formattedPrice}</div>
                       {!isFreePlan && (
-                        <div className="text-sm text-gray-600">/Monthly</div>
+                        <div className="text-xs sm:text-sm text-gray-600">/Monthly</div>
                       )}
                       {isFreePlan && (
-                        <div className="text-sm text-gray-600">Forever free</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Forever free</div>
                       )}
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 pt-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">Features included:</h3>
-                    <ul className="space-y-3">
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Features included:</h3>
+                    <ul className="space-y-2 sm:space-y-3">
                       {displayFeatures.length > 0 ? (
                         displayFeatures.map((feature, index) => (
                           <li key={index} className="flex items-start">
-                            <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
-                            <span className="text-gray-700 leading-relaxed">{feature}</span>
+                            <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 mr-2 sm:mr-3 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-700 leading-relaxed text-sm sm:text-base">{feature}</span>
                           </li>
                         ))
                       ) : (
@@ -377,22 +428,22 @@ export const CheckoutPage = () => {
 
               {/* Order Summary Card */}
               <div className="lg:col-span-1">
-                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm sticky top-24">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm lg:sticky lg:top-24">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Order Summary</h3>
                   
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Plan:</span>
-                      <span className="font-semibold text-gray-900">{plan.name}</span>
+                      <span className="text-sm sm:text-base text-gray-600">Plan:</span>
+                      <span className="font-semibold text-gray-900 text-sm sm:text-base">{plan.name}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Billing:</span>
-                      <span className="font-semibold text-gray-900 capitalize">Monthly</span>
+                      <span className="text-sm sm:text-base text-gray-600">Billing:</span>
+                      <span className="font-semibold text-gray-900 capitalize text-sm sm:text-base">Monthly</span>
                     </div>
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold text-gray-900">Total:</span>
-                        <span className="text-2xl font-bold text-purple-600">{formattedPrice}</span>
+                        <span className="text-base sm:text-lg font-semibold text-gray-900">Total:</span>
+                        <span className="text-xl sm:text-2xl font-bold text-purple-600">{formattedPrice}</span>
                       </div>
                       {!isFreePlan && (
                         <p className="text-xs text-gray-500 mt-1">Charged monthly</p>
@@ -400,11 +451,11 @@ export const CheckoutPage = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <button
                       onClick={handleSubscribe}
                       disabled={processing || isFreePlan}
-                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                      className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-all text-sm sm:text-base ${
                         processing || isFreePlan
                           ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                           : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg'
@@ -414,21 +465,21 @@ export const CheckoutPage = () => {
                     </button>
                     <button
                       onClick={() => navigate('/subscriptions')}
-                      className="w-full py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base"
                     >
                       Cancel
                     </button>
                   </div>
 
                   {isFreePlan && (
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-xs text-blue-800">
                         This is a free plan. No payment required.
                       </p>
                     </div>
                   )}
 
-                  <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
                     <p className="text-xs text-gray-500 text-center">
                       By subscribing, you agree to our Terms of Service and Privacy Policy
                     </p>
