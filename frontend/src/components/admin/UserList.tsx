@@ -200,111 +200,111 @@ const UserList = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Enhanced Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white">User Management</h2>
-          <p className="text-gray-300 mt-1">Manage and monitor user accounts</p>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white">User Management</h2>
+          <p className="text-sm sm:text-base text-gray-300 mt-1">Manage and monitor user accounts</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => fetchUsers(true)}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 shadow-md"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 disabled:opacity-50 shadow-md text-sm sm:text-base"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-3 sm:p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Total Users</p>
-              <p className="text-3xl font-bold text-white mt-1">{stats.total}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Total Users</p>
+              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-white mt-1">{stats.total}</p>
             </div>
-            <div className="bg-purple-600/20 p-3 rounded-lg">
-              <Users className="h-6 w-6 text-purple-400" />
+            <div className="bg-purple-600/20 p-2 sm:p-3 rounded-lg">
+              <Users className="h-4 w-4 sm:h-6 sm:w-6 text-purple-400" />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 text-green-400 mr-1" />
-            <span className="text-sm text-green-400">Growing steadily</span>
+          <div className="mt-2 sm:mt-4 flex items-center">
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-400 mr-1" />
+            <span className="text-xs sm:text-sm text-green-400">Growing steadily</span>
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-6">
+        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-3 sm:p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Verified</p>
-              <p className="text-3xl font-bold text-green-400 mt-1">{stats.verified}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Verified</p>
+              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-400 mt-1">{stats.verified}</p>
             </div>
-            <div className="bg-green-600/20 p-3 rounded-lg">
-              <CheckCircle className="h-6 w-6 text-green-400" />
+            <div className="bg-green-600/20 p-2 sm:p-3 rounded-lg">
+              <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-400" />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <CheckCircle className="h-4 w-4 text-green-400 mr-1" />
-            <span className="text-sm text-green-400">Verified accounts</span>
+          <div className="mt-2 sm:mt-4 flex items-center">
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-400 mr-1" />
+            <span className="text-xs sm:text-sm text-green-400">Verified accounts</span>
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-6">
+        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-3 sm:p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Unverified</p>
-              <p className="text-3xl font-bold text-amber-400 mt-1">{stats.unverified}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Unverified</p>
+              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-amber-400 mt-1">{stats.unverified}</p>
             </div>
-            <div className="bg-amber-600/20 p-3 rounded-lg">
-              <Clock className="h-6 w-6 text-amber-400" />
+            <div className="bg-amber-600/20 p-2 sm:p-3 rounded-lg">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-amber-400" />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <AlertCircle className="h-4 w-4 text-amber-400 mr-1" />
-            <span className="text-sm text-amber-400">Need verification</span>
+          <div className="mt-2 sm:mt-4 flex items-center">
+            <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-amber-400 mr-1" />
+            <span className="text-xs sm:text-sm text-amber-400">Need verification</span>
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-6">
+        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-3 sm:p-4 lg:p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Active</p>
-              <p className="text-3xl font-bold text-blue-400 mt-1">{stats.active}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Active</p>
+              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-blue-400 mt-1">{stats.active}</p>
             </div>
-            <div className="bg-blue-600/20 p-3 rounded-lg">
-              <Shield className="h-6 w-6 text-blue-400" />
+            <div className="bg-blue-600/20 p-2 sm:p-3 rounded-lg">
+              <Shield className="h-4 w-4 sm:h-6 sm:w-6 text-blue-400" />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <Shield className="h-4 w-4 text-blue-400 mr-1" />
-            <span className="text-sm text-blue-400">Active users</span>
+          <div className="mt-2 sm:mt-4 flex items-center">
+            <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 mr-1" />
+            <span className="text-xs sm:text-sm text-blue-400">Active users</span>
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-6">
+        <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-3 sm:p-4 lg:p-6 col-span-2 sm:col-span-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-400">Blocked</p>
-              <p className="text-3xl font-bold text-red-400 mt-1">{stats.blocked}</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-400">Blocked</p>
+              <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-400 mt-1">{stats.blocked}</p>
             </div>
-            <div className="bg-red-600/20 p-3 rounded-lg">
-              <ShieldOff className="h-6 w-6 text-red-400" />
+            <div className="bg-red-600/20 p-2 sm:p-3 rounded-lg">
+              <ShieldOff className="h-4 w-4 sm:h-6 sm:w-6 text-red-400" />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <XCircle className="h-4 w-4 text-red-400 mr-1" />
-            <span className="text-sm text-red-400">Blocked accounts</span>
+          <div className="mt-2 sm:mt-4 flex items-center">
+            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 text-red-400 mr-1" />
+            <span className="text-xs sm:text-sm text-red-400">Blocked accounts</span>
           </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-gray-800 rounded-xl shadow-xl border border-purple-500/20 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -313,21 +313,21 @@ const UserList = () => {
                 placeholder="Search users by name, email, or role..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 text-sm sm:text-base"
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-400" />
             <span className="text-sm text-gray-300">Filter:</span>
           </div>
         </div>
 
         {/* Enhanced Filter Tabs */}
-        <div className="mt-4 border-t border-gray-700 pt-4">
-          <div className="flex flex-wrap gap-2">
+        <div className="mt-3 sm:mt-4 border-t border-gray-700 pt-3 sm:pt-4">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {[
-              { key: 'all', label: 'All Users', count: stats.total, color: 'blue' },
+              { key: 'all', label: 'All', count: stats.total, color: 'blue' },
               { key: 'verified', label: 'Verified', count: stats.verified, color: 'green' },
               { key: 'unverified', label: 'Unverified', count: stats.unverified, color: 'amber' },
               { key: 'active', label: 'Active', count: stats.active, color: 'blue' },
@@ -336,14 +336,15 @@ const UserList = () => {
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key as UserStatus)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
                   statusFilter === tab.key
                     ? 'bg-purple-600 text-white border border-purple-500'
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {tab.label}
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.key === 'all' ? 'All' : tab.label.slice(0, 3)}</span>
+                <span className={`ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 rounded-full text-xs ${
                   statusFilter === tab.key
                     ? 'bg-purple-500 text-white'
                     : 'bg-gray-600 text-gray-300'
@@ -477,27 +478,27 @@ const UserList = () => {
 
       {/* Enhanced Pagination */}
       {filteredUsers.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Showing <span className="font-medium">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
-              <span className="font-medium">{Math.min(currentPage * pageSize, filteredUsers.length)}</span> of{' '}
-              <span className="font-medium">{filteredUsers.length}</span> results
+        <div className="bg-gray-800 rounded-xl shadow-sm border border-gray-700 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs sm:text-sm text-gray-300">
+              Showing <span className="font-medium text-white">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
+              <span className="font-medium text-white">{Math.min(currentPage * pageSize, filteredUsers.length)}</span> of{' '}
+              <span className="font-medium text-white">{filteredUsers.length}</span> results
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {calculatedTotalPages > 1 && (
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  Previous
+                  <ChevronLeft className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Previous</span>
                 </button>
               )}
               
               {calculatedTotalPages > 1 && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-0.5 sm:space-x-1">
                   {Array.from({ length: Math.min(5, calculatedTotalPages) }, (_, i) => {
                     let pageNumber;
                     if (calculatedTotalPages <= 5) {
@@ -514,10 +515,10 @@ const UserList = () => {
                       <button
                         key={pageNumber}
                         onClick={() => setCurrentPage(pageNumber)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                        className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg ${
                           currentPage === pageNumber
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? 'bg-purple-600 text-white'
+                            : 'text-gray-300 bg-gray-700 hover:bg-gray-600'
                         }`}
                       >
                         {pageNumber}
@@ -531,10 +532,10 @@ const UserList = () => {
                 <button
                   onClick={() => setCurrentPage(Math.min(calculatedTotalPages, currentPage + 1))}
                   disabled={currentPage === calculatedTotalPages}
-                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-4 h-4 sm:ml-1" />
                 </button>
               )}
             </div>
