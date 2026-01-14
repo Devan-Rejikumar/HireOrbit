@@ -51,6 +51,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    console.log('[Axios Interceptor] Error caught:', {
+      url: originalRequest?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
   
     const isBlockedUser = error.response?.status === HTTP_STATUS.FORBIDDEN && 
                          (error.response?.data?.error === 'Account blocked' || 
@@ -58,6 +63,7 @@ api.interceptors.response.use(
                           error.response?.data?.data?.error === 'Account blocked');
     
     if (isBlockedUser) {
+      console.log('[Axios Interceptor] User is blocked, clearing auth');
       localStorage.removeItem('role');
       document.cookie.split(';').forEach((c) => {
         document.cookie = c
@@ -96,7 +102,10 @@ api.interceptors.response.use(
                             originalRequest.url?.includes('/register') ||
                             originalRequest.url?.includes('/refresh-token');
       
+      console.log('[Axios Interceptor] Auth error, isAuthEndpoint:', isAuthEndpoint);
+      
       if (isAuthEndpoint) {
+        console.log('[Axios Interceptor] Skipping refresh for auth endpoint');
         return Promise.reject(error);
       }
       
@@ -110,6 +119,7 @@ api.interceptors.response.use(
           refreshEndpoint = '/api/users/admin/refresh-token';
         }
         
+        console.log('[Axios Interceptor] Attempting token refresh via interceptor');
         const baseUrl = ENV.API_BASE_URL.replace('/api', '');
         const response = await axios.post(
           `${baseUrl}${refreshEndpoint}`,
@@ -117,6 +127,7 @@ api.interceptors.response.use(
           { withCredentials: true },
         );
         if (response.status === HTTP_STATUS.OK) {
+          console.log('[Axios Interceptor] Token refresh successful, retrying original request');
           return api(originalRequest);
         }
       } catch (refreshError) {
@@ -130,8 +141,14 @@ api.interceptors.response.use(
         const isAuthFailure = axiosRefreshError?.response?.status === HTTP_STATUS.UNAUTHORIZED || 
                               axiosRefreshError?.response?.status === HTTP_STATUS.FORBIDDEN;
         
+        console.log('[Axios Interceptor] Refresh failed in interceptor:', {
+          status: axiosRefreshError?.response?.status,
+          isAuthFailure
+        });
+        
         if (isAuthFailure) {
           // Refresh token is invalid/expired - logout
+          console.log('[Axios Interceptor] Auth failure, clearing localStorage.role and redirecting');
           localStorage.removeItem('role');
           window.location.href = ROUTES.LOGIN;
         }

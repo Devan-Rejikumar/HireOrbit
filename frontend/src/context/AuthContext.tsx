@@ -88,39 +88,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         refreshEndpoint = '/users/admin/refresh-token';
       }
       
+      console.log('[AuthContext] Attempting token refresh for role:', userRole);
+      console.log('[AuthContext] Refresh endpoint:', refreshEndpoint);
+      console.log('[AuthContext] Cookies available:', document.cookie);
+      
       // Call refresh token endpoint - if refreshToken exists in cookies, it will return new accessToken
       const response = await api.post(refreshEndpoint, {}, { withCredentials: true });
       
+      console.log('[AuthContext] Token refresh successful, status:', response.status);
       // If successful, new accessToken is set in cookies automatically
       return response.status === 200;
-    } catch (error) {
+    } catch (error: unknown) {
       // Refresh token doesn't exist or is invalid
+      const axiosError = error as { response?: { status?: number; data?: unknown }; message?: string };
+      console.error('[AuthContext] Token refresh failed:', {
+        status: axiosError?.response?.status,
+        data: axiosError?.response?.data,
+        message: axiosError?.message
+      });
       return false;
     }
   };
 
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('[AuthContext] Starting initializeAuth...');
       setIsInitializing(true);
       const storedRole = localStorage.getItem('role') as Role | null;
+      console.log('[AuthContext] Stored role from localStorage:', storedRole);
       
       if (storedRole) {
         // Try to refresh token first if refreshToken exists in cookies
         const tokenRefreshed = await refreshTokenIfExists(storedRole);
+        console.log('[AuthContext] Token refresh result:', tokenRefreshed);
         
         if (tokenRefreshed) {
           // Token refreshed successfully, set role and fetch user data
+          console.log('[AuthContext] Setting role to:', storedRole);
           setRole(storedRole);
         } else {
           // No valid refresh token, clear everything
+          console.log('[AuthContext] Clearing auth state due to failed refresh');
           setRole(null);
           setUser(null);
           setCompany(null);
           localStorage.removeItem('role');
         }
+      } else {
+        console.log('[AuthContext] No stored role found');
       }
       
       setIsInitializing(false);
+      console.log('[AuthContext] initializeAuth completed');
     };
     
     initializeAuth();
