@@ -161,7 +161,7 @@ const AppliedJobsPage = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 pb-20 lg:pb-4">
           <div className="pl-10 lg:pl-0">
             <AppliedJobs userId={user.id} />
           </div>
@@ -169,7 +169,7 @@ const AppliedJobsPage = () => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb shadow-lg">
         <div className="flex items-center justify-around py-2">
           <button
             onClick={() => navigate('/user/dashboard')}
