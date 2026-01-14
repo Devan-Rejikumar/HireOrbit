@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Building2, Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Building2, Loader2, Briefcase, MapPin, ArrowRight, Sparkles } from 'lucide-react';
 import CompanyDetailsModal from '@/components/CompanyDetailsModal';
 import { companyService } from '@/api/companyService';
 import { useJobs, type Job } from '@/hooks/useJobs';
@@ -34,7 +33,7 @@ const CompanyShowcase = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [, setLoadingDetails] = useState(false);
   const prevCompaniesKeyRef = useRef<string>('');
   const isFetchingRef = useRef<boolean>(false);
 
@@ -189,47 +188,156 @@ const CompanyShowcase = () => {
 
   return (
     <>
-      <section className="py-20 bg-gradient-to-r from-gray-900 to-gray-800">
-        <div className="container mx-auto px-4">
+      <section className="py-24 bg-gradient-to-br from-slate-50 via-white to-slate-50 relative overflow-hidden">
+        {/* Spiral Dotted Arrow - Top Left (pointing up toward Featured Jobs) */}
+        <svg className="absolute top-8 left-[8%] w-[180px] h-[100px] hidden xl:block" viewBox="0 0 180 100" fill="none">
+          <path 
+            d="M180 80 C140 80, 130 50, 90 50 C50 50, 40 20, 0 20" 
+            stroke="#10b981" 
+            strokeWidth="2" 
+            strokeDasharray="6 4" 
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path d="M5 15 L0 20 L5 25" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+
+        {/* Spiral Dotted Arrow - Top Right (pointing up toward Featured Jobs) */}
+        <svg className="absolute top-8 right-[8%] w-[180px] h-[100px] hidden xl:block" viewBox="0 0 180 100" fill="none">
+          <path 
+            d="M0 80 C40 80, 50 50, 90 50 C130 50, 140 20, 180 20" 
+            stroke="#10b981" 
+            strokeWidth="2" 
+            strokeDasharray="6 4" 
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path d="M175 15 L180 20 L175 25" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+
+        {/* Background Decorations */}
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-emerald-200/30 to-teal-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-violet-200/25 to-purple-200/15 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3"></div>
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-gradient-to-tr from-amber-200/20 to-orange-200/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2"></div>
+        
+        {/* Subtle Dot Pattern */}
+        <div className="absolute inset-0 opacity-30" style={{
+          backgroundImage: `radial-gradient(circle, #cbd5e1 1px, transparent 1px)`,
+          backgroundSize: '32px 32px'
+        }}></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Section Header */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Top Companies Hiring</h2>
-            <p className="text-xl text-gray-300">Join industry leaders and innovative startups</p>
+            <div className="inline-flex items-center gap-2 bg-white border border-emerald-200 px-5 py-2.5 rounded-full mb-6 shadow-sm">
+              <div className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+              <span className="text-sm font-medium text-emerald-700">Featured Employers</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-5">
+              Top Companies{' '}
+              <span className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent">Hiring</span>
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Join industry leaders and innovative startups looking for talent like you
+            </p>
           </div>
           
           {(jobsLoading || loading) ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-white" />
-              <span className="ml-3 text-gray-300">Loading companies...</span>
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-4">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+              </div>
+              <span className="text-gray-500 font-medium">Loading top companies...</span>
             </div>
           ) : companies.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {companies.map((company, index) => (
-                <Card 
+                <div 
                   key={`${company.name}-${company.companyId || index}`}
                   onClick={() => handleCompanyClick(company)}
-                  className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20"
+                  className="group relative cursor-pointer"
+                  style={{
+                    animation: `float 4s ease-in-out infinite`,
+                    animationDelay: `${index * 0.3}s`
+                  }}
                 >
-                  <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                      {company.logo ? (
-                        <img src={company.logo} alt={company.name} className="w-full h-full rounded-lg object-cover" />
-                      ) : (
-                        <Building2 className="h-8 w-8 text-white" />
-                      )}
+                  {/* Lighter Hover Glow Effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-300/20 via-teal-300/20 to-green-300/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                  
+                  {/* Card */}
+                  <div className="relative bg-white rounded-2xl p-6 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden hover:-translate-y-1">
+                    {/* Top Gradient Accent Line */}
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Content */}
+                    <div className="relative z-10">
+                      {/* Header Row */}
+                      <div className="flex items-start gap-4 mb-5">
+                        {/* Company Logo */}
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-500/20 group-hover:shadow-lg group-hover:shadow-emerald-500/30 transition-all duration-300">
+                          {company.logo ? (
+                            <img src={company.logo} alt={company.name} className="w-full h-full rounded-2xl object-cover" />
+                          ) : (
+                            <Building2 className="h-7 w-7 text-white" />
+                          )}
+                        </div>
+                        
+                        {/* Company Name & Industry */}
+                        <div className="flex-1 min-w-0 pt-1">
+                          <h3 className="font-bold text-gray-900 text-lg mb-1 truncate group-hover:text-emerald-600 transition-colors">{company.name}</h3>
+                          {company.industry && (
+                            <p className="text-sm text-gray-700 truncate">{company.industry}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Stats Row */}
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full">
+                          <Briefcase className="w-4 h-4 text-gray-900" />
+                          <span className="text-gray-900 text-sm font-bold">{company.jobCount} {company.jobCount === 1 ? 'opening' : 'openings'}</span>
+                        </div>
+                        {company.location && (
+                          <div className="flex items-center gap-1.5 text-gray-800">
+                            <MapPin className="w-4 h-4" />
+                            <span className="text-sm truncate max-w-[100px]">{company.location}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* CTA Row */}
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <span className="text-xs text-gray-600">Click to explore</span>
+                        <div className="flex items-center gap-2 text-gray-900 font-semibold text-sm group-hover:gap-3 transition-all">
+                          <span>View Company</span>
+                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                            <ArrowRight className="w-3.5 h-3.5 group-hover:text-white transition-colors" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-white mb-2 line-clamp-2">{company.name}</h3>
-                    <p className="text-gray-300 text-sm">{company.jobCount} {company.jobCount === 1 ? 'position' : 'positions'}</p>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-20">
-              <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-300 text-lg">No companies available at the moment</p>
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Building2 className="h-10 w-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-700 mb-2">No companies available</h3>
+              <p className="text-gray-500">Check back soon for new opportunities</p>
             </div>
           )}
         </div>
+
+        {/* Floating Animation Keyframes */}
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+          }
+        `}</style>
       </section>
 
       {/* Company Details Modal */}
