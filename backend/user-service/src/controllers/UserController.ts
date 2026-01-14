@@ -69,13 +69,20 @@ export class UserController {
   }
 
   async refreshToken(req: Request, res: Response): Promise<void> {
+    logger.info('[REFRESH-TOKEN] Incoming request');
+    logger.info('[REFRESH-TOKEN] All cookies:', JSON.stringify(req.cookies));
+    logger.info('[REFRESH-TOKEN] Cookie header:', req.headers.cookie);
+    
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
+      logger.error('[REFRESH-TOKEN] No refreshToken cookie found!');
       throw new AppError(Messages.AUTH.NO_REFRESH_TOKEN, HttpStatusCode.UNAUTHORIZED);
     }
     
+    logger.info('[REFRESH-TOKEN] Found refreshToken, attempting refresh...');
     const result = await this._userService.refreshToken(refreshToken);
     this._cookieService.setAccessToken(res, result.accessToken);
+    logger.info('[REFRESH-TOKEN] Token refreshed successfully');
 
     res.status(HttpStatusCode.OK).json({ 
       message: Messages.AUTH.TOKEN_REFRESH_SUCCESS 
