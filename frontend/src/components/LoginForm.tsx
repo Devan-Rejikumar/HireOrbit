@@ -130,13 +130,12 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
       // Call login which will fetch user data
       try {
         await login('jobseeker');
-        setSuccess('Successfully signed in! You can now navigate to the home page.');
-        // Don't auto-navigate - let user see the success message
+        // Navigate immediately like regular login does
+        navigate(ROUTES.HOME);
       } catch (loginError: unknown) {
         const isAxiosError = loginError && typeof loginError === 'object' && 'response' in loginError;
         const axiosLoginError = isAxiosError ? (loginError as { response?: { status?: number; data?: { error?: string } }; message?: string }) : null;
         setError(`Failed to fetch user data: ${axiosLoginError?.response?.data?.error || axiosLoginError?.message || 'Unknown error'}`);
-        // Don't auto-navigate - let user see the error
       }
       
     } catch (error: unknown) {
@@ -144,7 +143,6 @@ const LoginForm = ({ onRoleChange }: LoginFormProps) => {
       const axiosError = isAxiosError ? (error as { response?: { status?: number; data?: { error?: string } }; message?: string; code?: string }) : null;
       const errorMessage = axiosError?.response?.data?.error || axiosError?.message || 'Google sign-in failed. Please try again.';
       setError(errorMessage);
-      // Don't auto-navigate - let user see the error
     }
   };
 
