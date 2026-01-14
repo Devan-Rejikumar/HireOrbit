@@ -196,7 +196,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setRole(null);
           localStorage.removeItem('role');
         }
-        // For network errors, keep the user logged in
+    
       }
     };
     
