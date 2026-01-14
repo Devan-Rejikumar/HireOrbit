@@ -123,9 +123,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('[AuthContext] Token refresh result:', tokenRefreshed);
         
         if (tokenRefreshed) {
-          // Token refreshed successfully, set role and fetch user data
-          console.log('[AuthContext] Setting role to:', storedRole);
-          setRole(storedRole);
+          // Token refreshed successfully, now fetch user data BEFORE setting isInitializing to false
+          console.log('[AuthContext] Token refreshed, fetching user data...');
+          try {
+            if (storedRole === 'admin') {
+              const res = await api.get<ApiResponse<AdminMeResponse>>('/users/admin/me');
+              setUser(res.data.data?.admin as User);
+              setCompany(null);
+            } else if (storedRole === 'jobseeker') {
+              const res = await api.get<ApiResponse<UserMeResponse>>('/users/me');
+              setUser(res.data.data?.user as User);
+              setCompany(null);
+            } else if (storedRole === 'company') {
+              const res = await api.get<ApiResponse<Company>>('/company/me');
+              setCompany(res.data.data as Company);
+              setUser(null);
+            }
+            setRole(storedRole);
+            console.log('[AuthContext] User data fetched successfully');
+          } catch (error) {
+            console.error('[AuthContext] Failed to fetch user data:', error);
+            setRole(null);
+            setUser(null);
+            setCompany(null);
+            localStorage.removeItem('role');
+          }
         } else {
           // No valid refresh token, clear everything
           console.log('[AuthContext] Clearing auth state due to failed refresh');
