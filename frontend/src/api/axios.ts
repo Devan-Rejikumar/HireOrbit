@@ -120,7 +120,7 @@ api.interceptors.response.use(
         }
         
         console.log('[Axios Interceptor] Attempting token refresh via interceptor');
-        const baseUrl = ENV.API_BASE_URL.replace('/api', '');
+        const baseUrl = ENV.API_BASE_URL.replace(/\/api$/, '');
         const response = await axios.post(
           `${baseUrl}${refreshEndpoint}`,
           {},
