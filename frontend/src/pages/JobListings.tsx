@@ -299,6 +299,7 @@ const JobListings = () => {
                 value={searchFilters.title}
                 onChange={(value) => setSearchFilters(prev => ({ ...prev, title: value }))}
                 placeholder="e.g. Software Engineer"
+                type="title"
               />
             </div>
             <div>
@@ -307,6 +308,7 @@ const JobListings = () => {
                 value={searchFilters.company}
                 onChange={(value) => setSearchFilters(prev => ({ ...prev, company: value }))}
                 placeholder="e.g. Google"
+                type="company"
               />
             </div>
             <div>
@@ -315,6 +317,7 @@ const JobListings = () => {
                 value={searchFilters.location}
                 onChange={(value) => setSearchFilters(prev => ({ ...prev, location: value }))}
                 placeholder="e.g. New York"
+                type="location"
               />
             </div>
             <div>

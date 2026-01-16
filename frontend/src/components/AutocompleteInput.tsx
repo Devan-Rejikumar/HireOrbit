@@ -7,6 +7,7 @@ interface AutocompleteInputProps {
   onChange: (value: string) => void;
   placeholder: string;
   onSelect?: (value: string) => void;
+  type?: 'title' | 'company' | 'location';
 }
 interface SuggestionsResponse {
   suggestions: string[];
@@ -18,6 +19,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   onChange,
   placeholder,
   onSelect,
+  type = 'title',
 }) => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -37,15 +39,27 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [value]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, type]);
 
   const fetchSuggestions = async (query: string) => {
     try {
-      const response = await api.get<{success: boolean, data: {jobs: Array<{title: string}>}}>(`/jobs/search?title=${encodeURIComponent(query)}`);
-      // Extract unique job titles from the search results
-      const jobTitles = response.data.data?.jobs?.map(job => job.title) || [];
-      const uniqueTitles = [...new Set(jobTitles)]; // Remove duplicates
-      setSuggestions(uniqueTitles);
+      const response = await api.get<{success: boolean, data: {jobs: Array<{title: string, company: string, location: string}>}}>(`/jobs/search?${type}=${encodeURIComponent(query)}`);
+      
+      // Extract unique values based on type
+      const jobs = response.data.data?.jobs || [];
+      let values: string[] = [];
+      
+      if (type === 'title') {
+        values = jobs.map(job => job.title);
+      } else if (type === 'company') {
+        values = jobs.map(job => job.company);
+      } else if (type === 'location') {
+        values = jobs.map(job => job.location);
+      }
+      
+      const uniqueValues = [...new Set(values)].filter(Boolean);
+      setSuggestions(uniqueValues);
       setShowSuggestions(true);
       setActiveSuggestion(-1);
     } catch (error) {

@@ -7,6 +7,7 @@ import PostJobModal from './PostJobModal';
 import { useAuth } from '@/context/AuthContext';
 import { ROUTES } from '@/constants/routes';
 import LogoutRequiredModal from './LogoutRequiredModal';
+import toast from 'react-hot-toast';
 
 const Hero = () => {
   const [searchData, setSearchData] = useState({
@@ -19,6 +20,12 @@ const Hero = () => {
   const { isAuthenticated, role } = useAuth();
 
   const handleSearch = () => {
+    // Validate that at least one field is filled
+    if (!searchData.title.trim() && !searchData.location.trim()) {
+      toast.error('Please enter a job title or location to search');
+      return;
+    }
+    
     const params = new URLSearchParams();
     if (searchData.title) params.set('title', searchData.title);
     if (searchData.location) params.set('location', searchData.location);
