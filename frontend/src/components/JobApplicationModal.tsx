@@ -136,13 +136,18 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
       }
     }
 
-    // Expected Salary validation - basic format check
+    // Expected Salary validation - only positive numbers allowed
     if (!formData.expectedSalary.trim()) {
       newErrors.expectedSalary = 'Expected salary is required';
     } else {
-      const salaryRegex = /[\d,.-]/;
-      if (!salaryRegex.test(formData.expectedSalary)) {
-        newErrors.expectedSalary = 'Please enter a valid salary format (e.g., ₹5,00,000 - ₹6,00,000)';
+      const salaryRegex = /^[0-9,]+$/;
+      if (!salaryRegex.test(formData.expectedSalary.trim())) {
+        newErrors.expectedSalary = 'Expected salary can only contain numbers and commas';
+      } else {
+        const numericValue = parseInt(formData.expectedSalary.replace(/,/g, ''), 10);
+        if (isNaN(numericValue) || numericValue <= 0) {
+          newErrors.expectedSalary = 'Expected salary must be a positive number';
+        }
       }
     }
 
@@ -407,7 +412,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
               type="text"
               value={formData.expectedSalary}
               onChange={(e) => handleInputChange('expectedSalary', e.target.value)}
-              placeholder="e.g., ₹5,00,000 - ₹6,00,000"
+              placeholder="e.g., 500000 or 5,00,000"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 errors.expectedSalary ? 'border-red-300' : 'border-gray-300'
               }`}

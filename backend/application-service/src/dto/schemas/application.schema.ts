@@ -5,7 +5,13 @@ export const CreateApplicationSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   companyId: z.string().min(1, 'Company ID is required'),
   coverLetter: z.string().min(10, 'Cover letter must be at least 10 characters'),
-  expectedSalary: z.string().min(1, 'Expected salary is required'),
+  expectedSalary: z.string()
+    .min(1, 'Expected salary is required')
+    .regex(/^[0-9,]+$/, 'Expected salary can only contain numbers and commas')
+    .refine((val) => {
+      const numericValue = parseInt(val.replace(/,/g, ''), 10);
+      return !isNaN(numericValue) && numericValue > 0;
+    }, 'Expected salary must be a positive number'),
   availability: z.string().min(1, 'Availability is required'),
   experience: z.string().min(1, 'Experience is required'),
   resumeUrl: z.string().url('Invalid resume URL').optional(),
