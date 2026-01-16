@@ -106,6 +106,45 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
     });
   };
 
+  const handleDownloadResume = async (resumeUrl: string, applicationId: string) => {
+    try {
+      // Fetch the file as a blob
+      const response = await fetch(resumeUrl, {
+        method: 'GET',
+        credentials: 'omit', // Don't send credentials to external URLs
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to download resume');
+      }
+
+      // Get the blob
+      const blob = await response.blob();
+      
+      // Create a blob URL and trigger download
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      
+      // Extract filename from URL or use default
+      const urlParts = resumeUrl.split('/');
+      const filename = urlParts[urlParts.length - 1] || `resume_${applicationId}.pdf`;
+      link.download = filename;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL after a short delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+
+      toast.success('Resume downloaded successfully');
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download resume');
+    }
+  };
+
   // Client-side search filtering (since jobTitle/companyName are enriched)
   const filteredApplications = useMemo(() => {
     if (!searchTerm) return applications;
@@ -278,15 +317,13 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
                     )}
 
                     {application.resumeUrl && (
-                      <a
-                        href={application.resumeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => handleDownloadResume(application.resumeUrl!, application.id)}
                         className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
                         title="Download Resume"
                       >
                         <Download className="h-4 w-4" />
-                      </a>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -433,15 +470,13 @@ const AppliedJobs: React.FC<AppliedJobsProps> = ({ userId }) => {
                   <div>
                     <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-2">Resume</h4>
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                      <a
-                        href={selectedApplication.resumeUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => handleDownloadResume(selectedApplication.resumeUrl!, selectedApplication.id)}
                         className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 text-sm sm:text-base"
                       >
                         <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         <span>Download Resume</span>
-                      </a>
+                      </button>
                     </div>
                   </div>
                 )}
