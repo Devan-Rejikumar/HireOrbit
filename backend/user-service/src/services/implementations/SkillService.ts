@@ -19,21 +19,26 @@ export class SkillService implements ISkillService {
   ) {}
 
   async createSkill(data: SkillInput): Promise<Skill> {
-    const name = data.name.trim();
-    const existing = await this._skillRepository.findByName(name);
+    const baseName = data.name.trim();
+    const category = data.category?.trim() || undefined;
+    
+    // Create unique name by appending category if provided
+    const uniqueName = category ? `${baseName} (${category})` : baseName;
+    
+    const existing = await this._skillRepository.findByName(uniqueName);
 
     if (existing) {
       if (!existing.isActive) {
         return this._skillRepository.update(existing.id, {
           isActive: true,
-          category: data.category,
+          category: category,
         });
       }
      
-      throw new AppError('This skill already exists', HttpStatusCode.BAD_REQUEST);
+      throw new AppError('This skill with the same category already exists', HttpStatusCode.BAD_REQUEST);
     }
 
-    return this._skillRepository.create(name, data.category);
+    return this._skillRepository.create(uniqueName, category);
   }
 
   async getAllSkills(includeInactive: boolean = false): Promise<Skill[]> {
@@ -53,12 +58,20 @@ export class SkillService implements ISkillService {
   }
 
   async updateSkill(id: string, data: SkillUpdateInput): Promise<Skill> {
-    if(data.name){
-      const name = data.name.trim();
-      const existing = await this._skillRepository.findByName(name);
-      if(existing && existing.id !== id){
-        throw new AppError('A skill with this name already exist', HttpStatusCode.BAD_REQUEST);
+    if (data.name) {
+      const baseName = data.name.trim();
+      const category = data.category?.trim() || undefined;
+      
+      // Create unique name by appending category if provided
+      const uniqueName = category ? `${baseName} (${category})` : baseName;
+      
+      const existing = await this._skillRepository.findByName(uniqueName);
+      if (existing && existing.id !== id) {
+        throw new AppError('A skill with this name and category already exists', HttpStatusCode.BAD_REQUEST);
       }
+      
+      // Update with the unique name
+      return this._skillRepository.update(id, { ...data, name: uniqueName });
     }
     return this._skillRepository.update(id, data);
   }
