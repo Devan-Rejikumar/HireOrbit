@@ -5,8 +5,12 @@ export const UserRegisterSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
+    .regex(/^\S+$/, 'Password cannot contain spaces')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  name: z.string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .regex(/^[a-zA-Z]+(\s[a-zA-Z]+)*$/, 'Name can only contain letters with single spaces between words'),
   role: z.enum(['user', 'admin']).default('user')
 });
 
@@ -34,6 +38,7 @@ export const ResetPasswordSchema = z.object({
   email: z.string().email('Invalid email format'),
   newPassword: z.string()
     .min(8, 'Password must be at least 8 characters')
+    .regex(/^\S+$/, 'Password cannot contain spaces')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
   confirmPassword: z.string().min(1, 'Confirm password is required')
 }).refine((data) => data.newPassword === data.confirmPassword, {
@@ -45,7 +50,10 @@ export const RefreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required')
 });
 export const UpdateNameSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').trim()
+  name: z.string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .regex(/^[a-zA-Z]+(\s[a-zA-Z]+)*$/, 'Name can only contain letters with single spaces between words')
 });
 export const GoogleAuthSchema = z.object({
   idToken: z.string().min(1, 'ID token is required'),
@@ -58,6 +66,7 @@ export const ChangePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string()
     .min(8, 'Password must be at least 8 characters')
+    .regex(/^\S+$/, 'Password cannot contain spaces')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number')
 });
 

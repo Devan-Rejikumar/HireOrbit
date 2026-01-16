@@ -3,8 +3,12 @@ export const CompanyRegisterSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
+    .regex(/^\S+$/, 'Password cannot contain spaces')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  companyName: z.string().min(2, 'Company name must be at least 2 characters'),
+  companyName: z.string()
+    .trim()
+    .min(2, 'Company name must be at least 2 characters')
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9\s&.,'\-]*$/, 'Company name can only contain letters, numbers, spaces, and common punctuation'),
   logo: z.string().optional(),
 });
 
@@ -14,7 +18,12 @@ export const CompanyLoginSchema = z.object({
 });
 
 export const CompanyProfileSchema = z.object({
-  companyName: z.string().min(2, 'Company name must be at least 2 characters').optional().or(z.literal('')),
+  companyName: z.string()
+    .trim()
+    .min(2, 'Company name must be at least 2 characters')
+    .regex(/^[a-zA-Z0-9][a-zA-Z0-9\s&.,'\-]*$/, 'Company name can only contain letters, numbers, spaces, and common punctuation')
+    .optional()
+    .or(z.literal('')),
   industry: z.string().min(1, 'Industry is required').optional().or(z.literal('')),
   size: z.string().min(1, 'Company size is required').optional().or(z.literal('')),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
