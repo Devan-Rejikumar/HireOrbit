@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, AlertCircle, User, Building2, Camera, Upload, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, Upload, X } from 'lucide-react';
 import RoleToggle from './RoleToggle';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import OTPVerification from './OTPVerification';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/api/axios';
 import type { Role } from '@/context/AuthContext';
 import toast from 'react-hot-toast';
+import { UserRegisterSchema, CompanyRegisterSchema } from '@/schemas/auth.schema';
 
 type RegisterResponse = { error?: string };
 
@@ -33,7 +32,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -72,26 +71,89 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
   //   }
   // }, [isAuthenticated, userRole, navigate]);
 
-  const validatePassword = (passwordValue: string): boolean => {
-    if (passwordValue.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+  // Validate a single field using Zod schema
+  const validateField = (field: string, value: string): boolean => {
+    const schema = role === 'company' ? CompanyRegisterSchema : UserRegisterSchema;
+    const fieldKey = field === 'name' && role === 'company' ? 'companyName' : field;
+    
+    // Get the field schema
+    const fieldSchema = schema.shape[fieldKey as keyof typeof schema.shape];
+    if (!fieldSchema) return true;
+    
+    const result = fieldSchema.safeParse(value);
+    
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: result.success ? '' : result.error.errors[0]?.message || ''
+    }));
+    
+    return result.success;
+  };
+
+  // Validate entire form before submission
+  const validateForm = (): boolean => {
+    const schema = role === 'company' ? CompanyRegisterSchema : UserRegisterSchema;
+    
+    const data = role === 'company' 
+      ? { companyName, email, password }
+      : { name, email, password };
+    
+    const result = schema.safeParse(data);
+    
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        const field = err.path[0] as string;
+        if (!newErrors[field]) {
+          newErrors[field] = err.message;
+        }
+      });
+      setFieldErrors(newErrors);
       return false;
     }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordValue)) {
-      setPasswordError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
-      return false;
-    }
-    setPasswordError('');
+    
+    setFieldErrors({});
     return true;
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    if (newPassword.length > 0) {
-      validatePassword(newPassword);
+  // Input change handlers with validation
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    if (value.length > 0) {
+      validateField('name', value);
     } else {
-      setPasswordError('');
+      setFieldErrors(prev => ({ ...prev, name: '' }));
+    }
+  };
+
+  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCompanyName(value);
+    if (value.length > 0) {
+      validateField('companyName', value);
+    } else {
+      setFieldErrors(prev => ({ ...prev, companyName: '' }));
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    if (value.length > 0) {
+      validateField('email', value);
+    } else {
+      setFieldErrors(prev => ({ ...prev, email: '' }));
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    if (value.length > 0) {
+      validateField('password', value);
+    } else {
+      setFieldErrors(prev => ({ ...prev, password: '' }));
     }
   };
 
@@ -100,8 +162,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
     setError('');
     setSuccess('');
     
-    if (!validatePassword(password)) {
-      setIsLoading(false);
+    if (!validateForm()) {
       return;
     }
     
@@ -295,7 +356,7 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
     setCompanyName('');
     setEmail('');
     setPassword('');
-    setPasswordError('');
+    setFieldErrors({});
     setError('');
     setSuccess('');
     if (logoPreview && logoPreview.startsWith('blob:')) {
@@ -389,11 +450,21 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
                       id="companyName"
                       type="text"
                       value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
+                      onChange={handleCompanyNameChange}
                       required
-                      className="border-0 border-b-2 border-gray-300 rounded-none px-0 py-4 text-base focus:border-teal-400 focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 hover:border-gray-400"
+                      className={`border-0 border-b-2 rounded-none px-0 py-4 text-base focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 ${
+                        fieldErrors.companyName 
+                          ? 'border-red-400 focus:border-red-400 hover:border-red-400' 
+                          : 'border-gray-300 focus:border-teal-400 hover:border-gray-400'
+                      }`}
                       placeholder="Company Name"
                     />
+                    {fieldErrors.companyName && (
+                      <p className="text-xs text-red-600 mt-1">{fieldErrors.companyName}</p>
+                    )}
+                    {!fieldErrors.companyName && companyName.length >= 2 && (
+                      <p className="text-xs text-green-600 mt-1">Company name looks good</p>
+                    )}
                   </div>
                   
                   {/* Company Logo Upload */}
@@ -490,11 +561,21 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
                     id="name"
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={handleNameChange}
                     required
-                    className="border-0 border-b-2 border-gray-300 rounded-none px-0 py-4 text-base focus:border-teal-400 focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 hover:border-gray-400"
+                    className={`border-0 border-b-2 rounded-none px-0 py-4 text-base focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 ${
+                      fieldErrors.name 
+                        ? 'border-red-400 focus:border-red-400 hover:border-red-400' 
+                        : 'border-gray-300 focus:border-teal-400 hover:border-gray-400'
+                    }`}
                     placeholder="Full Name"
                   />
+                  {fieldErrors.name && (
+                    <p className="text-xs text-red-600 mt-1">{fieldErrors.name}</p>
+                  )}
+                  {!fieldErrors.name && name.length >= 2 && (
+                    <p className="text-xs text-green-600 mt-1">Name looks good</p>
+                  )}
                 </div>
               )}
             
@@ -503,11 +584,21 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   required
-                  className="border-0 border-b-2 border-gray-300 rounded-none px-0 py-4 text-base focus:border-teal-400 focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 hover:border-gray-400"
+                  className={`border-0 border-b-2 rounded-none px-0 py-4 text-base focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 ${
+                    fieldErrors.email 
+                      ? 'border-red-400 focus:border-red-400 hover:border-red-400' 
+                      : 'border-gray-300 focus:border-teal-400 hover:border-gray-400'
+                  }`}
                   placeholder="Email"
                 />
+                {fieldErrors.email && (
+                  <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+                )}
+                {!fieldErrors.email && email.length > 0 && email.includes('@') && email.includes('.') && (
+                  <p className="text-xs text-green-600 mt-1">Email looks good</p>
+                )}
               </div>
             
               <div className="space-y-2">
@@ -518,21 +609,21 @@ function RegisterForm({ onRoleChange, initialRole = 'jobseeker' }: RegisterFormP
                   onChange={handlePasswordChange}
                   required
                   className={`border-0 border-b-2 rounded-none px-0 py-4 text-base focus:ring-0 transition-all duration-300 bg-transparent placeholder:text-gray-400 ${
-                    passwordError 
+                    fieldErrors.password 
                       ? 'border-red-400 focus:border-red-400 hover:border-red-400' 
                       : 'border-gray-300 focus:border-teal-400 hover:border-gray-400'
                   }`}
                   placeholder="Password"
                 />
-                {passwordError && (
-                  <p className="text-xs text-red-600 mt-1">{passwordError}</p>
+                {fieldErrors.password && (
+                  <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>
                 )}
-                {!passwordError && password.length > 0 && (
+                {!fieldErrors.password && password.length > 0 && (
                   <p className="text-xs text-green-600 mt-1">Password meets requirements</p>
                 )}
                 {password.length === 0 && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Password must be at least 8 characters with uppercase, lowercase, and number
+                    Password must be at least 8 characters with uppercase, lowercase, number, and no spaces
                   </p>
                 )}
               </div>
